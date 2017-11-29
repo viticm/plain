@@ -60,7 +60,8 @@ class Grammar {
    const std::string parameter(const variable_t &value);
 
  public:
-   using namespace pf_basic::type;
+   using variable_array_t = pf_basic::type::variable_array_t;
+   using variable_t = pf_basic::type::variable_t;
 
  protected:
 
