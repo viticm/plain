@@ -42,7 +42,7 @@ class Grammar {
    void wrap(variable_t &value, bool prefix_alias = false);
 
    //Wrap a value that has an alias.
-   void wrap(variable_t &value, bool prefix_alias = false);
+   void wrap_aliased_value(variable_t &value, bool prefix_alias = false);
 
    //Wrap the given value segments.
    void wrap_segments(variable_array_t &segments);
