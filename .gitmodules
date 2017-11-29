@@ -1,0 +1,3 @@
+[submodule "plugins"]
+	path = plain/plugins
+	url = https://github.com/viticm/pf_plugins.git
