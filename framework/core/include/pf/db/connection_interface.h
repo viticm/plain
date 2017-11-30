@@ -28,50 +28,55 @@ class PF_API ConnectionInterface {
    query::Builder table(const std::string &name) = 0;
 
    //Get a new raw query expression.
-   void raw(variable_t &value);
+   void raw(variable_t &value) = 0;
 
    //Run a select statement and return a single result.
-   void select_one(const std::string &str, const variable_array_t &bindings = {});
+   void select_one(
+       const std::string &str, const variable_array_t &bindings = {}) = 0;
 
    //Run a select statement against the database.
-   bool insert(const std::string &str, const variable_array_t &bindings = {});
+   bool insert(
+       const std::string &str, const variable_array_t &bindings = {}) = 0;
 
    //Run an update statement against the database.
-   int32_t update(const std::string &str, const variable_array_t &bindings = {});
+   int32_t update(
+       const std::string &str, const variable_array_t &bindings = {}) = 0;
 
    //Run a delete statement against the database.
-   int32_t deleted(const std::string &str, const variable_array_t &bindings = {});
+   int32_t deleted(
+       const std::string &str, const variable_array_t &bindings = {}) = 0;
 
    //Execute an SQL statement and return the boolean result.
-   bool statement(const std::string &str, const variable_array_t &bindings = {});
+   bool statement(
+       const std::string &str, const variable_array_t &bindings = {}) = 0;
 
    //Run an SQL statement and get the number of rows affected.
    int32_t affecting_statement(
-       const std::string &str, const variable_array_t &bindings = {});
+       const std::string &str, const variable_array_t &bindings = {}) = 0;
 
    //Run a raw, unprepared query against the PDO connection.
-   bool unprepared(const std::string &str);
+   bool unprepared(const std::string &str) = 0;
 
    //Prepare the query bindings for execution.
-   void prepare_bindings(variable_array_t &bindings);
+   void prepare_bindings(variable_array_t &bindings) = 0;
 
    //Execute a Closure within a transaction.
-   void transaction(callback_t callback, int8_t attempts = 1);
+   void transaction(callback_t callback, int8_t attempts = 1) = 0;
 
    //Start a new database transaction.
-   void begin_transaction();
+   void begin_transaction() = 0;
 
    //Commit the active database transaction.
-   void commit();
+   void commit() = 0;
 
    //Rollback the active database transaction.
-   void rollback();
+   void rollback() = 0;
 
    //Get the number of active transactions.
-   int32_t transaction_level() const;
+   int32_t transaction_level() const = 0;
 
    //Execute the given callback in "dry run" mode.
-   void pretend(callback_t callback);
+   void pretend(callback_t callback) = 0;
 
  public:
    using variable_array_t = pf_basic::type::variable_array_t;
