@@ -73,6 +73,7 @@ namespace pf_db {
 class Query;
 class Interface;
 class Factory;
+class ConnectionInterface;
 
 struct config_struct {
   std::string name; //connection or db name.
