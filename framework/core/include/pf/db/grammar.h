@@ -19,7 +19,7 @@ namespace pf_db {
 class Grammar {
 
  public:
-   Grammar() {};
+   Grammar() : table_prefix_{""} {};
    virtual Grammar() {};
 
  public:

@@ -84,9 +84,18 @@ struct config_struct {
 using config_t = config_struct;
 using eid_t = int16_t; //Environment.
 
+namespace query {
+
+class Builder;
+
+};
+
 }; //namespace pf_db
 
 #define DB_EID_INVALID (-1)
+
+/* The database expression variable type. */
+#define DB_EXPRESSION_TYPE (100)
 
 //Auto environment creator.
 auto_envcreator(db, pf_db::Interface)
