@@ -23,6 +23,7 @@ struct variable_struct;
 using variable_t = variable_struct;
 using variable_array_t = std::vector< variable_t >;
 using variable_set_t = std::map< std::string, variable_t > ;
+using closure_t = std::function<void()>;
 
 typedef enum {
   kVariableTypeInvalid = -1,

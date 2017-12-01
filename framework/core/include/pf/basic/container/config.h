@@ -5,12 +5,12 @@
  * @copyright Copyright (c) 2014- viticm( viticm.ti@gmail.com )
  * @license
  * @user viticm<viticm.ti@gmail.com>
- * @date 2017/12/01 15:05
- * @uses your description
+ * @date 2017/12/01 13:31
+ * @uses The container config file.
 */
-#ifndef PF_DB_CAPSULE_CONFIG_H_
-#define PF_DB_CAPSULE_CONFIG_H_
+#ifndef PF_BASIC_CONTAINER_CONFIG_H_
+#define PF_BASIC_CONTAINER_CONFIG_H_
 
-#include "pf/db/config.h"
+#include "pf/basic/config.h"
 
-#endif //PF_DB_CAPSULE_CONFIG_H_
+#endif //PF_BASIC_CONTAINER_CONFIG_H_
