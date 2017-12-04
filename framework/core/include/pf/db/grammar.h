@@ -16,7 +16,7 @@
 
 namespace pf_db {
 
-class Grammar {
+class PF_API Grammar {
 
  public:
    Grammar() : table_prefix_{""} {};
