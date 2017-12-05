@@ -89,6 +89,16 @@ namespace query {
 
 class Builder;
 
+namespace grammars {
+
+class Grammar;
+class MysqlGrammar;
+class PostgresGrammar;
+class SqliteGrammar;
+class SqlserverGrammar;
+
+};
+
 };
 
 }; //namespace pf_db

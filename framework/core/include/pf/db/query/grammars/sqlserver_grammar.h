@@ -22,7 +22,7 @@ namespace grammars {
 class PF_API SqlserverGrammar : public grammars::Grammar {
 
  public:
-   SqlseverGrammar();
+   SqlserverGrammar();
    virtual ~SqlserverGrammar();
 
  public:
