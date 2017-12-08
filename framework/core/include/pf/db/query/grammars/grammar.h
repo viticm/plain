@@ -28,6 +28,12 @@ class PF_API Grammar : pf_db::Grammar {
    virtual ~Grammar() {}
 
  public:
+   using variable_array_t = pf_basic::type::variable_array_t;
+   using variable_set_t = pf_basic::type::variable_set_t;
+   using variable_t = pf_basic::type::variable_t;
+   using Builder = pf_db::query::Builder;
+
+ public:
    
    //Compile a select query into SQL.
    virtual std::string compile_select(Builder &query);
@@ -161,15 +167,9 @@ class PF_API Grammar : pf_db::Grammar {
    std::string compile_exists(Builder &query);
 
    //Get the grammar specific operators.
-   variable_set_t get_operators() {
+   std::vector<std::string> get_operators() {
      return operators_;
    };
-
- public:
-   using variable_array_t = pf_basic::type::variable_array_t;
-   using variable_set_t = pf_basic::type::variable_set_t;
-   using variable_t = pf_basic::type::variable_t;
-   using Builder = pf_db::query::Builder;
 
  protected:
 

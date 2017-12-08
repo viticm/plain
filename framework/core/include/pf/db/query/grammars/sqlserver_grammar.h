@@ -26,6 +26,12 @@ class PF_API SqlserverGrammar : public grammars::Grammar {
    virtual ~SqlserverGrammar();
 
  public:
+   using variable_array_t = pf_basic::type::variable_array_t;
+   using variable_set_t = pf_basic::type::variable_set_t;
+   using variable_t = pf_basic::type::variable_t;
+   using Builder = pf_db::query::Builder;
+
+ public:
 
    //Compile a select query into SQL.
    virtual std::string compile_select(Builder &query);
@@ -43,10 +49,6 @@ class PF_API SqlserverGrammar : public grammars::Grammar {
    //Compile a where exists clause.
    virtual std::string where_exists(Builder &query, const variable_set_t &where);
 
-   //Compile an insert statement into SQL.
-   virtual std::string compile_insert(
-       Builder &query, const variable_array_t &values);
-
    //Compile an insert and get ID statement into SQL.
    virtual std::string compile_insert_getid(
        Builder &query, 
@@ -63,15 +65,6 @@ class PF_API SqlserverGrammar : public grammars::Grammar {
 
    //Compile a delete statement into SQL.
    virtual std::string compile_delete(Builder &query);
-
-   //Compile a truncate table statement into SQL.
-   virtual variable_set_t compile_truncate(Builder &query);
-
- public:
-   using variable_array_t = pf_basic::type::variable_array_t;
-   using variable_set_t = pf_basic::type::variable_set_t;
-   using variable_t = pf_basic::type::variable_t;
-   using Builder = pf_db::query::Builder;
 
  protected:
    

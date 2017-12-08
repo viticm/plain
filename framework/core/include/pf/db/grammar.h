@@ -20,7 +20,11 @@ class PF_API Grammar {
 
  public:
    Grammar() : table_prefix_{""} {};
-   virtual Grammar() {};
+   virtual ~Grammar() {};
+
+ public:
+   using variable_array_t = pf_basic::type::variable_array_t;
+   using variable_t = pf_basic::type::variable_t;
 
  public:
    
@@ -58,10 +62,6 @@ class PF_API Grammar {
 
    //Get the appropriate query parameter place-holder for a value.
    const std::string parameter(const variable_t &value);
-
- public:
-   using variable_array_t = pf_basic::type::variable_array_t;
-   using variable_t = pf_basic::type::variable_t;
 
  protected:
 

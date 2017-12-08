@@ -26,6 +26,12 @@ class Builder {
    virtual ~Builder();
 
  public:
+   using variable_array_t = pf_basic::type::variable_array_t;
+   using variable_set_t = pf_basic::type::variable_set_t;
+   using variable_t = pf_basic::type::variable_t;
+   using closure_t = pf_basic::type::closure_t;
+
+ public:
 
    //Set the columns to be selected.
    Builder &select(const std::vector<std::string> &columns = {"*"});
@@ -269,7 +275,8 @@ class Builder {
    Builder &for_nested_where();
 
    //Add another query builder as a nested where to the query builder.
-   Builder &add_nested_where_query(Builder &query, boolean = "and");
+   Builder &add_nested_where_query(Builder &query,
+                                   const std::string &boolean = "and");
 
    //Add an exists clause to the query.
    Builder &where_exists(closure_t callback, 
@@ -287,8 +294,8 @@ class Builder {
 
    //Add an exists clause to the query.
    Builder &add_where_exists_query(Builder &query, 
-                                   const std::string &boolean = "and", b
-                                   ool isnot = false);
+                                   const std::string &boolean = "and",
+                                   bool isnot = false);
 
    //Handles dynamic "where" clauses to the query.
    Builder &dynamic_where(const std::string &method,
@@ -388,8 +395,8 @@ class Builder {
    const variable_t value(const std::string &column) const;
 
    //Execute the query as a "select" statement.
-   void get(const std::vector<std::string> columns = {"*"},
-            db_fetch_array_t &result);
+   void get(db_fetch_array_t &result,
+            const std::vector<std::string> &columns = {"*"});
 
    //Run the query as a "select" statement against the connection.
    void run_select(db_fetch_array_t &result);
@@ -422,10 +429,10 @@ class Builder {
    int32_t count(const std::string &columns = "*");
 
    //Retrieve the minimum value of a given column.
-   const variable_t min(const std::string &column) const;
+   const variable_t _min(const std::string &column) const;
 
    //Retrieve the sum of the values of a given column.
-   const variable_t max(const std::string &column) const;
+   const variable_t _max(const std::string &column) const;
 
    //Retrieve the sum of the values of a given column.
    const variable_t sum(const std::string &column) const;
@@ -439,12 +446,12 @@ class Builder {
    //Execute an aggregate function on the database.
    void aggregate(const std::string &function, 
                   variable_set_t &result, 
-                  const std::vector<std::vector> &columns = {"*"});
+                  const std::vector<std::string> &columns = {"*"});
 
    //Execute a numeric aggregate function on the database.
    const variable_t numeric_aggregate(
        const std::string &function, 
-       const std::vector<std::vector> &columns = {"*"});
+       const std::vector<std::string> &columns = {"*"});
 
    //Insert a new record into the database.
    bool insert(const variable_array_t &values);
@@ -514,13 +521,6 @@ class Builder {
    //Clone the query without the given bindings.
    Builder clone_without_bindings(const std::vector<std::string> &except);
 
- public:
-   using variable_array_t = pf_basic::type::variable_array_t;
-   using variable_set_t = pf_basic::type::variable_set_t;
-   using variable_t = pf_basic::type::variable_t;
-   using closure_t = pf_basic::type::closure_t;
-   using Builder = pf_db::query::Builder;
-
  protected:
 
    //The database connection instance.
@@ -545,7 +545,7 @@ class Builder {
    std::string from_;
 
    //The table joins for the query.
-   std::string<std::string> joins_;
+   std::vector<std::string> joins_;
 
    //The where constraints for the query.
    variable_set_t wheres_;
