@@ -24,7 +24,7 @@ namespace grammars {
 class PF_API Grammar : pf_db::Grammar {
 
  public:
-   Grammar() {}
+   Grammar();
    virtual ~Grammar() {}
 
  public:
