@@ -77,14 +77,16 @@ class PF_API Grammar : pf_db::Grammar {
    //Compile the SQL statement to execute a savepoint rollback.
    virtual std::string compile_savepoint_rollback(const std::string &name);
 
+   //Call the compile method from string.
+   virtual std::string call(Builder &query, const std::string &component);
+
  public:
  
    //Compile the components necessary for a select clause.
    variable_set_t compile_components(Builder &query);
 
    //Compile an aggregated select clause.
-   std::string compile_aggregate(
-       Builder &query, const variable_set_t &aggregate);
+   std::string compile_aggregate(Builder &query, variable_set_t &aggregate);
 
     //Compile the "join" portions of the query.
    std::string compile_joins(
@@ -157,7 +159,7 @@ class PF_API Grammar : pf_db::Grammar {
 
    //Compile the "order by" portions of the query.
    std::string compile_orders(
-       Builder &query, const std::vector<std::string> &orders);
+       Builder &query, const variable_set_t &orders);
 
    //Compile the query orders to an array.
    variable_set_t compile_orders_toarray(
@@ -217,7 +219,7 @@ class PF_API Grammar : pf_db::Grammar {
    virtual std::string compile_limit(Builder &query, int32_t limit);
 
    //Concatenate an array of segments, removing empties.
-   virtual std::string concatenate(const std::vector<std::string> &segments);
+   virtual std::string concatenate(const variable_set_t &segments);
 
    //Remove the leading boolean from a statement.
    virtual std::string remove_leading_boolean(const std::string &value);

@@ -40,7 +40,7 @@ class PF_API Grammar {
    void wrap_array(variable_array_t &values);
 
    //Wrap a table in keyword identifiers.
-   void wrap_table(variable_t &table);
+   std::string wrap_table(variable_t &table);
 
    //Wrap a value in keyword identifiers.
    void wrap(variable_t &value, bool prefix_alias = false);
@@ -55,7 +55,7 @@ class PF_API Grammar {
    void wrap_value(variable_t &value);
 
    //Convert an array of column names into a delimited string.
-   const std::string columnize(const variable_array_t &columns) const;
+   const std::string columnize(const std::vector<std::string> &columns) const;
 
    //Create query parameter place-holders for an array.
    const std::string parameterize(const variable_array_t &values);

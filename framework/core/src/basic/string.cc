@@ -614,6 +614,14 @@ bool decrypt(const std::string &in, std::string &out) {
   return true;
 }
 
+std::string &trim(std::string &str, const std::string &character_mask) {
+  if (str.empty()) return str;
+  for (size_t i = 0; i < character_mask.length(); ++i) {
+    str.erase(0, str.find_first_not_of(character_mask[i]));
+    str.erase(str.find_last_not_of(character_mask[i]) + 1);
+  }
+}
+
 } //namespace string
 
 } //namespace pf_basic

@@ -1,5 +1,8 @@
+#include "pf/basic/string.h"
 #include "pf/db/query/grammars/grammar.h"
 
+using namespace pf_basic::string;
+using namespace pf_basic::type;
 using namespace pf_db::query::grammars;
 
 //The construct function.
@@ -22,7 +25,21 @@ Grammar::Grammar() {
 
 //Compile a select query into SQL.
 std::string Grammar::compile_select(Builder &query) {
+  // If the query does not have any columns set, we'll set the columns to the
+  // * character to just get all of the columns from the database. Then we
+  // can build the query and concatenate all the pieces together as one.
+  auto original = query.columns_;
+  
+  if (query.columns_.empty()) query.columns_ = {"*"};
 
+  // To compile the query, we'll spin through each component of the query and
+  // see if that component exists. If it does we'll just call the compiler
+  // function for the component which is responsible for making the SQL.
+  std::string sql = concatenate(compile_components(query)); trim(sql);
+
+  query.columns_ = original;
+
+  return sql;
 }
 
 //Compile the random statement into SQL.
@@ -90,13 +107,27 @@ std::string Grammar::compile_savepoint_rollback(
 
 //Compile the components necessary for a select clause.
 Grammar::variable_set_t Grammar::compile_components(Builder &query) {
-
+  variable_set_t sql;
+  // To compile the query, we'll spin through each component of the query and 
+  // see if that component exists. If it does we'll just call the compiler
+  // function for the component which is responsible for making the SQL.
+  for (const std::string &component : select_components_)
+    sql[component] = call(query, component);
+  return sql;
 }
 
 //Compile an aggregated select clause.
 std::string Grammar::compile_aggregate(
-    Builder &query, const variable_set_t &aggregate) {
+    Builder &query, variable_set_t &aggregate) {
+  std::string column = aggregate["columns"].c_str();
 
+  // If the query has a "distinct" constraint and we're not asking for all columns
+  // we need to prepend "distinct" onto the column name so that the query takes
+  // it into account when it performs the aggregating operations on the data.
+  if (query.distinct_ && column != "*") 
+    column = "distinct " + column;
+  
+  return "select " + aggregate["function"].data + "(" + column + ") as aggregate";
 }
 
 //Compile the "join" portions of the query.
@@ -110,9 +141,42 @@ std::string Grammar::compile_wheres(Builder &query) {
 
 }
 
+
+
 //Get an array of all the where clauses for the query.
 Grammar::variable_set_t Grammar::compile_wheres_toarray(Builder &query) {
 
+}
+
+//Call the compile method from string.
+std::string Grammar::call(Builder &query, const std::string &component) {
+  std::string r{""};
+  if ("aggregate" == component && !query.aggregate_.empty()) {
+    r = compile_aggregate(query, query.aggregate_);
+  } else if ("columns" == component && !query.columns_.empty()) {
+    r = compile_columns(query, query.columns_);
+  } else if ("from" == component && query.from_ != "") {
+    r = compile_from(query, query.from_);
+  } else if ("joins" == component && !query.joins_.empty()) {
+    r = compile_joins(query, query.joins_);
+  } else if ("wheres" == component && !query.wheres_.empty()) {
+    r = compile_wheres(query);
+  } else if ("groups" == component && !query.groups_.empty()) {
+    r = compile_groups(query, query.groups_);
+  } else if ("havings" == component && !query.havings_.empty()) {
+    r = compile_havings(query, query.havings_);
+  } else if ("orders" == component && !query.orders_.empty()) {
+    r = compile_orders(query, query.orders_);
+  } else if ("limit" == component && query.limit_ > 0) {
+    r = compile_limit(query, query.limit_);
+  } else if ("offset" == component && query.offset_ > 0) {
+    r = compile_offset(query, query.offset_);
+  } else if ("unions" == component && !query.unions_.empty()) {
+    r = compile_unions(query);
+  } else if ("lock" == component && query.lock_.type != kVariableTypeInvalid) {
+    r = compile_lock(query, query.lock_);
+  }
+  return r;
 }
 
 //Format the where clause statements into one string.
@@ -216,7 +280,7 @@ std::string Grammar::compile_basic_having(const variable_set_t &having) {
 
 //Compile the "order by" portions of the query.
 std::string Grammar::compile_orders(
-    Builder &query, const std::vector<std::string> &orders) {
+    Builder &query, const variable_set_t &orders) {
 
 }
 
@@ -275,12 +339,20 @@ std::string Grammar::date_based_where(
 //Compile the "select *" portion of the query.
 std::string Grammar::compile_columns(
     Builder &query, const std::vector<std::string> &columns) {
+  // If the query is actually performing an aggregating select, we will let that
+  // compiler handle the building of the select clauses, as it will need some
+  // more syntax that is best handled by that function to keep things neat. 
+  if (query.aggregate_.empty()) return "";
 
+  std::string select = query.distinct_ ? "select distinct " : "select ";
+
+  return select + columnize(columns);
 }
 
 //Compile the "from" portion of the query.
 std::string Grammar::compile_from(Builder &query, const std::string &table) {
-
+  variable_t _table{table};
+  return "from " + wrap_table(_table);
 }
 
 //Compile the "limit" portions of the query.
@@ -289,7 +361,7 @@ std::string Grammar::compile_limit(Builder &query, int32_t limit) {
 }
 
 //Concatenate an array of segments, removing empties.
-std::string Grammar::concatenate(const std::vector<std::string> &segments) {
+std::string Grammar::concatenate(const variable_set_t &segments) {
 
 }
 

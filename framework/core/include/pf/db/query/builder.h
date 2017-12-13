@@ -33,6 +33,68 @@ class Builder {
 
  public:
 
+   //The database connection instance.
+   std::unique_ptr<pf_db::ConnectionInterface> connection_;
+
+   //The database query grammar instance.
+   std::unique_ptr<pf_db::query::grammars::Grammar> grammar_;
+
+   //The current query value bindings.
+   variable_set_t bindings_;
+
+   //An aggregate function and column to be run.
+   variable_set_t aggregate_;
+
+   //The columns that should be returned.
+   std::vector<std::string> columns_;
+
+   //Indicates if the query returns distinct results.
+   bool distinct_;
+
+   //The table which the query is targeting.
+   std::string from_;
+
+   //The table joins for the query.
+   std::vector<std::string> joins_;
+
+   //The where constraints for the query.
+   variable_set_t wheres_;
+
+   //The groupings for the query.
+   std::vector<std::string> groups_;
+
+   //The having constraints for the query.
+   std::vector<std::string> havings_;
+
+   //The orderings for the query.
+   variable_set_t orders_;
+
+   //The maximum number of records to return.
+   int32_t limit_;
+
+   //The number of records to skip.
+   int32_t offset_;
+
+   //The query union statements.
+   variable_set_t unions_;
+
+   //The maximum number of union records to return.
+   int32_t union_limit_;
+
+   //The number of union records to skip.
+   int32_t union_offset_;
+
+   //The orderings for the union query.
+   variable_set_t union_orders_;
+
+   //Indicates whether row locking is being used.
+   variable_t lock_;
+
+   //All of the available clause operators. 
+   std::vector<std::string> operators_;
+
+ public:
+
    //Set the columns to be selected.
    Builder &select(const std::vector<std::string> &columns = {"*"});
 
@@ -520,68 +582,6 @@ class Builder {
 
    //Clone the query without the given bindings.
    Builder clone_without_bindings(const std::vector<std::string> &except);
-
- protected:
-
-   //The database connection instance.
-   std::unique_ptr<pf_db::ConnectionInterface> connection_;
-
-   //The database query grammar instance.
-   std::unique_ptr<pf_db::query::grammars::Grammar> grammar_;
-
-   //The current query value bindings.
-   variable_set_t bindings_;
-
-   //An aggregate function and column to be run.
-   variable_set_t aggregate_;
-
-   //The columns that should be returned.
-   std::vector<std::string> columns_;
-
-   //Indicates if the query returns distinct results.
-   bool distinct_;
-
-   //The table which the query is targeting.
-   std::string from_;
-
-   //The table joins for the query.
-   std::vector<std::string> joins_;
-
-   //The where constraints for the query.
-   variable_set_t wheres_;
-
-   //The groupings for the query.
-   variable_set_t groups_;
-
-   //The having constraints for the query.
-   variable_set_t havings_;
-
-   //The orderings for the query.
-   variable_set_t orders_;
-
-   //The maximum number of records to return.
-   int32_t limit_;
-
-   //The number of records to skip.
-   int32_t offset_;
-
-   //The query union statements.
-   variable_set_t unions_;
-
-   //The maximum number of union records to return.
-   int32_t union_limit_;
-
-   //The number of union records to skip.
-   int32_t union_offset_;
-
-   //The orderings for the union query.
-   variable_set_t union_orders_;
-
-   //Indicates whether row locking is being used.
-   bool lock_;
-
-   //All of the available clause operators. 
-   std::vector<std::string> operators_;
 
  protected:
 

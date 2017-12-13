@@ -61,6 +61,8 @@ PF_API int32_t explode(const char *source,
                        bool one_key,
                        bool ignore_empty);
 PF_API bool checkstr(const char *in, uint32_t size);
+PF_API std::string &trim(
+    std::string &str, const std::string &character_mask = " \t\n\r\0\x0B");
 
 
 }; //namespace string
