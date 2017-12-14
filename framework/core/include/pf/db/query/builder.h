@@ -12,14 +12,12 @@
 #define PF_DB_QUERY_BUILDER_H_
 
 #include "pf/db/query/config.h"
-#include "pf/db/connection_interface.h"
-#include "pf/db/query/grammars/grammar.h"
 
 namespace pf_db {
 
 namespace query {
 
-class Builder {
+class PF_API Builder {
 
  public:
    Builder(ConnectionInterface *connection, grammars::Grammar *grammar);
@@ -55,7 +53,7 @@ class Builder {
    std::string from_;
 
    //The table joins for the query.
-   std::vector<std::string> joins_;
+   std::vector<JoinClause> joins_;
 
    //The where constraints for the query.
    variable_set_t wheres_;

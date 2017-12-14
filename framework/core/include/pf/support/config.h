@@ -12,5 +12,13 @@
 #define PF_SUPPORT_CONFIG_H_
 
 #include "pf/basic/config.h"
+#include "pf/basic/type/variable.h"
+
+namespace pf_support {
+
+class Fluent;
+class ArrayAccess;
+
+}; //pf_support
 
 #endif //PF_SUPPORT_CONFIG_H_

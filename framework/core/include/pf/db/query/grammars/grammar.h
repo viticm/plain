@@ -14,6 +14,7 @@
 #include "pf/db/query/grammars/config.h"
 #include "pf/db/grammar.h"
 #include "pf/db/query/builder.h"
+#include "pf/db/query/join_clause.h"
 
 namespace pf_db {
 
@@ -90,7 +91,7 @@ class PF_API Grammar : pf_db::Grammar {
 
     //Compile the "join" portions of the query.
    std::string compile_joins(
-       Builder &query, const std::vector<std::string> &joins);
+       Builder &query, const std::vector<JoinClause> &joins);
 
    //Compile the "where" portions of the query.
    std::string compile_wheres(Builder &query);
@@ -99,7 +100,7 @@ class PF_API Grammar : pf_db::Grammar {
    variable_set_t compile_wheres_toarray(Builder &query);
 
    //Format the where clause statements into one string.
-   std::string concatenate_where_clauses(Builder &query);
+   std::string concatenate_where_clauses(Builder &query, variable_set_t &sql);
 
    //Compile a raw where clause.
    std::string where_raw(Builder &query, const variable_set_t &where);

@@ -42,6 +42,12 @@ class PF_API Grammar {
    //Wrap a table in keyword identifiers.
    std::string wrap_table(variable_t &table);
 
+   //Wrap a table in keyword identifiers.
+   std::string wrap_table(const std::string &table) {
+     variable_t _table{table};
+     return wrap_table(_table);
+   };
+
    //Wrap a value in keyword identifiers.
    void wrap(variable_t &value, bool prefix_alias = false);
 

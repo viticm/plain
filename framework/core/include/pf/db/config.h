@@ -87,7 +87,7 @@ using eid_t = int16_t; //Environment.
 
 namespace query {
 
-class Builder;
+class JoinClause;
 
 namespace grammars {
 

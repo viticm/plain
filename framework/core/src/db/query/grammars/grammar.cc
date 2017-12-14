@@ -1,8 +1,10 @@
 #include "pf/basic/string.h"
+#include "pf/support/helpers.h"
 #include "pf/db/query/grammars/grammar.h"
 
 using namespace pf_basic::string;
 using namespace pf_basic::type;
+using namespace pf_support;
 using namespace pf_db::query::grammars;
 
 //The construct function.
@@ -132,13 +134,28 @@ std::string Grammar::compile_aggregate(
 
 //Compile the "join" portions of the query.
 std::string Grammar::compile_joins(
-    Builder &query, const std::vector<std::string> &joins) {
+    Builder &query, const std::vector<JoinClause> &joins) {
 
+  return collect(joins).map([this, &query](JoinClause &join) {
+    std::string table = this->wrap_table(join.table_);
+    std::string r = join.type_ + " join " + table + this->compile_wheres(join);
+    return trim(r);
+  }).implode(" ");
 }
 
 //Compile the "where" portions of the query.
 std::string Grammar::compile_wheres(Builder &query) {
+  // Each type of where clauses has its own compiler function which is responsible 
+  // for actually creating the where clauses SQL. This helps keep the code nice
+  // and maintainable since each clause has a very small method that it uses.
+  if (query.wheres_.empty()) return "";
 
+  // If we actually have some where clauses, we will strip off the first boolean
+  // operator, which is added by the query builders for convenience so we can 
+  // avoid checking for the first clauses in each of the compilers methods.
+  auto sql = compile_wheres_toarray(query);
+
+  return sql.size() > 0 ? concatenate_where_clauses(query, sql) : "";
 }
 
 
@@ -180,13 +197,13 @@ std::string Grammar::call(Builder &query, const std::string &component) {
 }
 
 //Format the where clause statements into one string.
-std::string Grammar::concatenate_where_clauses(Builder &query) {
+std::string Grammar::concatenate_where_clauses(
+    Builder &query, variable_set_t &sql) {
 
 }
 
 //Compile a raw where clause.
 std::string Grammar::where_raw(Builder &query, const variable_set_t &where) {
-
 }
 
 //Compile a basic where clause.
@@ -351,8 +368,7 @@ std::string Grammar::compile_columns(
 
 //Compile the "from" portion of the query.
 std::string Grammar::compile_from(Builder &query, const std::string &table) {
-  variable_t _table{table};
-  return "from " + wrap_table(_table);
+  return "from " + wrap_table(table);
 }
 
 //Compile the "limit" portions of the query.

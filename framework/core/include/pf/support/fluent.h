@@ -11,6 +11,8 @@
 #ifndef PF_SUPPORT_FLUENT_H_
 #define PF_SUPPORT_FLUENT_H_
 
+#include "pf/support/config.h"
+
 namespace pf_support {
 
 class PF_API Fluent {
