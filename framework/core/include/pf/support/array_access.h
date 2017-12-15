@@ -28,12 +28,17 @@ class PF_API ArrayAccess {
  public:
 
    //The array.
-   variable_array_t array_;
+   variable_array_t items_;
 
  public:
    
    //Join array elements with a string.
    std::string implode(const std::string &pieces);
+
+   //Get all of the items in the collection.
+   variable_array_t all() {
+     return items_;
+   };
 
 };
 

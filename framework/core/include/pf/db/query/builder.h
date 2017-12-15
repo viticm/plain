@@ -31,6 +31,9 @@ class PF_API Builder {
 
  public:
 
+   //The class name.
+   std::string class_name_;
+
    //The database connection instance.
    std::unique_ptr<pf_db::ConnectionInterface> connection_;
 
@@ -56,7 +59,7 @@ class PF_API Builder {
    std::vector<JoinClause> joins_;
 
    //The where constraints for the query.
-   variable_set_t wheres_;
+   std::vector<db_query_where_t> wheres_;
 
    //The groupings for the query.
    std::vector<std::string> groups_;

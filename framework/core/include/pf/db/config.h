@@ -87,6 +87,7 @@ using eid_t = int16_t; //Environment.
 
 namespace query {
 
+class Builder;
 class JoinClause;
 
 namespace grammars {
@@ -100,6 +101,22 @@ class SqlserverGrammar;
 };
 
 };
+
+typedef struct PF_API db_query_where_struct db_query_where_t;
+struct db_query_where_struct {
+
+  //The variable set.
+  pf_basic::type::variable_set_t values;
+
+  //The query builder pointer.
+  std::unique_ptr<query::Builder> query;
+
+  pf_basic::type::variable_t operator [] (const std::string &key) {
+    return values[key];
+  };
+
+};
+
 
 }; //namespace pf_db
 

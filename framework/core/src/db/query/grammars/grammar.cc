@@ -7,6 +7,14 @@ using namespace pf_basic::type;
 using namespace pf_support;
 using namespace pf_db::query::grammars;
 
+#define where_call(name) \
+  [this](Builder &query, db_query_where_t &where) { return where_##name(query, where); }
+
+#define safe_call_where(name, query, where) \
+  (where_calls_.find(name) != where_calls_.end() ? where_calls_[name](query, where) : "")
+
+#define where_query(where) (*(where.query.get()))
+
 //The construct function.
 Grammar::Grammar() {
   select_components_ = {
@@ -23,6 +31,27 @@ Grammar::Grammar() {
     "unions",
     "lock",
   };
+  where_calls_ = {
+    {"raw", where_call(raw) },
+    {"basic", where_call(basic) },
+    {"in", where_call(in) },
+    {"notin", where_call(notin) },
+    {"insub", where_call(insub) },
+    {"not_insub", where_call(not_insub) },
+    {"null", where_call(null) },
+    {"notnull", where_call(notnull) },
+    {"between", where_call(between) },
+    {"time", where_call(time) },
+    {"column", where_call(column) },
+    {"time", where_call(time) },
+    {"nested", where_call(nested) },
+    {"sub", where_call(sub) },
+    {"notexists", where_call(notexists) },
+    {"day", where_call(day) },
+    {"month", where_call(raw) },
+    {"year", where_call(year) },
+    {"date", where_call(date) },
+  };
 }
 
 //Compile a select query into SQL.
@@ -37,7 +66,8 @@ std::string Grammar::compile_select(Builder &query) {
   // To compile the query, we'll spin through each component of the query and
   // see if that component exists. If it does we'll just call the compiler
   // function for the component which is responsible for making the SQL.
-  std::string sql = concatenate(compile_components(query)); trim(sql);
+  variable_set_t components = compile_components(query);
+  std::string sql = concatenate(components); trim(sql);
 
   query.columns_ = original;
 
@@ -63,7 +93,7 @@ std::string Grammar::compile_update(
 
 //Prepare the bindings for an update statement.
 Grammar::variable_set_t Grammar::prepare_bindings_forupdate(
-    const variable_set_t &bindings, const variable_array_t &values) {
+    variable_set_t &bindings, const variable_array_t &values) {
 
 }
 
@@ -87,7 +117,7 @@ Grammar::variable_set_t Grammar::compile_truncate(Builder &query) {
 
 //Compile a where exists clause.
 std::string Grammar::where_exists(
-    Builder &query, const variable_set_t &where) {
+    Builder &query, db_query_where_t &where) {
 
 }
 
@@ -114,7 +144,7 @@ Grammar::variable_set_t Grammar::compile_components(Builder &query) {
   // see if that component exists. If it does we'll just call the compiler
   // function for the component which is responsible for making the SQL.
   for (const std::string &component : select_components_)
-    sql[component] = call(query, component);
+    sql[component] = call_compile(query, component);
   return sql;
 }
 
@@ -155,18 +185,19 @@ std::string Grammar::compile_wheres(Builder &query) {
   // avoid checking for the first clauses in each of the compilers methods.
   auto sql = compile_wheres_toarray(query);
 
-  return sql.size() > 0 ? concatenate_where_clauses(query, sql) : "";
+  return !sql.empty() ? concatenate_where_clauses(query, sql) : "";
 }
 
-
-
 //Get an array of all the where clauses for the query.
-Grammar::variable_set_t Grammar::compile_wheres_toarray(Builder &query) {
-
+Grammar::variable_array_t Grammar::compile_wheres_toarray(Builder &query) {
+  return collect(query.wheres_).map([this, &query](db_query_where_t &where){
+    return where["boolean"].data + " " + 
+           safe_call_where(where["type"], query, where);
+  }).all();
 }
 
 //Call the compile method from string.
-std::string Grammar::call(Builder &query, const std::string &component) {
+std::string Grammar::call_compile(Builder &query, const std::string &component) {
   std::string r{""};
   if ("aggregate" == component && !query.aggregate_.empty()) {
     r = compile_aggregate(query, query.aggregate_);
@@ -196,80 +227,98 @@ std::string Grammar::call(Builder &query, const std::string &component) {
   return r;
 }
 
+//Call the where method from string.
+std::string Grammar::call_where(
+    Builder &query, db_query_where_t &where, const std::string &method) {
+  return safe_call_where(method, query, where);
+}
+
 //Format the where clause statements into one string.
 std::string Grammar::concatenate_where_clauses(
-    Builder &query, variable_set_t &sql) {
-
+    Builder &query, variable_array_t &sql) {
+  std::string conjunction = "JoinClause" == query.class_name_ ? "on" : "where";
+  return conjunction + " " + remove_leading_boolean(implode(" ", sql));
 }
 
 //Compile a raw where clause.
-std::string Grammar::where_raw(Builder &query, const variable_set_t &where) {
+std::string Grammar::where_raw(Builder &query, db_query_where_t &where) {
+  return where["sql"].data;
 }
 
 //Compile a basic where clause.
-std::string Grammar::where_basic(Builder &query, const variable_set_t &where) {
-
+std::string Grammar::where_basic(Builder &query, db_query_where_t &where) {
+  auto value = parameter(where["value"]);
+  return wrap(where["column"]) + " " + where["operator"].data + " " + value;
 }
 
 //Compile a "where in" clause.
-std::string Grammar::where_in(Builder &query, const variable_set_t &where) {
-
+std::string Grammar::where_in(Builder &query, db_query_where_t &where) {
+  if (!empty(where["values"])) {
+    return wrap(where["column"]) + " in (" + parameterize(where["values"]) + ")";
+  }
+  return "0 = 1";
 }
 
 //Compile a "where not in" clause.
-std::string Grammar::where_notin(Builder &query, const variable_set_t &where) {
-
+std::string Grammar::where_notin(Builder &query, db_query_where_t &where) {
+  if (!empty(where["values"])) {
+    return wrap(where["column"]) + " not in (" + parameterize(where["values"]) + ")";
+  }
+  return "1 = 1";
 }
 
 //Compile a where in sub-select clause.
-std::string Grammar::where_insub(Builder &query, const variable_set_t &where) {
-
+std::string Grammar::where_insub(Builder &query, db_query_where_t &where) {
+  if (is_null(where.query)) return "";
+  return wrap(where["column"]) + " in (" + compile_select(where_query(where));
 }
 
 //Compile a where not in sub-select clause.
 std::string Grammar::where_not_insub(
-    Builder &query, const variable_set_t &where) {
-
+    Builder &query, db_query_where_t &where) {
+  if (is_null(where.query)) return "";
+  return wrap(where["column"]) + " not in (" + compile_select(where_query(where));
 }
 
 //Compile a "where null" clause.
-std::string Grammar::where_null(Builder &query, const variable_set_t &where) {
-
+std::string Grammar::where_null(Builder &query, db_query_where_t &where) {
+  return wrap(where["column"]) + " is null";
 }
 
 //Compile a "where not null" clause.
-std::string Grammar::where_notnull(Builder &query, const variable_set_t &where) {
-
+std::string Grammar::where_notnull(Builder &query, db_query_where_t &where) {
+  return wrap(where["column"]) + " is not null";
 }
 
 //Compile a "between" where clause.
-std::string Grammar::where_between(Builder &query, const variable_set_t &where) {
-
+std::string Grammar::where_between(Builder &query, db_query_where_t &where) {
+  std::string between = empty(where["not"]) ? "not between" : "between";
+  return wrap(where["column"]) + " " + between + " ? and ?";
 }
 
 //Compile a "where time" clause.
-std::string Grammar::where_time(Builder &query, const variable_set_t &where) {
-
+std::string Grammar::where_time(Builder &query, db_query_where_t &where) {
+  return date_based_where("time", query, where);
 }
 
 //Compile a where clause comparing two columns.
-std::string Grammar::where_column(Builder &query, const variable_set_t &where) {
+std::string Grammar::where_column(Builder &query, db_query_where_t &where) {
 
 }
 
 //Compile a nested where clause.
-std::string Grammar::where_nested(Builder &query, const variable_set_t &where) {
+std::string Grammar::where_nested(Builder &query, db_query_where_t &where) {
 
 }
 
 //Compile a where condition with a sub-select.
-std::string Grammar::where_sub(Builder &query, const variable_set_t &where) {
+std::string Grammar::where_sub(Builder &query, db_query_where_t &where) {
 
 }
 
 //Compile a where not exists clause.
 std::string Grammar::where_notexists(
-    Builder &query, const variable_set_t &where) {
+    Builder &query, db_query_where_t &where) {
 
 }
 
@@ -291,19 +340,19 @@ std::string Grammar::compile_having(const std::vector<std::string> &having) {
 }
 
 //Compile a basic having clause.
-std::string Grammar::compile_basic_having(const variable_set_t &having) {
+std::string Grammar::compile_basic_having(variable_set_t &having) {
 
 }
 
 //Compile the "order by" portions of the query.
 std::string Grammar::compile_orders(
-    Builder &query, const variable_set_t &orders) {
+    Builder &query, variable_set_t &orders) {
 
 }
 
 //Compile the query orders to an array.
 Grammar::variable_set_t Grammar::compile_orders_toarray(
-    Builder &query, const variable_set_t &orders) {
+    Builder &query, variable_set_t &orders) {
 
 }
 
@@ -313,7 +362,7 @@ std::string Grammar::compile_exists(Builder &query) {
 }
 
 //Compile a single union statement.
-std::string Grammar::compile_union(const variable_set_t &unions) {
+std::string Grammar::compile_union(variable_set_t &unions) {
 
 }
 
@@ -328,29 +377,30 @@ std::string Grammar::compile_lock(Builder &query, const std::string &value) {
 }
 
 //Compile a "where day" clause.
-std::string Grammar::where_day(Builder &query, const variable_set_t &where) {
-
+std::string Grammar::where_day(Builder &query, db_query_where_t &where) {
+  return date_based_where("day", query, where);
 }
 
 //Compile a "where month" clause.
-std::string Grammar::where_month(Builder &query, const variable_set_t &where) {
-
+std::string Grammar::where_month(Builder &query, db_query_where_t &where) {
+  return date_based_where("month", query, where);
 }
 
 //Compile a "where year" clause.
-std::string Grammar::where_year(Builder &query, const variable_set_t &where) {
-
+std::string Grammar::where_year(Builder &query, db_query_where_t &where) {
+  return date_based_where("year", query, where);
 }
 
 //Compile a "where date" clause.
-std::string Grammar::where_date(Builder &query, const variable_set_t &where) {
-
+std::string Grammar::where_date(Builder &query, db_query_where_t &where) {
+  return date_based_where("date", query, where);
 }
 
 //Compile a date based where clause.
 std::string Grammar::date_based_where(
-    const std::string &type, Builder &query, const variable_set_t &where) {
-
+    const std::string &type, Builder &query, db_query_where_t &where) {
+  std::string value = parameter(where["value"]);
+  return type + "(" + wrap(where["column"]) + ")" + where["operator"].data + " " + value; 
 }
 
 //Compile the "select *" portion of the query.
@@ -377,7 +427,7 @@ std::string Grammar::compile_limit(Builder &query, int32_t limit) {
 }
 
 //Concatenate an array of segments, removing empties.
-std::string Grammar::concatenate(const variable_set_t &segments) {
+std::string Grammar::concatenate(variable_set_t &segments) {
 
 }
 

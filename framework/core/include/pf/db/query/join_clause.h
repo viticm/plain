@@ -27,7 +27,7 @@ class PF_API JoinClause : public Builder {
       : Builder(parent_query->get_connection(), parent_query->get_grammar()),
         type_{type},
         table_{table},
-        parent_query_{parent_query} {}
+        parent_query_{parent_query} { class_name_ = "JoinClause"; }
 
     virtual ~JoinClause() {};
 

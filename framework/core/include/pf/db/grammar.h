@@ -49,25 +49,37 @@ class PF_API Grammar {
    };
 
    //Wrap a value in keyword identifiers.
-   void wrap(variable_t &value, bool prefix_alias = false);
+   std::string wrap(const variable_t &value, bool prefix_alias = false);
 
    //Wrap a value that has an alias.
-   void wrap_aliased_value(variable_t &value, bool prefix_alias = false);
+   std::string wrap_aliased_value(
+       const variable_t &value, bool prefix_alias = false);
 
    //Wrap the given value segments.
-   void wrap_segments(variable_array_t &segments);
+   std::string wrap_segments(const variable_array_t &segments);
 
    //Wrap a single string in keyword identifiers.
-   void wrap_value(variable_t &value);
+   std::string wrap_value(const variable_t &value);
 
    //Convert an array of column names into a delimited string.
-   const std::string columnize(const std::vector<std::string> &columns) const;
+   std::string columnize(const std::vector<std::string> &columns) const;
 
    //Create query parameter place-holders for an array.
-   const std::string parameterize(const variable_array_t &values);
+   std::string parameterize(const variable_array_t &values);
 
    //Get the appropriate query parameter place-holder for a value.
-   const std::string parameter(const variable_t &value);
+   std::string parameter(const variable_t &value);
+
+   //Get the value of a raw expression.
+   std::string get_value(const variable_t &value) {
+     if (!is_expression(value)) return "";
+     return value.data;
+   }
+
+   //Determine if the given value is a raw expression.
+   bool is_expression(const variable_t &value) {
+      return DB_EXPRESSION_TYPE == value.type;
+   };
 
  protected:
 
