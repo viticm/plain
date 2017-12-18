@@ -8,10 +8,13 @@ using namespace pf_support;
 using namespace pf_db::query::grammars;
 
 #define where_call(name) \
-  [this](Builder &query, db_query_where_t &where) { return where_##name(query, where); }
+  [this](Builder &query, db_query_array_t &where) { \
+     return where_##name(query, where); \
+  }
 
 #define safe_call_where(name, query, where) \
-  (where_calls_.find(name) != where_calls_.end() ? where_calls_[name](query, where) : "")
+  (where_calls_.find(name) != where_calls_.end() ? \
+   where_calls_[name](query, where) : "")
 
 #define where_query(where) (*(where.query.get()))
 
@@ -76,65 +79,117 @@ std::string Grammar::compile_select(Builder &query) {
 
 //Compile the random statement into SQL.
 std::string Grammar::compile_random(const std::string &seed) {
-
+  return "RANDOM()";
 }
 
 //Compile an insert statement into SQL.
 std::string Grammar::compile_insert(
-    Builder &query, const variable_array_t &values) {
+    Builder &query, std::vector<variable_set_t> &values) {
+  if (values.empty()) return "";
+  // Essentially we will force every insert to be treated as a batch insert which 
+  // simply makes creating the SQL easier for us since we can utilize the same 
+  // basic routine regardless of an amount of records given to us to insert.
+  auto table = wrap_table(query.from_);
+  
+  auto columns = columnize(array_keys(values[0]));
 
+  // We need to build a list of parameter place-holders of values that are bound
+  // to the query. Each insert should have the exact same amount of parameter
+  // bindings so we will loop through the record and parameterize them all.
+  auto parameters = collect(values).map([this](variable_set_t &record){
+    return "(" + parameterize(record) + ")";
+  }).implode(", ");
+
+  return "insert into " + table + "(" + columns + ")" + " values " + parameters;
 }
 
 //Compile an update statement into SQL.
 std::string Grammar::compile_update(
-    Builder &query, const variable_array_t &values) {
+    Builder &query, variable_set_t &values) {
+  if (values.empty()) return "";
 
-}
+  auto table = wrap_table(query.from_);
+
+  // Each one of the columns in the update statements needs to be wrapped in the 
+  // keyword identifiers, also a place-holder needs to be created for each of 
+  // the values in the list of bindings so we can make the sets statements.
+  variable_array_t _columns;
+  for (auto it = values.begin(); it != values.end(); ++it) {
+    std::string one = wrap(it->first) + " = " + parameter(it->second);
+    _columns.push_back(one);
+  }
+
+  auto columns = implode(", ", _columns);
+
+  // If the query has any "join" clauses, we will setup the joins on the builder
+  // and compile them so we can attach them to this update, as update queries
+  // can get join statements to attach to other tables when they're needed.
+  std::string joins{""};
+
+  if (!query.joins_.empty()) {
+    joins += " " + compile_joins(query, query.joins_);
+  }
+
+  // Of course, update queries may also be constrained by where clauses so we'll
+  // need to compile the where clauses and attach it to the query so only the
+  // intended records are updated by the SQL statements we generate to run.
+  auto wheres = compile_wheres(query);
+
+  std::string sql = "update " + table + joins + " set " + columns + " " + wheres;
+
+  return trim(sql);
+} 
 
 //Prepare the bindings for an update statement.
-Grammar::variable_set_t Grammar::prepare_bindings_forupdate(
+Grammar::variable_array_t Grammar::prepare_bindings_forupdate(
     variable_set_t &bindings, const variable_array_t &values) {
 
 }
 
 //Compile a delete statement into SQL.
 std::string Grammar::compile_delete(Builder &query) {
-
+  std::string wheres = query.wheres_.empty() ? "" : compile_wheres(query);
+  std::string r = "delete from " + wrap_table(query.from_) + " " + wheres;
+  return trim(r);
 }
 
 //Compile an insert and get ID statement into SQL.
 std::string Grammar::compile_insert_getid(
     Builder &query, 
-    const variable_array_t &values, 
+    std::vector<variable_set_t> &values, 
     const std::string &sequence) {
-
+  return compile_insert(query, values);
 }
 
 //Compile a truncate table statement into SQL.
 Grammar::variable_set_t Grammar::compile_truncate(Builder &query) {
-
+  variable_set_t r;
+  r["truncate " + wrap_table(query.from_)] = "";
+  return r;
 }
 
 //Compile a where exists clause.
 std::string Grammar::where_exists(
-    Builder &query, db_query_where_t &where) {
+    Builder &query, db_query_array_t &where) {
+  if (is_null(where.query)) return "";
 
+  return "exists (" + compile_select(where_query(where)) + ")";
 }
 
 //Determine if the grammar supports savepoints.
 bool Grammar::supports_savepoints() const {
-
+  return true;
 }
 
 //Compile the SQL statement to define a savepoint.
 std::string Grammar::compile_savepoint(const std::string &name) {
-
+  return "SAVEPOINT " + name;
 }
 
 //Compile the SQL statement to execute a savepoint rollback.
 std::string Grammar::compile_savepoint_rollback(
     const std::string &name) {
-
+  return "ROLLBACK TO SAVEPOINT " + name;
 }
 
 //Compile the components necessary for a select clause.
@@ -190,7 +245,7 @@ std::string Grammar::compile_wheres(Builder &query) {
 
 //Get an array of all the where clauses for the query.
 Grammar::variable_array_t Grammar::compile_wheres_toarray(Builder &query) {
-  return collect(query.wheres_).map([this, &query](db_query_where_t &where){
+  return collect(query.wheres_).map([this, &query](db_query_array_t &where){
     return where["boolean"].data + " " + 
            safe_call_where(where["type"], query, where);
   }).all();
@@ -229,7 +284,7 @@ std::string Grammar::call_compile(Builder &query, const std::string &component) 
 
 //Call the where method from string.
 std::string Grammar::call_where(
-    Builder &query, db_query_where_t &where, const std::string &method) {
+    Builder &query, db_query_array_t &where, const std::string &method) {
   return safe_call_where(method, query, where);
 }
 
@@ -241,166 +296,211 @@ std::string Grammar::concatenate_where_clauses(
 }
 
 //Compile a raw where clause.
-std::string Grammar::where_raw(Builder &query, db_query_where_t &where) {
+std::string Grammar::where_raw(Builder &query, db_query_array_t &where) {
   return where["sql"].data;
 }
 
 //Compile a basic where clause.
-std::string Grammar::where_basic(Builder &query, db_query_where_t &where) {
+std::string Grammar::where_basic(Builder &query, db_query_array_t &where) {
   auto value = parameter(where["value"]);
   return wrap(where["column"]) + " " + where["operator"].data + " " + value;
 }
 
 //Compile a "where in" clause.
-std::string Grammar::where_in(Builder &query, db_query_where_t &where) {
+std::string Grammar::where_in(Builder &query, db_query_array_t &where) {
   if (!empty(where["values"])) {
-    return wrap(where["column"]) + " in (" + parameterize(where["values"]) + ")";
+    return wrap(where["column"]) + " in (" + parameterize(where.values) + ")";
   }
   return "0 = 1";
 }
 
 //Compile a "where not in" clause.
-std::string Grammar::where_notin(Builder &query, db_query_where_t &where) {
+std::string Grammar::where_notin(Builder &query, db_query_array_t &where) {
   if (!empty(where["values"])) {
-    return wrap(where["column"]) + " not in (" + parameterize(where["values"]) + ")";
+    return wrap(where["column"]) + " not in (" + parameterize(where.values) + ")";
   }
   return "1 = 1";
 }
 
 //Compile a where in sub-select clause.
-std::string Grammar::where_insub(Builder &query, db_query_where_t &where) {
+std::string Grammar::where_insub(Builder &query, db_query_array_t &where) {
   if (is_null(where.query)) return "";
   return wrap(where["column"]) + " in (" + compile_select(where_query(where));
 }
 
 //Compile a where not in sub-select clause.
 std::string Grammar::where_not_insub(
-    Builder &query, db_query_where_t &where) {
+    Builder &query, db_query_array_t &where) {
   if (is_null(where.query)) return "";
   return wrap(where["column"]) + " not in (" + compile_select(where_query(where));
 }
 
 //Compile a "where null" clause.
-std::string Grammar::where_null(Builder &query, db_query_where_t &where) {
+std::string Grammar::where_null(Builder &query, db_query_array_t &where) {
   return wrap(where["column"]) + " is null";
 }
 
 //Compile a "where not null" clause.
-std::string Grammar::where_notnull(Builder &query, db_query_where_t &where) {
+std::string Grammar::where_notnull(Builder &query, db_query_array_t &where) {
   return wrap(where["column"]) + " is not null";
 }
 
 //Compile a "between" where clause.
-std::string Grammar::where_between(Builder &query, db_query_where_t &where) {
+std::string Grammar::where_between(Builder &query, db_query_array_t &where) {
   std::string between = empty(where["not"]) ? "not between" : "between";
   return wrap(where["column"]) + " " + between + " ? and ?";
 }
 
 //Compile a "where time" clause.
-std::string Grammar::where_time(Builder &query, db_query_where_t &where) {
+std::string Grammar::where_time(Builder &query, db_query_array_t &where) {
   return date_based_where("time", query, where);
 }
 
 //Compile a where clause comparing two columns.
-std::string Grammar::where_column(Builder &query, db_query_where_t &where) {
-
+std::string Grammar::where_column(Builder &query, db_query_array_t &where) {
+  return wrap(where["first"]) + " " + where["operator"].data + " " + 
+         wrap(where["second"]);
 }
 
 //Compile a nested where clause.
-std::string Grammar::where_nested(Builder &query, db_query_where_t &where) {
+std::string Grammar::where_nested(Builder &query, db_query_array_t &where) {
+  if (is_null(where.query)) return "";
+  // Here we will calculate what portion of the string we need to remove. If this
+  // is a join clause query, we need to remove the "on" portion of the SQL and
+  // if it is a normal query we need to take the leading "where" of queries.
+  int32_t offset = "JoinClause" == query.class_name_ ? 3 : 6;
 
+  return "(" + compile_wheres(where_query(where)).substr(offset) + ")";
 }
 
 //Compile a where condition with a sub-select.
-std::string Grammar::where_sub(Builder &query, db_query_where_t &where) {
+std::string Grammar::where_sub(Builder &query, db_query_array_t &where) {
+  if (is_null(where.query)) return "";
+  auto select = compile_select(where_query(where));
 
+  return wrap(where["column"]) + " " + where["operator"].data + "(" + select + 
+         ")";
 }
 
 //Compile a where not exists clause.
 std::string Grammar::where_notexists(
-    Builder &query, db_query_where_t &where) {
+    Builder &query, db_query_array_t &where) {
+  if (is_null(where.query)) return "";
 
+  return "not exists (" + compile_select(where_query(where)) + ")";
 }
 
 //Compile the "group by" portions of the query.
 std::string Grammar::compile_groups(
     Builder &query, const std::vector<std::string> &groups) {
-
+  return "group by " + columnize(groups);
 }
 
 //Compile the "having" portions of the query.
 std::string Grammar::compile_havings(
-    Builder &query, const std::vector<std::string> &havings) {
-
+    Builder &query, const std::vector<variable_set_t> &havings) {
+  auto sql = collect(havings).map([this](variable_set_t &having){
+    return compile_having(having);
+  }).implode(" ");
+  return "having " + remove_leading_boolean(sql);
 }
 
 //Compile a single having clause.
-std::string Grammar::compile_having(const std::vector<std::string> &having) {
+std::string Grammar::compile_having(variable_set_t &having) {
+  // If the having clause is "raw", we can just return the clause straight away 
+  // without doing any more processing on it. Otherwise, we will compile the
+  // clause into SQL based on the components that make it up from builder.
+  if ("Raw" == having["type"])
+    return having["boolean"].data + " " + having["sql"].data;
 
+  return compile_basic_having(having);
 }
 
 //Compile a basic having clause.
 std::string Grammar::compile_basic_having(variable_set_t &having) {
-
+  auto column = wrap(having["column"]);
+  auto param = parameter(having["value"]);
+  return having["boolean"].data + " " + column + " " + having["operator"].data + 
+         param;
 }
 
 //Compile the "order by" portions of the query.
 std::string Grammar::compile_orders(
-    Builder &query, variable_set_t &orders) {
-
+    Builder &query, const std::vector<variable_set_t> &orders) {
+  if (orders.empty()) return "";
+  return "order by " + implode(", ", compile_orders_toarray(query, orders));
 }
 
 //Compile the query orders to an array.
-Grammar::variable_set_t Grammar::compile_orders_toarray(
-    Builder &query, variable_set_t &orders) {
-
+Grammar::variable_array_t Grammar::compile_orders_toarray(
+    Builder &query, const std::vector<variable_set_t> &orders) {
+  return collect(orders).map([this](variable_set_t &order){
+    return !empty(order["sql"]) ? 
+           wrap(order["column"]) + " " + order["direction"].data :
+           order["sql"].data;
+  }).items_;
 }
 
 //Compile an exists statement into SQL.
 std::string Grammar::compile_exists(Builder &query) {
-
+  auto select = compile_select(query);
+  return "select exists(" + select + ") as " + wrap("exists");
 }
 
 //Compile a single union statement.
-std::string Grammar::compile_union(variable_set_t &unions) {
-
+std::string Grammar::compile_union(db_query_array_t &_union) {
+  if (is_null(_union.query)) return "";
+  std::string conjunction = !empty(_union["all"]) && (_union["all"] == true) ? 
+                           " union all " : " union ";
+  return conjunction + _union.query->to_sql();
 }
 
 //Compile the "union" queries attached to the main query.
 std::string Grammar::compile_unions(Builder &query) {
-
+  std::string sql{""};
+  for (db_query_array_t &_union : query.unions_) {
+    sql += compile_union(_union);
+  }
+  if (!query.union_orders_.empty())
+    sql += compile_orders(query, query.orders_);
+  if (query.union_limit_ != -1)
+    sql += compile_limit(query, query.union_limit_);
+  if (query.union_offset_ != -1)
+    sql += compile_offset(query, query.union_offset_);
+  return ltrim(sql);
 }
 
 //Compile the lock into SQL.
 std::string Grammar::compile_lock(Builder &query, const std::string &value) {
-
+  return value;
 }
 
 //Compile a "where day" clause.
-std::string Grammar::where_day(Builder &query, db_query_where_t &where) {
+std::string Grammar::where_day(Builder &query, db_query_array_t &where) {
   return date_based_where("day", query, where);
 }
 
 //Compile a "where month" clause.
-std::string Grammar::where_month(Builder &query, db_query_where_t &where) {
+std::string Grammar::where_month(Builder &query, db_query_array_t &where) {
   return date_based_where("month", query, where);
 }
 
 //Compile a "where year" clause.
-std::string Grammar::where_year(Builder &query, db_query_where_t &where) {
+std::string Grammar::where_year(Builder &query, db_query_array_t &where) {
   return date_based_where("year", query, where);
 }
 
 //Compile a "where date" clause.
-std::string Grammar::where_date(Builder &query, db_query_where_t &where) {
+std::string Grammar::where_date(Builder &query, db_query_array_t &where) {
   return date_based_where("date", query, where);
 }
 
 //Compile a date based where clause.
 std::string Grammar::date_based_where(
-    const std::string &type, Builder &query, db_query_where_t &where) {
+    const std::string &type, Builder &query, db_query_array_t &where) {
   std::string value = parameter(where["value"]);
-  return type + "(" + wrap(where["column"]) + ")" + where["operator"].data + " " + value; 
+  return type + "(" + wrap(where["column"]) + ")" + 
+         where["operator"].data + " " + value; 
 }
 
 //Compile the "select *" portion of the query.
@@ -423,15 +523,30 @@ std::string Grammar::compile_from(Builder &query, const std::string &table) {
 
 //Compile the "limit" portions of the query.
 std::string Grammar::compile_limit(Builder &query, int32_t limit) {
-
+  return "limit " + std::to_string(limit);
 }
 
 //Concatenate an array of segments, removing empties.
 std::string Grammar::concatenate(variable_set_t &segments) {
-
+  if (segments.empty()) return "";
+  variable_array_t r;
+  for (auto it = segments.begin(); it != segments.end(); ++it)
+    if (it->second != "") r.push_back(it->second);
+  return implode(" ", r);
 }
 
 //Remove the leading boolean from a statement.
 std::string Grammar::remove_leading_boolean(const std::string &value) {
+  const std::string _and{"and "};
+  const std::string _or{"or "};
+  std::string r{value};
+  auto find_and = r.find(_and);
+  if (find_and != std::string::npos) r.replace(find_and, _and.length(), "");
+  auto find_or = r.find(_or);
+  if (find_or != std::string::npos) r.replace(find_or, _or.length(), "");
+  return r;
+}
 
+std::string Grammar::compile_offset(Builder &query, int32_t offset) {
+  return "offset " + std::to_string(offset);
 }

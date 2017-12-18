@@ -59,16 +59,16 @@ class PF_API Builder {
    std::vector<JoinClause> joins_;
 
    //The where constraints for the query.
-   std::vector<db_query_where_t> wheres_;
+   std::vector<db_query_array_t> wheres_;
 
    //The groupings for the query.
    std::vector<std::string> groups_;
 
    //The having constraints for the query.
-   std::vector<std::string> havings_;
+   std::vector<variable_set_t> havings_;
 
    //The orderings for the query.
-   variable_set_t orders_;
+   std::vector<variable_set_t> orders_;
 
    //The maximum number of records to return.
    int32_t limit_;
@@ -77,7 +77,7 @@ class PF_API Builder {
    int32_t offset_;
 
    //The query union statements.
-   variable_set_t unions_;
+   std::vector<db_query_array_t> unions_;
 
    //The maximum number of union records to return.
    int32_t union_limit_;
@@ -86,7 +86,7 @@ class PF_API Builder {
    int32_t union_offset_;
 
    //The orderings for the union query.
-   variable_set_t union_orders_;
+   std::vector<variable_set_t> union_orders_;
 
    //Indicates whether row locking is being used.
    variable_t lock_;
@@ -447,7 +447,7 @@ class PF_API Builder {
    Builder &shared_lock();
 
    //Get the SQL representation of the query.
-   const std::string tosql() const;
+   const std::string to_sql() const;
 
    //Execute a query for a single record by ID.
    void find(int32_t id, 

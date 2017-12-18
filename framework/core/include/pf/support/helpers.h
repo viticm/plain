@@ -30,7 +30,8 @@ inline std::string implode(const std::string &glue,
   std::string r{""};
   auto it = array.begin();
   for (;it != array.end(); ++it) {
-    r += it != array.begin() && it != array.end() ? glue + (*it).data : (*it).data;
+    r += it != array.begin() && it != array.end() ? 
+         glue + (*it).data : (*it).data;
   }
   return r;
 };
@@ -38,6 +39,15 @@ inline std::string implode(const std::string &glue,
 //Check the value is empty.
 inline bool empty(const pf_basic::type::variable_t &value) {
   return pf_basic::type::kVariableTypeInvalid == value.type;
+}
+
+//Get the array keys of one variable set.
+inline std::vector<std::string> array_keys(
+    pf_basic::type::variable_set_t &array) {
+  std::vector<std::string> r;
+  for (auto it = array.begin(); it != array.end(); ++it)
+    r.push_back(it->first);
+  return r;
 }
 
 };

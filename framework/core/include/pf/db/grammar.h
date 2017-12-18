@@ -24,6 +24,7 @@ class PF_API Grammar {
 
  public:
    using variable_array_t = pf_basic::type::variable_array_t;
+   using variable_set_t = pf_basic::type::variable_set_t;
    using variable_t = pf_basic::type::variable_t;
 
  public:
@@ -65,7 +66,7 @@ class PF_API Grammar {
    std::string columnize(const std::vector<std::string> &columns) const;
 
    //Create query parameter place-holders for an array.
-   std::string parameterize(const variable_array_t &values);
+   std::string parameterize(variable_set_t &values);
 
    //Get the appropriate query parameter place-holder for a value.
    std::string parameter(const variable_t &value);

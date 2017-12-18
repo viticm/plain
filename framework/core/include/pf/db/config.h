@@ -102,17 +102,21 @@ class SqlserverGrammar;
 
 };
 
-typedef struct PF_API db_query_where_struct db_query_where_t;
-struct db_query_where_struct {
+//The query array, has an variable set and query pointer.
+typedef struct PF_API db_query_array_struct db_query_array_t;
+struct db_query_array_struct {
 
   //The variable set.
-  pf_basic::type::variable_set_t values;
+  pf_basic::type::variable_set_t items;
 
   //The query builder pointer.
   std::unique_ptr<query::Builder> query;
 
+  //The values of query(always it is empty).
+  pf_basic::type::variable_set_t values;
+
   pf_basic::type::variable_t operator [] (const std::string &key) {
-    return values[key];
+    return items[key];
   };
 
 };
