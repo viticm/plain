@@ -22,7 +22,7 @@ namespace query {
 
 namespace grammars {
 
-class PF_API Grammar : pf_db::Grammar {
+class PF_API Grammar : public pf_db::Grammar {
 
  public:
    Grammar();
@@ -201,7 +201,7 @@ class PF_API Grammar : pf_db::Grammar {
    virtual std::string compile_unions(Builder &query);
 
    //Compile the lock into SQL.
-   virtual std::string compile_lock(Builder &query, const std::string &value);
+   virtual std::string compile_lock(Builder &query, const variable_t &value);
 
    //Compile a "where day" clause.
    virtual std::string where_day(Builder &query, db_query_array_t &where);

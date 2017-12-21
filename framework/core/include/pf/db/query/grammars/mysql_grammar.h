@@ -22,7 +22,7 @@ namespace grammars {
 class PF_API MysqlGrammar : public grammars::Grammar {
 
  public:
-   MysqlGrammar() {}
+   MysqlGrammar();
    virtual ~MysqlGrammar() {}
 
  public:
@@ -33,14 +33,13 @@ class PF_API MysqlGrammar : public grammars::Grammar {
    //Compile the random statement into SQL.
    virtual std::string compile_random(const std::string &seed);
 
-
    //Compile an update statement into SQL.
    virtual std::string compile_update(
-       Builder &query, const variable_array_t &values);
+       Builder &query, variable_set_t &values);
 
    //Prepare the bindings for an update statement.
-   virtual variable_set_t prepare_bindings_forupdate(
-       const variable_set_t &bindings, const variable_array_t &values);
+   virtual variable_array_t prepare_bindings_forupdate(
+       variable_set_t &bindings, const variable_array_t &values);
 
    //Compile a delete statement into SQL.
    virtual std::string compile_delete(Builder &query);
@@ -54,15 +53,15 @@ class PF_API MysqlGrammar : public grammars::Grammar {
  protected:
 
    //Compile a single union statement.
-   virtual std::string compile_union(const variable_set_t &unions);
+   virtual std::string compile_union(db_query_array_t &_union);
 
    //Compile the lock into SQL.
-   virtual std::string compile_lock(Builder &query, const std::string &value);
+   virtual std::string compile_lock(Builder &query, const variable_t &value);
 
  protected:
 
    //Compile all of the columns for an update statement.
-   std::string compile_update_columns(const variable_set_t &values);
+   std::string compile_update_columns(variable_set_t &values);
 
    //Prepares a JSON column being updated using the JSON_SET function.
    std::string compile_json_update_column(
@@ -70,11 +69,11 @@ class PF_API MysqlGrammar : public grammars::Grammar {
 
    //Compile a delete query that does not use joins.
    std::string compile_delete_without_joins(
-       Builder &query, const std::string &table, const variable_set_t &where);
+       Builder &query, const std::string &table, const std::string &where);
 
    //Compile a delete query that uses joins.
    std::string compile_delete_with_joins(
-       Builder &query, const std::string &table, const variable_set_t &where);
+       Builder &query, const std::string &table, const std::string &where);
  
     //Wrap a single string in keyword identifiers.
     std::string wrap_value(const std::string &value);

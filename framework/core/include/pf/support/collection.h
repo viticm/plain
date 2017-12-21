@@ -33,10 +33,17 @@ class Collection {
    //The map loop touch on item.
    using map_callback_t = std::function<std::string (T &)>;
 
+   //The filter callback function.
+   using filter_callback_t = std::function<bool (T &)>;
+
  public:
 
    //Run a map over each of the items.
    ArrayAccess map(map_callback_t callback);
+
+   //Create a collection of all elements that do not pass a given truth test.
+   ArrayAccess reject(filter_callback_t callback);
+
 
 };
 

@@ -471,8 +471,8 @@ std::string Grammar::compile_unions(Builder &query) {
 }
 
 //Compile the lock into SQL.
-std::string Grammar::compile_lock(Builder &query, const std::string &value) {
-  return value;
+std::string Grammar::compile_lock(Builder &query, const variable_t &value) {
+  return value.data;
 }
 
 //Compile a "where day" clause.

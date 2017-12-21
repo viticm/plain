@@ -636,6 +636,15 @@ std::string &trim(std::string &str, const std::string &character_mask) {
   }
 }
 
+bool contains(
+    const std::string &haystack, const std::vector<std::string> &needles) {
+  for (const std::string &needle : needles) {
+    if (needle != "" && haystack.find(needle) != std::string::npos)
+      return true;
+  }
+  return false;
+}
+
 } //namespace string
 
 } //namespace pf_basic

@@ -36,6 +36,18 @@ inline std::string implode(const std::string &glue,
   return r;
 };
 
+//Concatenate values of a given key as a string.
+inline std::string implode(const std::string &glue, 
+    const std::vector<std::string> & array) {
+  std::string r{""};
+  auto it = array.begin();
+  for (;it != array.end(); ++it) {
+    r += it != array.begin() && it != array.end() ? 
+         glue + (*it) : (*it);
+  }
+  return r;
+};
+
 //Check the value is empty.
 inline bool empty(const pf_basic::type::variable_t &value) {
   return pf_basic::type::kVariableTypeInvalid == value.type;
@@ -48,6 +60,16 @@ inline std::vector<std::string> array_keys(
   for (auto it = array.begin(); it != array.end(); ++it)
     r.push_back(it->first);
   return r;
+}
+
+// Checks if a value exists in an array
+inline bool in_array(const pf_basic::type::variable_t &needle, 
+                     const pf_basic::type::variable_array_t &haystack) {
+  for (const pf_basic::type::variable_t &value : haystack) {
+    if (value == needle)
+      return true;
+  }
+  return false;
 }
 
 };
