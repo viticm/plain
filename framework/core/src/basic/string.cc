@@ -645,6 +645,19 @@ bool contains(
   return false;
 }
 
+std::string str_replace(const std::string &search , 
+                        const std::string &replace, 
+                        const std::string &subject, 
+                        int32_t count) {
+  std::string r{subject};
+  int32_t replace_count{0};
+  while (auto it = r.find(search) && (-1 == count || replace_count < count)) {
+    ++replace_count;
+    r.replace(it, search.length(), replace);
+  }
+  return r;
+}
+
 } //namespace string
 
 } //namespace pf_basic

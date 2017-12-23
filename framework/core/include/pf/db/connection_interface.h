@@ -83,6 +83,13 @@ class PF_API ConnectionInterface {
    //Execute the given callback in "dry run" mode.
    virtual void pretend(callback_t callback) = 0;
 
+   //Get the query grammar used by the connection.
+   virtual query::grammars::Grammar *get_query_grammar() = 0;
+
+   //Get the schema grammar used by the connection.
+   virtual query::grammars::Grammar *get_schema_grammar() = 0;
+
+
 };
 
 }; //namespace pf_db

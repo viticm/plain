@@ -20,14 +20,15 @@ namespace query {
 class PF_API Builder {
 
  public:
-   Builder(ConnectionInterface *connection, grammars::Grammar *grammar);
+   Builder(ConnectionInterface *connection, 
+           grammars::Grammar *grammar = nullptr);
    virtual ~Builder();
 
  public:
    using variable_array_t = pf_basic::type::variable_array_t;
    using variable_set_t = pf_basic::type::variable_set_t;
    using variable_t = pf_basic::type::variable_t;
-   using closure_t = pf_basic::type::closure_t;
+   using closure_t = std::function<void (Builder *)>;
 
  public:
 
@@ -35,13 +36,13 @@ class PF_API Builder {
    std::string class_name_;
 
    //The database connection instance.
-   std::unique_ptr<pf_db::ConnectionInterface> connection_;
+   pf_db::ConnectionInterface *connection_;
 
    //The database query grammar instance.
-   std::unique_ptr<pf_db::query::grammars::Grammar> grammar_;
+   pf_db::query::grammars::Grammar *grammar_;
 
    //The current query value bindings.
-   variable_set_t bindings_;
+   db_query_bindings_t bindings_;
 
    //An aggregate function and column to be run.
    variable_set_t aggregate_;
@@ -105,19 +106,22 @@ class PF_API Builder {
 
    //Add a new "raw" select expression to the query.
    Builder &select_raw(
-       const std::string &expression, const variable_set_t &bindings);
+       const std::string &expression, db_query_bindings_t &bindings);
 
    //Add a subselect expression to the query.
    Builder &select_sub(Builder &query, const std::string &as);
 
    //Add a subselect expression to the query.
-   Builder &select_sub(const std::string &query, const std::string &as);
+   Builder &select_sub(
+       std::function<void(Builder *)> callback, const std::string &as);
 
    //Parse the sub-select query into SQL and bindings.
-   variable_set_t parse_subselect(Builder &query);
+   void parse_subselect(
+       Builder &query, std::string &sql, db_query_bindings_t &bindings);
 
    //Parse the sub-select query into SQL and bindings.
-   variable_set_t parse_subselect(const std::string &query);
+   void parse_subselect(
+       const std::string &query, std::string &sql, db_query_bindings_t &bindings);
 
    //Add a new select column to the query.
    Builder &add_select(const std::vector<std::string> &column);
@@ -127,14 +131,28 @@ class PF_API Builder {
    Builder &add_select(const std::string &param, TS... args);
 
    //Force the query to only return distinct results.
-   Builder &distinct();
+   Builder &distinct(){
+     distinct_ = true;
+     return *this;
+   };
 
    //Set the table which the query is targeting.
-   Builder &from(const std::string &table);
+   Builder &from(const std::string &table){
+     from_ = table;
+     return *this;
+   };
 
    //Add a join clause to the query.
    Builder &join(const std::string &table, 
                  const std::string &first, 
+                 const std::string &oper = "", 
+                 const std::string &second = "", 
+                 const std::string &type = "inner", 
+                 bool where = false);
+
+   //Add a join clause to the query.
+   Builder &join(const std::string &table, 
+                 std::function<void(Builder *)> callback,
                  const std::string &oper = "", 
                  const std::string &second = "", 
                  const std::string &type = "inner", 
@@ -145,31 +163,41 @@ class PF_API Builder {
                        const std::string &first, 
                        const std::string &oper = "", 
                        const std::string &second = "", 
-                       const std::string &type = "inner");
+                       const std::string &type = "inner") {
+     return join(table, first, oper, second, type, true);
+   };
 
    //Add a left join to the query.
    Builder &left_join(const std::string &table,
                       const std::string &first,
                       const std::string &oper = "",
-                      const std::string &second = "");
+                      const std::string &second = "") {
+     return join(table, first, oper, second, "left");
+   };
 
    //Add a "join where" clause to the query.
    Builder &left_join_where(const std::string &table,
                             const std::string &first,
                             const std::string &oper,
-                            const std::string &second);
+                            const std::string &second) {
+     return join_where(table, first, oper, second, "left");
+   };
 
    //Add a right join to the query.
    Builder &right_join(const std::string &table,
                        const std::string &first,
                        const std::string &oper = "",
-                       const std::string &second = "");
+                       const std::string &second = "") {
+     return join(table, first, oper, second, "right");
+   };
   
    //Add a "right join where" clause to the query.
    Builder &right_join_where(const std::string &table,
                              const std::string &first,
                              const std::string &oper,
-                             const std::string &second);
+                             const std::string &second) {
+     return join_where(table, first, oper, second, "right");
+   };
 
    //Add a "cross join" clause to the query.
    Builder &cross_join(const std::string &table, 
@@ -178,11 +206,13 @@ class PF_API Builder {
                        const std::string &second = "");
 
    //Pass the query to a given callback.
-   Builder &tap(closure_t callback);
+   Builder &tap(closure_t callback) {
+     //return when(true, callback);
+   };
 
    //Merge an array of where clauses and bindings.
-   void merge_wheres(const variable_set_t &wheres, 
-                     const variable_set_t &bindings);
+   void merge_wheres(std::vector<db_query_array_t> &wheres, 
+                     variable_array_t &bindings);
 
    //Add a basic where clause to the query.
    Builder &where(const std::string &column, 
@@ -191,15 +221,44 @@ class PF_API Builder {
                   const std::string &boolean = "and");
 
    //Add a basic where clause to the query.
-   Builder &where(const std::vector<std::string> &column, 
+   Builder &where(const std::vector<variable_array_t> &columns, 
+                  const std::string &boolean = "and") {
+     return add_array_of_wheres(columns, boolean);
+   };
+
+   //Add a basic where clause to the query.
+   Builder &where(variable_set_t &columns, 
+                  const std::string &boolean = "and") {
+     return add_array_of_wheres(columns, boolean);
+   };
+
+   //Add a basic where clause to the query.
+   Builder &where(closure_t column, 
                   const std::string &oper = "", 
                   const variable_t &value = "", 
+                  const std::string &boolean = "and") {
+     // If the columns is actually a Closure instance, we will assume the developer
+     // wants to begin a nested where statement which is wrapped in parenthesis.
+     // We'll add that Closure to the query then return back out immediately.
+     return where_nested(column, boolean);
+   };
+
+   //Add a basic where clause to the query.
+   Builder &where(const std::string &column, 
+                  const std::string &oper, 
+                  closure_t value,
                   const std::string &boolean = "and");
  
    //Add an array of where clauses to the query.
-   Builder &add_array_of_wheres(const variable_set_t &column,
+   Builder &add_array_of_wheres(const std::vector<variable_array_t> &columns,
                                 const std::string &boolean,
                                 const std::string &method = "where");
+
+   //Add an array of where clauses to the query.
+   Builder &add_array_of_wheres(variable_set_t &columns,
+                                const std::string &boolean,
+                                const std::string &method = "where");
+
 
    //Add an "or where" clause to the query.
    Builder &or_where(const std::string &column, 
@@ -547,20 +606,24 @@ class PF_API Builder {
    void truncate();
 
    //Get a new instance of the query builder.
-   Builder new_query();
+   Builder *new_query();
 
    //* Create a raw database expression.
    void raw();
 
    //Get the current query value bindings in a flattened array.
-   variable_set_t *get_bindings();
+   db_query_bindings_t *get_bindings();
 
    //Get the raw array of bindings.
    variable_set_t *get_raw_bindings();
 
    //Set the bindings on the query builder.
-   Builder &set_bindings(const variable_set_t &bindings, 
+   Builder &set_bindings(db_query_bindings_t &bindings, 
                          const std::string &type = "where");
+
+   //Add a binding to the query.
+   Builder &add_binding(const variable_array_t &values, 
+                        const std::string &type = "where");
 
    //Add a binding to the query.
    Builder &add_binding(const variable_t &value, 

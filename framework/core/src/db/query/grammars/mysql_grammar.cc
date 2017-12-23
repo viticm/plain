@@ -81,7 +81,7 @@ std::string MysqlGrammar::compile_update(
 
 //Prepare the bindings for an update statement.
 MysqlGrammar::variable_array_t MysqlGrammar::prepare_bindings_forupdate(
-    variable_set_t &bindings, const variable_array_t &values) {
+    db_query_bindings_t &bindings, const variable_array_t &values) {
   auto vals = collect(values).reject([](variable_t &value){
     //Not complete.
     return true;    
@@ -177,15 +177,31 @@ std::string MysqlGrammar::compile_delete_with_joins(
  
 //Wrap a single string in keyword identifiers.
 std::string MysqlGrammar::wrap_value(const std::string &value) {
+  if ("*" == value) return value;
 
+  // If the given value is a JSON selector we will wrap it differently than a 
+  // traditional value. We will need to split this path and wrap each part
+  // wrapped, etc. Otherwise, we will simply wrap the value as a string.
+  if (is_json_selector(value))
+    return wrap_json_selector(value);
+  
+  return "`" + str_replace("`", "``", value) + "`";
 }
 
 //Wrap the given JSON selector.
 std::string MysqlGrammar::wrap_json_selector(const std::string &value) {
-
+  std::vector<std::string> path;
+  explode(value.c_str(), path, "->", true, true);
+  if (path.empty()) return "";
+  auto field = wrap_table(path[0]);
+  path.erase(path.begin());
+  auto parts = collect(path).map([] (std::string &part){
+    return "\"" + part + "\"";
+  }).implode(".");
+  return field + "->'$." + parts + "'";
 }
 
 //Determine if the given string is a JSON selector.
 bool MysqlGrammar::is_json_selector(const std::string &value) const {
-
+  return contains(value, {"->"});
 }

@@ -121,6 +121,9 @@ struct db_query_array_struct {
 
 };
 
+using db_query_bindings_t = 
+  std::map<std::string, pf_basic::type::variable_array_t>;
+
 
 }; //namespace pf_db
 

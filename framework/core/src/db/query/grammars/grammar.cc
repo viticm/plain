@@ -142,7 +142,7 @@ std::string Grammar::compile_update(
 
 //Prepare the bindings for an update statement.
 Grammar::variable_array_t Grammar::prepare_bindings_forupdate(
-    variable_set_t &bindings, const variable_array_t &values) {
+    db_query_bindings_t &bindings, const variable_array_t &values) {
 
 }
 

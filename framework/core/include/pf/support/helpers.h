@@ -72,6 +72,15 @@ inline bool in_array(const pf_basic::type::variable_t &needle,
   return false;
 }
 
+//Safe get vector array elements.
+template <typename T>
+T get(const std::vector<T> &array, size_t n) {
+  T r;
+  if (array.size() < n + 1) return r;
+  r = array[n];
+  return r;
+}
+
 };
 
 #endif //PF_SUPPORT_HELPERS_H_

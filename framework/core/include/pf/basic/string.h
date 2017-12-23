@@ -74,6 +74,11 @@ PF_API std::string &trim(
 PF_API bool contains(
     const std::string &haystack, const std::vector<std::string> &needles);
 
+PF_API std::string str_replace(const std::string &search , 
+                               const std::string &replace, 
+                               const std::string &subject, 
+                               int32_t count = -1);
+
 }; //namespace string
 
 }; //namespace pf_basic

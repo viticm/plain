@@ -39,7 +39,7 @@ class PF_API MysqlGrammar : public grammars::Grammar {
 
    //Prepare the bindings for an update statement.
    virtual variable_array_t prepare_bindings_forupdate(
-       variable_set_t &bindings, const variable_array_t &values);
+       db_query_bindings_t &bindings, const variable_array_t &values);
 
    //Compile a delete statement into SQL.
    virtual std::string compile_delete(Builder &query);
