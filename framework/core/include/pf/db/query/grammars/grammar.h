@@ -174,7 +174,7 @@ class PF_API Grammar : public pf_db::Grammar {
    std::string compile_exists(Builder &query);
 
    //Get the grammar specific operators.
-   std::vector<std::string> get_operators() {
+   std::vector<std::string> &get_operators() {
      return operators_;
    };
 

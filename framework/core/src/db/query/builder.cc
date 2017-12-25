@@ -15,6 +15,23 @@ using namespace pf_db::query;
 Builder::Builder(ConnectionInterface *connection, grammars::Grammar *grammar) {
   connection_ = connection;
   grammar_ = is_null(grammar) ? connection->get_query_grammar() : grammar;
+  bindings_ = {
+    {"select", {}},
+    {"join", {}},
+    {"where", {}},
+    {"having", {}},
+    {"order", {}},
+    {"union", {}},
+  };
+
+  operators_ = {
+    "=", "<", ">", "<=", ">=", "<>", "!=", "<=>",
+    "like", "like binary", "not like", "between", "ilike",
+    "&", "|", "^", "<<", ">>",
+    "rlike", "regexp", "not regexp",
+    "~", "~*", "!~", "!~*", "similar to",
+    "not similar to", "not ilike", "~~*", "!~~*",
+  };
 }
 
 //The builder destruct function.
@@ -173,7 +190,7 @@ Builder &Builder::where(const std::string &column,
   // Here we will make some assumptions about the operator. If only 2 values are 
   // passed to the method, we will assume that the operator is an equals sign
   // and keep going. Otherwise, we'll require the operator to be passed in.
-  bool use_default = ("" == oper) && (value == "") && ("and" == boolean);
+  bool use_default = (value == "") && ("and" == boolean);
   auto value_oper = prepare_value_and_operator(value.data, oper, use_default);
 
   variable_t rvalue{value_oper[0]};
@@ -262,7 +279,7 @@ Builder &Builder::where(const std::string &column,
   // Now that we are working with just a simple query we can put the elements 
   // in our array and add the query binding to our array of bindings that
   // will be bound to each SQL statements when it is finally executed. 
-  std::string type{"Basic"};
+  std::string type{"basic"};
 
   db_query_array_t where;
   where.items = { //PHP compact can collect the variable with names.
@@ -282,11 +299,10 @@ Builder &Builder::add_array_of_wheres(
     const std::vector<variable_array_t> &columns,
     const std::string &boolean,
     const std::string &method) {
-
+  #define get(n) (values.size() > (n) + 1 ? values[n].data : "")
   return where_nested([&columns, &method](Builder *query){
     for (auto values : columns) {
-      #define get(n) values.size() > (n) + 1 ? values[n].data : ""
-      auto _boolean = empty(values[3]) ? "and" : values[3].data;
+      auto _boolean = "" == get(3) ? "and" : get(3);
       if ("where" == method) {
         query->where(get(0), get(1), get(2), _boolean);
       } else if ("where_column" == method) {
@@ -294,6 +310,7 @@ Builder &Builder::add_array_of_wheres(
       }
     }
   }, boolean);
+  #undef get
 }
 
 //Add an array of where clauses to the query.
@@ -322,4 +339,262 @@ variable_array_t Builder::prepare_value_and_operator(const std::string &value,
     AssertEx(false, "Illegal operator and value combination.");
   }
   return {value, oper};
+}
+
+//Determine if the given operator and value combination is legal.
+bool Builder::invalid_operator_and_value(const std::string &oper, 
+                                         const variable_t &value) {
+  return empty(value) && in_array(oper, operators_) && 
+         !in_array(oper, {"=", "<>", "!="});
+}
+
+//Determine if the given operator is supported.
+bool Builder::invalid_operator(const std::string &oper) {
+  return !in_array(oper, operators_) && 
+         !in_array(oper, grammar_->get_operators());
+}
+
+//Add a "where" clause comparing two columns to the query.
+Builder &Builder::where_column(const std::string &first, 
+                               const std::string &oper, 
+                               const std::string &second, 
+                               const std::string &boolean) {
+  // If the given operator is not found in the list of valid operators we will
+  // assume that the developer is just short-cutting the '=' operators and
+  // we will set the operators to '=' and set the values appropriately.
+  std::string rsecond{second}, roper{oper};
+  if (invalid_operator(oper)) {
+    rsecond = oper;
+    roper = "=";
+  }
+  // Finally, we will add this where clause into this array of clauses that we
+  // are building for the query. All of them will be compiled via a grammar 
+  // once the query is about to be executed and run against the database.
+  std::string type{"column"}; //see grammar where_calls_.
+
+  db_query_array_t where;
+  where.items = { //PHP compact can collect the variable with names.
+    {"type", type}, {"first", first}, {"operator", roper}, 
+    {"second", rsecond}, {"boolean", boolean}
+  };
+  wheres_.push_back(where);
+
+  return *this;
+}
+
+//Add a raw where clause to the query.
+Builder &Builder::where_raw(const std::string &sql, 
+                            db_query_bindings_t &bindings, 
+                            const std::string &boolean) {
+  db_query_array_t where;
+  where.items = { //PHP compact can collect the variable with names.
+    {"type", "raw"}, {"sql", sql}, {"boolean", boolean}
+  };
+  wheres_.push_back(where);
+ 
+  add_binding(bindings, "where");
+
+  return *this;
+}
+
+//Add a "where in" clause to the query.
+Builder &Builder::where_in(const std::string &column, 
+                           const variable_array_t &values, 
+                           const std::string &boolean, 
+                           bool isnot) {
+  db_query_array_t where;
+  where.items = { //PHP compact can collect the variable with names.
+    {"type", isnot ? "notin" : "in"}, {"column", column}, {"boolean", boolean},
+  };
+
+  size_t i{0};
+  for (const variable_t &value : values)
+    where.values[std::to_string(i++)] = value;
+  wheres_.push_back(where);
+
+  // Finally we'll add a binding for each values unless that value is an expression
+  // in which case we will just skip over it since it will be the query as a raw 
+  // string and not as a parameterized place-holder to be replaced by the ENV(PDO).
+  for (const variable_t &value : values) {
+    if (value.type != DB_EXPRESSION_TYPE)
+      add_binding(value, "where");
+  }
+
+  return *this;
+}
+
+//Add a where in with a sub-select to the query.
+Builder &Builder::where_insub(const std::string &column, 
+                              closure_t callback, 
+                              const std::string &boolean, 
+                              bool isnot) {
+  auto query = new_query();
+  db_query_array_t where;
+  unique_move(Builder, query, where.query);
+
+  // To create the exists sub-select, we will actually create a query and call the 
+  // provided callback with the query so the developer may set any of the query 
+  // conditions they want for the in clause, then we'll put it in this array.
+  callback(where.query.get());
+
+  where.items = {
+    {"type", isnot ? "not_insub" : "insub"}, {"column", column}, 
+    {"boolean", boolean},
+  };
+
+  wheres_.push_back(where);
+
+  add_binding(where.query->get_bindings(), "where");
+
+  return *this;
+}
+
+//Add an external sub-select to the query.
+Builder &Builder::where_in_existing_query(const std::string &column,
+                                          Builder &query,
+                                          const std::string &boolean,
+                                          bool isnot) {
+  db_query_array_t where;
+  auto _query = query.new_query();
+  unique_move(Builder, _query, where.query);
+
+  where.items = {
+    {"type", isnot ? "not_insub" : "insub"}, {"column", column}, 
+    {"boolean", boolean},
+  };
+  wheres_.push_back(where);
+
+  add_binding(where.query->get_bindings(), "where");
+
+  return *this;
+}
+
+//Add a "where null" clause to the query.
+Builder &Builder::where_null(const std::string &column, 
+                             const std::string &boolean, 
+                             bool isnot) {
+  db_query_array_t where;
+  where.items = {
+    {"type", isnot ? "notnull" : "null"}, {"column", column}, 
+    {"boolean", boolean},
+  };
+  wheres_.push_back(where);
+  return *this;
+}
+
+//Add a where between statement to the query.
+Builder &Builder::where_between(const std::string &column,
+                                const variable_array_t &values,
+                                const std::string &boolean,
+                                bool isnot) {
+  db_query_array_t where;
+  where.items = {
+    {"type", "between"}, {"column", column}, {"boolean", boolean}, 
+    {"not", isnot},
+  };
+
+  variable_set_t _values;
+  size_t i{0};
+  for (const variable_t &value : values)
+    _values[std::to_string(i++)] = value;
+
+  add_binding(_values, "where");
+
+  return *this;
+}
+
+//Add a "where date" statement to the query.
+Builder &Builder::where_date(const std::string &column,
+                             const std::string &oper,
+                             const variable_t &value,
+                             const std::string &boolean) {
+  bool use_default = (value == "") && ("and" == boolean);
+  auto value_oper = prepare_value_and_operator(value.data, oper, use_default);
+
+  variable_t rvalue{value_oper[0]};
+  std::string roper{value_oper[1]};
+ 
+  return add_date_based_where("date", column, roper, rvalue, boolean);
+}
+
+//Add a "where day" statement to the query.
+Builder &Builder::where_day(const std::string &column, 
+                            const std::string &oper, 
+                            const variable_t &value, 
+                            const std::string &boolean) {
+  bool use_default = (value == "") && ("and" == boolean);
+  auto value_oper = prepare_value_and_operator(value.data, oper, use_default);
+
+  variable_t rvalue{value_oper[0]};
+  std::string roper{value_oper[1]};
+ 
+  return add_date_based_where("day", column, roper, rvalue, boolean);
+}
+
+//Add a "where month" statement to the query.
+Builder &Builder::where_month(const std::string &column, 
+                              const std::string &oper, 
+                              const variable_t &value, 
+                              const std::string &boolean) {
+  bool use_default = (value == "") && ("and" == boolean);
+  auto value_oper = prepare_value_and_operator(value.data, oper, use_default);
+
+  variable_t rvalue{value_oper[0]};
+  std::string roper{value_oper[1]};
+ 
+  return add_date_based_where("month", column, roper, rvalue, boolean);
+}
+
+//Add a "where year" statement to the query.
+Builder &Builder::where_year(const std::string &column, 
+                             const std::string &oper, 
+                             const variable_t &value, 
+                             const std::string &boolean) {
+  bool use_default = (value == "") && ("and" == boolean);
+  auto value_oper = prepare_value_and_operator(value.data, oper, use_default);
+
+  variable_t rvalue{value_oper[0]};
+  std::string roper{value_oper[1]};
+ 
+  return add_date_based_where("year", column, roper, rvalue, boolean);
+}
+
+//Add another query builder as a nested where to the query builder.
+Builder &Builder::add_nested_where_query(Builder *query,
+                                         const std::string &boolean) {
+  if (!query->wheres_.empty()) {
+    db_query_array_t where;
+    where.items = {
+      {"type", "nested"}, {"boolean", boolean}
+    };
+    unique_move(Builder, query, where.query);
+    add_binding(where.query.get(), "where");
+  } else {
+    safe_delete(query);
+  }
+  return *this;
+}
+
+//Add a full sub-select to the query.
+Builder &Builder::where_sub(const std::string &column, 
+                            const std::string &oper,
+                            closure_t callback,
+                            const std::string &boolean) {
+  // Once we have the query instance we can simply execute it so it can add all 
+  // of the sub-select's conditions to itself, and then we can cache it off 
+  // in the array of where clauses for the "main" parent query instance.
+  db_query_array_t where;
+  auto query = new_query();
+  unique_move(Builder, query, where.query);
+
+  callback(where.query.get());
+
+  where.items = {
+    {"type", "sub"}, {"column", column}, {"operator", oper}, 
+    {"boolean", boolean},
+  };
+
+  add_binding(where.query->get_bindings(), "where");
+
+  return *this;
 }

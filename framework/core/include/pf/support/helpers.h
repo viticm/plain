@@ -63,13 +63,10 @@ inline std::vector<std::string> array_keys(
 }
 
 // Checks if a value exists in an array
-inline bool in_array(const pf_basic::type::variable_t &needle, 
-                     const pf_basic::type::variable_array_t &haystack) {
-  for (const pf_basic::type::variable_t &value : haystack) {
-    if (value == needle)
-      return true;
-  }
-  return false;
+template <typename T>
+bool in_array(const T &needle, 
+              const std::vector<T> &haystack) {
+  return haystack.find(needle) != haystack.end();
 }
 
 //Safe get vector array elements.

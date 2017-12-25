@@ -263,7 +263,9 @@ class PF_API Builder {
    //Add an "or where" clause to the query.
    Builder &or_where(const std::string &column, 
                      const std::string &oper, 
-                     variable_t value);
+                     const variable_t &value) {
+     return where(column, oper, value, "or");
+   };
 
    //Add a "where" clause comparing two columns to the query.
    Builder &where_column(const std::string &first, 
@@ -272,49 +274,141 @@ class PF_API Builder {
                          const std::string &boolean = "and");
 
    //Add a "where" clause comparing two columns to the query.
-   Builder &where_column(const std::vector<std::string> &first, 
+   Builder &where_column(const std::vector<variable_array_t> &first, 
                          const std::string &oper = "", 
                          const std::string &second = "", 
-                         const std::string &boolean = "and");
+                         const std::string &boolean = "and") {
+     // If the column is an array, we will assume it is an array of key-value pairs 
+     // and can add them each as a where clause. We will maintain the boolean we
+     // received when the method was called and pass it into the nested where.
+     return add_array_of_wheres(first, boolean, "where_column");
+   };
 
+   //Add a "where" clause comparing two columns to the query.
+   Builder &where_column(variable_set_t &first, 
+                         const std::string &oper = "", 
+                         const std::string &second = "", 
+                         const std::string &boolean = "and") {
+     // If the column is an array, we will assume it is an array of key-value pairs 
+     // and can add them each as a where clause. We will maintain the boolean we
+     // received when the method was called and pass it into the nested where.
+     return add_array_of_wheres(first, boolean, "where_column");
+   };
 
    //Add an "or where" clause comparing two columns to the query.
    Builder &or_where_column(const std::string &first,
                             const std::string &oper = "",
                             const std::string &second = "");
 
-   //Add an "or where" clause comparing two columns to the query.
-   Builder &or_where_column(const std::vector<std::string> &first,
-                            const std::string &oper = "",
-                            const std::string &second = "");
+   //Add a "or where" clause comparing two columns to the query.
+   Builder &or_where_column(const std::vector<variable_array_t> &first, 
+                            const std::string &oper = "", 
+                            const std::string &second = "") {
+     return where_column(first, oper, second, "or");
+   };
+
+   //Add a "or where" clause comparing two columns to the query.
+   Builder &where_column(variable_set_t &first, 
+                         const std::string &oper = "", 
+                         const std::string &second = "") {
+     return where_column(first, oper, second, "or");
+   };
 
    //Add a raw where clause to the query.
    Builder &where_raw(const std::string &sql, 
-                      const variable_set_t &bindings = {}, 
+                      db_query_bindings_t &bindings, 
                       const std::string &boolean = "and");
 
    //Add a raw or where clause to the query.
    Builder &or_where_raw(const std::string &sql, 
-                         const variable_set_t &bindings = {});
+                         db_query_bindings_t &bindings) {
+     return where_raw(sql, bindings, "or");
+   };
 
    //Add a "where in" clause to the query.
    Builder &where_in(const std::string &column, 
-                     const std::vector<variable_t> &values, 
+                     const variable_array_t &values, 
                      const std::string &boolean = "and", 
                      bool isnot = false);
 
+   //Add a "where in" clause to the query.
+   Builder &where_in(const std::string &column, 
+                     Builder &query, 
+                     const std::string &boolean = "and", 
+                     bool isnot = false) {
+     // If the value is a query builder instance we will assume the developer wants to 
+     // look for any values that exists within this given query. So we will add the
+     // query accordingly so that this query is properly executed when it is run.
+     return where_in_existing_query(column, query, boolean, isnot);
+   };
+
+   //Add a "where in" clause to the query.
+   Builder &where_in(const std::string &column, 
+                     closure_t callback, 
+                     const std::string &boolean = "and", 
+                     bool isnot = false) {
+     // If the value of the where in clause is actually a Closure, we will assume that
+     // the developer is using a full sub-select for this "in" statement, and will
+     // execute those Closures, then we can re-construct the entire sub-selects.
+     return where_insub(column, callback, boolean, isnot);
+   };
+
    //Add an "or where in" clause to the query.
    Builder &or_where_in(const std::string &column, 
-                        const std::vector<variable_t> &values);
+                        const variable_array_t &values) {
+     return where_in(column, values, "or");
+   };
+
+   //Add an "or where in" clause to the query.
+   Builder &or_where_in(const std::string &column, 
+                        Builder &query) {
+     return where_in(column, query, "or");
+   };
+
+   //Add an "or where in" clause to the query.
+   Builder &or_where_in(const std::string &column, 
+                        closure_t callback) {
+     return where_in(column, callback, "or");
+   };
 
    //Add a "where not in" clause to the query.
    Builder &where_notin(const std::string &column,
-                        const std::vector<variable_t> &values,
-                        const std::string &boolean = "and");
+                        const variable_array_t &values,
+                        const std::string &boolean = "and") {
+     return where_in(column, values, boolean, true);
+   };
+
+   //Add a "where not in" clause to the query.
+   Builder &where_notin(const std::string &column,
+                        Builder &query,
+                        const std::string &boolean = "and") {
+     return where_in(column, query, boolean, true);
+   };
+
+   //Add a "where not in" clause to the query.
+   Builder &where_notin(const std::string &column,
+                        closure_t callback,
+                        const std::string &boolean = "and") {
+     return where_in(column, callback, boolean, true); 
+   };
 
    //Add an "or where not in" clause to the query.
    Builder &or_where_notin(const std::string &column,
-                           const std::vector<variable_t> &values);
+                           const variable_array_t &values) {
+     return where_notin(column, values, "or");
+   };
+   
+   //Add an "or where not in" clause to the query.
+   Builder &or_where_notin(const std::string &column,
+                           Builder &query) {
+     return where_notin(column, query, "or");
+   };
+   
+   //Add an "or where not in" clause to the query.
+   Builder &or_where_notin(const std::string &column,
+                           closure_t callback) {
+     return where_notin(column, callback, "or");
+   };
 
    //Add a "where null" clause to the query.
    Builder &where_null(const std::string &column, 
@@ -322,33 +416,45 @@ class PF_API Builder {
                        bool isnot = false);
 
    //Add an "or where null" clause to the query.
-   Builder &or_where_null(const std::string &column);
+   Builder &or_where_null(const std::string &column) {
+     return where_null(column, "or");
+   };
 
    //Add a "where not null" clause to the query.
    Builder &where_notnull(const std::string &column, 
-                          const std::string &boolean = "and");
+                          const std::string &boolean = "and") {
+     return where_null(column, boolean, true);
+   };
 
    //Add a where between statement to the query.
    Builder &where_between(const std::string &column,
-                          const std::vector<variable_t> &values,
+                          const variable_array_t &values,
                           const std::string &boolean = "and",
                           bool isnot = false);
 
    //Add an or where between statement to the query.
    Builder &or_where_between(const std::string &column,
-                             const std::vector<variable_t> &values);
+                             const variable_array_t &values) {
+     return where_between(column, values, "or");
+   };
 
    //Add a where not between statement to the query.
    Builder &where_notbetween(const std::string &column,
-                             const std::vector<variable_t> &values,
-                             const std::string &boolean = "and");
+                             const variable_array_t &values,
+                             const std::string &boolean = "and") {
+     return where_between(column, values, boolean, true);
+   };
 
    //Add an or where not between statement to the query.
    Builder &or_where_notbetween(const std::string &column,
-                                const std::vector<variable_t> &values);
+                                const variable_array_t &values) {
+     return where_notbetween(column, values, "or");
+   };
 
    //Add an "or where not null" clause to the query.
-   Builder &or_where_notnull(const std::string &column);
+   Builder &or_where_notnull(const std::string &column) {
+     return where_notnull(column, "or");
+   };
 
    //Add a "where date" statement to the query.
    Builder &where_date(const std::string &column,
@@ -359,24 +465,30 @@ class PF_API Builder {
    //Add an "or where date" statement to the query.
    Builder &or_where_date(const std::string &column,
                           const std::string &oper,
-                          const std::string &value);
+                          const std::string &value) {
+     return where_date(column, oper, value, "or");
+   };
 
    //Add a "where time" statement to the query.
    Builder &where_time(const std::string &column, 
                        const std::string &oper, 
                        int32_t value, 
-                       const std::string &boolean = "and");
+                       const std::string &boolean = "and") {
+     return add_date_based_where("time", column, oper, value, boolean);
+   };
 
    //Add an "or where time" statement to the query.
    Builder &or_where_time(const std::string &column, 
                           const std::string &oper, 
-                          int32_t value);
+                          int32_t value) {
+     return where_time(column, oper, value, "or");
+   };
 
    //Add a "where day" statement to the query.
-   Builder &where_time(const std::string &column, 
-                       const std::string &oper, 
-                       const variable_t &value = "", 
-                       const std::string &boolean = "and");
+   Builder &where_day(const std::string &column, 
+                      const std::string &oper, 
+                      const variable_t &value = "", 
+                      const std::string &boolean = "and");
 
    //Add a "where month" statement to the query.
    Builder &where_month(const std::string &column, 
@@ -391,13 +503,21 @@ class PF_API Builder {
                        const std::string &boolean = "and");
 
    //Add a nested where statement to the query.
-   Builder &where_nested(closure_t callback, const std::string &boolean = "and");
+   Builder &where_nested(closure_t callback, const std::string &boolean = "and") {
+     auto query = for_nested_where();
+     callback(query);
+     return add_nested_where_query(query, boolean);
+   };
 
    //Create a new query instance for nested where condition.
-   Builder &for_nested_where();
+   Builder *for_nested_where() {
+     auto query = new_query();
+     query->from(from_);
+     return query;
+   };
 
    //Add another query builder as a nested where to the query builder.
-   Builder &add_nested_where_query(Builder &query,
+   Builder &add_nested_where_query(Builder *query,
                                    const std::string &boolean = "and");
 
    //Add an exists clause to the query.
@@ -657,7 +777,8 @@ class PF_API Builder {
 
    //Determine if the given operator and value combination is legal.
    // - Prevents using Null values with invalid operators.
-   bool invalid_operator_and_value(const std::string &oper, variable_t value);
+   bool invalid_operator_and_value(const std::string &oper, 
+                                   const variable_t &value);
 
    //Determine if the given operator is supported.
    bool invalid_operator(const std::string &oper);
