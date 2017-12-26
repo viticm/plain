@@ -85,6 +85,12 @@ struct config_struct {
 using config_t = config_struct;
 using eid_t = int16_t; //Environment.
 
+namespace concerns {
+
+class BuildsQueries;
+
+};
+
 namespace query {
 
 class Builder;

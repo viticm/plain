@@ -1,6 +1,7 @@
 #include "pf/basic/string.h"
 #include "pf/support/helpers.h"
 #include "pf/sys/assert.h"
+#include "pf/db/concerns/builds_queries.h"
 #include "pf/db/query/grammars/grammar.h"
 #include "pf/db/connection_interface.h"
 #include "pf/db/query/join_clause.h"
@@ -12,7 +13,8 @@ using namespace pf_support;
 using namespace pf_db::query;
 
 //The builder construct function.
-Builder::Builder(ConnectionInterface *connection, grammars::Grammar *grammar) {
+Builder::Builder(ConnectionInterface *connection, grammars::Grammar *grammar)
+: BuildsQueries(this) {
   connection_ = connection;
   grammar_ = is_null(grammar) ? connection->get_query_grammar() : grammar;
   bindings_ = {
@@ -597,4 +599,236 @@ Builder &Builder::where_sub(const std::string &column,
   add_binding(where.query->get_bindings(), "where");
 
   return *this;
+}
+
+//Add a date based (year, month, day, time) statement to the query.
+Builder &Builder::add_date_based_where(const std::string &type,
+                                       const std::string &column,
+                                       const std::string &oper,
+                                       int32_t value,
+                                       const std::string &boolean) {
+  db_query_array_t where;
+  where.items = {
+    {"type", type}, {"column", column}, {"operator", oper}, 
+    {"boolean", boolean}, {"value", value}
+  };
+  add_binding(value, "where");
+  return *this;
+}
+
+//Add an exists clause to the query.
+Builder &Builder::where_exists(closure_t callback, 
+                               const std::string &boolean, 
+                               bool isnot) {
+  auto query = new_query();
+
+  // Similar to the sub-select clause, we will create a new query instance so
+  // the developer may cleanly specify the entire exists query and we will
+  // compile the whole thing in the grammar and insert it into the SQL.
+
+  callback(query);
+
+  return add_where_exists_query(query, boolean, isnot);
+}
+
+//Add an exists clause to the query.
+Builder &Builder::add_where_exists_query(Builder *query, 
+                                         const std::string &boolean,
+                                         bool isnot) {
+  db_query_array_t where;
+  unique_move(Builder, query, where.query);
+  where.items = {
+    {"type", isnot ? "notexists" : "exists"}, {"boolean", boolean},
+  };
+  wheres_.push_back(where);
+  add_binding(where.query->get_bindings(), "where");
+  return *this;
+}
+
+//Add a "group by" clause to the query.
+Builder &Builder::group_by(const std::vector<std::string> &groups) {
+  for (const std::string &group : groups)
+    groups_.push_back(group);
+  return *this;
+}
+
+//Add a "having" clause to the query.
+Builder &Builder::having(const std::string &column, 
+                         const std::string &oper, 
+                         const variable_t &value, 
+                         const std::string &boolean) {
+  // Here we will make some assumptions about the operator. If only 2 values are
+  // passed to the method, we will assume that the operator is an equals sign 
+  // and keep going. Otherwise, we'll require the operator to be passed in.
+  bool use_default = (value == "") && ("and" == boolean);
+  auto value_oper = prepare_value_and_operator(value.data, oper, use_default);
+
+  variable_t rvalue{value_oper[0]};
+  std::string roper{value_oper[1]};
+
+  // If the given operator is not found in the list of valid operators we will
+  // assume that the developer is just short-cutting the '=' operators and
+  // we will set the operators to '=' and set the values appropriately.
+  if (invalid_operator(roper)) {
+    rvalue = roper;
+    roper = "=";
+  }
+  variable_set_t _having = {
+    {"type", "basic"}, {"column", column}, {"operator", roper}, 
+    {"value", rvalue}, {"boolean", boolean},
+  };
+  havings_.push_back(_having);
+
+  if (rvalue.type != DB_EXPRESSION_TYPE)
+    add_binding(rvalue, "having");
+
+  return *this;
+}
+
+//Add a raw having clause to the query.
+Builder &Builder::having_raw(const std::string &sql,
+                             variable_set_t &bindings,
+                             const std::string &boolean) {
+  variable_set_t _having = {
+    {"type", "raw"}, {"sql", sql}, {"boolean", boolean},
+  };
+  add_binding(bindings, "having");
+  return *this;
+}
+
+//Add an "order by" clause to the query.
+Builder &Builder::order_by(const std::string &column, 
+                           const std::string &direction) {
+  variable_set_t order = {
+    {"column", column}, {"direction", "asc" == direction ? "asc" : "desc"},
+  };
+  if (unions_.empty()) {
+    orders_.push_back(order);
+  } else {
+    union_orders_.push_back(order);
+  }
+  return *this;
+}
+
+//Put the query's results in random order.
+Builder &Builder::in_random_order(const std::string &seed) {
+  variable_set_t bindings;
+  return order_byraw(grammar_->compile_random(seed), bindings);
+}
+
+//Add a raw "order by" clause to the query.
+Builder &Builder::order_byraw(const std::string &sql,
+                              variable_set_t &bindings) {
+  variable_set_t order = {
+    {"type", "raw"}, {"sql", sql},
+  };
+  if (unions_.empty()) {
+    orders_.push_back(order);
+  } else {
+    union_orders_.push_back(order);
+  }
+  add_binding(bindings, "order");
+  return *this;
+}
+
+//Set the "offset" value of the query.
+Builder &Builder::offset(int32_t value) {
+  value = max(0, value);
+  if (unions_.empty())
+    offset_ = value;
+  else
+    union_offset_ = value;
+  return *this;
+}
+
+//Set the "limit" value of the query.
+Builder &Builder::limit(int32_t value) {
+  if (value > 0) {
+    if (unions_.empty())
+      limit_ = value;
+    else
+      union_limit_ = value;
+  }
+  value = max(0, value);
+  return *this;
+}
+
+//Get an array orders with all orders for an given column removed.
+void Builder::remove_existing_orders_for(const std::string &column, 
+                                         std::vector<variable_set_t> &result) {
+  result.clear();
+  for (variable_set_t &item : orders_) {
+    if (item["column"] != column) result.push_back(item);
+  }
+}
+
+//Add a union statement to the query.
+Builder &Builder::_union(closure_t callback, bool all) {
+  auto query = new_query();
+  callback(query);
+  return _union(query, all);
+}
+
+//Add a union statement to the query.
+Builder &Builder::_union(Builder *query, bool all) {
+  db_query_array_t where;
+  unique_move(Builder, query, where.query);
+  where.items = {
+    {"all", all},
+  };
+  add_binding(where.query->get_bindings(), "union");
+  return *this;
+}
+
+//Get the SQL representation of the query.
+std::string Builder::to_sql() {
+  return grammar_->compile_select(*this);
+}
+
+//Execute a query for a single record by ID.
+variable_array_t Builder::find(int32_t id, 
+                               const std::vector<std::string> columns) {
+  return where("id", "=", id).first(columns);
+}
+
+//Get a single column's value from the first result of a query.
+variable_t Builder::value(const std::string &column) {
+  variable_t _value;
+  auto result = first({column});
+  if (!result.empty()) _value = result[0];
+  return _value;
+}
+
+//Execute the query as a "select" statement.
+db_fetch_array_t Builder::get(const std::vector<std::string> &columns) {
+  auto original = columns_;
+  if (original.empty()) {
+    columns_ = columns;
+  }
+  db_fetch_array_t result = run_select();
+  columns_ = original;
+  return result;
+}
+
+//Run the query as a "select" statement against the connection.
+db_fetch_array_t Builder::run_select() {
+  return connection_->select(to_sql(), bindings_);
+}
+
+//Throw an exception if the query doesn't have an order_by clause.
+void Builder::enforce_order_by() {
+  if (orders_.empty() && union_orders_.empty())
+    AssertEx(false, 
+        "You must specify an order_by clause when using this function.");
+}
+
+//Determine if any rows exist for the current query.
+bool Builder::exists() {
+  auto results = 
+    connection_->select(grammar_->compile_exists(*this), bindings_);
+  // If the results has rows, we will get the row and see if the exists column is a 
+  // boolean true. If there is no results for this query we will return false as 
+  // there are no rows for this query at all and we can return that info here.
+  if (results.get(0, "exists")) return true;
+  return false;
 }

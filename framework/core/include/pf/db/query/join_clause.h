@@ -53,7 +53,7 @@ class PF_API JoinClause : public Builder {
                       const std::string &second = "");
 
     //Get a new instance of the join clause builder.
-    JoinClause *new_query() {
+    virtual Builder *new_query() {
        return new JoinClause(parent_query_, type_, table_);
     }
 

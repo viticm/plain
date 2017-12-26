@@ -49,6 +49,7 @@ Grammar::Grammar() {
     { "time", where_call(time) },
     { "nested", where_call(nested) },
     { "sub", where_call(sub) },
+    { "exists", where_call(exists) },
     { "notexists", where_call(notexists) },
     { "day", where_call(day) },
     { "month", where_call(raw) },

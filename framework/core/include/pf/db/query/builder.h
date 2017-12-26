@@ -17,7 +17,7 @@ namespace pf_db {
 
 namespace query {
 
-class PF_API Builder {
+class PF_API Builder : public concerns::BuildsQueries {
 
  public:
    Builder(ConnectionInterface *connection, 
@@ -258,7 +258,6 @@ class PF_API Builder {
    Builder &add_array_of_wheres(variable_set_t &columns,
                                 const std::string &boolean,
                                 const std::string &method = "where");
-
 
    //Add an "or where" clause to the query.
    Builder &or_where(const std::string &column, 
@@ -510,6 +509,7 @@ class PF_API Builder {
    };
 
    //Create a new query instance for nested where condition.
+   // * This function will create heap pointer with new_query function.
    Builder *for_nested_where() {
      auto query = new_query();
      query->from(from_);
@@ -526,122 +526,160 @@ class PF_API Builder {
                          bool isnot = false);
 
    //Add an or exists clause to the query.
-   Builder &or_where_exists(closure_t callback, bool isnot = false);
+   Builder &or_where_exists(closure_t callback, bool isnot = false) {
+     return where_exists(callback, "or", isnot);
+   };
 
    //Add a where not exists clause to the query.
-   Builder &where_not_exists(closure_t callback, bool isnot = false);
+   Builder &where_not_exists(closure_t callback, 
+                             const std::string &boolean = "and") {
+     return where_exists(callback, boolean, true);
+   };
 
    //Add a or where not exists clause to the query.
-   Builder &or_where_not_exists(closure_t callback, bool isnot = false);
+   Builder &or_where_not_exists(closure_t callback, bool isnot = false) {
+     return or_where_exists(callback, true);
+   };
 
    //Add an exists clause to the query.
-   Builder &add_where_exists_query(Builder &query, 
+   // * The query pointer with delete by this function.
+   Builder &add_where_exists_query(Builder *query, 
                                    const std::string &boolean = "and",
                                    bool isnot = false);
 
    //Handles dynamic "where" clauses to the query.
+   // * Not complete.
    Builder &dynamic_where(const std::string &method,
                           const std::string &parameters);
 
    //Add a "group by" clause to the query.
-   Builder &group_by(std::vector<std::string> groups);
-
-   //Add a "group by" clause to the query.
-   template <typename... TS>
-   Builder &group_by(const std::string &param, TS... args);
+   Builder &group_by(const std::vector<std::string> &groups);
 
    //Add a "having" clause to the query.
    Builder &having(const std::string &column, 
                    const std::string &oper = "", 
-                   const std::string &value = "", 
+                   const variable_t &value = "", 
                    const std::string &boolean = "and");
 
    //Add a "or having" clause to the query.
    Builder &or_having(const std::string &column, 
                       const std::string &oper = "", 
-                      const std::string &value = "");
+                      const variable_t &value = "") {
+     return having(column, oper, value, "or");
+   };
 
    //Add a raw having clause to the query.
    Builder &having_raw(const std::string &sql,
-                       const variable_set_t &bindings = {},
+                       variable_set_t &bindings,
                        const std::string &boolean = "and");
 
    //Add a raw or having clause to the query.
    Builder &or_having_raw(const std::string &sql,
-                          const variable_set_t &bindings = {});
+                          variable_set_t &bindings) {
+     return having_raw(sql, bindings, "or");
+   };
 
    //Add an "order by" clause to the query.
    Builder &order_by(const std::string &column, 
                      const std::string &direction = "asc");
 
    //Add a descending "order by" clause to the query.
-   Builder &order_bydesc(const std::string &column);
+   Builder &order_bydesc(const std::string &column) {
+     return order_by(column, "desc");
+   };
   
    //Add an "order by" clause for a timestamp to the query.
-   Builder &latest(const std::string &column = "created_at");
+   Builder &latest(const std::string &column = "created_at") {
+     return order_by(column, "desc");
+   };
 
    //Add an "order by" clause for a timestamp to the query.
-   Builder &oldest(const std::string &column = "created_at");
+   Builder &oldest(const std::string &column = "created_at") {
+     return order_by(column, "asc");
+   };
 
    //Put the query's results in random order.
    Builder &in_random_order(const std::string &seed = "");
 
    //Add a raw "order by" clause to the query.
    Builder &order_byraw(const std::string &sql,
-                        const variable_set_t &bindings = {});
+                        variable_set_t &bindings);
 
    //Alias to set the "offset" value of the query.
-   Builder &skip(int32_t value);
+   Builder &skip(int32_t value) {
+     return offset(value);
+   };
 
    //Set the "offset" value of the query.
    Builder &offset(int32_t value);
 
    //Alias to set the "limit" value of the query.
-   Builder &take(int32_t value);
+   Builder &take(int32_t value) {
+     return limit(value);
+   };
 
    //Set the "limit" value of the query.
    Builder &limit(int32_t value);
 
    //Set the limit and offset for a given page.
-   Builder &for_page(int32_t page, int32_t perpage);
+   Builder &for_page(int32_t page, int32_t perpage = 15) {
+     return skip((page - 1) * perpage).take(perpage);
+   };
 
    //Constrain the query to the next "page" of results after a given ID.
    Builder &for_page_afterid(int32_t perpage, 
                              int32_t lastid, 
-                             const std::string &column = "id");
+                             const std::string &column = "id") {
+     std::vector<variable_set_t> orders;
+     remove_existing_orders_for(column, orders);
+     orders_ = orders;
+     return where(column, ">", lastid).order_by(column, "desc").take(perpage);
+   };
+   
+   //Add a union statement to the query.
+   Builder &_union(closure_t callback, bool all = false);
 
    //Add a union statement to the query.
-   Builder &unions(Builder &query, bool all = false);
+   // * This function will delete the query pointer.
+   Builder &_union(Builder *query, bool all = false);
 
    //Add a union all statement to the query.
-   Builder &union_all(Builder &query);
+   // * This function will delete the query pointer.
+   Builder &union_all(Builder *query) {
+     return _union(query, true);
+   };
 
-   //Lock the selected rows in the table.
-   Builder &lock(const variable_t &value = true);
+    //Lock the selected rows in the table.
+   Builder &lock(const variable_t &value = true) {
+     lock_ = value;
+     return *this;
+   };
 
    //Lock the selected rows in the table for updating.
-   Builder &lock_forupdate();
+   Builder &lock_forupdate() {
+     return lock(true);
+   };
 
    //Share lock the selected rows in the table.
-   Builder &shared_lock();
+   Builder &shared_lock() {
+     return lock(false);
+   };
 
    //Get the SQL representation of the query.
-   const std::string to_sql() const;
+   std::string to_sql();
 
    //Execute a query for a single record by ID.
-   void find(int32_t id, 
-             db_fetch_array_t &result, 
-             const std::vector<std::string> columns = {"*"});
+   variable_array_t find(int32_t id, 
+                         const std::vector<std::string> columns = {"*"});
 
    //Get a single column's value from the first result of a query.
-   const variable_t value(const std::string &column) const;
+   variable_t value(const std::string &column);
 
    //Execute the query as a "select" statement.
-   void get(db_fetch_array_t &result,
-            const std::vector<std::string> &columns = {"*"});
+   db_fetch_array_t get(const std::vector<std::string> &columns = {"*"});
 
    //Run the query as a "select" statement against the connection.
-   void run_select(db_fetch_array_t &result);
+   db_fetch_array_t run_select();
 
    //* Get a generator for the given query.
    void cursor();
@@ -652,7 +690,7 @@ class PF_API Builder {
                    const std::string &column = "id", 
                    const std::string &alias = "");
 
-   //Throw an exception if the query doesn't have an orderBy clause.
+   //Throw an exception if the query doesn't have an order_by clause.
    void enforce_order_by();
 
    //Get an array with the values of a given column.
@@ -668,19 +706,34 @@ class PF_API Builder {
    bool exists();
 
    //Retrieve the "count" result of the query.
-   int32_t count(const std::string &columns = "*");
+   int32_t count(const std::string &columns = "*") {
+     return aggregate("count", {columns});
+   };
+
+   //Retrieve the "count" result of the query.
+   int32_t count(const std::vector<std::string> &columns) {
+     return aggregate("count", columns);
+   };
 
    //Retrieve the minimum value of a given column.
-   const variable_t _min(const std::string &column) const;
+   const variable_t _min(const std::string &column) const {
+     return aggregate("_min", {column});
+   };
 
    //Retrieve the sum of the values of a given column.
-   const variable_t _max(const std::string &column) const;
+   const variable_t _max(const std::string &column) const {
+     return aggregate("_max", {column});
+   };
 
    //Retrieve the sum of the values of a given column.
-   const variable_t sum(const std::string &column) const;
+   const variable_t sum(const std::string &column) const {
+     return aggregate("sum", {column});
+   };
 
    //Retrieve the average of the values of a given column.
-   const variable_t avg(const std::string &column) const;
+   const variable_t avg(const std::string &column) const {
+     return aggregate("avg", {column});
+   };
 
    //Alias for the "avg" method.
    const variable_t average(const std::string &column) const;
@@ -726,7 +779,9 @@ class PF_API Builder {
    void truncate();
 
    //Get a new instance of the query builder.
-   Builder *new_query();
+   //* This function will return the new object from heap, you need ensure safe
+   // delete it.
+   virtual Builder *new_query();
 
    //* Create a raw database expression.
    void raw();
@@ -816,7 +871,7 @@ class PF_API Builder {
 
    //Get an array orders with all orders for an given column removed.
    void remove_existing_orders_for(const std::string &column, 
-                                   std::vector<std::string> &result);
+                                   std::vector<variable_set_t> &result);
 
    //Remove the column aliases since they will break count queries.
    void without_select_aliases(std::vector<std::string> &columns);
