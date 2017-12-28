@@ -26,7 +26,7 @@ Collection<T> collect(const std::vector<T> &value) {
 
 //Concatenate values of a given key as a string.
 inline std::string implode(const std::string &glue, 
-    const pf_basic::type::variable_array_t & array) {
+                           const pf_basic::type::variable_array_t &array) {
   std::string r{""};
   auto it = array.begin();
   for (;it != array.end(); ++it) {
@@ -38,7 +38,7 @@ inline std::string implode(const std::string &glue,
 
 //Concatenate values of a given key as a string.
 inline std::string implode(const std::string &glue, 
-    const std::vector<std::string> & array) {
+                           const std::vector<std::string> &array) {
   std::string r{""};
   auto it = array.begin();
   for (;it != array.end(); ++it) {
@@ -76,6 +76,29 @@ T get(const std::vector<T> &array, size_t n) {
   if (array.size() < n + 1) return r;
   r = array[n];
   return r;
+}
+
+//Filters elements of an array using a callback function.
+template <typename T>
+std::vector<T> array_filter(const std::vector<T> &array, 
+                            std::function<bool(const T&)> callback) {
+  std::vector<T> result;
+  for (const T &item : array) {
+    if (callback(item)) 
+      result.push_back(item);
+  }
+  return result;
+}
+
+//Merge one or more arrays.
+template <typename T_k, typename T_v>
+std::map<T_k, T_v> array_merge(const std::map<T_k, T_v> &array1, 
+                               const std::map<T_k, T_v> &array2) {
+  std::map<T_k, T_v> result;
+  for (auto it = array1.begin(); it != array1.end(); ++it)
+    result[it->first] = it->second;
+  for (auto it = array2.begin(); it != array2.end(); ++it)
+    result[it->first] = it->second;
 }
 
 };

@@ -34,6 +34,18 @@ Builder::Builder(ConnectionInterface *connection, grammars::Grammar *grammar)
     "~", "~*", "!~", "!~*", "similar to",
     "not similar to", "not ilike", "~~*", "!~~*",
   };
+   
+  distinct_ = false;
+
+  limit_ = -1;
+
+  offset_ = -1;
+
+  union_limit_ = -1;
+
+  union_offset_ = -1;
+  
+  lock_ = false;
 }
 
 //The builder destruct function.
@@ -831,4 +843,169 @@ bool Builder::exists() {
   // there are no rows for this query at all and we can return that info here.
   if (results.get(0, "exists")) return true;
   return false;
+}
+
+//Clean the member by the variable name without "_".
+Builder &Builder::clean(const std::string &except) {
+  if ("columns" == except) {
+    columns_.clear();
+  } else if ("distinct" == except) {
+    distinct_ = false;
+  } else if ("from" == except) {
+    from_ = "";
+  } else if ("joins" == except) {
+    joins_.clear();
+  } else if ("wheres" == except) {
+    wheres_.clear();
+  } else if ("groups" == except) {
+    groups_.clear();
+  } else if ("havings" == except) {
+    havings_.clear();
+  } else if ("orders" == except) {
+    orders_.clear();
+  } else if ("limit" == except) {
+    limit_ = -1;
+  } else if ("offset" == except) {
+    offset_ = -1;
+  } else if ("unions" == except) {
+    unions_.clear();
+  } else if ("union_limit" == except) {
+    union_offset_ = -1;
+  } else if ("union_offset" == except) {
+    union_offset_ = -1;
+  } else if ("union_orders" == except) {
+    union_orders_.clear();
+  } else if ("lock" == except) {
+    lock_ = false;
+  } else if ("operators" == except) {
+    operators_.clear();
+  }
+  return *this;
+}
+
+//Clean the given bindings.
+Builder &Builder::clean_bindings(const std::vector<std::string> &except) {
+  return tap([this, &except](Builder *query){
+    for (const std::string &type : except)
+      query->bindings_[type] = {};
+  });
+}
+
+//Remove all of the expressions from a list of bindings.
+variable_array_t Builder::clean_bindings_expression(
+    const variable_array_t &bindings) {
+  return array_filter<variable_t>(bindings, [](const variable_t &value){
+    return value.type != DB_EXPRESSION_TYPE;
+  });
+}
+
+//Execute an aggregate function on the database.
+variable_t Builder::aggregate(const std::string &function, 
+                              const std::vector<std::string> &columns) {
+  //Need safe delete the query pointer.
+  auto _query = new_query();
+  std::unique_ptr<Builder> query;
+  unique_move(Builder, _query, query);
+  auto results = query->clean("columns").
+                 clean_bindings({"select"}).
+                 set_aggregate(function, columns).
+                 get(columns);
+  auto _result = results.get(0, "aggregate");
+  variable_t result;
+  if (_result) result = *_result;
+  return result;
+}
+
+//Execute a numeric aggregate function on the database.
+variable_t Builder::numeric_aggregate(const std::string &function, 
+                                      const std::vector<std::string> &columns) {
+  auto result = aggregate(function ,columns);
+  
+  // If there is no result, we can obviously just return 0 here. Next, we will check 
+  // if the result is an integer or float. If it is already one of these two data
+  // types we can just return the result as-is, otherwise we will convert this.
+  if (empty(result)) return 0;
+
+  if (result.type != kVariableTypeString) return result;
+
+  // If the result doesn't contain a decimal place, we will assume it is an int then
+  // cast it to one. When it does we will cast it to a float since it needs to be 
+  // cast to the expected data type for the developers out of pure convenience.
+  return result.data.find(".") != std::string::npos ? 
+         result.get<double>() : result.get<int32_t>();
+}
+
+//Set the aggregate property without running the query.
+Builder &Builder::set_aggregate(const std::string &function, 
+                                const std::vector<std::string> &columns) {
+  std::string _columns = pf_support::implode(", ", columns);
+  aggregate_["function"] = function;
+  aggregate_["columns"] = _columns;
+  if (groups_.empty()) {
+    orders_.clear();
+    bindings_["order"] = {};
+  }
+  return *this;
+}
+
+//Insert a new record into the database.
+bool Builder::insert(std::vector<variable_set_t> &values) {
+  // Since every insert gets treated like a batch insert, we will make sure the 
+  // bindings are structured in a way that is convenient when building these 
+  // inserts statements by verifying these elements are actually an array.
+  if (values.empty()) return true;
+
+  // Here, we will sort the insert keys for every record so that each insert is 
+  // the results. We will need to also flatten these bindings before running 
+  // the query so they are all in one huge, flattened array for execution.
+
+  variable_array_t cbindings;
+  for (auto it = values[0].begin(); it != values[0].end(); ++it)
+    cbindings.push_back(it->second);
+  
+  return connection_->insert(
+      grammar_->compile_insert(*this, values), 
+      clean_bindings_expression(cbindings));
+}
+
+//Update a record in the database.
+int32_t Builder::update(variable_set_t &values) {
+  auto sql = grammar_->compile_update(*this, values);
+  return connection_->update(sql, clean_bindings_expression(
+    grammar_->prepare_bindings_forupdate(bindings_, values)
+  ));
+}
+
+//Insert or update a record matching the attributes, and fill it with values.
+bool Builder::update_or_insert(variable_set_t &attributes,
+                               variable_set_t &values) {
+  if (!where(attributes).exists()) {
+    std::vector<variable_set_t> _values;
+    _values.push_back(array_merge<std::string, variable_t>(attributes, values));
+    return insert(_values);    
+  }
+}
+
+//Decrement a column's value by a given amount.
+int32_t Builder::decrement(const std::string &column, 
+                           int32_t amount, 
+                           const variable_set_t &extra) {
+  auto wrapped = grammar_->wrap(column);
+
+  auto columns = array_merge<std::string, variable_t>({
+    {"column", raw("wrapped - " + std::to_string(amount))} 
+  }, extra);
+
+  return update(columns);
+}
+
+//Delete a record from the database.
+int32_t Builder::deleted(const variable_t &id) {
+  // If an ID is passed to the method, we will set the where clause to check the 
+  // ID to let developers to simply and quickly remove a single row from this
+  // database without manually specifying the "where" clauses on the query.
+  if (id != "") {
+    where(from_ + ".id", "=", id);
+  }
+  return connection_->deleted(grammar_->compile_delete(*this), bindings_);
 }

@@ -56,7 +56,7 @@ class PF_API ConnectionInterface {
 
    //Run a delete statement against the database.
    virtual int32_t deleted(
-       const std::string &str, const variable_array_t &bindings = {}) = 0;
+       const std::string &str, const db_query_bindings_t &bindings = {}) = 0;
 
    //Execute an SQL statement and return the boolean result.
    virtual bool statement(

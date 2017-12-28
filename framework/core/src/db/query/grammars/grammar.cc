@@ -1,5 +1,6 @@
 #include "pf/basic/string.h"
 #include "pf/support/helpers.h"
+#include "pf/db/concerns/builds_queries.h"
 #include "pf/db/query/grammars/grammar.h"
 
 using namespace pf_basic::string;
@@ -143,7 +144,7 @@ std::string Grammar::compile_update(
 
 //Prepare the bindings for an update statement.
 Grammar::variable_array_t Grammar::prepare_bindings_forupdate(
-    db_query_bindings_t &bindings, const variable_array_t &values) {
+    db_query_bindings_t &bindings, variable_set_t &values) {
 
 }
 

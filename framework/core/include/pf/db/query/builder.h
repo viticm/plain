@@ -707,60 +707,67 @@ class PF_API Builder : public concerns::BuildsQueries {
 
    //Retrieve the "count" result of the query.
    int32_t count(const std::string &columns = "*") {
-     return aggregate("count", {columns});
+     return aggregate("count", {columns}).get<int32_t>();
    };
 
    //Retrieve the "count" result of the query.
    int32_t count(const std::vector<std::string> &columns) {
-     return aggregate("count", columns);
+     return aggregate("count", columns).get<int32_t>();
    };
 
    //Retrieve the minimum value of a given column.
-   const variable_t _min(const std::string &column) const {
+   variable_t _min(const std::string &column) {
      return aggregate("_min", {column});
    };
 
    //Retrieve the sum of the values of a given column.
-   const variable_t _max(const std::string &column) const {
+   variable_t _max(const std::string &column) {
      return aggregate("_max", {column});
    };
 
    //Retrieve the sum of the values of a given column.
-   const variable_t sum(const std::string &column) const {
+   variable_t sum(const std::string &column) {
      return aggregate("sum", {column});
    };
 
    //Retrieve the average of the values of a given column.
-   const variable_t avg(const std::string &column) const {
+   variable_t avg(const std::string &column) {
      return aggregate("avg", {column});
    };
 
    //Alias for the "avg" method.
-   const variable_t average(const std::string &column) const;
+   variable_t average(const std::string &column) {
+     return avg(column);
+   };
 
    //Execute an aggregate function on the database.
-   void aggregate(const std::string &function, 
-                  variable_set_t &result, 
-                  const std::vector<std::string> &columns = {"*"});
+   variable_t aggregate(const std::string &function, 
+                        const std::vector<std::string> &columns = {"*"});
 
    //Execute a numeric aggregate function on the database.
-   const variable_t numeric_aggregate(
+   variable_t numeric_aggregate(
        const std::string &function, 
        const std::vector<std::string> &columns = {"*"});
 
    //Insert a new record into the database.
-   bool insert(const variable_array_t &values);
+   bool insert(variable_set_t &values) {
+     std::vector<variable_set_t> _values{ {values} };
+     return insert(_values);
+   };
+
+   //Insert a new record into the database.
+   bool insert(std::vector<variable_set_t> &values);
 
    //Insert a new record and get the value of the primary key.
    int32_t insert_getid(const variable_array_t &values, 
                         const std::string &sequence = "");
 
    //Update a record in the database.
-   int32_t update(const variable_array_t &values);
+   int32_t update(variable_set_t &values);
 
    //Insert or update a record matching the attributes, and fill it with values.
-   bool update_or_insert(const std::vector<std::string> &attributes,
-                         const variable_array_t &values);
+   bool update_or_insert(variable_set_t &attributes,
+                         variable_set_t &values);
 
    //Increment a column's value by a given amount.
    int32_t increment(const std::string &column, 
@@ -770,7 +777,7 @@ class PF_API Builder : public concerns::BuildsQueries {
    //Decrement a column's value by a given amount.
    int32_t decrement(const std::string &column, 
                      int32_t amount = 1, 
-                     const variable_array_t &extra = {});
+                     const variable_set_t &extra = {});
 
    //Delete a record from the database.
    int32_t deleted(const variable_t &id = "");
@@ -784,7 +791,7 @@ class PF_API Builder : public concerns::BuildsQueries {
    virtual Builder *new_query();
 
    //* Create a raw database expression.
-   void raw();
+   variable_t raw(const variable_t &value);
 
    //Get the current query value bindings in a flattened array.
    db_query_bindings_t *get_bindings();
@@ -808,7 +815,7 @@ class PF_API Builder : public concerns::BuildsQueries {
    Builder &merge_bindings(Builder &query);
 
    //Remove all of the expressions from a list of bindings.
-   void clean_bindings(variable_set_t &bindings);
+   variable_array_t clean_bindings_expression(const variable_array_t &bindings);
 
    //Get the database connection instance.
    ConnectionInterface *get_connection();
@@ -816,11 +823,19 @@ class PF_API Builder : public concerns::BuildsQueries {
    //Get the query grammar instance.
    grammars::Grammar *get_grammar();
 
-   //Clone the query without the given properties.
-   Builder clone_without();
+   //Clean the members by the variable name without "_".
+   Builder &clean(const std::vector<std::string> &except) {
+     for (const std::string &name : except)
+       clean(name);
+     return *this;
+   };
 
-   //Clone the query without the given bindings.
-   Builder clone_without_bindings(const std::vector<std::string> &except);
+   //Clean the member by the variable name without "_".
+   Builder &clean(const std::string &except);
+
+   //Clean the given bindings.
+   Builder &clean_bindings(const std::vector<std::string> &except);
+
 
  protected:
 
