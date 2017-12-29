@@ -788,7 +788,9 @@ class PF_API Builder : public concerns::BuildsQueries {
    //Get a new instance of the query builder.
    //* This function will return the new object from heap, you need ensure safe
    // delete it.
-   virtual Builder *new_query();
+   virtual Builder *new_query() {
+     return new Builder(connection_, grammar_);
+   };
 
    //* Create a raw database expression.
    variable_t raw(const variable_t &value);
@@ -800,7 +802,7 @@ class PF_API Builder : public concerns::BuildsQueries {
    variable_set_t *get_raw_bindings();
 
    //Set the bindings on the query builder.
-   Builder &set_bindings(db_query_bindings_t &bindings, 
+   Builder &set_bindings(variable_array_t &bindings, 
                          const std::string &type = "where");
 
    //Add a binding to the query.

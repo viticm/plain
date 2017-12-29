@@ -1009,3 +1009,62 @@ int32_t Builder::deleted(const variable_t &id) {
   }
   return connection_->deleted(grammar_->compile_delete(*this), bindings_);
 }
+
+//Run a truncate statement on the table.
+void Builder::truncate() {
+  auto r = grammar_->compile_truncate(*this);
+  for (auto it = r.begin(); it != r.end(); ++it)
+    connection_->statement(it->first);
+}
+
+//* Create a raw database expression.
+variable_t Builder::raw(const variable_t &value) {
+  return connection_->raw(value);
+}
+
+//Set the bindings on the query builder.
+Builder &Builder::set_bindings(variable_array_t &bindings, 
+                               const std::string &type) {
+  if (bindings_.find(type) == bindings_.end()) {
+    std::string msg{"Invalid binding type: "};
+    msg += type;
+    AssertEx(false, msg.c_str());
+    return *this;
+  }
+  bindings_[type] = bindings;
+}
+
+//Add a binding to the query.
+Builder &Builder::add_binding(const variable_array_t &values, 
+                              const std::string &type) {
+  if (bindings_.find(type) == bindings_.end()) {
+    std::string msg{"Invalid binding type: "};
+    msg += type;
+    AssertEx(false, msg.c_str());
+    return *this;
+  }
+  for (const variable_t &item : values)
+    bindings_[type].push_back(item);
+  return *this;
+}
+
+//Add a binding to the query.
+Builder &Builder::add_binding(const variable_t &value, 
+                              const std::string &type) {
+  if (bindings_.find(type) == bindings_.end()) {
+    std::string msg{"Invalid binding type: "};
+    msg += type;
+    AssertEx(false, msg.c_str());
+    return *this;
+  }
+  bindings_[type].push_back(value);
+  return *this;
+}
+
+//Merge an array of bindings into our bindings.
+Builder &Builder::merge_bindings(Builder &query) {
+  for (auto it = query.bindings_.begin(); it != query.bindings_.end(); ++it) {
+    add_binding(it->second, it->first);
+  }
+  return *this;
+}

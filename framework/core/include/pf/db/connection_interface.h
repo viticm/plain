@@ -40,7 +40,7 @@ class PF_API ConnectionInterface {
    virtual query::Builder table(const std::string &name) = 0;
 
    //Get a new raw query expression.
-   virtual void raw(variable_t &value) = 0;
+   virtual variable_t raw(const variable_t &value) = 0;
 
    //Run a select statement and return a single result.
    virtual void select_one(
