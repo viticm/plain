@@ -1,7 +1,6 @@
 #include "pf/basic/string.h"
 #include "pf/support/helpers.h"
 #include "pf/sys/assert.h"
-#include "pf/db/concerns/builds_queries.h"
 #include "pf/db/query/grammars/grammar.h"
 #include "pf/db/connection_interface.h"
 #include "pf/db/query/join_clause.h"
@@ -105,7 +104,7 @@ void Builder::parse_subselect(
   query.columns_ = {query.columns_[0]};
 
   sql = query.to_sql();
-  bindings = *query.get_bindings();
+  bindings = *query.get_raw_bindings();
 }
 
 //Parse the sub-select query into SQL and bindings.
@@ -138,7 +137,7 @@ Builder &Builder::join(const std::string &table,
 
   joins_.push_back(join);
 
-  add_binding(*join.get_bindings(), "join");
+  add_binding(*join.get_raw_bindings(), "join");
 
   return *this;
 }
@@ -164,7 +163,7 @@ Builder &Builder::join(const std::string &table,
   }
   joins_.push_back(join);
 
-  add_binding(*join.get_bindings(), "join");
+  add_binding(*join.get_raw_bindings(), "join");
 
   return *this;
 }
@@ -458,7 +457,7 @@ Builder &Builder::where_insub(const std::string &column,
 
   wheres_.push_back(where);
 
-  add_binding(where.query->get_bindings(), "where");
+  add_binding(where.query->get_raw_bindings(), "where");
 
   return *this;
 }
@@ -478,7 +477,7 @@ Builder &Builder::where_in_existing_query(const std::string &column,
   };
   wheres_.push_back(where);
 
-  add_binding(where.query->get_bindings(), "where");
+  add_binding(where.query->get_raw_bindings(), "where");
 
   return *this;
 }
@@ -608,7 +607,7 @@ Builder &Builder::where_sub(const std::string &column,
     {"boolean", boolean},
   };
 
-  add_binding(where.query->get_bindings(), "where");
+  add_binding(where.query->get_raw_bindings(), "where");
 
   return *this;
 }
@@ -653,7 +652,7 @@ Builder &Builder::add_where_exists_query(Builder *query,
     {"type", isnot ? "notexists" : "exists"}, {"boolean", boolean},
   };
   wheres_.push_back(where);
-  add_binding(where.query->get_bindings(), "where");
+  add_binding(where.query->get_raw_bindings(), "where");
   return *this;
 }
 
@@ -788,7 +787,7 @@ Builder &Builder::_union(Builder *query, bool all) {
   where.items = {
     {"all", all},
   };
-  add_binding(where.query->get_bindings(), "union");
+  add_binding(where.query->get_raw_bindings(), "union");
   return *this;
 }
 
@@ -824,7 +823,7 @@ db_fetch_array_t Builder::get(const std::vector<std::string> &columns) {
 
 //Run the query as a "select" statement against the connection.
 db_fetch_array_t Builder::run_select() {
-  return connection_->select(to_sql(), bindings_);
+  return connection_->select(to_sql(), get_bindings());
 }
 
 //Throw an exception if the query doesn't have an order_by clause.
@@ -837,7 +836,7 @@ void Builder::enforce_order_by() {
 //Determine if any rows exist for the current query.
 bool Builder::exists() {
   auto results = 
-    connection_->select(grammar_->compile_exists(*this), bindings_);
+    connection_->select(grammar_->compile_exists(*this), get_bindings());
   // If the results has rows, we will get the row and see if the exists column is a 
   // boolean true. If there is no results for this query we will return false as 
   // there are no rows for this query at all and we can return that info here.
@@ -1007,7 +1006,10 @@ int32_t Builder::deleted(const variable_t &id) {
   if (id != "") {
     where(from_ + ".id", "=", id);
   }
-  return connection_->deleted(grammar_->compile_delete(*this), bindings_);
+  variable_array_t bindings;
+  auto it = bindings_.begin();
+  if (it != bindings_.end()) bindings = it->second;
+  return connection_->deleted(grammar_->compile_delete(*this), bindings);
 }
 
 //Run a truncate statement on the table.

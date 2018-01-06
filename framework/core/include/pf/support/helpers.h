@@ -55,10 +55,19 @@ inline bool empty(const pf_basic::type::variable_t &value) {
 
 //Get the array keys of one variable set.
 inline std::vector<std::string> array_keys(
-    pf_basic::type::variable_set_t &array) {
+    const pf_basic::type::variable_set_t &array) {
   std::vector<std::string> r;
   for (auto it = array.begin(); it != array.end(); ++it)
     r.push_back(it->first);
+  return r;
+}
+
+//Get the array values of one variable set.
+inline pf_basic::type::variable_array_t array_values(
+    const pf_basic::type::variable_set_t &array) {
+  pf_basic::type::variable_array_t r;
+  for (auto it = array.begin(); it != array.end(); ++it)
+    r.push_back(it->second);
   return r;
 }
 
@@ -99,6 +108,7 @@ std::map<T_k, T_v> array_merge(const std::map<T_k, T_v> &array1,
     result[it->first] = it->second;
   for (auto it = array2.begin(); it != array2.end(); ++it)
     result[it->first] = it->second;
+  return result;
 }
 
 };

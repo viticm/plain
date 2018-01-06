@@ -12,6 +12,7 @@
 #define PF_DB_QUERY_BUILDER_H_
 
 #include "pf/db/query/config.h"
+#include "pf/db/concerns/builds_queries.h"
 
 namespace pf_db {
 
@@ -796,10 +797,15 @@ class PF_API Builder : public concerns::BuildsQueries {
    variable_t raw(const variable_t &value);
 
    //Get the current query value bindings in a flattened array.
-   db_query_bindings_t *get_bindings();
+   variable_array_t get_bindings() {
+     if (bindings_.empty()) return {};
+     return bindings_.begin()->second;
+   };
 
    //Get the raw array of bindings.
-   variable_set_t *get_raw_bindings();
+   db_query_bindings_t *get_raw_bindings() {
+     return &bindings_;
+   };
 
    //Set the bindings on the query builder.
    Builder &set_bindings(variable_array_t &bindings, 
@@ -838,6 +844,34 @@ class PF_API Builder : public concerns::BuildsQueries {
    //Clean the given bindings.
    Builder &clean_bindings(const std::vector<std::string> &except);
 
+ public:
+   //Add an "on" clause to the join.
+   virtual Builder &on(const std::string &, 
+                      const std::string &, 
+                      const std::string &, 
+                      const std::string &) {
+     return *this;
+   };
+
+   //Add an "on" clause to the join.
+   virtual Builder &on(closure_t, 
+                       const std::string &, 
+                       const std::string &, 
+                       const std::string &boolean) {
+      return *this;
+   };
+
+   //Add an "or on" clause to the join.
+   virtual Builder &or_on(const std::string &,
+                  const std::string &,
+                  const std::string &) {
+     return *this;
+   };
+
+   //Add an "or on" clause to the join.
+   virtual Builder &or_on(closure_t) {
+     return *this;
+   };
 
  protected:
 

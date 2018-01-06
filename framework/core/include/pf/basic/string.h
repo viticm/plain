@@ -62,18 +62,23 @@ PF_API int32_t explode(const char *source,
                        bool ignore_empty);
 PF_API bool checkstr(const char *in, uint32_t size);
 
+// Retira espacios en blanco (u otros caracteres) del inicio de un string.
 PF_API std::string &ltrim(
     std::string &str, const std::string &character_mask = " \t\n\r\0\x0B");
 
+// Retira los espacios en blanco (u otros caracteres) del final de un string.
 PF_API std::string &rtrim(
     std::string &str, const std::string &character_mask = " \t\n\r\0\x0B");
 
+// Elimina espacio en blanco (u otro tipo de caracteres) del inicio y el final de la cadena.
 PF_API std::string &trim(
     std::string &str, const std::string &character_mask = " \t\n\r\0\x0B");
 
+// Determine if a given string contains a given substring.
 PF_API bool contains(
     const std::string &haystack, const std::vector<std::string> &needles);
 
+// Reemplaza todas las apariciones del string buscado con el string de reemplazo.
 PF_API std::string str_replace(const std::string &search , 
                                const std::string &replace, 
                                const std::string &subject, 

@@ -549,6 +549,7 @@ std::string Grammar::remove_leading_boolean(const std::string &value) {
   return r;
 }
 
+//Compile the "offset" portions of the query.
 std::string Grammar::compile_offset(Builder &query, int32_t offset) {
   return "offset " + std::to_string(offset);
 }

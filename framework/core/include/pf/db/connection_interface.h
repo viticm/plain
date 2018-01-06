@@ -25,16 +25,17 @@ class PF_API ConnectionInterface {
  public:
    using variable_array_t = pf_basic::type::variable_array_t;
    using variable_t = pf_basic::type::variable_t;
-   using callback_t = std::function<void(ConnectionInterface *)>;
+   using closure_t = 
+     std::function<void(ConnectionInterface *, const variable_array_t &)>;
 
  public:
 
    //Run a select statement against the database.
    virtual db_fetch_array_t select(const std::string &query, 
-                                   db_query_bindings_t &bindings);
+                                   const variable_array_t &bindings = {}) = 0;
 
    //Run a select statement against the database.
-   virtual db_fetch_array_t select(const std::string &query);
+   virtual db_fetch_array_t select(const std::string &query) = 0;
 
    //Begin a fluent query against a database table.
    virtual query::Builder table(const std::string &name) = 0;
@@ -43,7 +44,7 @@ class PF_API ConnectionInterface {
    virtual variable_t raw(const variable_t &value) = 0;
 
    //Run a select statement and return a single result.
-   virtual void select_one(
+   virtual db_fetch_array_t select_one(
        const std::string &str, const variable_array_t &bindings = {}) = 0;
 
    //Run a select statement against the database.
@@ -56,7 +57,7 @@ class PF_API ConnectionInterface {
 
    //Run a delete statement against the database.
    virtual int32_t deleted(
-       const std::string &str, const db_query_bindings_t &bindings = {}) = 0;
+       const std::string &str, const variable_array_t &bindings = {}) = 0;
 
    //Execute an SQL statement and return the boolean result.
    virtual bool statement(
@@ -70,10 +71,10 @@ class PF_API ConnectionInterface {
    virtual bool unprepared(const std::string &str) = 0;
 
    //Prepare the query bindings for execution.
-   virtual void prepare_bindings(variable_array_t &bindings) = 0;
+   virtual void prepare_bindings(db_query_bindings_t &bindings) = 0;
 
    //Execute a Closure within a transaction.
-   virtual void transaction(callback_t callback, int8_t attempts = 1) = 0;
+   virtual void transaction(closure_t callback, int8_t attempts = 1) = 0;
 
    //Start a new database transaction.
    virtual void begin_transaction() = 0;
@@ -88,14 +89,13 @@ class PF_API ConnectionInterface {
    virtual int32_t transaction_level() const = 0;
 
    //Execute the given callback in "dry run" mode.
-   virtual void pretend(callback_t callback) = 0;
+   virtual void pretend(closure_t callback) = 0;
 
    //Get the query grammar used by the connection.
    virtual query::grammars::Grammar *get_query_grammar() = 0;
 
    //Get the schema grammar used by the connection.
    virtual query::grammars::Grammar *get_schema_grammar() = 0;
-
 
 };
 

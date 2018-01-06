@@ -74,6 +74,7 @@ class Query;
 class Interface;
 class Factory;
 class ConnectionInterface;
+class Connection;
 
 struct config_struct {
   std::string name; //connection or db name.

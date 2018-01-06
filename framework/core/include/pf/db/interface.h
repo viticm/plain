@@ -18,7 +18,7 @@ namespace pf_db {
 class PF_API Interface {
 
  public:
-   Interface() : isready_{false} {};
+   Interface() : isready_{false}, eid_{DB_EID_INVALID} {};
    virtual ~Interface() {};
 
  public:
@@ -27,7 +27,7 @@ class PF_API Interface {
    virtual bool query(const std::string &sql_str) = 0;
    virtual bool fetch(int32_t orientation = 1, int32_t offset = 0) = 0;
    virtual int32_t get_affectcount() const = 0;
-   virtual bool check_db_connect() = 0;
+   virtual bool check_db_connect(bool directly = false) = 0;
    bool isready() const { return isready_; };
    virtual bool getresult() const = 0;
    virtual int32_t get_columncount() const = 0;
@@ -71,14 +71,35 @@ class PF_API Interface {
    virtual db_columntype_t gettype(int32_t column_index) = 0;
 
  public:
+
+   //Get the object mutex pointer.
    std::mutex *get_mutex() { return &mutex_; }
 
+   //Set the environment id.
+   void set_eid(eid_t id) { eid_ = id; }
+
+   //Get the environment id.
+   eid_t get_eid() const { return eid_; }
+
  protected:
+
+   /* Database if on ready status. */
    bool isready_;
+   
+   /* The query mutex in mutli threads. */
    std::mutex mutex_;
+
+   /* The use database name. */
    std::string name_;
+
+   /* The use database user name. */
    std::string username_;
+
+   /* The use database password. */
    std::string password_;
+
+   /* The environment id. */
+   eid_t eid_;
 
 };
 
