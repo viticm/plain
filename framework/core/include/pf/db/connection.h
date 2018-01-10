@@ -132,6 +132,9 @@ class PF_API Connection : public ConnectionInterface {
    // Indicates if the connection is in a "dry run".
    bool pretending_;
 
+   // The number of active transactions.
+   int32_t transactions_;
+
  protected:
 
    // Run a SQL statement and log its execution context.

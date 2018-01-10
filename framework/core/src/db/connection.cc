@@ -25,6 +25,8 @@ Connection::Connection(Interface *env,
   // which are both very important parts of the database abstractions 
   // so we initialize these to their default values while starting.
   use_default_query_grammar();
+
+  transactions_ = 0;
 }
 
 // The destruct function.
@@ -83,53 +85,70 @@ db_fetch_array_t Connection::select(const std::string &query,
 
 //Begin a fluent query against a database table.
 query::Builder Connection::table(const std::string &name) {
-
+  query::Builder r(this, get_query_grammar());
+  return r;
 }
 
 //Get a new raw query expression.
 variable_t Connection::raw(const variable_t &value) {
+  variable_t r{value};
+  r.type = static_cast<var_t>(DB_EXPRESSION_TYPE);
   return value;
 }
 
 //Run a select statement and return a single result.
 db_fetch_array_t Connection::select_one(
     const std::string &str, const variable_array_t &bindings) {
-
+  auto records = select(str, bindings);
+  db_fetch_array_t r;
+  if (records.size() > 0) {
+    r.keys = records.keys;
+    for (int32_t i = 0; i < r.keys.size(); ++i)
+      r.values.push_back(r.values[i]);
+  }
+  return r;
 }
 
 //Run a select statement against the database.
 bool Connection::insert(
-    const std::string &str, const variable_array_t &bindings) {
-
+    const std::string &str, const variable_array_t &) {
+  return env_->query(str);
 }
 
 //Run an update statement against the database.
 int32_t Connection::update(
     const std::string &str, const variable_array_t &bindings) {
-
+  if (!env_->query(str)) return 0;
+  return env_->get_affectcount();
 }
 
 //Run a delete statement against the database.
 int32_t Connection::deleted(
     const std::string &str, const variable_array_t &bindings) {
-
+  if (!env_->query(str)) return 0;
+  return env_->get_affectcount();
 }
 
 //Execute an SQL statement and return the boolean result.
 bool Connection::statement(
     const std::string &str, const variable_array_t &bindings) {
-
+  return env_->query(str);
 }
 
 //Run an SQL statement and get the number of rows affected.
 int32_t Connection::affecting_statement(
     const std::string &str, const variable_array_t &bindings) {
-
+  if (!env_->query(str)) return 0;
+  return env_->get_affectcount();
 }
 
 //Run a raw, unprepared query against the PDO connection.
 bool Connection::unprepared(const std::string &str) {
-
+  return run(str, {}, [this](
+        const std::string &query, const variable_array_t &bindings){
+    if (pretending()) return true;
+    return env_->query(query);
+  });
 }
 
 //Prepare the query bindings for execution.
@@ -139,12 +158,11 @@ void Connection::prepare_bindings(db_query_bindings_t &bindings) {
 
 //Execute a Closure within a transaction.
 void Connection::transaction(closure_t callback, int8_t attempts) {
-
+  //do nothing
 }
 
 //Start a new database transaction.
 void Connection::begin_transaction() {
-
 }
 
 //Commit the active database transaction.
@@ -159,7 +177,7 @@ void Connection::rollback() {
 
 //Get the number of active transactions.
 int32_t Connection::transaction_level() const {
-
+  return transactions_;
 }
 
 //Execute the given callback in "dry run" mode.
