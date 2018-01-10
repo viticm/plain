@@ -75,7 +75,10 @@ inline pf_basic::type::variable_array_t array_values(
 template <typename T>
 bool in_array(const T &needle, 
               const std::vector<T> &haystack) {
-  return haystack.find(needle) != haystack.end();
+  for (const T &item : haystack) {
+    if (needle == item) return true;
+  }
+  return false;
 }
 
 //Safe get vector array elements.

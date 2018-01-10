@@ -53,8 +53,8 @@ class stringstream {
    }
 
    void set_position(size_t position) {
-     Assert(position >= 0 && position < size_);
-     if (position < 0 || position >= size_) return;
+     Assert(position < size_);
+     if (position >= size_) return;
      cur_ = position;
    }
 

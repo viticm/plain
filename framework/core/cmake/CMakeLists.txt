@@ -18,6 +18,8 @@ option(
 
 option(pf_build_tests "Build all of pf's own tests." OFF)
 
+option(pf_build_shared "Build all of pf as share library." OFF)
+
 option(pf_build_samples "Build pf's sample programs." OFF)
 
 option(pf_disable_pthreads "Disable uses of pthreads in pf." OFF)
@@ -30,7 +32,7 @@ option(
 set(CMAKE_DEBUG_POSTFIX "d" CACHE STRING "Generate debug library name with a postfix.")
 
 # Defines pre_project_set_up_hermetic_build() and set_up_hermetic_build().
-include(cmake/hermetic_build.cmake OPTIONAL)
+include(inc/hermetic_build.cmake OPTIONAL)
 
 if (COMMAND pre_project_set_up_hermetic_build)
   pre_project_set_up_hermetic_build()
@@ -68,9 +70,11 @@ if (pf_hide_internal_symbols)
 endif()
 
 # Define helper functions and macros used by Plain Framework.
-include(cmake/internal_utils.cmake)
+include(inc/internal_utils.cmake)
 
 config_compiler_and_linker()  # Defined in internal_utils.cmake.
+
+set(pf_SOURCE_DIR "..")
 
 # Where Plain Framework's .h files can be found.
 include_directories(
@@ -94,23 +98,29 @@ endif()
 # Defines the pf_core libraries.  User tests should link
 # with one of them.
 
+file(GLOB_RECURSE LIB_SOURCES "${pf_SOURCE_DIR}/src/*.cc")
+
 # Plain Framework libraries.  We build them using more strict warnings than what
 # are used for other targets, to ensure that pf can be compiled by a user
 # aggressive about warnings.
-cxx_library(pf_core "${cxx_strict}" src/*.cc)
+if (pf_build_shared)
+  cxx_shared_library(pf_core "${cxx_default}" ${LIB_SOURCES})
+else()
+  cxx_library(pf_core "${cxx_strict}" ${LIB_SOURCES})
+endif()
 
 # If the CMake version supports it, attach header directory information
 # to the targets for when we are part of a parent build (ie being pulled
 # in via add_subdirectory() rather than being a standalone build).
 if (DEFINED CMAKE_VERSION AND NOT "${CMAKE_VERSION}" VERSION_LESS "2.8.12")
-  target_include_directories(pf      SYSTEM INTERFACE "${pf_SOURCE_DIR}/include")
+  target_include_directories(pf_core      SYSTEM INTERFACE "${pf_SOURCE_DIR}/include")
 endif()
 
 ########################################################################
 #
 # Install rules
 if(INSTALL_PF)
-  install(TARGETS pf pf_main
+  install(TARGETS pf_core
     RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
     ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
     LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}")
@@ -119,7 +129,7 @@ if(INSTALL_PF)
 
   # configure and install pkgconfig files
   configure_file(
-    cmake/pf.pc.in
+    inc/pf.pc.in
     "${CMAKE_BINARY_DIR}/pf.pc"
     @ONLY)
   install(FILES "${CMAKE_BINARY_DIR}/pf.pc"
@@ -167,8 +177,6 @@ if (pf_build_tests)
 
   endif()
 
-  cxx_shared_library(pf_dll "${cxx_default}"
-    src/*.cc)
 
   if (NOT MSVC OR MSVC_VERSION LESS 1600)  # 1600 is Visual Studio 2010.
     # Visual Studio 2010, 2012, and 2013 define symbols in std::tr1 that

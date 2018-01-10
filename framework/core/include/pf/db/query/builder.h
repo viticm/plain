@@ -42,7 +42,7 @@ class PF_API Builder : public concerns::BuildsQueries {
    //The database query grammar instance.
    pf_db::query::grammars::Grammar *grammar_;
 
-   //The current query value bindings.
+   //The current query val bindings.
    db_query_bindings_t bindings_;
 
    //An aggregate function and column to be run.
@@ -107,7 +107,7 @@ class PF_API Builder : public concerns::BuildsQueries {
 
    //Add a new "raw" select expression to the query.
    Builder &select_raw(
-       const std::string &expression, db_query_bindings_t &bindings);
+       const std::string &expression, const variable_array_t &bindings);
 
    //Add a subselect expression to the query.
    Builder &select_sub(Builder &query, const std::string &as);
@@ -118,11 +118,11 @@ class PF_API Builder : public concerns::BuildsQueries {
 
    //Parse the sub-select query into SQL and bindings.
    void parse_subselect(
-       Builder &query, std::string &sql, db_query_bindings_t &bindings);
+       Builder &query, std::string &sql, variable_array_t &bindings);
 
    //Parse the sub-select query into SQL and bindings.
    void parse_subselect(
-       const std::string &query, std::string &sql, db_query_bindings_t &bindings);
+       const std::string &query, std::string &sql, variable_array_t &bindings);
 
    //Add a new select column to the query.
    Builder &add_select(const std::vector<std::string> &column);
@@ -161,54 +161,55 @@ class PF_API Builder : public concerns::BuildsQueries {
 
    //Add a "join where" clause to the query.
    Builder &join_where(const std::string &table, 
-                       const std::string &first, 
+                       const std::string &_first, 
                        const std::string &oper = "", 
                        const std::string &second = "", 
                        const std::string &type = "inner") {
-     return join(table, first, oper, second, type, true);
+     return join(table, _first, oper, second, type, true);
    };
 
    //Add a left join to the query.
    Builder &left_join(const std::string &table,
-                      const std::string &first,
+                      const std::string &_first,
                       const std::string &oper = "",
                       const std::string &second = "") {
-     return join(table, first, oper, second, "left");
+     return join(table, _first, oper, second, "left");
    };
 
    //Add a "join where" clause to the query.
    Builder &left_join_where(const std::string &table,
-                            const std::string &first,
+                            const std::string &_first,
                             const std::string &oper,
                             const std::string &second) {
-     return join_where(table, first, oper, second, "left");
+     return join_where(table, _first, oper, second, "left");
    };
 
    //Add a right join to the query.
    Builder &right_join(const std::string &table,
-                       const std::string &first,
+                       const std::string &_first,
                        const std::string &oper = "",
                        const std::string &second = "") {
-     return join(table, first, oper, second, "right");
+     return join(table, _first, oper, second, "right");
    };
   
    //Add a "right join where" clause to the query.
    Builder &right_join_where(const std::string &table,
-                             const std::string &first,
+                             const std::string &_first,
                              const std::string &oper,
                              const std::string &second) {
-     return join_where(table, first, oper, second, "right");
+     return join_where(table, _first, oper, second, "right");
    };
 
    //Add a "cross join" clause to the query.
    Builder &cross_join(const std::string &table, 
-                       const std::string &first = "", 
+                       const std::string &_first = "", 
                        const std::string &oper = "", 
                        const std::string &second = "");
 
    //Pass the query to a given callback.
    Builder &tap(closure_t callback) {
      //return when(true, callback);
+     return *this;
    };
 
    //Merge an array of where clauses and bindings.
@@ -218,7 +219,7 @@ class PF_API Builder : public concerns::BuildsQueries {
    //Add a basic where clause to the query.
    Builder &where(const std::string &column, 
                   const std::string &oper = "", 
-                  const variable_t &value = "", 
+                  const variable_t &val = "", 
                   const std::string &boolean = "and");
 
    //Add a basic where clause to the query.
@@ -236,7 +237,7 @@ class PF_API Builder : public concerns::BuildsQueries {
    //Add a basic where clause to the query.
    Builder &where(closure_t column, 
                   const std::string &oper = "", 
-                  const variable_t &value = "", 
+                  const variable_t &val = "", 
                   const std::string &boolean = "and") {
      // If the columns is actually a Closure instance, we will assume the developer
      // wants to begin a nested where statement which is wrapped in parenthesis.
@@ -247,7 +248,7 @@ class PF_API Builder : public concerns::BuildsQueries {
    //Add a basic where clause to the query.
    Builder &where(const std::string &column, 
                   const std::string &oper, 
-                  closure_t value,
+                  closure_t val,
                   const std::string &boolean = "and");
  
    //Add an array of where clauses to the query.
@@ -263,8 +264,8 @@ class PF_API Builder : public concerns::BuildsQueries {
    //Add an "or where" clause to the query.
    Builder &or_where(const std::string &column, 
                      const std::string &oper, 
-                     const variable_t &value) {
-     return where(column, oper, value, "or");
+                     const variable_t &val) {
+     return where(column, oper, val, "or");
    };
 
    //Add a "where" clause comparing two columns to the query.
@@ -274,25 +275,25 @@ class PF_API Builder : public concerns::BuildsQueries {
                          const std::string &boolean = "and");
 
    //Add a "where" clause comparing two columns to the query.
-   Builder &where_column(const std::vector<variable_array_t> &first, 
+   Builder &where_column(const std::vector<variable_array_t> &_first, 
                          const std::string &oper = "", 
                          const std::string &second = "", 
                          const std::string &boolean = "and") {
-     // If the column is an array, we will assume it is an array of key-value pairs 
+     // If the column is an array, we will assume it is an array of key-val pairs 
      // and can add them each as a where clause. We will maintain the boolean we
      // received when the method was called and pass it into the nested where.
-     return add_array_of_wheres(first, boolean, "where_column");
+     return add_array_of_wheres(_first, boolean, "where_column");
    };
 
    //Add a "where" clause comparing two columns to the query.
-   Builder &where_column(variable_set_t &first, 
+   Builder &where_column(variable_set_t &_first, 
                          const std::string &oper = "", 
                          const std::string &second = "", 
                          const std::string &boolean = "and") {
-     // If the column is an array, we will assume it is an array of key-value pairs 
+     // If the column is an array, we will assume it is an array of key-val pairs 
      // and can add them each as a where clause. We will maintain the boolean we
      // received when the method was called and pass it into the nested where.
-     return add_array_of_wheres(first, boolean, "where_column");
+     return add_array_of_wheres(_first, boolean, "where_column");
    };
 
    //Add an "or where" clause comparing two columns to the query.
@@ -301,33 +302,33 @@ class PF_API Builder : public concerns::BuildsQueries {
                             const std::string &second = "");
 
    //Add a "or where" clause comparing two columns to the query.
-   Builder &or_where_column(const std::vector<variable_array_t> &first, 
+   Builder &or_where_column(const std::vector<variable_array_t> &_first, 
                             const std::string &oper = "", 
                             const std::string &second = "") {
-     return where_column(first, oper, second, "or");
+     return where_column(_first, oper, second, "or");
    };
 
    //Add a "or where" clause comparing two columns to the query.
-   Builder &where_column(variable_set_t &first, 
+   Builder &where_column(variable_set_t &_first, 
                          const std::string &oper = "", 
                          const std::string &second = "") {
-     return where_column(first, oper, second, "or");
+     return where_column(_first, oper, second, "or");
    };
 
    //Add a raw where clause to the query.
    Builder &where_raw(const std::string &sql, 
-                      db_query_bindings_t &bindings, 
+                      const variable_array_t &bindings, 
                       const std::string &boolean = "and");
 
    //Add a raw or where clause to the query.
    Builder &or_where_raw(const std::string &sql, 
-                         db_query_bindings_t &bindings) {
+                         const variable_array_t &bindings) {
      return where_raw(sql, bindings, "or");
    };
 
    //Add a "where in" clause to the query.
    Builder &where_in(const std::string &column, 
-                     const variable_array_t &values, 
+                     const variable_array_t &vals, 
                      const std::string &boolean = "and", 
                      bool isnot = false);
 
@@ -336,8 +337,8 @@ class PF_API Builder : public concerns::BuildsQueries {
                      Builder &query, 
                      const std::string &boolean = "and", 
                      bool isnot = false) {
-     // If the value is a query builder instance we will assume the developer wants to 
-     // look for any values that exists within this given query. So we will add the
+     // If the val is a query builder instance we will assume the developer wants to 
+     // look for any vals that exists within this given query. So we will add the
      // query accordingly so that this query is properly executed when it is run.
      return where_in_existing_query(column, query, boolean, isnot);
    };
@@ -347,7 +348,7 @@ class PF_API Builder : public concerns::BuildsQueries {
                      closure_t callback, 
                      const std::string &boolean = "and", 
                      bool isnot = false) {
-     // If the value of the where in clause is actually a Closure, we will assume that
+     // If the val of the where in clause is actually a Closure, we will assume that
      // the developer is using a full sub-select for this "in" statement, and will
      // execute those Closures, then we can re-construct the entire sub-selects.
      return where_insub(column, callback, boolean, isnot);
@@ -355,8 +356,8 @@ class PF_API Builder : public concerns::BuildsQueries {
 
    //Add an "or where in" clause to the query.
    Builder &or_where_in(const std::string &column, 
-                        const variable_array_t &values) {
-     return where_in(column, values, "or");
+                        const variable_array_t &vals) {
+     return where_in(column, vals, "or");
    };
 
    //Add an "or where in" clause to the query.
@@ -373,9 +374,9 @@ class PF_API Builder : public concerns::BuildsQueries {
 
    //Add a "where not in" clause to the query.
    Builder &where_notin(const std::string &column,
-                        const variable_array_t &values,
+                        const variable_array_t &vals,
                         const std::string &boolean = "and") {
-     return where_in(column, values, boolean, true);
+     return where_in(column, vals, boolean, true);
    };
 
    //Add a "where not in" clause to the query.
@@ -394,8 +395,8 @@ class PF_API Builder : public concerns::BuildsQueries {
 
    //Add an "or where not in" clause to the query.
    Builder &or_where_notin(const std::string &column,
-                           const variable_array_t &values) {
-     return where_notin(column, values, "or");
+                           const variable_array_t &vals) {
+     return where_notin(column, vals, "or");
    };
    
    //Add an "or where not in" clause to the query.
@@ -428,27 +429,27 @@ class PF_API Builder : public concerns::BuildsQueries {
 
    //Add a where between statement to the query.
    Builder &where_between(const std::string &column,
-                          const variable_array_t &values,
+                          const variable_array_t &vals,
                           const std::string &boolean = "and",
                           bool isnot = false);
 
    //Add an or where between statement to the query.
    Builder &or_where_between(const std::string &column,
-                             const variable_array_t &values) {
-     return where_between(column, values, "or");
+                             const variable_array_t &vals) {
+     return where_between(column, vals, "or");
    };
 
    //Add a where not between statement to the query.
    Builder &where_notbetween(const std::string &column,
-                             const variable_array_t &values,
+                             const variable_array_t &vals,
                              const std::string &boolean = "and") {
-     return where_between(column, values, boolean, true);
+     return where_between(column, vals, boolean, true);
    };
 
    //Add an or where not between statement to the query.
    Builder &or_where_notbetween(const std::string &column,
-                                const variable_array_t &values) {
-     return where_notbetween(column, values, "or");
+                                const variable_array_t &vals) {
+     return where_notbetween(column, vals, "or");
    };
 
    //Add an "or where not null" clause to the query.
@@ -459,47 +460,47 @@ class PF_API Builder : public concerns::BuildsQueries {
    //Add a "where date" statement to the query.
    Builder &where_date(const std::string &column,
                        const std::string &oper,
-                       const variable_t &value = "",
+                       const variable_t &val = "",
                        const std::string &boolean = "and");
 
    //Add an "or where date" statement to the query.
    Builder &or_where_date(const std::string &column,
                           const std::string &oper,
-                          const std::string &value) {
-     return where_date(column, oper, value, "or");
+                          const std::string &val) {
+     return where_date(column, oper, val, "or");
    };
 
    //Add a "where time" statement to the query.
    Builder &where_time(const std::string &column, 
                        const std::string &oper, 
-                       int32_t value, 
+                       int32_t val, 
                        const std::string &boolean = "and") {
-     return add_date_based_where("time", column, oper, value, boolean);
+     return add_date_based_where("time", column, oper, val, boolean);
    };
 
    //Add an "or where time" statement to the query.
    Builder &or_where_time(const std::string &column, 
                           const std::string &oper, 
-                          int32_t value) {
-     return where_time(column, oper, value, "or");
+                          int32_t val) {
+     return where_time(column, oper, val, "or");
    };
 
    //Add a "where day" statement to the query.
    Builder &where_day(const std::string &column, 
                       const std::string &oper, 
-                      const variable_t &value = "", 
+                      const variable_t &val = "", 
                       const std::string &boolean = "and");
 
    //Add a "where month" statement to the query.
    Builder &where_month(const std::string &column, 
                         const std::string &oper, 
-                        const variable_t &value = "", 
+                        const variable_t &val = "", 
                         const std::string &boolean = "and");
 
    //Add a "where year" statement to the query.
    Builder &where_year(const std::string &column, 
                        const std::string &oper, 
-                       const variable_t &value = "", 
+                       const variable_t &val = "", 
                        const std::string &boolean = "and");
 
    //Add a nested where statement to the query.
@@ -559,24 +560,24 @@ class PF_API Builder : public concerns::BuildsQueries {
    //Add a "having" clause to the query.
    Builder &having(const std::string &column, 
                    const std::string &oper = "", 
-                   const variable_t &value = "", 
+                   const variable_t &val = "", 
                    const std::string &boolean = "and");
 
    //Add a "or having" clause to the query.
    Builder &or_having(const std::string &column, 
                       const std::string &oper = "", 
-                      const variable_t &value = "") {
-     return having(column, oper, value, "or");
+                      const variable_t &val = "") {
+     return having(column, oper, val, "or");
    };
 
    //Add a raw having clause to the query.
    Builder &having_raw(const std::string &sql,
-                       variable_set_t &bindings,
+                       const variable_array_t &bindings,
                        const std::string &boolean = "and");
 
    //Add a raw or having clause to the query.
    Builder &or_having_raw(const std::string &sql,
-                          variable_set_t &bindings) {
+                          const variable_array_t &bindings) {
      return having_raw(sql, bindings, "or");
    };
 
@@ -604,23 +605,23 @@ class PF_API Builder : public concerns::BuildsQueries {
 
    //Add a raw "order by" clause to the query.
    Builder &order_byraw(const std::string &sql,
-                        variable_set_t &bindings);
+                        const variable_array_t &bindings = {});
 
-   //Alias to set the "offset" value of the query.
-   Builder &skip(int32_t value) {
-     return offset(value);
+   //Alias to set the "offset" val of the query.
+   Builder &skip(int32_t val) {
+     return offset(val);
    };
 
-   //Set the "offset" value of the query.
-   Builder &offset(int32_t value);
+   //Set the "offset" val of the query.
+   Builder &offset(int32_t val);
 
-   //Alias to set the "limit" value of the query.
-   Builder &take(int32_t value) {
-     return limit(value);
+   //Alias to set the "limit" val of the query.
+   Builder &take(int32_t val) {
+     return limit(val);
    };
 
-   //Set the "limit" value of the query.
-   Builder &limit(int32_t value);
+   //Set the "limit" val of the query.
+   Builder &limit(int32_t val);
 
    //Set the limit and offset for a given page.
    Builder &for_page(int32_t page, int32_t perpage = 15) {
@@ -651,8 +652,8 @@ class PF_API Builder : public concerns::BuildsQueries {
    };
 
     //Lock the selected rows in the table.
-   Builder &lock(const variable_t &value = true) {
-     lock_ = value;
+   Builder &lock(const variable_t &val = true) {
+     lock_ = val;
      return *this;
    };
 
@@ -673,7 +674,7 @@ class PF_API Builder : public concerns::BuildsQueries {
    variable_array_t find(int32_t id, 
                          const std::vector<std::string> columns = {"*"});
 
-   //Get a single column's value from the first result of a query.
+   //Get a single column's val from the first result of a query.
    variable_t value(const std::string &column);
 
    //Execute the query as a "select" statement.
@@ -694,12 +695,12 @@ class PF_API Builder : public concerns::BuildsQueries {
    //Throw an exception if the query doesn't have an order_by clause.
    void enforce_order_by();
 
-   //Get an array with the values of a given column.
+   //Get an array with the vals of a given column.
    void pluck(const std::string &column, 
               db_fetch_array_t &result, 
               const std::string &key = "");
 
-   //Concatenate values of a given column as a string.
+   //Concatenate vals of a given column as a string.
    const std::string implode(
        const std::string &column, const std::string &glue) const;
 
@@ -716,22 +717,22 @@ class PF_API Builder : public concerns::BuildsQueries {
      return aggregate("count", columns).get<int32_t>();
    };
 
-   //Retrieve the minimum value of a given column.
+   //Retrieve the minimum val of a given column.
    variable_t _min(const std::string &column) {
      return aggregate("_min", {column});
    };
 
-   //Retrieve the sum of the values of a given column.
+   //Retrieve the sum of the vals of a given column.
    variable_t _max(const std::string &column) {
      return aggregate("_max", {column});
    };
 
-   //Retrieve the sum of the values of a given column.
+   //Retrieve the sum of the vals of a given column.
    variable_t sum(const std::string &column) {
      return aggregate("sum", {column});
    };
 
-   //Retrieve the average of the values of a given column.
+   //Retrieve the average of the vals of a given column.
    variable_t avg(const std::string &column) {
      return aggregate("avg", {column});
    };
@@ -751,31 +752,31 @@ class PF_API Builder : public concerns::BuildsQueries {
        const std::vector<std::string> &columns = {"*"});
 
    //Insert a new record into the database.
-   bool insert(variable_set_t &values) {
-     std::vector<variable_set_t> _values{ {values} };
-     return insert(_values);
+   bool insert(variable_set_t &vals) {
+     std::vector<variable_set_t> _vals{ {vals} };
+     return insert(_vals);
    };
 
    //Insert a new record into the database.
-   bool insert(std::vector<variable_set_t> &values);
+   bool insert(std::vector<variable_set_t> &vals);
 
-   //Insert a new record and get the value of the primary key.
-   int32_t insert_getid(const variable_array_t &values, 
+   //Insert a new record and get the val of the primary key.
+   int32_t insert_getid(const variable_array_t &vals, 
                         const std::string &sequence = "");
 
    //Update a record in the database.
-   int32_t update(variable_set_t &values);
+   int32_t update(variable_set_t &vals);
 
-   //Insert or update a record matching the attributes, and fill it with values.
+   //Insert or update a record matching the attributes, and fill it with vals.
    bool update_or_insert(variable_set_t &attributes,
-                         variable_set_t &values);
+                         variable_set_t &vals);
 
-   //Increment a column's value by a given amount.
+   //Increment a column's val by a given amount.
    int32_t increment(const std::string &column, 
                      int32_t amount = 1, 
                      const variable_array_t &extra = {});
 
-   //Decrement a column's value by a given amount.
+   //Decrement a column's val by a given amount.
    int32_t decrement(const std::string &column, 
                      int32_t amount = 1, 
                      const variable_set_t &extra = {});
@@ -794,9 +795,9 @@ class PF_API Builder : public concerns::BuildsQueries {
    };
 
    //* Create a raw database expression.
-   variable_t raw(const variable_t &value);
+   variable_t raw(const variable_t &val);
 
-   //Get the current query value bindings in a flattened array.
+   //Get the current query val bindings in a flattened array.
    variable_array_t get_bindings() {
      if (bindings_.empty()) return {};
      return bindings_.begin()->second;
@@ -812,11 +813,11 @@ class PF_API Builder : public concerns::BuildsQueries {
                          const std::string &type = "where");
 
    //Add a binding to the query.
-   Builder &add_binding(const variable_array_t &values, 
+   Builder &add_bindings(const variable_array_t &vals, 
                         const std::string &type = "where");
 
    //Add a binding to the query.
-   Builder &add_binding(const variable_t &value, 
+   Builder &add_binding(const variable_t &val, 
                         const std::string &type = "where");
 
    //Merge an array of bindings into our bindings.
@@ -875,16 +876,16 @@ class PF_API Builder : public concerns::BuildsQueries {
 
  protected:
 
-   //Prepare the value and operator for a where clause.
+   //Prepare the val and operator for a where clause.
    variable_array_t prepare_value_and_operator(
-       const std::string &value, 
+       const std::string &val, 
        const std::string &oper, 
        bool use_default = false);
 
-   //Determine if the given operator and value combination is legal.
-   // - Prevents using Null values with invalid operators.
+   //Determine if the given operator and val combination is legal.
+   // - Prevents using Null vals with invalid operators.
    bool invalid_operator_and_value(const std::string &oper, 
-                                   const variable_t &value);
+                                   const variable_t &val);
 
    //Determine if the given operator is supported.
    bool invalid_operator(const std::string &oper);
@@ -905,7 +906,7 @@ class PF_API Builder : public concerns::BuildsQueries {
    Builder &add_date_based_where(const std::string &type,
                                  const std::string &column,
                                  const std::string &oper,
-                                 int32_t value,
+                                 int32_t val,
                                  const std::string &boolean = "and");
 
    //Add a full sub-select to the query.
