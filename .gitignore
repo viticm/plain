@@ -262,6 +262,7 @@ pf/plugin/bak/*
 *.lib
 *.dll
 *.tlog
+*.a
 
 #######################
 ## rename source files
