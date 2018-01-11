@@ -3,8 +3,8 @@
 
 namespace pf_cache {
 
-Repository::Repository(StoreInterface *store) {
-  store_ = store;
+Repository::Repository(StoreInterface *_store) {
+  store_ = _store;
   minutes_ = 0;
 }
 

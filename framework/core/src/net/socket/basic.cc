@@ -13,11 +13,11 @@ Basic::Basic() :
   //do nothing.
 }
 
-Basic::Basic(const char *host, uint16_t port) {
+Basic::Basic(const char *_host, uint16_t _port) {
   using namespace pf_basic;
   memset(host_, '\0', sizeof(host_));
-  if (host != nullptr) string::safecopy(host_, host, sizeof(host_));      
-  port_ = port;
+  if (_host != nullptr) string::safecopy(host_, _host, sizeof(host_));      
+  port_ = _port;
   create();
 }
 
@@ -59,23 +59,23 @@ if (0 == strcmp(host_, "0.0.0.0")) {
   return result;
 }
 
-bool Basic::connect(const char *host, uint16_t port) {
+bool Basic::connect(const char *_host, uint16_t _port) {
   using namespace pf_basic;
   bool result = true;
-  if (host != nullptr)
-    string::safecopy(host_, host, sizeof(host_));
-  port_ = port;
+  if (_host != nullptr)
+    string::safecopy(host_, _host, sizeof(host_));
+  port_ = _port;
   result = connect();
   return result;
 }
 
-bool Basic::reconnect(const char *host, uint16_t port) {
+bool Basic::reconnect(const char *_host, uint16_t _port) {
   using namespace pf_basic;
   bool result = true;
   close();
-  if (host != nullptr)
-    string::safecopy(host_, host, sizeof(host_));
-  port_ = port;
+  if (_host != nullptr)
+    string::safecopy(host_, _host, sizeof(host_));
+  port_ = _port;
   create();
   result = connect();
   return result;
@@ -142,9 +142,9 @@ bool Basic::bind(const char *ip) {
   return result;
 }
 
-bool Basic::bind(uint16_t port, const char *ip) {
+bool Basic::bind(uint16_t _port, const char *ip) {
   bool result = true;
-  port_ = port;
+  port_ = _port;
   result = bind(ip);
   return result;
 }

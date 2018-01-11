@@ -619,6 +619,7 @@ std::string &ltrim(std::string &str, const std::string &character_mask) {
   for (size_t i = 0; i < character_mask.length(); ++i) {
     str.erase(0, str.find_first_not_of(character_mask[i]));
   }
+  return str;
 }
 
 std::string &rtrim(std::string &str, const std::string &character_mask) {
@@ -626,6 +627,7 @@ std::string &rtrim(std::string &str, const std::string &character_mask) {
   for (size_t i = 0; i < character_mask.length(); ++i) {
     str.erase(str.find_last_not_of(character_mask[i]) + 1);
   }
+  return str;
 }
 
 std::string &trim(std::string &str, const std::string &character_mask) {
@@ -634,6 +636,7 @@ std::string &trim(std::string &str, const std::string &character_mask) {
     str.erase(0, str.find_first_not_of(character_mask[i]));
     str.erase(str.find_last_not_of(character_mask[i]) + 1);
   }
+  return str;
 }
 
 bool contains(

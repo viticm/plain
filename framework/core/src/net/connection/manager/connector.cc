@@ -4,8 +4,8 @@
 
 using namespace pf_net::connection::manager;
 
-bool Connector::init(uint16_t max_size) {
-  return Basic::init(max_size);
+bool Connector::init(uint16_t _max_size) {
+  return Basic::init(_max_size);
 }
 
 pf_net::connection::Basic *Connector::connect(const char *ip, uint16_t port) {

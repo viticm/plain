@@ -22,10 +22,10 @@ class PF_API Input : public Basic {
 
  public: //construct and destruct
    Input(
-       socket::Basic *socket, 
+       socket::Basic *_socket, 
        uint32_t bufferlength = NETINPUT_BUFFERSIZE_DEFAULT, 
        uint32_t bufferlength_max = NETINPUT_DISCONNECT_MAXSIZE)
-     : Basic(socket, bufferlength, bufferlength_max) {};
+     : Basic(_socket, bufferlength, bufferlength_max) {};
    virtual ~Input() {};
    
  public:
@@ -87,15 +87,15 @@ class PF_API Input : public Basic {
      return *this;
    };
    Input &operator >> (char *&var) { //Not safe.
-     uint32_t size = read_uint32();
-     read(var, size);
+     uint32_t _size = read_uint32();
+     read(var, _size);
      return *this;
    };
    Input &operator >> (std::string &var) { //Need optimize
-     uint32_t size = read_uint32();
-     auto temp = new char[size];
-     memset(temp, 0, size);
-     read(temp, size);
+     uint32_t _size = read_uint32();
+     auto temp = new char[_size];
+     memset(temp, 0, _size);
+     read(temp, _size);
      var = temp;
      safe_delete(temp);
      return *this;

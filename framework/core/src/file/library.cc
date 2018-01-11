@@ -48,20 +48,20 @@ std::unique_ptr< pf_file::LibraryManager > g_librarymanager{nullptr};
 
 namespace pf_file {
 
-void Library::set_filename(const std::string &filename) {
-  filename_ = filename;
-  if (filename.size() < strlen(LIBRARY_SUFFIX)) {
+void Library::set_filename(const std::string &_filename) {
+  filename_ = _filename;
+  if (_filename.size() < strlen(LIBRARY_SUFFIX)) {
     filename_ += LIBRARY_SUFFIX;
     return;
   }
-  size_t suf_pos = filename.rfind(LIBRARY_SUFFIX); //find the last: xxx.soyz.so.1
+  size_t suf_pos = _filename.rfind(LIBRARY_SUFFIX); //find the last: xxx.soyz.so.1
   if (suf_pos == std::string::npos) {
     filename_ += LIBRARY_SUFFIX;
     return;
   }
   // xx.sox, xx.so.1
-  if (suf_pos + strlen(LIBRARY_SUFFIX) > filename.size()) {
-    if (filename.substr(suf_pos + strlen(LIBRARY_SUFFIX), 1) != ".") {
+  if (suf_pos + strlen(LIBRARY_SUFFIX) > _filename.size()) {
+    if (_filename.substr(suf_pos + strlen(LIBRARY_SUFFIX), 1) != ".") {
       filename_ += LIBRARY_SUFFIX;
       return;
     }
@@ -218,12 +218,12 @@ bool LibraryManager::load(const std::string &name,
   std::vector<std::string> names = namesmap_[name];
   if (0 == names.size()) names.push_back(name);
   auto library = new Library();
-  for (const std::string &name : names) {
-    library->set_filename(name);
+  for (const std::string &_name : names) {
+    library->set_filename(_name);
     if (library->load()) break;
     SLOW_ERRORLOG("library", 
                   "[library] load(%s) error-> %s", 
-                  name.c_str(), 
+                  _name.c_str(), 
                   library->errorstr().c_str());
   }
   if (!library->isloaded()) {

@@ -37,22 +37,22 @@ Basic::~Basic() {
 bool Basic::init(protocol::Interface *protocol) {
   if (ready()) return true; 
   if (is_null(protocol)) return false;
-  std::unique_ptr<socket::Basic> socket(new socket::Basic());
-  socket_ = std::move(socket);
+  std::unique_ptr<socket::Basic> _socket(new socket::Basic());
+  socket_ = std::move(_socket);
   Assert(socket_.get());
-  std::unique_ptr<stream::Input> istream(
+  std::unique_ptr<stream::Input> _istream(
       new stream::Input(socket_.get(),
       NETINPUT_BUFFERSIZE_DEFAULT,
       64 * 1024 * 1024));
-  istream_ = std::move(istream);
+  istream_ = std::move(_istream);
   Assert(istream_.get());
   istream_->init();
-  std::unique_ptr<stream::Output> ostream (
+  std::unique_ptr<stream::Output> _ostream (
       new stream::Output(
       socket_.get(),
       NETOUTPUT_BUFFERSIZE_DEFAULT,
       64 * 1024 * 1024));
-  ostream_ = std::move(ostream);
+  ostream_ = std::move(_ostream);
   Assert(ostream_.get());
   ostream_->init();
   ready_ = true;
@@ -205,11 +205,11 @@ void Basic::compress_set_mode(compress_mode_t mode) {
       memset(compress_buffer_, 0, NET_CONNECTION_COMPRESS_BUFFER_SIZE);
     }
     if (is_null(istream_compress_)) {
-      std::unique_ptr<stream::Input> istream_compress(
+      std::unique_ptr<stream::Input> _istream_compress(
             new stream::Input(socket_.get(),
             NETINPUT_BUFFERSIZE_DEFAULT,
             64 * 1024 * 1024));
-      istream_compress_ = std::move(istream_compress);
+      istream_compress_ = std::move(_istream_compress);
     }
   }
   assistant = ostream_->getcompressor()->getassistant();

@@ -54,9 +54,9 @@ class SharePool : public pf_sys::memory::share::GroupPool {
 
  public:
    explicit SharePool(
-       uint32_t key, 
+       uint32_t _key, 
        const std::vector<pf_sys::memory::share::group_item_t> &group) :
-     pf_sys::memory::share::GroupPool(key, group) {
+     pf_sys::memory::share::GroupPool(_key, group) {
 
   }
 

@@ -36,7 +36,7 @@ class PF_API Encryptor {
      pf_basic::string::safecopy(key_, key, sizeof(key_));
    };
    const char *getkey() { return key_; };
-   void enable(bool enable) { isenable_ = enable; };
+   void enable(bool _enable) { isenable_ = _enable; };
    bool isenable() const { return isenable_; };
 
  private:

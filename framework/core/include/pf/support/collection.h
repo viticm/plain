@@ -20,7 +20,7 @@ template <typename T>
 class Collection {
 
  public:
-   Collection(std::vector<T> original) : original_{original} {};
+   Collection(const std::vector<T> &original) : original_{original} {};
    ~Collection() {};
 
  public:

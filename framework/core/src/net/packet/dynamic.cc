@@ -151,9 +151,9 @@ uint64_t Dynamic::read_uint64() {
   return result;
 }
    
-void Dynamic::read_string(char *buffer, size_t size) {
+void Dynamic::read_string(char *buffer, size_t _size) {
   uint32_t length = read_uint32();
-  if (length <= 0 || size < length) return;
+  if (length <= 0 || _size < length) return;
   read(buffer, length);
 }
 
@@ -188,8 +188,8 @@ bool Dynamic::read(stream::Input &istream) {
   check_memory(size_);
   char *_buffer = reinterpret_cast<char *>(allocator_.get());
   memset(_buffer, 0, allocator_.size());
-  uint32_t size = istream.read(_buffer, size_);
-  bool result = size == size_;
+  uint32_t _size = istream.read(_buffer, size_);
+  bool result = _size == size_;
   return result;
 }
 
@@ -197,8 +197,8 @@ bool Dynamic::write(stream::Output &ostream) {
   //DEBUGPRINTF("Dynamic::write size: %d", size_);
   if (size_ <= 0 || 0 == id_) return false;
   char *_buffer = reinterpret_cast<char *>(allocator_.get());
-  uint32_t size = ostream.write(_buffer, size_);
-  bool result = size == size_;
+  uint32_t _size = ostream.write(_buffer, size_);
+  bool result = _size == size_;
   return result;
 }
 

@@ -16,14 +16,14 @@ Listener::~Listener() {
   //do nothing
 }
 
-bool Listener::init(uint16_t max_size, uint16_t port, const std::string &ip) {
+bool Listener::init(uint16_t _max_size, uint16_t _port, const std::string &ip) {
   std::unique_ptr<socket::Listener> 
-    pointer{new socket::Listener(port, ip)};
+    pointer{new socket::Listener(_port, ip)};
   if (is_null(pointer)) return false;
   listener_socket_ = std::move(pointer);
   listener_socket_->set_nonblocking();
   Assert(listener_socket_->get_id() != SOCKET_INVALID);
-  return Basic::init(max_size);
+  return Basic::init(_max_size);
 }
 
 
@@ -38,12 +38,12 @@ pf_net::connection::Basic *Listener::accept() {
       socket.close();
     }
     static uint32_t checktime{0};
-    auto tick = TIME_MANAGER_POINTER->get_tickcount();
-    if (0 == checktime || tick - checktime >= 600000) {
+    auto _tick = TIME_MANAGER_POINTER->get_tickcount();
+    if (0 == checktime || _tick - checktime >= 600000) {
       SLOW_WARNINGLOG(NET_MODULENAME, 
                       "[net.connection.manager] (Listener::accept)"
                       " can't accept new connection");
-      checktime = tick;
+      checktime = _tick;
     }
     return nullptr;
   }

@@ -15,12 +15,12 @@ Assistant::~Assistant() {
   //do nothing
 }
 
-void Assistant::enable(bool enable, uint64_t threadid) {
-  if (true == enable) {
+void Assistant::enable(bool _enable, uint64_t threadid) {
+  if (true == _enable) {
     if (!UTIL_COMPRESSOR_MINIMANAGER_POINTER ||
         nullptr == UTIL_COMPRESSOR_MINIMANAGER_POINTER->alloc(threadid)) {
       isenable_ = false;
     }
   }
-  isenable_ = enable;
+  isenable_ = _enable;
 }

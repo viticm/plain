@@ -237,7 +237,7 @@ void Ini::_trimstring(char *buffer) {
       break;
     }
   }
-  for (i = strlen(buffer) - 1; i >= 0; --i) {
+  for (i = strlen(buffer) - 1; i > 0; --i) {
     if (' '== buffer[i] || '\t' == buffer[i]) {
       buffer[i] = 0;
     } else {

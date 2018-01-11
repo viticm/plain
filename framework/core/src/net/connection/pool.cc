@@ -32,7 +32,7 @@ bool Pool::init(uint32_t max_size) {
 
 bool Pool::init_data(uint16_t index, Basic *connection) {
   Assert(connection);
-  Assert(index >= 0 && index < max_size_);
+  Assert((0 == index || index > 0) && index < max_size_);
   std::unique_ptr< Basic > ptr(connection);
   connections_[index] = std::move(ptr);
   connections_[index]->set_id(index);

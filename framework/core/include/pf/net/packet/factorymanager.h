@@ -53,7 +53,7 @@ class PF_API FactoryManager : public pf_basic::Singleton<FactoryManager> {
    void packet_remove(Interface *packet);
    bool is_valid_packet_id(uint16_t id); //packetid is valid
    bool is_valid_dynamic_packet_id(uint16_t id); //dynamic packet id is valid
-   void set_size(uint16_t size) { size_ = size; };
+   void set_size(uint16_t _size) { size_ = _size; };
    uint16_t size() const { return size_; };
    void add_factory(Factory *factory);
    bool is_encrypt_packet_id(uint16_t id); //packetid is encrypt id

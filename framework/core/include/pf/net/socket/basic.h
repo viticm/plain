@@ -66,10 +66,10 @@ class PF_API Basic {
    
  public:
    void set_id(int32_t id) { id_ = id; };
-   void set_host(const char *host) { 
-     pf_basic::string::safecopy(host_, host, sizeof(host_));
+   void set_host(const char *_host) { 
+     pf_basic::string::safecopy(host_, _host, sizeof(host_));
    };
-   void set_port(uint16_t port) { port_ = port; };
+   void set_port(uint16_t _port) { port_ = _port; };
 
  private:
    int32_t id_;

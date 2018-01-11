@@ -144,8 +144,8 @@ std::string Grammar::compile_update(
 
 //Prepare the bindings for an update statement.
 Grammar::variable_array_t Grammar::prepare_bindings_forupdate(
-    db_query_bindings_t &bindings, variable_set_t &values) {
-
+    db_query_bindings_t &bindings, const variable_array_t &values) {
+  return {};
 }
 
 //Compile a delete statement into SQL.
@@ -221,13 +221,16 @@ std::string Grammar::compile_aggregate(
 
 //Compile the "join" portions of the query.
 std::string Grammar::compile_joins(
-    Builder &query, const std::vector<JoinClause> &joins) {
+    Builder &query, std::vector< std::unique_ptr<JoinClause> > &joins) {
 
-  return collect(joins).map([this, &query](JoinClause &join) {
-    std::string table = this->wrap_table(join.table_);
-    std::string r = join.type_ + " join " + table + this->compile_wheres(join);
-    return trim(r);
-  }).implode(" ");
+  std::vector<std::string> array;
+  for (std::unique_ptr<JoinClause> &join : joins) {
+    std::string table = this->wrap_table(join->table_);
+    std::string r = join->type_ + " join " + table + 
+                    this->compile_wheres(*join.get());
+    array.emplace_back(trim(r));
+  }
+  return implode(" ", array);
 }
 
 //Compile the "where" portions of the query.
@@ -247,10 +250,13 @@ std::string Grammar::compile_wheres(Builder &query) {
 
 //Get an array of all the where clauses for the query.
 Grammar::variable_array_t Grammar::compile_wheres_toarray(Builder &query) {
-  return collect(query.wheres_).map([this, &query](db_query_array_t &where){
-    return where["boolean"].data + " " + 
-           safe_call_where(where["type"], query, where);
-  }).all();
+  variable_array_t array;
+  for (db_query_array_t &where : query.wheres_) {
+    std::string r = where["boolean"].data + " " + 
+                    safe_call_where(where["type"], query, where);
+    array.emplace_back(r);
+  }
+  return array;
 }
 
 //Call the compile method from string.

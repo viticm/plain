@@ -29,7 +29,7 @@ class PF_API Assistant {
    bool isenable() const { return isenable_; };
    void enable(bool enable, uint64_t threadid = 0);
    bool log_isenable() const { return log_isenable_; };
-   void log_enable(bool enable) { log_isenable_ = enable; };
+   void log_enable(bool _enable) { log_isenable_ = _enable; };
    void compressframe_inc() { ++compressframe_success_; };
    uint32_t get_compressframe() const { return compressframe_; };
    void compressframe_successinc() { ++compressframe_success_; };

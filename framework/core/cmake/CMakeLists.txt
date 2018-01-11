@@ -100,6 +100,8 @@ endif()
 
 file(GLOB_RECURSE LIB_SOURCES "${pf_SOURCE_DIR}/src/*.cc")
 
+set(pf_build_shared ON)
+
 # Plain Framework libraries.  We build them using more strict warnings than what
 # are used for other targets, to ensure that pf can be compiled by a user
 # aggressive about warnings.

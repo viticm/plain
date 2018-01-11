@@ -117,7 +117,7 @@ void Builder::parse_subselect(
 //Add a new select column to the query.
 Builder &Builder::add_select(const std::vector<std::string> &column) {
   for (const std::string &col : column)
-    columns_.push_back(col);
+    columns_.emplace_back(col);
   return *this;
 }
 
@@ -128,16 +128,16 @@ Builder &Builder::join(const std::string &table,
                        const std::string &, 
                        const std::string &type, 
                        bool) {
-  JoinClause _join(this, type, table);
+  std::unique_ptr<JoinClause> _join(new JoinClause(this, type, table));
 
   // If the first "column" of the join is really a Closure instance the developer
   // is trying to build a join with a complex "on" clause containing more than
   // one condition, so we'll add the join and call a Closure with the query.
-  callback(&_join);
+  callback(_join.get());
 
-  joins_.push_back(_join);
+  joins_.emplace_back(std::move(_join));
 
-  add_bindings(_join.get_bindings(), "join");
+  add_bindings(_join->get_bindings(), "join");
 
   return *this;
 }
@@ -154,16 +154,16 @@ Builder &Builder::join(const std::string &table,
   // "on" clause with a single condition. So we will just build the join with
   // this simple join clauses attached to it. There is not a join callback.
 
-  JoinClause _join(this, type, table);
+  std::unique_ptr<JoinClause> _join(new JoinClause(this, type, table));
 
   if (_where) {
-    _join.where(_first, oper, second);
+    _join->where(_first, oper, second);
   } else {
-    _join.on(_first, oper, second);
+    _join->on(_first, oper, second);
   }
-  joins_.push_back(_join);
+  joins_.emplace_back(std::move(_join));
 
-  add_bindings(_join.get_bindings(), "join");
+  add_bindings(_join->get_bindings(), "join");
 
   return *this;
 }
@@ -176,8 +176,9 @@ Builder &Builder::cross_join(const std::string &table,
   if (_first != "")
     return join(table, _first, oper, second, "cross");
 
-  JoinClause new_join(this, "cross", table);
-  joins_.push_back(new_join);
+  std::unique_ptr<JoinClause> new_join(new JoinClause(this, "cross", table));
+
+  joins_.emplace_back(std::move(new_join));
  
   return *this;
 }
@@ -186,14 +187,14 @@ Builder &Builder::cross_join(const std::string &table,
 void Builder::merge_wheres(std::vector<db_query_array_t> &wheres, 
                            variable_array_t &bindings) {
   for (db_query_array_t &_where : wheres) {
-    wheres_.emplace_back(_where);
+    wheres_.emplace_back(std::move(_where));
   }
 
   if (bindings_["where"].empty()) 
     bindings_["where"] = {};
 
   for (variable_t &binding : bindings)
-    bindings_["where"].push_back(binding);
+    bindings_["where"].emplace_back(binding);
 }
 
 //Add a basic where clause to the query.
@@ -242,7 +243,7 @@ Builder &Builder::where(const std::string &column,
     {"type", type}, {"column", column}, {"operator", roper}, 
     {"val", rval}, {"boolean", boolean}
   };
-  wheres_.emplace_back(_where);
+  wheres_.emplace_back(std::move(_where));
 
   if (rval.type != DB_EXPRESSION_TYPE)
     add_binding(rval, "where");
@@ -300,7 +301,7 @@ Builder &Builder::where(const std::string &column,
     {"type", type}, {"column", column}, {"operator", roper}, 
     {"val", rval}, {"boolean", boolean}
   };
-  wheres_.emplace_back(_where);
+  wheres_.emplace_back(std::move(_where));
 
   if (rval.type != DB_EXPRESSION_TYPE)
     add_binding(rval, "where");
@@ -391,7 +392,7 @@ Builder &Builder::where_column(const std::string &_first,
     {"type", type}, {"first", _first}, {"operator", roper}, 
     {"second", rsecond}, {"boolean", boolean}
   };
-  wheres_.emplace_back(_where);
+  wheres_.emplace_back(std::move(_where));
 
   return *this;
 }
@@ -404,7 +405,7 @@ Builder &Builder::where_raw(const std::string &sql,
   _where.items = { //PHP compact can collect the variable with names.
     {"type", "raw"}, {"sql", sql}, {"boolean", boolean}
   };
-  wheres_.emplace_back(_where);
+  wheres_.emplace_back(std::move(_where));
  
   add_bindings(bindings, "where");
 
@@ -424,7 +425,7 @@ Builder &Builder::where_in(const std::string &column,
   size_t i{0};
   for (const variable_t &val : vals)
     _where.values[std::to_string(i++)] = val;
-  wheres_.emplace_back(_where);
+  wheres_.emplace_back(std::move(_where));
 
   // Finally we'll add a binding for each vals unless that val is an expression
   // in which case we will just skip over it since it will be the query as a raw 
@@ -456,7 +457,7 @@ Builder &Builder::where_insub(const std::string &column,
     {"boolean", boolean},
   };
 
-  wheres_.emplace_back(_where);
+  wheres_.emplace_back(std::move(_where));
 
   add_bindings(_where.query->get_bindings(), "where");
 
@@ -476,7 +477,7 @@ Builder &Builder::where_in_existing_query(const std::string &column,
     {"type", isnot ? "not_insub" : "insub"}, {"column", column}, 
     {"boolean", boolean},
   };
-  wheres_.emplace_back(_where);
+  wheres_.emplace_back(std::move(_where));
 
   add_bindings(_where.query->get_bindings(), "where");
 
@@ -492,7 +493,7 @@ Builder &Builder::where_null(const std::string &column,
     {"type", isnot ? "notnull" : "null"}, {"column", column}, 
     {"boolean", boolean},
   };
-  wheres_.emplace_back(_where);
+  wheres_.emplace_back(std::move(_where));
   return *this;
 }
 
@@ -507,7 +508,7 @@ Builder &Builder::where_between(const std::string &column,
     {"not", isnot},
   };
 
-  wheres_.emplace_back(_where);
+  wheres_.emplace_back(std::move(_where));
 
   add_bindings(vals, "where");
 
@@ -579,7 +580,7 @@ Builder &Builder::add_nested_where_query(Builder *query,
       {"type", "nested"}, {"boolean", boolean}
     };
     unique_move(Builder, query, _where.query);
-    wheres_.emplace_back(_where);
+    wheres_.emplace_back(std::move(_where));
     add_bindings(_where.query->get_bindings(), "where");
   } else {
     safe_delete(query);
@@ -606,7 +607,7 @@ Builder &Builder::where_sub(const std::string &column,
     {"boolean", boolean},
   };
 
-  wheres_.emplace_back(_where);
+  wheres_.emplace_back(std::move(_where));
 
   add_bindings(_where.query->get_bindings(), "where");
 
@@ -624,7 +625,7 @@ Builder &Builder::add_date_based_where(const std::string &type,
     {"type", type}, {"column", column}, {"operator", oper}, 
     {"boolean", boolean}, {"val", val}
   };
-  wheres_.emplace_back(_where);
+  wheres_.emplace_back(std::move(_where));
   add_binding(val, "where");
   return *this;
 }
@@ -653,7 +654,7 @@ Builder &Builder::add_where_exists_query(Builder *query,
   _where.items = {
     {"type", isnot ? "notexists" : "exists"}, {"boolean", boolean},
   };
-  wheres_.emplace_back(_where);
+  wheres_.emplace_back(std::move(_where));
   add_bindings(_where.query->get_bindings(), "where");
   return *this;
 }
@@ -661,7 +662,7 @@ Builder &Builder::add_where_exists_query(Builder *query,
 //Add a "group by" clause to the query.
 Builder &Builder::group_by(const std::vector<std::string> &groups) {
   for (const std::string &group : groups)
-    groups_.push_back(group);
+    groups_.emplace_back(group);
   return *this;
 }
 
@@ -690,7 +691,7 @@ Builder &Builder::having(const std::string &column,
     {"type", "basic"}, {"column", column}, {"operator", roper}, 
     {"val", rval}, {"boolean", boolean},
   };
-  havings_.push_back(_having);
+  havings_.emplace_back(_having);
 
   if (rval.type != DB_EXPRESSION_TYPE)
     add_binding(rval, "having");
@@ -716,9 +717,9 @@ Builder &Builder::order_by(const std::string &column,
     {"column", column}, {"direction", "asc" == direction ? "asc" : "desc"},
   };
   if (unions_.empty()) {
-    orders_.push_back(order);
+    orders_.emplace_back(order);
   } else {
-    union_orders_.push_back(order);
+    union_orders_.emplace_back(order);
   }
   return *this;
 }
@@ -735,9 +736,9 @@ Builder &Builder::order_byraw(const std::string &sql,
     {"type", "raw"}, {"sql", sql},
   };
   if (unions_.empty()) {
-    orders_.push_back(order);
+    orders_.emplace_back(order);
   } else {
-    union_orders_.push_back(order);
+    union_orders_.emplace_back(order);
   }
   add_bindings(bindings, "order");
   return *this;
@@ -770,7 +771,7 @@ void Builder::remove_existing_orders_for(const std::string &column,
                                          std::vector<variable_set_t> &result) {
   result.clear();
   for (variable_set_t &item : orders_) {
-    if (item["column"] != column) result.push_back(item);
+    if (item["column"] != column) result.emplace_back(item);
   }
 }
 
@@ -788,7 +789,7 @@ Builder &Builder::_union(Builder *query, bool all) {
   _where.items = {
     {"all", all},
   };
-  unions_.push_back(_where);
+  unions_.emplace_back(std::move(_where));
   add_bindings(_where.query->get_bindings(), "union");
   return *this;
 }
@@ -962,7 +963,7 @@ bool Builder::insert(std::vector<variable_set_t> &vals) {
 
   variable_array_t cbindings;
   for (auto it = vals[0].begin(); it != vals[0].end(); ++it)
-    cbindings.push_back(it->second);
+    cbindings.emplace_back(it->second);
   
   return connection_->insert(
       grammar_->compile_insert(*this, vals), 
@@ -973,7 +974,7 @@ bool Builder::insert(std::vector<variable_set_t> &vals) {
 int32_t Builder::update(variable_set_t &vals) {
   auto sql = grammar_->compile_update(*this, vals);
   return connection_->update(sql, clean_bindings_expression(
-    grammar_->prepare_bindings_forupdate(bindings_, vals)
+    grammar_->prepare_bindings_forupdate(bindings_, array_values(vals))
   ));
 }
 
@@ -982,7 +983,7 @@ bool Builder::update_or_insert(variable_set_t &attributes,
                                variable_set_t &vals) {
   if (!where(attributes).exists()) {
     std::vector<variable_set_t> _vals;
-    _vals.push_back(array_merge<std::string, variable_t>(attributes, vals));
+    _vals.emplace_back(array_merge<std::string, variable_t>(attributes, vals));
     return insert(_vals);    
   }
   return false;
@@ -1049,7 +1050,7 @@ Builder &Builder::add_bindings(const variable_array_t &vals,
     return *this;
   }
   for (const variable_t &item : vals)
-    bindings_[type].push_back(item);
+    bindings_[type].emplace_back(item);
   return *this;
 }
 
@@ -1062,7 +1063,7 @@ Builder &Builder::add_binding(const variable_t &val,
     AssertEx(false, msg.c_str());
     return *this;
   }
-  bindings_[type].push_back(val);
+  bindings_[type].emplace_back(val);
   return *this;
 }
 

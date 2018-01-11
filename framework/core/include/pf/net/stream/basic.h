@@ -34,9 +34,9 @@ class PF_API Basic {
    bool resize(int32_t size);
    size_t size() const;
    /* Try use the unused buffer size, maybe use the resize extend buffer size. */
-   bool use(size_t size) {
+   bool use(size_t _size) {
      auto freecount = unused();
-     if (size >= freecount && !resize(size - freecount + 1)) return false;
+     if (_size >= freecount && !resize(_size - freecount + 1)) return false;
      return true;
    };
    size_t unused() const {
@@ -63,7 +63,7 @@ class PF_API Basic {
      encryptor_.setkey(key);
    };
    bool isinit() const { return isinit_; };
-   void set_isinit(bool isinit) {  isinit_ = isinit; };
+   void set_isinit(bool _isinit) {  isinit_ = _isinit; };
 
  protected:
    socket::Basic *socket_;

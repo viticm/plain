@@ -78,9 +78,9 @@ class PF_API map_iterator {
     map_{nullptr} {
    }
 
-   map_iterator(Map *map, int32_t current) : 
+   map_iterator(Map *_map, int32_t current) : 
      current_{current},
-     map_{map} {
+     map_{_map} {
      generate_data();
    }
 
@@ -177,9 +177,9 @@ class PF_API map_reverse_iterator {
     map_{nullptr} {
    }
 
-   map_reverse_iterator(Map *map, int32_t current) : 
+   map_reverse_iterator(Map *_map, int32_t current) : 
      current_{current},
-     map_{map} {
+     map_{_map} {
      generate_data();
    }
 

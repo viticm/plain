@@ -68,7 +68,7 @@ inline UnitPool<T>::~UnitPool() {
 }
 
 template <typename T>
-bool UnitPool<T>::init(uint32_t key, size_t size, uint8_t type) {
+bool UnitPool<T>::init(uint32_t _key, size_t _size, uint8_t type) {
   if (ready_) return true;
   std::unique_ptr<Base> p{new Base()};
   ref_obj_pointer_ = std::move(p);
@@ -78,8 +78,8 @@ bool UnitPool<T>::init(uint32_t key, size_t size, uint8_t type) {
   bool need_init = false;
   auto full_size = sizeof(header_t) + 
                    header_extend_size_ + 
-                   (sizeof(T) + data_extend_size_ ) * size;
-  result = ref_obj_pointer_->attach(key, full_size, false);
+                   (sizeof(T) + data_extend_size_ ) * _size;
+  result = ref_obj_pointer_->attach(_key, full_size, false);
   if (kSmptDefault == type && !result) {
     result = ref_obj_pointer_->create(key, full_size);
     need_init = true;
@@ -95,7 +95,7 @@ bool UnitPool<T>::init(uint32_t key, size_t size, uint8_t type) {
     Assert(result);
     return false;
   }
-  size_ = size;
+  size_ = _size;
   set_position(0);
   objs_ = new T * [size_];
   if (is_null(objs_)) return false;
@@ -113,7 +113,7 @@ bool UnitPool<T>::init(uint32_t key, size_t size, uint8_t type) {
     }
     if (need_init) objs_[i]->init();
   }
-  key_ = key;
+  key_ = _key;
   ready_ = true;
   return true;
 }
@@ -236,11 +236,11 @@ inline void Node<T>::clear() {
 }
 
 template <typename T>
-bool Node<T>::init(uint32_t key, size_t size) {
+bool Node<T>::init(uint32_t _key, size_t _size) {
   if (ready_) return true;
   pool_ = new UnitPool<T>;
   if (is_null(pool_)) return false;
-  if (!pool_->init(key, size)) return false;
+  if (!pool_->init(_key, _size)) return false;
   pool_->set_head_version(0);
   ready_ = init_after();
   return ready_;
@@ -303,16 +303,16 @@ inline bool Node<T>::full() const {
 
 template <typename T>
 inline size_t Node<T>::size() const {
-  size_t size = 0;
-  if (!is_null(pool_)) size = pool_->get_position();
+  size_t _size = 0;
+  if (!is_null(pool_)) _size = pool_->get_position();
   return size;
 }
 
 template <typename T>
 inline size_t Node<T>::max_size() const {
-  size_t size = 0;
-  if (!is_null(pool_)) size = pool_->max_size();
-  return size;
+  size_t _size = 0;
+  if (!is_null(pool_)) _size = pool_->max_size();
+  return _size;
 }
 
 template <typename T>

@@ -21,8 +21,8 @@ namespace pf_file {
 class PF_API Library {
 
  public:
-   Library(const std::string &filename = "") : 
-     filename_{filename},
+   Library(const std::string &_filename = "") : 
+     filename_{_filename},
      isloaded_{false},
      handle_{nullptr} {};
    ~Library() { unload(); };

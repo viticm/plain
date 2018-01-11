@@ -52,7 +52,7 @@ class PF_API Grammar : public pf_db::Grammar {
 
    //Prepare the bindings for an update statement.
    virtual variable_array_t prepare_bindings_forupdate(
-       db_query_bindings_t &bindings, variable_set_t &values);
+       db_query_bindings_t &bindings, const variable_array_t &values = {});
 
    //Compile a delete statement into SQL.
    virtual std::string compile_delete(Builder &query);
@@ -95,7 +95,7 @@ class PF_API Grammar : public pf_db::Grammar {
 
     //Compile the "join" portions of the query.
    std::string compile_joins(
-       Builder &query, const std::vector<JoinClause> &joins);
+       Builder &query, std::vector< std::unique_ptr<JoinClause> > &joins);
 
    //Compile the "where" portions of the query.
    std::string compile_wheres(Builder &query);

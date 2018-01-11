@@ -5,10 +5,10 @@ namespace pf_net {
 
 namespace stream {
 
-Basic::Basic(socket::Basic *socket, 
+Basic::Basic(socket::Basic *_socket, 
              uint32_t bufferlength, 
              uint32_t bufferlength_max) : 
-              socket_{socket},
+              socket_{_socket},
               encrypt_isenable_{false},
               isinit_{false} {
   streamdata_.buffer = nullptr;
@@ -44,9 +44,11 @@ bool Basic::resize(int32_t _size) {
   uint32_t tail = streamdata_.tail;
   uint32_t _reallength = size();
   //_size = max(_size, static_cast<int32_t>(bufferlength >> 1));
-  uint32_t newbuffer_length = bufferlength + _size;
-  if (newbuffer_length > streamdata_.bufferlength_max) return false;
-  if (_size < 0 && (newbuffer_length < 0 || newbuffer_length < _reallength))
+  int32_t newbuffer_length = bufferlength + _size;
+  if (newbuffer_length > static_cast<int32_t>(streamdata_.bufferlength_max)) 
+    return false;
+  if (_size < 0 && (newbuffer_length < 0 ||
+        newbuffer_length < static_cast<int32_t>(_reallength)))
     return false;
   char *oldbuffer = streamdata_.buffer;
   char *newbuffer = new char[sizeof(char) * newbuffer_length];

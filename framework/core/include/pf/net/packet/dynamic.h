@@ -40,7 +40,7 @@ class PF_API Dynamic : public packet::Interface {
 
  public:
    virtual void set_id(uint16_t id) { id_ = id; }
-   virtual void set_size(uint32_t size) { size_ = size; }
+   virtual void set_size(uint32_t _size) { size_ = _size; }
 
  public:
    virtual bool read(stream::Input &istream);
@@ -114,14 +114,14 @@ class PF_API Dynamic : public packet::Interface {
      return *this;
    };
    Dynamic &operator >> (char *&var) { //Not safe.
-     uint32_t size = read_uint32();
-     read_string(var, size);
+     uint32_t _size = read_uint32();
+     read_string(var, _size);
      return *this;
    };
    Dynamic &operator >> (std::string &var) { //Not safe.
-     uint32_t size = read_uint32();
+     uint32_t _size = read_uint32();
      char temp[2048]{0,};
-     read_string(temp, size);
+     read_string(temp, _size);
      var = temp;
      return *this;
    };

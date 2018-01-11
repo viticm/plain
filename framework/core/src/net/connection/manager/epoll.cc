@@ -50,9 +50,9 @@ bool Epoll::select() {
   return true;
 }
 
-bool Epoll::poll_set_max_size(uint16_t max_size) {
+bool Epoll::poll_set_max_size(uint16_t _max_size) {
   if (polldata_.fd > 0) return true;
-  bool result = poll_create(polldata_, max_size) > 0 ? true : false;
+  bool result = poll_create(polldata_, _max_size) > 0 ? true : false;
   if (!result) return false;
   if (is_service()) {
     if (ID_INVALID == listener_socket_id()) return false;

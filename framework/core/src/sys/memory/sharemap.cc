@@ -29,8 +29,8 @@ MapPool::~MapPool() {
   //do nothing
 }
 
-bool MapPool::init(uint32_t key, 
-                   size_t size, 
+bool MapPool::init(uint32_t _key, 
+                   size_t _size, 
                    size_t datasize, 
                    bool create) {
   if (ready_) return true;
@@ -41,12 +41,12 @@ bool MapPool::init(uint32_t key,
   bool result = true;
   bool needinit = false;
   auto headersize = sizeof(header_t);
-  auto bucketsize = sizeof(map_bucket_t) * size;
-  auto full_datasize = (sizeof(map_node_t) + data_extend_size_) * size;
+  auto bucketsize = sizeof(map_bucket_t) * _size;
+  auto full_datasize = (sizeof(map_node_t) + data_extend_size_) * _size;
   auto memorysize = headersize + bucketsize + full_datasize;
-  result = ref_obj_pointer_->attach(key, memorysize, false);
+  result = ref_obj_pointer_->attach(_key, memorysize, false);
   if (create && !result) {
-    result = ref_obj_pointer_->create(key, memorysize);
+    result = ref_obj_pointer_->create(_key, memorysize);
     needinit = true;
   } else if (!result) {
     return false;
@@ -60,7 +60,7 @@ bool MapPool::init(uint32_t key,
     Assert(result);
     return result;
   }    
-  size_ = size;
+  size_ = _size;
   objs_ = new map_node_t * [size_];
   if (is_null(objs_)) return false;
   map_bucket_t *buckets = reinterpret_cast<map_bucket_t *>(getbuckets());
@@ -81,7 +81,7 @@ bool MapPool::init(uint32_t key,
       objs_[i]->init();
     }
   }    
-  key_ = key;
+  key_ = _key;
   ready_ = true;
   return true;
 }
@@ -101,7 +101,7 @@ void MapPool::delete_obj(map_node_t *obj) {
   Assert(obj != nullptr && ref_obj_pointer_ != nullptr);
   header_t *header = ref_obj_pointer_->header();
   Assert(header); Assert(header->pool_position > 0);
-  if (is_null(obj) || header->pool_position < 0) {
+  if (is_null(obj) || static_cast<int32_t>(header->pool_position) < 0) {
     return;
   }
   auto delete_index = obj->get_pool_id(); //this function 
@@ -157,18 +157,17 @@ uint32_t MapPool::hashkey(const char *str) {
   return hash;
 }
 
-char *MapPool::getdata(uint32_t size, uint32_t index) {
+char *MapPool::getdata(uint32_t _size, uint32_t index) {
   char *result = nullptr;
   if (!ref_obj_pointer_) return result;
   char *data = ref_obj_pointer_->get();
   auto bucketsize = sizeof(map_bucket_t) * size_;
   char *realdata = data + bucketsize;
   auto data_fullsize = (sizeof(map_node_t) + data_extend_size_) * size_;
-  Assert(size > 0);
-  Assert(size * index <= data_fullsize - size);
-  result = (size <= 0 || size * index > data_fullsize - size) ? 
+  Assert(_size * index <= data_fullsize - _size);
+  result = (0 == _size || _size * index > data_fullsize - _size) ? 
             nullptr : 
-            realdata + size * index;
+            realdata + _size * index;
   return result;
 }
 
@@ -188,8 +187,8 @@ Map::Map() :
 Map::~Map() {
 }
 
-bool Map::init(uint32_t key, 
-               size_t size, 
+bool Map::init(uint32_t _key, 
+               size_t _size, 
                size_t keysize, 
                size_t valuesize,
                bool create) {
@@ -198,7 +197,7 @@ bool Map::init(uint32_t key,
   unique_move(MapPool, pool, pool_);
   Assert(pool_);
   auto datasize = (keysize + 1) + (valuesize + 1);
-  bool result = pool_->init(key, size, datasize, create);
+  bool result = pool_->init(_key, _size, datasize, create);
   if (!result) return result;
   buckets_ = reinterpret_cast<map_bucket_t *>(pool_->getbuckets());
   Assert(buckets_);
@@ -273,7 +272,7 @@ void Map::remove(const char *key) {
     }
 
     uint32_t _bucketindex = pool_->bucketindex(hash);
-    if (_bucketindex >= 0 && _bucketindex < pool_->size()) {
+    if (static_cast<int32_t>(_bucketindex) >= 0 && _bucketindex < pool_->size()) {
       map_bucket_t *bucket = &buckets[_bucketindex];
       if (bucket->cur == static_cast<int32_t>(node->get_pool_id())) 
         bucket->cur = node->data.next;
@@ -325,7 +324,7 @@ int32_t Map::getref(const char *key) {
   map_bucket_t *buckets = reinterpret_cast<map_bucket_t *>(pool_->getbuckets());
   if (pool_->get_position() > 0) {
     uint32_t _bucketindex = pool_->bucketindex(hash);
-    Assert(_bucketindex >= 0 && _bucketindex < pool_->size());
+    Assert(static_cast<int32_t>(_bucketindex) >= 0 && _bucketindex < pool_->size());
     map_bucket_t *bucket = &buckets[_bucketindex];
     uint32_t keypos = sizeof(map_node_t);
     int32_t index = bucket->cur;

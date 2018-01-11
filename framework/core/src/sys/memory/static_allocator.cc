@@ -15,29 +15,29 @@ StaticAllocator::~StaticAllocator() {
   //do nothing
 }
 
-void StaticAllocator::init(char *buffer, size_t size) {
+void StaticAllocator::init(char *buffer, size_t _size) {
   buffer_ = buffer;
-  size_ = size;
+  size_ = _size;
 }
 
-void *StaticAllocator::malloc(size_t size) {
+void *StaticAllocator::malloc(size_t _size) {
   using namespace pf_basic;
-  if (offset_ + size > size_) {
+  if (offset_ + _size > size_) {
     SLOW_ERRORLOG("error",
                   "[sys.memory] (StaticAllocator::malloc)"
                   " out of memory allocating %d bytes",
-                  size);
+                  _size);
     Assert(false);
     return nullptr;
   }
   char *pointer = &buffer_[offset_]; 
-  offset_ += size;
+  offset_ += _size;
   return reinterpret_cast<void *>(pointer);
 }
 
-void *StaticAllocator::calloc(size_t size, size_t count) {
-  void *pointer = malloc(count * size);
-  memset(pointer, 0, count * size);
+void *StaticAllocator::calloc(size_t _size, size_t count) {
+  void *pointer = malloc(count * _size);
+  memset(pointer, 0, count * _size);
   return reinterpret_cast<void *>(pointer);
 }
 
@@ -54,16 +54,16 @@ void *StaticAllocator::realloc(void *data, size_t newsize) {
     return nullptr;
   }
   size_t size_ofdata = offset_ - static_cast<size_t>(_data - buffer);
-  size_t size = newsize - size_ofdata;
-  if (offset_ + size > size_) {
+  size_t _size = newsize - size_ofdata;
+  if (offset_ + _size > size_) {
     SLOW_ERRORLOG("error",
                   "[sys.memory] (StaticAllocator::malloc)"
                   " out of memory allocating %d bytes",
-                  size);
+                  _size);
     Assert(false);
     return nullptr;
   } else {
-    offset_ += size;
+    offset_ += _size;
     return data;
   }
   return nullptr;

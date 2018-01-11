@@ -22,10 +22,10 @@ class PF_API Output : public Basic {
 
  public:
    Output(
-     socket::Basic *socket, 
+     socket::Basic *_socket, 
        uint32_t bufferlength = NETOUTPUT_BUFFERSIZE_DEFAULT,
        uint32_t bufferlength_max = NETOUTPUT_DISCONNECT_MAXSIZE)
-     : Basic(socket, bufferlength, bufferlength_max), tail_(0) {};
+     : Basic(_socket, bufferlength, bufferlength_max), tail_(0) {};
    virtual ~Output() {};
 
  public:

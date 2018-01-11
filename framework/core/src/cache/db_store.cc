@@ -532,19 +532,19 @@ void DBStore::recycle_drop(int32_t key, int32_t index) {
   key_map_.set(swap_recycle_key, "0");
 }
 
-void DBStore::cache_info(const char *key, cache_info_t &cache_info) {
+void DBStore::cache_info(const char *key, cache_info_t &_cache_info) {
   using namespace pf_basic;
   type::variable_t val;
   //Key.
   std::vector< std::string > array;
   string::explode(key, array, "#", true, true);
   if (array.size() != 2) return;
-  cache_info.name = array[0];
-  cache_info.only_key = array[1];
+  _cache_info.name = array[0];
+  _cache_info.only_key = array[1];
   share_config_iterator it_conf;
-  it_conf = share_config_map_.find(cache_info.name);
+  it_conf = share_config_map_.find(_cache_info.name);
   if (it_conf == share_config_map_.end()) return;
-  cache_info.share_key = it_conf->second.share_key;
+  _cache_info.share_key = it_conf->second.share_key;
 
   array.clear();
 
@@ -554,9 +554,9 @@ void DBStore::cache_info(const char *key, cache_info_t &cache_info) {
   string::explode(hash, array, "#", true, true);
   if (array.size() != 2) return;
   val = array[0];
-  cache_info.share_index = val.get<int32_t>();
+  _cache_info.share_index = val.get<int32_t>();
   val = array[1];
-  cache_info.recycle_index = val.get<int32_t>();
+  _cache_info.recycle_index = val.get<int32_t>();
 }
 
 bool DBStore::recycle_find(int32_t key, int32_t index) {
@@ -620,13 +620,13 @@ bool DBStore::query(const std::string &key) {
     return db_connection->send(&packet);
   } else {
     cache->status = kQueryError;
-    pf_db::Query query;
-    query.set_sql(sql);
+    pf_db::Query _query;
+    _query.set_sql(sql);
     db_lock(db_env, db_auto_lock);
-    if (!query.init(db_env) || !query.query()) {
+    if (!_query.init(db_env) || !_query.query()) {
       return false;
     }
-    if (kQuerySelect == status && !query.fetch(
+    if (kQuerySelect == status && !_query.fetch(
           cast(char *, table_info), 
           sizeof(db_table_info_t), 
           data, 
@@ -760,7 +760,7 @@ bool DBStore::generate_sql(const std::string &key, std::string &sql) {
   if (kQueryInvalid == t_item->status || 
       kQueryError == t_item->status || 
       kQueryWaiting == t_item->status) return false;
-  pf_db::Query query;
+  pf_db::Query _query;
   /**
   std::string table_name;
   table_name = t_base->prefix;
@@ -799,7 +799,7 @@ bool DBStore::generate_sql(const std::string &key, std::string &sql) {
       snprintf(msg, sizeof(msg) - 1, "[%s|%d]", key.c_str(), row);
       AssertEx(row >= 0 && row <= DB_ROW_MAX, msg);
       if (row <= 0 || row > DB_ROW_MAX) return false;
-      query.set_tablename(info.name.c_str());
+      _query.set_tablename(info.name.c_str());
       type::variable_array_t values;
       std::vector< std::string > &save_columns = it_conf->second.save_columns;
       for (decltype(row)i = 0; i < row; ++i) {
@@ -829,9 +829,9 @@ bool DBStore::generate_sql(const std::string &key, std::string &sql) {
         }
       }
       if (values.size() > names.size()) {
-        query.update(names, values, dbtype_);
+        _query.update(names, values, dbtype_);
       } else {
-          query.update(names, values);
+          _query.update(names, values);
           std::string save_cond;
           for (size_t m = 0; m < save_columns.size(); ++m) {
             char temp[128]{0,};
@@ -848,9 +848,9 @@ bool DBStore::generate_sql(const std::string &key, std::string &sql) {
               save_cond += " and ";
           }
           save_cond += ";";
-          query.where(save_cond.c_str());
+          _query.where(save_cond.c_str());
       }
-      query.get_sql(sql);
+      _query.get_sql(sql);
       break;
     }
   }

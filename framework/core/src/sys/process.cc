@@ -56,7 +56,7 @@ bool writeid(const char *filename) {
 
 bool waitexit(const char *filename) {
   using namespace pf_basic;
-  if (nullptr == filename || strlen(filename) < 0) {
+  if (nullptr == filename || 0 == strlen(filename)) {
     io_cerr("[sys] (process::waitexit) error, can't find pid file");
     return false;
   }

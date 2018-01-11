@@ -271,15 +271,15 @@ uint64_t Input::read_uint64() {
   return result;
 }
    
-void Input::read_string(char *buffer, size_t size) {
+void Input::read_string(char *buffer, size_t _size) {
   int32_t length = read_uint32();
-  auto read_length = static_cast< int32_t >(size);
+  auto read_length = static_cast< int32_t >(_size);
   if (length <= 0 || read_length < length) {
     if (read_length < length) {
       SLOW_ERRORLOG(NET_MODULENAME,
                     "[net.stream] Input::read_string size < length"
                     " not read, size: %d, length: %d",
-                    size, 
+                    _size, 
                     length);
     }
     return;

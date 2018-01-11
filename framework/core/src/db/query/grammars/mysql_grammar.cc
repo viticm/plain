@@ -82,11 +82,13 @@ std::string MysqlGrammar::compile_update(
 //Prepare the bindings for an update statement.
 MysqlGrammar::variable_array_t MysqlGrammar::prepare_bindings_forupdate(
     db_query_bindings_t &bindings, const variable_array_t &values) {
+  /**
   auto vals = collect(values).reject([](variable_t &value){
     //Not complete.
     return true;    
   }).all();
-  return Grammar::prepare_bindings_forupdate(bindings, vals);
+  **/
+  return Grammar::prepare_bindings_forupdate(bindings, values);
 }
 
 //Compile a delete statement into SQL.

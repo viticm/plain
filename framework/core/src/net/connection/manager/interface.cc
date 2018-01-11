@@ -122,7 +122,6 @@ bool Interface::remove(int16_t id) {
     connection_idset_[size_] = ID_INVALID;
     connection->set_managerid(managerid);
   }
-  Assert(size_ >= 0);
   return true;
 }
 
@@ -218,7 +217,7 @@ connection::Pool *Interface::get_pool() {
 
 connection::Basic *Interface::get(uint16_t id) {
   connection::Basic *connection = nullptr;
-  if (id >= 0 && id < pool_->size()) {
+  if ((id > 0 && id < pool_->size()) || 0 == id) {
     connection = pool_->get(id);
     Assert(connection);
   }

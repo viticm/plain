@@ -46,7 +46,7 @@ class PF_API Connection : public ConnectionInterface {
                                    const variable_array_t &bindings);
 
    //Begin a fluent query against a database table.
-   virtual query::Builder table(const std::string &name);
+   virtual query::Builder *table(const std::string &name);
 
    //Get a new raw query expression.
    virtual variable_t raw(const variable_t &value);

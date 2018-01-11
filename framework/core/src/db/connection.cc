@@ -46,11 +46,11 @@ db_fetch_array_t Connection::select(const std::string &query,
                                     const variable_array_t &bindings) {
   db_fetch_array_t r;
   return run(query, bindings, [this, &r](
-        const std::string &query, const variable_array_t &bindings){
+        const std::string &_query, const variable_array_t &_bindings){
     if (pretending()) return r;
 
     // The query sql string and fetch all result.
-    if (!env_->query(query) || !env_->fetch()) return r;
+    if (!env_->query(_query) || !env_->fetch()) return r;
 
     int32_t columncount = env_->get_columncount();
     if (0 == columncount) return r;
@@ -84,9 +84,9 @@ db_fetch_array_t Connection::select(const std::string &query,
 }
 
 //Begin a fluent query against a database table.
-query::Builder Connection::table(const std::string &name) {
-  query::Builder r(this, get_query_grammar());
-  return r;
+query::Builder *Connection::table(const std::string &name) {
+  //query::Builder r(this, get_query_grammar());
+  return nullptr;
 }
 
 //Get a new raw query expression.
@@ -103,7 +103,7 @@ db_fetch_array_t Connection::select_one(
   db_fetch_array_t r;
   if (records.size() > 0) {
     r.keys = records.keys;
-    for (int32_t i = 0; i < r.keys.size(); ++i)
+    for (size_t i = 0; i < r.keys.size(); ++i)
       r.values.push_back(r.values[i]);
   }
   return r;

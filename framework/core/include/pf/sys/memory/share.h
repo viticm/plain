@@ -148,7 +148,7 @@ struct data_template {
    size_t get_extend_size() const { return extend_size; };
    void set_extend_size(size_t size) { extend_size = size; };
    uint32_t key() const { return header.key; };
-   void set_key(uint32_t key) { header.key = key; };
+   void set_key(uint32_t _key) { header.key = _key; };
    void init() { clear(); };
    void clear() {
      header.clear();
@@ -179,9 +179,9 @@ class UnitPool {
    bool full() const { return size_ - 1 == get_position(); };
    uint32_t get_version() const;
    void set_version(uint32_t version);
-   void set_data_extend_size(size_t size) { data_extend_size_ = size; };
+   void set_data_extend_size(size_t _size) { data_extend_size_ = _size; };
    size_t get_data_extend_size() const { return data_extend_size_; };
-   void set_header_extend_size(size_t size) { header_extend_size_ = size; };
+   void set_header_extend_size(size_t _size) { header_extend_size_ = _size; };
    size_t get_header_extend_size() const { return header_extend_size_; } ;
    int32_t get_position() const;
    void set_position(int32_t position);

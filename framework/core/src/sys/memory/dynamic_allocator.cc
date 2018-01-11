@@ -15,27 +15,27 @@ DynamicAllocator::~DynamicAllocator() {
   free();
 }
 
-void *DynamicAllocator::malloc(size_t size) {
-  if (size_ == size) return pointer_;
-  void *pointer = reinterpret_cast<void *>(new char[size]);
+void *DynamicAllocator::malloc(size_t _size) {
+  if (size_ == _size) return pointer_;
+  void *pointer = reinterpret_cast<void *>(new char[_size]);
   if (is_null(pointer)) {
     Assert(false);
     return nullptr;
   }
-  memset(pointer, 0, size);
+  memset(pointer, 0, _size);
   if (!is_null(pointer_)) {
-    size_t copysize = size > size_ ? size_ : size;
+    size_t copysize = _size > size_ ? size_ : _size;
     memcpy(pointer, pointer_, copysize);
     free();
   }
   pointer_ = pointer;
-  size_ = size;
+  size_ = _size;
   return pointer_;
 }
 
-void *DynamicAllocator::calloc(size_t size, size_t count) {
+void *DynamicAllocator::calloc(size_t _size, size_t count) {
   auto leftsize = size_ - offset_;
-  auto needsize = count * size;
+  auto needsize = count * _size;
   if (needsize > leftsize) {
     if (!malloc(needsize - leftsize + size_ + 1)) return nullptr;
   }
@@ -58,16 +58,16 @@ void *DynamicAllocator::realloc(void *data, size_t newsize) {
     return nullptr;
   }
   size_t size_ofdata = offset_ - static_cast<size_t>(_data - pointer);
-  size_t size = newsize - size_ofdata;
-  if (offset_ + size > size_) {
+  size_t _size = newsize - size_ofdata;
+  if (offset_ + _size > size_) {
     SLOW_ERRORLOG("error",
                   "[sys.memory] (DynamicAllocator::malloc)"
                   " out of memory allocating %d bytes",
-                  size);
+                  _size);
     Assert(false);
     return nullptr;
   } else {
-    offset_ += size;
+    offset_ += _size;
     return data;
   }
   return nullptr;
