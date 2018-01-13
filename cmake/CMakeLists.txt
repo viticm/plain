@@ -14,7 +14,8 @@ set(PROJECT_NAME PlainFramework)
 project(PlainFramework)
 
 # Call fplutil to get locations of dependencies and set common build settings.
-include("cmake/find_fplutil.cmake")
+include("inc/find_fplutil.cmake")
+include("inc/common.cmake")
 include("${fplutil_dir}/buildutil/cmake_common.txt")
 set_common_build_variables()
 
@@ -22,10 +23,6 @@ set_common_build_variables()
 # To configure PlainFramework flags per build target, see the
 # plainframework_configure_flags() function.
 option(plainframework_build_tests "Build PlainFramework unit tests." ON)
-
-# Save the plainframework directory, store this in the cache so that it's globally
-# accessible from plainframework_configure_flags().
-set(plainframework_dir ${CMAKE_CURRENT_LIST_DIR}/framework/core CACHE INTERNAL "plainframework directory")
 
 function(plainframework_configure_flags target)
 
@@ -79,5 +76,5 @@ endmacro(plainframework_set_ios_attributes)
 file(GLOB_RECURSE PLAINFRAMEWORK_HEADERS ${CMAKE_CURRENT_LIST_DIR}/framework/core/include *.h)
 
 if(plainframework_build_tests)
-  add_subdirectory(framework/core/unit_tests)
+  add_subdirectory(${root_dir}/framework/unit_tests/cmake ${root_dir}/bin)
 endif()

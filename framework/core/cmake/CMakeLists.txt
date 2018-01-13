@@ -24,6 +24,7 @@ option(pf_build_samples "Build pf's sample programs." OFF)
 
 option(pf_disable_pthreads "Disable uses of pthreads in pf." OFF)
 
+
 option(
   pf_hide_internal_symbols
   "Build pf with internal symbols hidden in shared libraries."
@@ -98,15 +99,15 @@ endif()
 # Defines the pf_core libraries.  User tests should link
 # with one of them.
 
-file(GLOB_RECURSE LIB_SOURCES "${pf_SOURCE_DIR}/src/*.cc")
-
 set(pf_build_shared ON)
+set(INSTALL_PF ON)
+file(GLOB_RECURSE LIB_SOURCES "${pf_SOURCE_DIR}/src/*.cc")
 
 # Plain Framework libraries.  We build them using more strict warnings than what
 # are used for other targets, to ensure that pf can be compiled by a user
 # aggressive about warnings.
 if (pf_build_shared)
-  cxx_shared_library(pf_core "${cxx_default}" ${LIB_SOURCES})
+  cxx_shared_library(pf_core "${cxx_default} -ldl -lpthread" ${LIB_SOURCES})
 else()
   cxx_library(pf_core "${cxx_strict}" ${LIB_SOURCES})
 endif()
