@@ -52,6 +52,6 @@ template <typename T> class Singleton {
 
 };
 
-}; //namespace pf_basic
+} //namespace pf_basic
 
 #endif //PF_BASIC_SINGLETON_H_

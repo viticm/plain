@@ -43,8 +43,8 @@ inline void print_curinfo() {
       pf_sys::process::get_physicalmemory_usage(pf_sys::process::getid()));
 }
 
-}; //namespace process
+} //namespace process
 
-}; //namespace pf_sys
+} //namespace pf_sys
 
 #endif //PF_SYS_PROCESS_H_

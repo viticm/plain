@@ -89,6 +89,6 @@ class PF_API Ini {
 
 };
 
-}; //namespace pf_file
+} //namespace pf_file
 
 #endif //PF_FILE_INI_H_

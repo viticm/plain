@@ -45,8 +45,8 @@ class PF_API Encryptor {
 
 };
 
-}; //namespace stream
+} //namespace stream
 
-}; //namespace pf_net
+} //namespace pf_net
 
 #endif //PF_NET_STREAM_ENCRYPTOR_H_

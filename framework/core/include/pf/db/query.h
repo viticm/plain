@@ -73,6 +73,6 @@ class PF_API Query {
 
 };
 
-}; //namespace pf_db
+} //namespace pf_db
 
 #endif //PF_DB_QUERY_H_

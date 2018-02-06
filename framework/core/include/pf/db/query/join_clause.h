@@ -81,9 +81,9 @@ class PF_API JoinClause : public Builder {
 
 };
 
-}; //namespace query
+} //namespace query
 
-}; //namespace pf_db
+} //namespace pf_db
 
 
 #endif //PF_DB_QUERY_JOIN_CLAUSE_H_

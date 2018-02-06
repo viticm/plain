@@ -33,6 +33,6 @@ class Expression {
 
 };
 
-}; //namespace pf_db
+} //namespace pf_db
 
 #endif //PF_DB_QUERY_EXPRESSION_H_

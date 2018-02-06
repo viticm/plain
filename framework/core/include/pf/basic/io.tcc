@@ -42,55 +42,55 @@ inline void reset_consolecolor(uint16_t color) {
 template<typename... TS> 
 void io_cerr(const char *format, TS... args) {
 #if OS_UNIX
-  std::cout << "\e[0;31;1m";  
+  std::cout << "\033[0;31;1m";  
 #elif OS_WIN
   auto lastcolor = set_consolecolor(FOREGROUND_INTENSITY | FOREGROUND_RED);
 #endif
   printf(format, args...);
 #if OS_UNIX
-  std::cout << "\e[0m";
+  std::cout << "\033[0m";
 #endif
   std::cout << std::endl;
 #if OS_WIN
   reset_consolecolor(lastcolor);
 #endif
-};
+}
 
 template<typename... TS> 
 void io_cwarn(const char *format, TS... args) {
 #if OS_UNIX
-  std::cout<<"\e[0;33;1m";  
+  std::cout<<"\033[0;33;1m";  
 #elif OS_WIN
   auto lastcolor = 
     set_consolecolor(FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN);
 #endif
   printf(format, args...);
 #if OS_UNIX
-  std::cout << "\e[0m";
+  std::cout << "\033[0m";
 #endif
   std::cout << std::endl;
 #if OS_WIN
   reset_consolecolor(lastcolor);
 #endif
-};
+}
 
 template<typename... TS> 
 void io_cdebug(const char *format, TS... args) {
 #if OS_UNIX
-  std::cout << "\e[0;32;1m";  
+  std::cout << "\033[0;32;1m";  
 #elif OS_WIN
   auto lastcolor = set_consolecolor(FOREGROUND_INTENSITY | FOREGROUND_GREEN);
 #endif
   printf(format, args...);
 #if OS_UNIX
-  std::cout << "\e[0m";
+  std::cout << "\033[0m";
 #endif
   std::cout << std::endl;
 #if OS_WIN
   reset_consolecolor(lastcolor);
 #endif
-};
+}
 
-}; //namespace pf_basic
+} //namespace pf_basic
 
 #endif //PF_BASIC_IO_TCC_

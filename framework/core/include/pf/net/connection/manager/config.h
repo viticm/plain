@@ -44,10 +44,10 @@ struct cache_struct {
   };
 };
 
-}; //namespace manager
+} //namespace manager
 
-}; //namespace connection
+} //namespace connection
 
-}; //namespace pf_net
+} //namespace pf_net
 
 #endif //PF_NET_CONNECTION_MANAGER_CONFIG_H_

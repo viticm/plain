@@ -59,9 +59,9 @@ class Template {
 
 };
 
-}; //namespace hashmap
+} //namespace hashmap
 
-}; //namespace pf_basic
+} //namespace pf_basic
 
 #include "pf/basic/hashmap/template.tcc"
 

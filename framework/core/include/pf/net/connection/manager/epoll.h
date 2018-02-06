@@ -50,11 +50,11 @@ class PF_API Epoll : public Interface {
 
 };
 
-}; //namespace manager
+} //namespace manager
 
-}; //namespace connection
+} //namespace connection
 
-}; //namespace pf_net
+} //namespace pf_net
 
 
 #endif

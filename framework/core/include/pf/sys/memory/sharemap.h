@@ -382,10 +382,10 @@ class PF_API Map {
 
 };
 
-}; //namespace share
+} //namespace share
 
-}; //namespace memory
+} //namespace memory
 
-}; //namespace memory
+} //namespace memory
 
 #endif //PF_SYS_MEMORY_SHAREMAP_H_

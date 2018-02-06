@@ -17,7 +17,7 @@ namespace pf_basic {
 
 PF_API type::variable_set_t &get_globals();
 
-};
+}
 
 #define GLOBALS pf_basic::get_globals()
 

@@ -68,7 +68,7 @@ class unique_lock {
 
 };
 
-}; //namespace pf_sys
+} //namespace pf_sys
 
 #include "pf/sys/thread.tcc"
 

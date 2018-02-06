@@ -38,10 +38,10 @@ class PF_API Basic : public Select {
 
 };
 
-}; //namespace manager
+} //namespace manager
 
-}; //namespace connection
+} //namespace connection
 
-}; //namespace pf_net
+} //namespace pf_net
 
 #endif //PF_NET_CONNECTION_MANAGER_BASIC_H_

@@ -73,6 +73,6 @@ std::thread::id Kernel::newthread(F&& f, Args&&... args) {
   return res;
 }
 
-}; //namespace pf_engine
+} //namespace pf_engine
 
 #endif //PF_ENGINE_KERNEL_TCC_

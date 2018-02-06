@@ -47,6 +47,8 @@ class Collection {
 
 };
 
-}; //namespace pf_support
+} //namespace pf_support
+
+#include "pf/support/collection.tcc"
 
 #endif //PF_SUPPORT_COLLECTION_H_

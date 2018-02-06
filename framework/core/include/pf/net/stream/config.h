@@ -28,8 +28,8 @@ class Output;
 class Encryptor;
 class Compressor;
 
-};
+}
 
-}; //namespace pf_net
+} //namespace pf_net
 
 #endif //PF_NET_STREAM_CONFIG_H_

@@ -92,7 +92,7 @@ class PF_API Kernel : public pf_basic::Singleton< Kernel > {
 
 };
 
-}; //namespace pf_engine
+} //namespace pf_engine
 
 #include "pf/engine/kernel.tcc"
 

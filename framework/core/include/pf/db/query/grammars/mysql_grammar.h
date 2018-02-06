@@ -88,8 +88,8 @@ class PF_API MysqlGrammar : public grammars::Grammar {
 
 };
 
-}; //namespace query
+} //namespace query
 
-}; //namespace pf_db
+} //namespace pf_db
 
 #endif //PF_DB_QUERY_GRAMMARS_MYSQL_GRAMMAR_H_

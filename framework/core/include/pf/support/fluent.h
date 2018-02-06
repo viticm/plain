@@ -37,6 +37,6 @@ class PF_API Fluent {
 
 };
 
-}; //namespace pf_support
+} //namespace pf_support
 
 #endif //PF_SUPPORT_FLUENT_H_

@@ -46,8 +46,8 @@ class PF_API Assistant {
 
 };
 
-}; //namespace compressor
+} //namespace compressor
 
-}; //namespace pf_util
+} //namespace pf_util
 
 #endif //PF_UTIL_COMPRESSOR_ASSISTANT_H_

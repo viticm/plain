@@ -111,9 +111,9 @@ struct PF_API variable_struct {
 
 }; //PF变量，类似脚本变量
 
-}; //namespace type
+} //namespace type
 
-}; //namespace pf_basic
+} //namespace pf_basic
 
 #include "pf/basic/type/variable.tcc"
 

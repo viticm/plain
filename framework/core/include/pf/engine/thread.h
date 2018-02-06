@@ -26,8 +26,8 @@ bool for_db(pf_db::Interface *db);
 bool for_cache(pf_cache::Manager *cache);
 bool for_script(pf_script::Interface *env);
 
-}; //namespace thread
+} //namespace thread
 
-}; //namespace pf_engine
+} //namespace pf_engine
 
 #endif //PF_ENGINE_THREAD_H_

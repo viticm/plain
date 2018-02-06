@@ -1,5 +1,5 @@
-libdir=@CMAKE_INSTALL_FULL_LIBDIR@../dll/
-includedir=@CMAKE_INSTALL_FULL_INCLUDEDIR@../include/
+libdir=@CMAKE_INSTALL_FULL_LIBDIR@
+includedir=@CMAKE_INSTALL_FULL_INCLUDEDIR@
 
 Name: pf
 Description: PlainFramework (without main() function)

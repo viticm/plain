@@ -138,10 +138,10 @@ class PF_API Interface {
 
 };
 
-}; //namespace manager
+} //namespace manager
 
-}; //namespace connection
+} //namespace connection
 
-}; //namespace pf_net
+} //namespace pf_net
 
 #endif //PF_NET_CONNECTION_MANAGER_BASE_H_

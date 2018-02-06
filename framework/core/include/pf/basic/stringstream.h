@@ -109,6 +109,6 @@ class stringstream {
 
 };
 
-}; //namespace pf_basic
+} //namespace pf_basic
 
 #endif //PF_BASIC_STRINGSTREAM_H_

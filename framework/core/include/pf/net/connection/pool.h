@@ -49,9 +49,9 @@ class PF_API Pool {
 
 };
 
-}; //namespace connection
+} //namespace connection
 
-}; //namespace pf_net
+} //namespace pf_net
 
 //extern pf_net::connection::Pool* g_connectionpool;
 

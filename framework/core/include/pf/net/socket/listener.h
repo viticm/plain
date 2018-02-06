@@ -45,8 +45,8 @@ class PF_API Listener {
 
 };
 
-}; //namespace socket
+} //namespace socket
 
-}; //namespace pf_net
+} //namespace pf_net
 
 #endif //PF_NET_SOCKET_SERVER_H_

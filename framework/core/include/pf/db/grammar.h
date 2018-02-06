@@ -41,7 +41,12 @@ class PF_API Grammar {
    void wrap_array(variable_array_t &values);
 
    //Wrap a table in keyword identifiers.
-   std::string wrap_table(variable_t &table);
+   std::string wrap_table(variable_t &table) {
+     if (table.type != DB_EXPRESSION_TYPE) {
+       return table_prefix_ + table.data;
+     }
+     return table.data;
+   };
 
    //Wrap a table in keyword identifiers.
    std::string wrap_table(const std::string &table) {
@@ -50,7 +55,9 @@ class PF_API Grammar {
    };
 
    //Wrap a value in keyword identifiers.
-   std::string wrap(const variable_t &value, bool prefix_alias = false);
+   std::string wrap(const variable_t &value, bool prefix_alias = false) {
+     return wrap(value);
+   };
 
    //Wrap a value that has an alias.
    std::string wrap_aliased_value(
@@ -63,13 +70,15 @@ class PF_API Grammar {
    std::string wrap_value(const variable_t &value);
 
    //Convert an array of column names into a delimited string.
-   std::string columnize(const std::vector<std::string> &columns) const;
+   std::string columnize(const std::vector<std::string> &columns);
 
    //Create query parameter place-holders for an array.
    std::string parameterize(variable_set_t &values);
 
    //Get the appropriate query parameter place-holder for a value.
-   std::string parameter(const variable_t &value);
+   std::string parameter(const variable_t &value) {
+     return value.data;
+   };
 
    //Get the value of a raw expression.
    std::string get_value(const variable_t &value) {
@@ -89,6 +98,6 @@ class PF_API Grammar {
 
 };
 
-}; //namespace pf_db
+} //namespace pf_db
 
 #endif //PF_DB_GRAMMAR_H_

@@ -84,8 +84,8 @@ PF_API std::string str_replace(const std::string &search ,
                                const std::string &subject, 
                                int32_t count = -1);
 
-}; //namespace string
+} //namespace string
 
-}; //namespace pf_basic
+} //namespace pf_basic
 
 #endif //PF_BASIC_STRING_H_

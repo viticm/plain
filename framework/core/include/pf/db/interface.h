@@ -103,7 +103,7 @@ class PF_API Interface {
 
 };
 
-}; //namespace pf_db
+} //namespace pf_db
 
 /* Lock db manager in mutli threads, p is manager pointer, n is lock name. */
 #ifndef db_lock

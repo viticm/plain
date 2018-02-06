@@ -78,8 +78,8 @@ class PF_API Basic {
 
 };
 
-}; //namespace socket
+} //namespace socket
 
-}; //namespace pf_net
+} //namespace pf_net
 
 #endif //PF_NET_SOCKET_BASE_H_

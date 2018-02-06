@@ -16,7 +16,7 @@
 namespace pf_engine {
   class Application;
   class Kernel;
-};
+}
 
 #define ENGINE_MODULENAME "engine"
 

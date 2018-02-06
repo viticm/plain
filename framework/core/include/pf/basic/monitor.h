@@ -31,6 +31,6 @@ class PF_API monitor {
 
 };
 
-}; //namespace pf_basic
+} //namespace pf_basic
 
 #endif //PF_BASIC_MONITOR_H_

@@ -365,6 +365,6 @@ class PF_API DBStore : public StoreInterface {
 
 };
 
-}; //namespace pf_cache
+} //namespace pf_cache
 
 #endif //PF_CACHE_DB_STORE_H_

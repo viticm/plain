@@ -115,10 +115,10 @@ class PF_API SqlserverGrammar : public grammars::Grammar {
 
 };
 
-}; //namespace grammars
+} //namespace grammars
 
-}; //namespace query
+} //namespace query
 
-}; //namespace pf_db
+} //namespace pf_db
 
 #endif //PF_DB_QUERY_GRAMMARS_SQLSERVER_GRAMMAR_H_

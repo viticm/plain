@@ -95,8 +95,8 @@ class DBResultFactory : public pf_net::packet::Factory {
 };
 
 
-}; //namespace packet
+} //namespace packet
 
-}; //namespace pf_cache
+} //namespace pf_cache
 
 #endif //PF_CACHE_PACKET_DB_RESULT_H_

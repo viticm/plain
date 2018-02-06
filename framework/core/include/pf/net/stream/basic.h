@@ -77,8 +77,8 @@ class PF_API Basic {
 
 };
 
-}; //namespace stream
+} //namespace stream
 
-}; //namespace pf_net
+} //namespace pf_net
 
 #endif //PF_NET_STREAM_STREAM_H_

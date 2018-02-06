@@ -73,7 +73,7 @@ class PF_API TimeManager : public Singleton<TimeManager> {
 
 };
 
-}; //namespace pf_basic
+} //namespace pf_basic
 
 extern std::unique_ptr< pf_basic::TimeManager > g_time_manager;
 

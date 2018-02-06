@@ -55,10 +55,10 @@ enum {
 class MapPool;
 class Map;
 
-}; //namespace share
+} //namespace share
 
-}; //namespace memory
+} //namespace memory
 
-}; //namespace pf_sys
+} //namespace pf_sys
 
 #endif //PF_SYS_MEMORY_CONFIG_H_

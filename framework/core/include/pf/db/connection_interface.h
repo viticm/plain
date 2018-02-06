@@ -99,6 +99,6 @@ class PF_API ConnectionInterface {
 
 };
 
-}; //namespace pf_db
+} //namespace pf_db
 
 #endif //PF_DB_CONNECTION_INTERFACE_H_

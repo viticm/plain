@@ -40,7 +40,9 @@ class PF_API BuildsQueries {
    bool each(check_closure_t callback, int32_t count = 1000);
 
    //Execute the query and get the first result.
-   variable_array_t first(const std::vector<std::string> &columns = {"*"});
+   variable_array_t first(const std::vector<std::string> &columns = {"*"}) {
+     return {};
+   };
 
    //Apply the callback's query changes if the given "value" is true. 
    query::Builder *unless(const variable_t &value, 
@@ -54,8 +56,8 @@ class PF_API BuildsQueries {
 
 };
 
-}; //namespace concerns
+} //namespace concerns
 
-}; //namespace pf_db
+} //namespace pf_db
 
 #endif //PF_DB_CONCERNS_BUILDS_QUERIES_H_

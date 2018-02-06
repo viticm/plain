@@ -59,8 +59,8 @@ typedef struct streamdata_struct {
   }
 } streamdata_t;
 
-}; //namespace socket
+} //namespace socket
 
-}; //namespace pf_net
+} //namespace pf_net
 
 #endif //PF_NET_SOCKET_CONFIG_H_

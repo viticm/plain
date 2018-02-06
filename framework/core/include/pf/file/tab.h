@@ -119,6 +119,6 @@ class PF_API Tab {
 
 };
 
-}; //namespace pf_file
+} //namespace pf_file
 
 #endif //PF_FILE_DATABASE_H_

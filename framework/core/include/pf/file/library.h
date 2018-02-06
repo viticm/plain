@@ -117,7 +117,7 @@ class PF_API LibraryManager : public pf_basic::Singleton< LibraryManager > {
 
 };
 
-}; //namespace pf_file
+} //namespace pf_file
 
 extern std::unique_ptr< pf_file::LibraryManager > g_librarymanager;
 #define LIBRARY_MANAGER_POINTER pf_file::LibraryManager::getsingleton_pointer()

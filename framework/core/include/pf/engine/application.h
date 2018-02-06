@@ -53,6 +53,6 @@ class PF_API Application : public pf_basic::Singleton<Application> {
 
 };
 
-}; //namespace pf_engine
+} //namespace pf_engine
 
 #endif //PF_ENGINE_APPLICATION_H_

@@ -33,7 +33,15 @@ class PF_API ArrayAccess {
  public:
    
    //Join array elements with a string.
-   std::string implode(const std::string &pieces);
+   std::string implode(const std::string &pieces) {
+     std::string r{""};
+     auto it = items_.begin();
+     for (;it != items_.end(); ++it) {
+       r += it != items_.begin() && it != items_.end() ? 
+            pieces + (*it).data : (*it).data;
+     }
+     return r;
+   };
 
    //Get all of the items in the collection.
    variable_array_t all() {
@@ -42,6 +50,6 @@ class PF_API ArrayAccess {
 
 };
 
-}; //namespace pf_support
+} //namespace pf_support
 
 #endif //PF_SUPPORT_ARRAY_ACCESS_H_

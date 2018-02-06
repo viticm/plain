@@ -100,9 +100,9 @@ class PF_API MiniManager : public pf_basic::Singleton<MiniManager> {
 
 };
 
-}; //namespace compressor
+} //namespace compressor
 
-}; //namespace pf_util
+} //namespace pf_util
 
 #define UTIL_COMPRESSOR_MINIMANAGER_POINTER \
 pf_util::compressor::MiniManager::getsingleton_pointer()

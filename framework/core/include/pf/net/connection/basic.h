@@ -139,8 +139,8 @@ class PF_API Basic {
 
 };
 
-}; //namespace connection
+} //namespace connection
 
-}; //namespace pap_common_net
+} //namespace pap_common_net
 
 #endif //PF_NET_CONNECTION_BASE_H_

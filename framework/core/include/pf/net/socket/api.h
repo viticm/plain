@@ -117,10 +117,10 @@ PF_API int32_t getsockname_ex(int32_t socketid,
 PF_API int32_t getlast_errorcode();
 PF_API void getlast_errormessage(char *buffer, uint16_t length);
 
-}; //namespace api
+} //namespace api
 
-}; //namespace socket
+} //namespace socket
 
-}; //namespace pf_net
+} //namespace pf_net
 
 #endif //PF_NET_SOCKET_API_H_

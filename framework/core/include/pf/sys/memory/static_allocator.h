@@ -39,8 +39,8 @@ class PF_API StaticAllocator {
 
 };
 
-}; //namespace memory
+} //namespace memory
 
-}; //namespace pf_sys
+} //namespace pf_sys
 
 #endif //PF_SYS_MEMORY_STATIC_ALLOCATOR_H_

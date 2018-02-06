@@ -60,11 +60,11 @@ class PF_API Select : public Interface {
 
 };
 
-}; //namespace manager
+} //namespace manager
 
-}; //namespace connection
+} //namespace connection
 
-}; //namespace pf_net
+} //namespace pf_net
 #endif
 
 #endif //PF_NET_CONNECTION_MANAGER_SELECT_H_

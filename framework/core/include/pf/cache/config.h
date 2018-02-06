@@ -25,7 +25,7 @@ class Repository;
 class DBStore;
 class Manager;
 
-};
+}
 
 /* Set cache from get value(void *) */
 #define cache_set(c,v,n) { memset((c), 0, (n)); \

@@ -827,10 +827,14 @@ class PF_API Builder : public concerns::BuildsQueries {
    variable_array_t clean_bindings_expression(const variable_array_t &bindings);
 
    //Get the database connection instance.
-   ConnectionInterface *get_connection();
+   ConnectionInterface *get_connection() {
+     return connection_;
+   };
 
    //Get the query grammar instance.
-   grammars::Grammar *get_grammar();
+   grammars::Grammar *get_grammar() {
+     return grammar_;
+   };
 
    //Clean the members by the variable name without "_".
    Builder &clean(const std::vector<std::string> &except) {
@@ -936,8 +940,8 @@ class PF_API Builder : public concerns::BuildsQueries {
                           const std::vector<std::string> &columns);
 };
 
-}; //namespace query
+} //namespace query
 
-}; //namespace pf_db
+} //namespace pf_db
 
 #endif //PF_DB_QUERY_BUILDER_H_

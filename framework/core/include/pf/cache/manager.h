@@ -30,6 +30,6 @@ class PF_API Manager {
 
 };
 
-}; //namespace pf_cache
+} //namespace pf_cache
 
 #endif //PF_CACHE_MANAGER_H_

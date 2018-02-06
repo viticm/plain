@@ -45,6 +45,6 @@ class PF_API Factory {
 
 };
 
-}; //namespace pf_script
+} //namespace pf_script
 
 #endif //PF_DB_FACTORY_H_

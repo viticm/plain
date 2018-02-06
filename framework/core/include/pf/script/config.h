@@ -47,7 +47,7 @@ using eid_t = int16_t; //Environment.
 //using var_array_t = pf_basic::type::variable_array_t;
 //using var_t = pf_basic::type::variable_t;
 
-};
+}
 
 #define SCRIPT_EID_INVALID (-1)
 

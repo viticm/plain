@@ -134,8 +134,8 @@ void Template<T_key, T_value>::set_maxcount(uint32_t count) {
   maxcount_ = count;
 }
 
-}; //namespace hashmap
+} //namespace hashmap
 
-}; //namespace pf_basic
+} //namespace pf_basic
 
 #endif //PF_BASIC_HASHMAP_TEMPLATE_TCC_

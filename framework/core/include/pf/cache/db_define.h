@@ -228,7 +228,7 @@ using db_share_config_t = struct db_share_config_struct;
 //DB table columns info.
 using db_table_cinfo_t = struct db_table_cinfo_struct;
 
-}; //namespace pf_cache
+} //namespace pf_cache
 
 //Some useful macros.
 #define cast_dcache(v)cast(db_item_t *, (v)) //dcache is db cache.

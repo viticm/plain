@@ -100,6 +100,6 @@ const char *BitFlags<size>::getflags() const {
   return flags_;
 }
 
-}; //namespace pf_util
+} //namespace pf_util
 
 #endif //PF_UTIL_BITFLAG_H_

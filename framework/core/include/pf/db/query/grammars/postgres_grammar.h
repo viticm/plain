@@ -98,10 +98,10 @@ public:
 
 };
 
-}; //namespace grammars
+} //namespace grammars
 
-}; //namespace query
+} //namespace query
 
-}; //namespace pf_db
+} //namespace pf_db
 
 #endif //PF_DB_QUERY_GRAMMARS_POSTGRES_GRAMMAR_H_

@@ -49,10 +49,10 @@ class PF_API Listener : public Basic {
 
 };
 
-}; //namespace manager
+} //namespace manager
 
-}; //namespace connection
+} //namespace connection
 
-}; //namespace pf_net
+} //namespace pf_net
 
 #endif //PF_NET_CONNECTION_MANAGER_LISTENER_H_

@@ -47,8 +47,8 @@ class PF_API Interface {
 
 };
 
-}; //namespace packet
+} //namespace packet
 
-}; //namespace pf_net
+} //namespace pf_net
 
 #endif //PF_NET_PACKET_BASE_H_

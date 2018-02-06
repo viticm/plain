@@ -30,11 +30,11 @@ class PF_API Iocp : public Base {
 
 };
 
-}; //namespace manager
+} //namespace manager
 
-}; //namespace connection
+} //namespace connection
 
-}; //namespace pf_net
+} //namespace pf_net
 #endif
 
 #endif //PF_NET_CONNECTION_MANAGER_IOCP_H_

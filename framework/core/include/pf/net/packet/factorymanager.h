@@ -97,9 +97,9 @@ class PF_API FactoryManager : public pf_basic::Singleton<FactoryManager> {
 
 };
 
-}; //namespace packet
+} //namespace packet
 
-}; //namespace pap_common_net
+} //namespace pap_common_net
 
 PF_API extern std::unique_ptr< pf_net::packet::FactoryManager > 
   g_packetfactory_manager;

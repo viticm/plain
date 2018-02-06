@@ -71,8 +71,8 @@ class PF_API Compressor {
 
 };
 
-}; //namespace stream
+} //namespace stream
 
-}; //namespace pf_net
+} //namespace pf_net
 
 #endif //PF_NET_STREAM_COMPRESSOR_H_

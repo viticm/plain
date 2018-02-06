@@ -35,8 +35,8 @@ typedef enum {
 class Basic;
 class Pool;
 
-}; //namespace connection
+} //namespace connection
 
-}; //namespace pf_net
+} //namespace pf_net
 
 #endif //PF_NET_CONNECTION_CONFIG_H_

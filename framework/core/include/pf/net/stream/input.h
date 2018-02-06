@@ -108,8 +108,8 @@ class PF_API Input : public Basic {
 
 };
 
-}; //namespace socket
+} //namespace socket
 
-}; //namespace pf_net
+} //namespace pf_net
 
 #endif //PF_NET_STREAM_INPUTSTREAM_H_

@@ -185,8 +185,8 @@ class PF_API Dynamic : public packet::Interface {
 
 };
 
-}; //namespace packet
+} //namespace packet
 
-}; //namespace pf_net
+} //namespace pf_net
 
 #endif //PF_NET_PACKET_DYNAMIC_H_

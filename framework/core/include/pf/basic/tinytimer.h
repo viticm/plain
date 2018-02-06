@@ -37,6 +37,6 @@ class PF_API TinyTimer {
 
 };
 
-}; //namespace pf_basic
+} //namespace pf_basic
 
 #endif //PF_BASIC_TINYTIMER_H_

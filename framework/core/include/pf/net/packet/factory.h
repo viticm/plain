@@ -27,8 +27,8 @@ class PF_API Factory {
 
 };
 
-}; //namespace packet
+} //namespace packet
 
-}; //namespace pf_net
+} //namespace pf_net
 
 #endif //PF_NET_PACKET_FACTORY_H_

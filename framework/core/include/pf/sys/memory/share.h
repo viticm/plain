@@ -43,7 +43,7 @@ PF_API char *map(HANDLE handle);
 #endif
 PF_API void unmap(char *pointer);
 
-}; //namespace api
+} //namespace api
 
 class PF_API Base {
 
@@ -363,11 +363,11 @@ class Node {
 
 };
 
-}; //namespace share
+} //namespace share
 
-}; //namespace memory
+} //namespace memory
 
-}; //namespace pf_sys
+} //namespace pf_sys
 
 #include "pf/sys/memory/share.tcc"
 

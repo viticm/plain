@@ -45,8 +45,8 @@ PF_API int64_t lseekex(int32_t fd, uint64_t offset, int32_t whence);
 PF_API int64_t tellex(int32_t fd);
 PF_API bool truncate(const char *filename);
 
-}; //namespace api
+} //namespace api
 
-}; //namespace pf_file
+} //namespace pf_file
 
 #endif //PF_FILE_API_H_

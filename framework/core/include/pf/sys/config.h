@@ -23,6 +23,6 @@ enum {
   kThreadStatusRun,
 };
 
-}; //namespace pf_sys
+} //namespace pf_sys
 
 #endif //PF_SYS_CONFIG_H_

@@ -33,8 +33,8 @@ class PF_API Interface {
 
 };
 
-}; //namespace protocol
+} //namespace protocol
 
-}; //namespace pf_net
+} //namespace pf_net
 
 #endif //PF_NET_PROTOCOL_INTERFACE_H_

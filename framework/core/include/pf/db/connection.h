@@ -100,10 +100,14 @@ class PF_API Connection : public ConnectionInterface {
    virtual void pretend(closure_t callback);
 
    //Get the query grammar used by the connection.
-   virtual query::grammars::Grammar *get_query_grammar();
+   virtual query::grammars::Grammar *get_query_grammar() {
+     return nullptr;
+   };
 
    //Get the schema grammar used by the connection.
-   virtual query::grammars::Grammar *get_schema_grammar();
+   virtual query::grammars::Grammar *get_schema_grammar() {
+     return nullptr;
+   };
 
  public:
 
@@ -158,6 +162,6 @@ class PF_API Connection : public ConnectionInterface {
 
 };
 
-}; //namespace pf_db
+} //namespace pf_db
 
 #endif //PF_DB_CONNECTION_H_

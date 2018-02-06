@@ -368,10 +368,10 @@ inline void clear(int32_t key) {
 #endif
 }
 
-}; //namespace share
+} //namespace share
 
-}; //namespace memory
+} //namespace memory
 
-}; //namespace pf_sys
+} //namespace pf_sys
 
 #endif //PF_SYS_MEMORY_SHARE_TCC_

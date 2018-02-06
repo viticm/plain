@@ -64,9 +64,9 @@ class PF_API Mini {
 
 };
 
-}; //namespace compressor
+} //namespace compressor
 
-}; //namespace pf_util
+} //namespace pf_util
 
 
 #endif //PF_UTIL_COMPRESSOR_MINI_H_

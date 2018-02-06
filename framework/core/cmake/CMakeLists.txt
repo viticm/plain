@@ -102,14 +102,15 @@ endif()
 set(pf_build_shared ON)
 set(INSTALL_PF ON)
 file(GLOB_RECURSE LIB_SOURCES "${pf_SOURCE_DIR}/src/*.cc")
+file(GLOB_RECURSE LIB_SOURCES_C "${pf_SOURCE_DIR}/src/*.c")
 
 # Plain Framework libraries.  We build them using more strict warnings than what
 # are used for other targets, to ensure that pf can be compiled by a user
 # aggressive about warnings.
 if (pf_build_shared)
-  cxx_shared_library(pf_core "${cxx_default} -ldl -lpthread" ${LIB_SOURCES})
+  cxx_shared_library(pf_core "${cxx_default} -ldl -lpthread" ${LIB_SOURCES} ${LIB_SOURCES_C})
 else()
-  cxx_library(pf_core "${cxx_strict}" ${LIB_SOURCES})
+  cxx_library(pf_core "${cxx_strict}" ${LIB_SOURCES} ${LIB_SOURCES_C})
 endif()
 
 # If the CMake version supports it, attach header directory information

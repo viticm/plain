@@ -156,7 +156,7 @@ inline bool is_stopping() {
   return kThreadStatusStop == status();
 }
 
-}; //namespace thread
+} //namespace thread
 
 inline ThreadCollect::ThreadCollect() {
   ++GLOBALS["thread.collects"];
@@ -177,6 +177,6 @@ inline int32_t ThreadCollect::count() {
   return GLOBALS["thread.collects"].get<int32_t>();
 }
 
-}; //namespace pf_sys
+} //namespace pf_sys
 
 #endif //PF_SYS_THREAD_TCC_

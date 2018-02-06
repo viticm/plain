@@ -242,10 +242,10 @@ class PF_API Grammar : public pf_db::Grammar {
 
 };
 
-}; //namespace grammars
+} //namespace grammars
 
-}; //namespace query
+} //namespace query
 
-}; //namespace pf_db
+} //namespace pf_db
 
 #endif //PF_DB_QUERY_GRAMMARS_GRAMMAR_H_

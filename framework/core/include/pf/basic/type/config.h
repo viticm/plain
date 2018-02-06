@@ -42,8 +42,8 @@ typedef enum {
   kVariableTypeNumber,
 } var_t; //变量的类型
 
-}; //namespace type
+} //namespace type
 
-}; //namespace pf_basic
+} //namespace pf_basic
 
 #endif //PF_BASIC_TYPE_CONFIG_H_

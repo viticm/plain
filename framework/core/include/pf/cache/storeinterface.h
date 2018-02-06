@@ -62,6 +62,6 @@ class PF_API StoreInterface {
 
 };
 
-}; //namespace pf_cache
+} //namespace pf_cache
 
 #endif //PF_CACHE_STOREINTERFACE_H_

@@ -58,6 +58,6 @@ class PF_API Interface {
 
 };
 
-}; //namespace pf_script
+} //namespace pf_script
 
 #endif //PF_SCRIPT_INTERFACE_H_

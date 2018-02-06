@@ -90,6 +90,6 @@ class PF_API Repository {
 
 };
 
-}; //namespace pf_cache
+} //namespace pf_cache
 
 #endif //PF_CACHE_REPOSITORY_H_

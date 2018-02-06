@@ -137,6 +137,6 @@ void Logger::slow_savelog(const char *filename_prefix,
   }
 }
 
-}; //namespace pf_basic;
+} //namespace pf_basic;
 
 #endif //PF_BASIC_LOGGER_TCC_

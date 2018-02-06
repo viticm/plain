@@ -72,6 +72,6 @@ class TaskQueue {
 
 };
 
-}; //namespace pf_basic
+} //namespace pf_basic
 
 #endif //PF_BASIC_TASK_QUEUE_TCC_

@@ -90,7 +90,7 @@ namespace concerns {
 
 class BuildsQueries;
 
-};
+}
 
 namespace query {
 
@@ -105,9 +105,9 @@ class PostgresGrammar;
 class SqliteGrammar;
 class SqlserverGrammar;
 
-};
+}
 
-};
+}
 
 //The query array, has an variable set and query pointer.
 typedef struct PF_API db_query_array_struct db_query_array_t;
@@ -132,7 +132,7 @@ using db_query_bindings_t =
   std::map<std::string, pf_basic::type::variable_array_t>;
 
 
-}; //namespace pf_db
+} //namespace pf_db
 
 #define DB_EID_INVALID (-1)
 

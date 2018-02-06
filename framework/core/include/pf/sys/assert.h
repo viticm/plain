@@ -32,7 +32,7 @@ PF_API void __assertspecial__(const char *file,
 PF_API void __messagebox__(const char *msg);
 PF_API void __show__(const char *temp);
 
-}; //namespace pf_sys
+} //namespace pf_sys
 
 #if defined(NDEBUG)
   #define Assert(expr) ((void)0)

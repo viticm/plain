@@ -74,7 +74,7 @@ class PF_API RandomGenerator : public pf_basic::Singleton< RandomGenerator > {
 
 };
 
-}; //namespace pf_util
+} //namespace pf_util
 
 extern std::unique_ptr< pf_util::RandomGenerator > g_random_generator;
 

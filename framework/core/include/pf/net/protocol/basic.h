@@ -36,8 +36,8 @@ class PF_API Basic : public Interface {
 
 };
 
-}; //namespace protocol
+} //namespace protocol
 
-}; //namespace pf_net
+} //namespace pf_net
 
 #endif //PF_NET_PROTOCOL_BASIC_H_

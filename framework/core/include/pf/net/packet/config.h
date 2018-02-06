@@ -73,8 +73,8 @@ struct queue_struct {
   ~queue_struct();
 };
 
-}; //namespace packet
+} //namespace packet
 
-}; //namespace pf_net
+} //namespace pf_net
 
 #endif //PF_NET_PACKET_CONFIG_H_

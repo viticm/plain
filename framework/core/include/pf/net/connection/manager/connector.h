@@ -34,10 +34,10 @@ class PF_API Connector : public Basic {
 
 };
 
-}; //namespace manager
+} //namespace manager
 
-}; //namespace connection
+} //namespace connection
 
-}; //namespace pf_net
+} //namespace pf_net
 
 #endif //PF_NET_CONNECTION_MANAGER_CONNECTOR_H_

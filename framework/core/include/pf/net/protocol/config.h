@@ -20,8 +20,8 @@ namespace protocol {
 class Interface;
 class Basic;
 
-}; //namespace protocol
+} //namespace protocol
 
-}; //namespace pf_net
+} //namespace pf_net
 
 #endif //PF_NET_PROTOCOL_CONFIG_H_

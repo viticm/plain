@@ -1,5 +1,5 @@
-libdir=
-includedir=
+libdir=/usr/local/lib64
+includedir=/usr/local/include
 
 Name: pf
 Description: PlainFramework (without main() function)
