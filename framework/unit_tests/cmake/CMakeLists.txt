@@ -65,4 +65,4 @@ endfunction()
 
 file(GLOB_RECURSE CORE_TEST_SOURCES "../core_test/*.cc")
 
-test_executables(core_test ${CORE_TEST_SOURCES})
+test_executables(core ${CORE_TEST_SOURCES})
