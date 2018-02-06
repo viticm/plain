@@ -76,5 +76,6 @@ endmacro(plainframework_set_ios_attributes)
 file(GLOB_RECURSE PLAINFRAMEWORK_HEADERS ${CMAKE_CURRENT_LIST_DIR}/framework/core/include *.h)
 
 if(plainframework_build_tests)
-  add_subdirectory(${root_dir}/framework/unit_tests/cmake ${root_dir}/bin)
+  add_subdirectory(${root_dir}/framework/unit_tests/cmake 
+                   ${root_dir}/framework/unit_tests/cmake/dependencies)
 endif()
