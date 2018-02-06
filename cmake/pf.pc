@@ -1,9 +1,0 @@
-libdir=/usr/local/lib64
-includedir=/usr/local/include
-
-Name: pf
-Description: PlainFramework (without main() function)
-Version: 
-URL: https://github.com/viticm/plain
-Libs: -L${libdir} -lpf_core -lpthread
-Cflags: -I${includedir}  -lpthread
