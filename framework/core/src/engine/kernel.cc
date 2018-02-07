@@ -101,8 +101,6 @@ void Kernel::stop() {
 bool Kernel::init_base() {
   using namespace pf_basic;
  
-  io_cdebug("[%s] Kernel::init_base start...", ENGINE_MODULENAME);
-
   //Time manager.
   if (is_null(TIME_MANAGER_POINTER)) {
     auto time_manager = new TimeManager();

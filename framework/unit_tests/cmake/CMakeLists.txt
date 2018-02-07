@@ -60,9 +60,10 @@ endfunction()
 # Generate a rule to build unit test executables.
 function(test_executables test_name source)
   # Default build options for the target architecture.
-  test_executable(${test_name}_tests ${source})
+  test_executable(${test_name}_tests "${source}")
+  MESSAGE(${source})
 endfunction()
 
 file(GLOB_RECURSE CORE_TEST_SOURCES "../core_test/*.cc")
 
-test_executables(core ${CORE_TEST_SOURCES})
+test_executables(core "${CORE_TEST_SOURCES}")

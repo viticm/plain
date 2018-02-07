@@ -15,6 +15,8 @@ using namespace pf_db::query;
 Builder::Builder(ConnectionInterface *connection, grammars::Grammar *grammar)
 : BuildsQueries(this) {
   connection_ = connection;
+  Assert(connection_);
+  if (is_null(connection_)) return;
   grammar_ = is_null(grammar) ? connection->get_query_grammar() : grammar;
   bindings_ = {
     {"select", {}},

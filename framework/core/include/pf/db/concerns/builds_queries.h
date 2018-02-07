@@ -41,6 +41,7 @@ class PF_API BuildsQueries {
 
    //Execute the query and get the first result.
    variable_array_t first(const std::vector<std::string> &columns = {"*"}) {
+     UNUSED(columns);
      return {};
    };
 

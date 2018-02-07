@@ -208,6 +208,7 @@ class PF_API Builder : public concerns::BuildsQueries {
 
    //Pass the query to a given callback.
    Builder &tap(closure_t callback) {
+     UNUSED(callback);
      //return when(true, callback);
      return *this;
    };
@@ -239,6 +240,8 @@ class PF_API Builder : public concerns::BuildsQueries {
                   const std::string &oper = "", 
                   const variable_t &val = "", 
                   const std::string &boolean = "and") {
+     UNUSED(oper);
+     UNUSED(val);
      // If the columns is actually a Closure instance, we will assume the developer
      // wants to begin a nested where statement which is wrapped in parenthesis.
      // We'll add that Closure to the query then return back out immediately.
@@ -279,6 +282,8 @@ class PF_API Builder : public concerns::BuildsQueries {
                          const std::string &oper = "", 
                          const std::string &second = "", 
                          const std::string &boolean = "and") {
+     UNUSED(oper);
+     UNUSED(second);
      // If the column is an array, we will assume it is an array of key-val pairs 
      // and can add them each as a where clause. We will maintain the boolean we
      // received when the method was called and pass it into the nested where.
@@ -290,6 +295,8 @@ class PF_API Builder : public concerns::BuildsQueries {
                          const std::string &oper = "", 
                          const std::string &second = "", 
                          const std::string &boolean = "and") {
+     UNUSED(oper);
+     UNUSED(second);
      // If the column is an array, we will assume it is an array of key-val pairs 
      // and can add them each as a where clause. We will maintain the boolean we
      // received when the method was called and pass it into the nested where.
@@ -539,7 +546,7 @@ class PF_API Builder : public concerns::BuildsQueries {
    };
 
    //Add a or where not exists clause to the query.
-   Builder &or_where_not_exists(closure_t callback, bool isnot = false) {
+   Builder &or_where_not_exists(closure_t callback) {
      return or_where_exists(callback, true);
    };
 
@@ -862,7 +869,7 @@ class PF_API Builder : public concerns::BuildsQueries {
    virtual Builder &on(closure_t, 
                        const std::string &, 
                        const std::string &, 
-                       const std::string &boolean) {
+                       const std::string &) {
       return *this;
    };
 
