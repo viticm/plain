@@ -108,7 +108,7 @@ file(GLOB_RECURSE LIB_SOURCES_C "${pf_SOURCE_DIR}/src/*.c")
 # are used for other targets, to ensure that pf can be compiled by a user
 # aggressive about warnings.
 if (pf_build_shared)
-  cxx_shared_library(pf_core "${cxx_default} -ldl -lpthread" ${LIB_SOURCES} ${LIB_SOURCES_C})
+  cxx_shared_library(pf_core "${cxx_default}" ${LIB_SOURCES} ${LIB_SOURCES_C})
 else()
   cxx_library(pf_core "${cxx_strict}" ${LIB_SOURCES} ${LIB_SOURCES_C})
 endif()
