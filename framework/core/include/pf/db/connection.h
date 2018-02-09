@@ -12,6 +12,7 @@
 #define PF_DB_CONNECTION_H_
 
 #include "pf/db/config.h"
+#include "pf/db/interface.h"
 #include "pf/db/connection_interface.h"
 
 namespace pf_db {
@@ -101,7 +102,7 @@ class PF_API Connection : public ConnectionInterface {
 
    //Get the query grammar used by the connection.
    virtual query::grammars::Grammar *get_query_grammar() {
-     return nullptr;
+     return query_grammar_.get();
    };
 
    //Get the schema grammar used by the connection.
@@ -149,7 +150,7 @@ class PF_API Connection : public ConnectionInterface {
      env_->check_db_connect(true);
      auto result = run_query_callback(query, bindings, f);
      return result;
-   };
+   }
 
    // Run a SQL statement.
    template <class F>
@@ -158,7 +159,7 @@ class PF_API Connection : public ConnectionInterface {
    -> typename std::result_of<
    F(const std::string &, const variable_array_t &)>::type {
      return f(query, bindings);
-   };
+   }
 
 };
 

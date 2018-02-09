@@ -34,9 +34,6 @@ class PF_API ConnectionInterface {
    virtual db_fetch_array_t select(const std::string &query, 
                                    const variable_array_t &bindings = {}) = 0;
 
-   //Run a select statement against the database.
-   virtual db_fetch_array_t select(const std::string &query) = 0;
-
    //Begin a fluent query against a database table.
    virtual query::Builder *table(const std::string &name) = 0;
 

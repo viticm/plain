@@ -56,6 +56,7 @@ class PF_API Grammar {
 
    //Wrap a value in keyword identifiers.
    std::string wrap(const variable_t &value, bool prefix_alias = false) {
+     UNUSED(prefix_alias);
      return wrap(value);
    };
 
