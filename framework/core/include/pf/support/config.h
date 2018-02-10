@@ -19,6 +19,6 @@ namespace pf_support {
 class Fluent;
 class ArrayAccess;
 
-}; //pf_support
+} //pf_support
 
 #endif //PF_SUPPORT_CONFIG_H_

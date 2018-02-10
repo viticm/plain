@@ -200,8 +200,9 @@ Grammar::variable_set_t Grammar::compile_components(Builder &query) {
   // To compile the query, we'll spin through each component of the query and 
   // see if that component exists. If it does we'll just call the compiler
   // function for the component which is responsible for making the SQL.
-  for (const std::string &component : select_components_)
+  for (const std::string &component : select_components_) {
     sql[component] = call_compile(query, component);
+  }
   return sql;
 }
 
@@ -480,7 +481,7 @@ std::string Grammar::compile_unions(Builder &query) {
 
 //Compile the lock into SQL.
 std::string Grammar::compile_lock(Builder &query, const variable_t &value) {
-  return value.data;
+  return kVariableTypeString == value.type ? value.data : "";
 }
 
 //Compile a "where day" clause.
@@ -517,7 +518,7 @@ std::string Grammar::compile_columns(
   // If the query is actually performing an aggregating select, we will let that
   // compiler handle the building of the select clauses, as it will need some
   // more syntax that is best handled by that function to keep things neat. 
-  if (query.aggregate_.empty()) return "";
+  if (!query.aggregate_.empty()) return "";
 
   std::string select = query.distinct_ ? "select distinct " : "select ";
 

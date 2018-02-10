@@ -43,7 +43,7 @@ class PF_API Grammar {
    //Wrap a table in keyword identifiers.
    std::string wrap_table(variable_t &table) {
      if (table.type != DB_EXPRESSION_TYPE) {
-       return table_prefix_ + table.data;
+       return wrap(table_prefix_ + table.data, true);
      }
      return table.data;
    };
@@ -55,10 +55,7 @@ class PF_API Grammar {
    };
 
    //Wrap a value in keyword identifiers.
-   std::string wrap(const variable_t &value, bool prefix_alias = false) {
-     UNUSED(prefix_alias);
-     return wrap(value);
-   };
+   std::string wrap(const variable_t &value, bool prefix_alias = false);
 
    //Wrap a value that has an alias.
    std::string wrap_aliased_value(

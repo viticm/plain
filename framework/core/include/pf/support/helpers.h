@@ -34,7 +34,28 @@ inline std::string implode(const std::string &glue,
          glue + (*it).data : (*it).data;
   }
   return r;
-};
+}
+
+//Split a string by string.
+inline pf_basic::type::variable_array_t explode(
+    const std::string &delimiter, const std::string &str) {
+  pf_basic::type::variable_array_t r;
+  if ("" == str) return r;
+  size_t last_found{0};
+  for (;;) {
+    auto found = 
+      str.find(delimiter, 0 == last_found ? 0 : last_found + 1);
+    if (found != std::string::npos) {
+      auto pos = 0 == last_found ? 0 : last_found + 1; 
+      r.push_back(str.substr(pos, found - last_found - 1));
+      last_found = found;
+    } else {
+      r.push_back(str.substr(0 == last_found ? 0 : last_found + 1, str.size()));      
+      break;
+    }
+  }
+  return r;
+}
 
 //Concatenate values of a given key as a string.
 inline std::string implode(const std::string &glue, 
@@ -46,7 +67,7 @@ inline std::string implode(const std::string &glue,
          glue + (*it) : (*it);
   }
   return r;
-};
+}
 
 //Check the value is empty.
 inline bool empty(const pf_basic::type::variable_t &value) {
@@ -114,6 +135,6 @@ std::map<T_k, T_v> array_merge(const std::map<T_k, T_v> &array1,
   return result;
 }
 
-};
+}
 
 #endif //PF_SUPPORT_HELPERS_H_

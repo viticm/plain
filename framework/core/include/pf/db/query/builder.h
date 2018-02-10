@@ -98,6 +98,9 @@ class PF_API Builder : public concerns::BuildsQueries {
 
  public:
 
+   //Clear the all members.
+   Builder &clear();
+
    //Set the columns to be selected.
    Builder &select(const std::vector<std::string> &columns = {"*"});
 

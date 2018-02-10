@@ -21,7 +21,7 @@ inline ArrayAccess Collection<T>::map(map_callback_t callback) {
   for (T &item : original_) 
     a.items_.push_back(callback(item));
   return a;
-};
+}
 
 } //namespace pf_support
 

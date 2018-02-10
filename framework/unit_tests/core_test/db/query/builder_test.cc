@@ -3,7 +3,7 @@
 #include "pf/db/query/grammars/grammar.h"
 #include "pf/db/connection.h"
 #include "pf/db/query/builder.h"
-
+#include "pf/support/helpers.h"
 
 enum {
   kDBTypeODBC = 1,
@@ -39,15 +39,12 @@ class DBQueryBuilder : public testing::Test {
      //std::cout << "TearDownTestCase" << std::endl;
    }
 
-/**
  public:
    virtual void SetUp() {
-     std::cout << "my SetUp" << std::endl;
+     builder_->clear();
    }
    virtual void TearDown() {
-     std::cout << "my TearDown" << std::endl;
    }
-**/
 
  protected:
    static pf_engine::Kernel engine_;
@@ -71,4 +68,27 @@ TEST_F(DBQueryBuilder, construct) {
 TEST_F(DBQueryBuilder, testBasicSelect) {
   builder_->select({"*"}).from("users");
   ASSERT_STREQ("select * from \"users\"", builder_->to_sql().c_str());
+}
+
+TEST_F(DBQueryBuilder, testBasicSelectWithGetColumns) {
+  builder_->from("users").get();
+  ASSERT_TRUE(builder_->columns_.empty());
+  
+  ASSERT_STREQ("select * from \"users\"", builder_->to_sql().c_str());
+  ASSERT_TRUE(builder_->columns_.empty());
+}
+
+TEST_F(DBQueryBuilder, testBasicSelectUseWritePdo) {
+
+}
+
+TEST_F(DBQueryBuilder, testBasicTableWrappingProtectsQuotationMarks) {
+  builder_->select({"*"}).from("some\"table");
+  ASSERT_STREQ("select * from \"some\"\"table\"", builder_->to_sql().c_str());
+}
+
+TEST_F(DBQueryBuilder, testAliasWrappingAsWholeConstant) {
+  builder_->select({"x.y as foo.bar"}).from("baz");
+  ASSERT_STREQ("select \"x\".\"y\" as \"foo.bar\" from \"baz\"", 
+               builder_->to_sql().c_str());
 }

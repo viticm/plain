@@ -654,9 +654,13 @@ std::string str_replace(const std::string &search ,
                         int32_t count) {
   std::string r{subject};
   int32_t replace_count{0};
-  while (auto it = r.find(search) && (-1 == count || replace_count < count)) {
+  auto it = r.find(search);
+  auto search_length = search.length();
+  auto replace_length = replace.length();
+  while (it != std::string::npos && (-1 == count || replace_count < count)) {
     ++replace_count;
-    r.replace(it, search.length(), replace);
+    r.replace(it, search_length, replace);
+    it = r.find(search, it + replace_length);
   }
   return r;
 }

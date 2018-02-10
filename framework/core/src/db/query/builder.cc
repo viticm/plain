@@ -54,6 +54,48 @@ Builder::~Builder() {
 
 }
 
+//Clear the all members.
+Builder &Builder::clear() {
+  bindings_ = {
+    {"select", {}},
+    {"join", {}},
+    {"where", {}},
+    {"having", {}},
+    {"order", {}},
+    {"union", {}},
+  };
+
+  distinct_ = false;
+
+  limit_ = -1;
+
+  offset_ = -1;
+
+  union_limit_ = -1;
+
+  union_offset_ = -1;
+  
+  lock_ = false;
+
+  aggregate_.clear();
+
+  columns_.clear();
+
+  joins_.clear();
+
+  wheres_.clear();
+
+  groups_.clear();
+
+  havings_.clear();
+
+  unions_.clear();
+
+  orders_.clear();
+
+  union_orders_.clear();
+}
+
 //Set the columns to be selected.
 Builder &Builder::select(const std::vector<std::string> &columns) {
   columns_ = columns;
