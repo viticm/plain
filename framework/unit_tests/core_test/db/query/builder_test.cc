@@ -92,3 +92,52 @@ TEST_F(DBQueryBuilder, testAliasWrappingAsWholeConstant) {
   ASSERT_STREQ("select \"x\".\"y\" as \"foo.bar\" from \"baz\"", 
                builder_->to_sql().c_str());
 }
+
+TEST_F(DBQueryBuilder, testAliasWrappingWithSpacesInDatabaseName) {
+  builder_->select({"w x.y.z as foo.bar"}).from("baz");
+  ASSERT_STREQ("select \"w x\".\"y\".\"z\" as \"foo.bar\" from \"baz\"",
+               builder_->to_sql().c_str());
+}
+
+TEST_F(DBQueryBuilder, testAddingSelects) {
+  builder_->select({"foo"}).
+            add_select({"bar"}).add_select({"baz", "boom"}).from("users");
+  ASSERT_STREQ("select \"foo\", \"bar\", \"baz\", \"boom\" from \"users\"",
+               builder_->to_sql().c_str());
+}
+
+TEST_F(DBQueryBuilder, testBasicSelectWithPrefix) {
+  builder_->get_grammar()->set_table_prefix("prefix_");
+  builder_->select({"*"}).from("users");
+  ASSERT_STREQ("select * from \"prefix_users\"",
+               builder_->to_sql().c_str());
+}
+
+TEST_F(DBQueryBuilder, testBasicSelectDistinct) {
+  builder_->distinct().select({"foo", "bar"}).from("users");
+  ASSERT_STREQ("select distinct \"foo\", \"bar\" from \"users\"",
+               builder_->to_sql().c_str());
+}
+
+TEST_F(DBQueryBuilder, testBasicAlias) {
+  builder_->select({"foo as bar"}).from("users");
+  ASSERT_STREQ("select \"foo\" as \"bar\" from \"users\"",
+               builder_->to_sql().c_str());
+}
+
+TEST_F(DBQueryBuilder, testAliasWithPrefix) {
+  builder_->get_grammar()->set_table_prefix("prefix_");
+  builder_->select({"*"}).from("users as people");
+  ASSERT_STREQ("select * from \"prefix_users\" as \"prefix_people\"",
+               builder_->to_sql().c_str());
+}
+
+TEST_F(DBQueryBuilder, testJoinAliasesWithPrefix) {
+  builder_->get_grammar()->set_table_prefix("prefix_");
+  builder_->select({"*"}).from("services").join(
+      "translations AS t", "t.item_id", "=", "services.id");
+   ASSERT_STREQ(
+       "select * from \"prefix_services\" inner join \"prefix_translations\" \
+as \"prefix_t\" on \"prefix_t\".\"item_id\" = \"prefix_services\".\"id\"",
+       builder_->to_sql().c_str());
+}

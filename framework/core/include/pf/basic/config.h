@@ -42,6 +42,7 @@
 #include <mutex>
 #include <thread>
 #include <chrono>
+#include <tuple>
 /* } C++ */
 
 /* platform { */

@@ -13,6 +13,7 @@
 
 #include "pf/db/query/config.h"
 #include "pf/db/concerns/builds_queries.h"
+#include "pf/support/helpers.h"
 
 namespace pf_db {
 
@@ -105,8 +106,15 @@ class PF_API Builder : public concerns::BuildsQueries {
    Builder &select(const std::vector<std::string> &columns = {"*"});
 
    //Set the columns to be selected.
+   /**
    template <typename... TS>
-   Builder &select(const std::string &param, TS... args);
+   Builder &select(const std::string &param, TS... args) {
+     std::vector<std::string> columns;
+     columns.push_back(param);
+     pf_support::collectargs(columns, args...);
+     return select(columns);
+   }
+   **/
 
    //Add a new "raw" select expression to the query.
    Builder &select_raw(
@@ -131,8 +139,15 @@ class PF_API Builder : public concerns::BuildsQueries {
    Builder &add_select(const std::vector<std::string> &column);
 
    //Add a new select column to the query.
+   /**
    template <typename... TS>
-   Builder &add_select(const std::string &param, TS... args);
+   Builder &add_select(const std::string &param, TS... args) {
+     std::vector<std::string> columns;
+     columns.push_back(param);
+     pf_support::collectargs(columns, args...);
+     return add_select(columns);
+   }
+   **/
 
    //Force the query to only return distinct results.
    Builder &distinct(){

@@ -227,7 +227,7 @@ std::string Grammar::compile_joins(
   std::vector<std::string> array;
   for (std::unique_ptr<JoinClause> &join : joins) {
     std::string table = this->wrap_table(join->table_);
-    std::string r = join->type_ + " join " + table + 
+    std::string r = join->type_ + " join " + table + " " + 
                     this->compile_wheres(*join.get());
     array.emplace_back(trim(r));
   }

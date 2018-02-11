@@ -30,7 +30,9 @@ class PF_API Grammar {
  public:
    
    //Set the grammar's table prefix.
-   void set_table_prefix(const std::string &prefix);
+   void set_table_prefix(const std::string &prefix) {
+     table_prefix_ = prefix;
+   };
 
    //Get the grammar's table prefix.
    const std::string get_table_prefix() const {

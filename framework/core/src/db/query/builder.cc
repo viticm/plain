@@ -94,6 +94,8 @@ Builder &Builder::clear() {
   orders_.clear();
 
   union_orders_.clear();
+
+  if (grammar_) grammar_->set_table_prefix("");
 }
 
 //Set the columns to be selected.
@@ -179,9 +181,10 @@ Builder &Builder::join(const std::string &table,
   // one condition, so we'll add the join and call a Closure with the query.
   callback(_join.get());
 
+  add_bindings(_join->get_bindings(), "join");
+  
   joins_.emplace_back(std::move(_join));
 
-  add_bindings(_join->get_bindings(), "join");
 
   return *this;
 }
@@ -197,7 +200,6 @@ Builder &Builder::join(const std::string &table,
   // If the column is simply a string, we can assume the join simply has a basic 
   // "on" clause with a single condition. So we will just build the join with
   // this simple join clauses attached to it. There is not a join callback.
-
   std::unique_ptr<JoinClause> _join(new JoinClause(this, type, table));
 
   if (_where) {
@@ -205,9 +207,10 @@ Builder &Builder::join(const std::string &table,
   } else {
     _join->on(_first, oper, second);
   }
-  joins_.emplace_back(std::move(_join));
-
+  
   add_bindings(_join->get_bindings(), "join");
+  
+  joins_.emplace_back(std::move(_join));
 
   return *this;
 }
@@ -1086,7 +1089,7 @@ Builder &Builder::set_bindings(variable_array_t &bindings,
 }
 
 Builder &Builder::add_bindings(const variable_array_t &vals, 
-                              const std::string &type) {
+                               const std::string &type) {
   if (bindings_.find(type) == bindings_.end()) {
     std::string msg{"Invalid binding type: "};
     msg += type;

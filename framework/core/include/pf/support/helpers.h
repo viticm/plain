@@ -24,6 +24,17 @@ Collection<T> collect(const std::vector<T> &value) {
   return o;
 }
 
+//Get the args to a string vector.
+/**
+template <typename ...TS>
+void collectargs(std::vector<std::string> &r, TS... args) {
+  auto temp = std::forward_as_tuple(args...);
+  auto size = std::tuple_size<decltype(temp)>::value;
+  for (size_t i = 0; i < size; ++i) {
+    r.push_back(std::to_string(std::get<i>(temp)));
+}
+**/
+
 //Concatenate values of a given key as a string.
 inline std::string implode(const std::string &glue, 
                            const pf_basic::type::variable_array_t &array) {
@@ -42,15 +53,20 @@ inline pf_basic::type::variable_array_t explode(
   pf_basic::type::variable_array_t r;
   if ("" == str) return r;
   size_t last_found{0};
+  size_t delimiter_length = delimiter.size();
   for (;;) {
     auto found = 
-      str.find(delimiter, 0 == last_found ? 0 : last_found + 1);
+      str.find(delimiter, 0 == last_found ? 0 : last_found + delimiter_length);
+    auto pos = 0 == last_found ? 0 : last_found + delimiter_length; 
     if (found != std::string::npos) {
-      auto pos = 0 == last_found ? 0 : last_found + 1; 
-      r.push_back(str.substr(pos, found - last_found - 1));
+      auto length = 
+        0 == last_found ? found : found - last_found - delimiter_length;
+      r.push_back(str.substr(pos, length));
       last_found = found;
     } else {
-      r.push_back(str.substr(0 == last_found ? 0 : last_found + 1, str.size()));      
+      auto length = 0 == last_found ? 
+                    str.size() : str.size() - last_found - delimiter_length;
+      r.push_back(str.substr(pos, length));    
       break;
     }
   }
