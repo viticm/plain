@@ -77,7 +77,7 @@ class PF_API Grammar {
 
    //Get the appropriate query parameter place-holder for a value.
    std::string parameter(const variable_t &value) {
-     return value.data;
+     return DB_EXPRESSION_TYPE == value.type ? value.data : "?";
    };
 
    //Get the value of a raw expression.

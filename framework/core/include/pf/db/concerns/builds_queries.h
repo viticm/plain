@@ -20,7 +20,7 @@ namespace concerns {
 class PF_API BuildsQueries {
 
  public:
-   BuildsQueries(query::Builder *query) : query_{query} {}
+   BuildsQueries() {};
    virtual ~BuildsQueries() {};
 
  public:
@@ -29,7 +29,7 @@ class PF_API BuildsQueries {
    using check_closure_t = 
      std::function<bool (const variable_t &, const variable_t &)>;
    using value_closure_t = 
-     std::function<variable_t (query::Builder *, const variable_t &)>;
+     std::function<void (query::Builder *, const variable_t &)>;
 
  public:
 
@@ -45,15 +45,15 @@ class PF_API BuildsQueries {
      return {};
    };
 
+   //Apply the callback's query changes if the given "value" is true.
+   query::Builder &when(const variable_t &value,
+                        value_closure_t callback,
+                        value_closure_t def = nullptr);
+
    //Apply the callback's query changes if the given "value" is true. 
-   query::Builder *unless(const variable_t &value, 
+   query::Builder &unless(const variable_t &value, 
                           value_closure_t callback, 
                           value_closure_t def = nullptr);
-
- protected:
-
-   //The query builder pointer.
-   query::Builder *query_;
 
 };
 

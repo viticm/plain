@@ -10,6 +10,7 @@ enum {
 };
 
 using namespace pf_db::query;
+using namespace pf_basic::type;
 
 class DBQueryBuilder : public testing::Test {
 
@@ -140,4 +141,57 @@ TEST_F(DBQueryBuilder, testJoinAliasesWithPrefix) {
        "select * from \"prefix_services\" inner join \"prefix_translations\" \
 as \"prefix_t\" on \"prefix_t\".\"item_id\" = \"prefix_services\".\"id\"",
        builder_->to_sql().c_str());
+}
+
+TEST_F(DBQueryBuilder, testBasicTableWrapping) {
+  builder_->select({"*"}).from("public.users");
+  ASSERT_STREQ("select * from \"public\".\"users\"",
+               builder_->to_sql().c_str());
+}
+
+TEST_F(DBQueryBuilder, testWhenCallback) {
+  auto callback = [](Builder *query, const variable_t &condition) {
+    ASSERT_TRUE(condition.get<bool>());
+    query->where("id", "=", 1);
+  };
+  builder_->select({"*"}).from("users").when(true, callback).where("email", "foo");
+  ASSERT_STREQ("select * from \"users\" where \"id\" = ? and \"email\" = ?",
+               builder_->to_sql().c_str());
+
+  builder_->clear();
+  builder_->select({"*"}).from("users").when(false, callback).where("email", "foo");
+  ASSERT_STREQ("select * from \"users\" where \"email\" = ?",
+               builder_->to_sql().c_str());
+}
+
+TEST_F(DBQueryBuilder, testWhenCallbackWithReturn) {
+
+}
+
+TEST_F(DBQueryBuilder, testWhenCallbackWithDefault) {
+  auto callback = [](Builder *query, const variable_t &condition) {
+    ASSERT_STREQ(condition.c_str(), "truthy");
+    query->where("id", "=", 1);
+  };
+  auto def = [](Builder *query, const variable_t &condition) {
+    ASSERT_TRUE(condition == 0);
+    query->where("id", "=", 2);
+  };
+
+  builder_->select({"*"}).
+            from("users").when("truthy", callback, def).where("email", "foo");
+  ASSERT_STREQ("select * from \"users\" where \"id\" = ? and \"email\" = ?",
+               builder_->to_sql().c_str());
+
+  auto bindings = builder_->get_bindings();
+  std::cout << "bindings.size(): " << bindings.size() << std::endl;
+  for (const variable_t &value : bindings)
+    std::cout << "value: " << value.data << std::endl;
+
+  builder_->clear();
+
+  builder_->select({"*"}).
+            from("users").when(0, callback, def).where("email", "foo");
+  ASSERT_STREQ("select * from \"users\" where \"id\" = ? and \"email\" = ?",
+               builder_->to_sql().c_str());
 }

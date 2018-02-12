@@ -202,6 +202,7 @@ Grammar::variable_set_t Grammar::compile_components(Builder &query) {
   // function for the component which is responsible for making the SQL.
   for (const std::string &component : select_components_) {
     sql[component] = call_compile(query, component);
+    std::cout << "component: " << component << " sql: " << sql[component] << std::endl;
   }
   return sql;
 }
@@ -255,6 +256,7 @@ Grammar::variable_array_t Grammar::compile_wheres_toarray(Builder &query) {
   for (db_query_array_t &where : query.wheres_) {
     std::string r = where["boolean"].data + " " + 
                     safe_call_where(where["type"], query, where);
+    std::cout << "compile_wheres_toarray: " << r << " " << where["type"] << std::endl;
     array.emplace_back(r);
   }
   return array;

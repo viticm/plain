@@ -12,8 +12,7 @@ using namespace pf_support;
 using namespace pf_db::query;
 
 //The builder construct function.
-Builder::Builder(ConnectionInterface *connection, grammars::Grammar *grammar)
-: BuildsQueries(this) {
+Builder::Builder(ConnectionInterface *connection, grammars::Grammar *grammar) {
   connection_ = connection;
   Assert(connection_);
   if (is_null(connection_)) return;
@@ -283,7 +282,7 @@ Builder &Builder::where(const std::string &column,
   // Now that we are working with just a simple query we can put the elements 
   // in our array and add the query binding to our array of bindings that
   // will be bound to each SQL statements when it is finally executed. 
-  std::string type{"Basic"};
+  std::string type{"basic"};
 
   db_query_array_t _where;
   _where.items = { //PHP compact can collect the variable with names.
