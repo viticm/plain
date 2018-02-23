@@ -168,6 +168,15 @@ TEST_F(DBQueryBuilder, testWhenCallbackWithReturn) {
 
 }
 
+void assertEquals(
+    const variable_array_t &a, const variable_array_t &b, int32_t line = -1) {
+  if (line != -1)
+    std::cout << "assertEquals: " << line << std::endl;
+  ASSERT_TRUE(a.size() == b.size());
+  for (size_t i = 0; i < a.size(); ++i)
+    ASSERT_STREQ(a[i].data.c_str(), b[i].data.c_str());
+}
+
 TEST_F(DBQueryBuilder, testWhenCallbackWithDefault) {
   auto callback = [](Builder *query, const variable_t &condition) {
     ASSERT_STREQ(condition.c_str(), "truthy");
@@ -183,10 +192,7 @@ TEST_F(DBQueryBuilder, testWhenCallbackWithDefault) {
   ASSERT_STREQ("select * from \"users\" where \"id\" = ? and \"email\" = ?",
                builder_->to_sql().c_str());
 
-  auto bindings = builder_->get_bindings();
-  std::cout << "bindings.size(): " << bindings.size() << std::endl;
-  for (const variable_t &value : bindings)
-    std::cout << "value: " << value.data << std::endl;
+  assertEquals({1, "foo"}, builder_->get_bindings(), __LINE__);
 
   builder_->clear();
 
@@ -194,4 +200,86 @@ TEST_F(DBQueryBuilder, testWhenCallbackWithDefault) {
             from("users").when(0, callback, def).where("email", "foo");
   ASSERT_STREQ("select * from \"users\" where \"id\" = ? and \"email\" = ?",
                builder_->to_sql().c_str());
+
+  assertEquals({2, "foo"}, builder_->get_bindings(), __LINE__);
+}
+
+TEST_F(DBQueryBuilder, testUnlessCallback) {
+  auto callback = [](Builder *query, const variable_t &condition) {
+    ASSERT_FALSE(condition.get<bool>());
+    query->where("id", "=", 1);
+  };
+
+  builder_->select({"*"}).
+            from("users").unless(false, callback).where("email", "foo");
+  ASSERT_STREQ("select * from \"users\" where \"id\" = ? and \"email\" = ?",
+               builder_->to_sql().c_str());
+
+
+  builder_->clear();
+  builder_->select({"*"}).
+            from("users").unless(true, callback).where("email", "foo");
+  ASSERT_STREQ("select * from \"users\" where \"email\" = ?",
+               builder_->to_sql().c_str());
+
+}
+
+TEST_F(DBQueryBuilder, testUnlessCallbackWithReturn) {
+
+}
+
+TEST_F(DBQueryBuilder, testUnlessCallbackWithDefault) {
+  auto callback = [](Builder *query, const variable_t &condition) {
+    ASSERT_TRUE(condition == 0);
+    query->where("id", "=", 1);
+  };
+  auto def = [](Builder *query, const variable_t &condition) {
+    ASSERT_STREQ(condition.c_str(), "truthy");
+    query->where("id", "=", 2);
+  };
+
+  builder_->select({"*"}).
+            from("users").unless(0, callback, def).where("email", "foo");
+  ASSERT_STREQ("select * from \"users\" where \"id\" = ? and \"email\" = ?",
+               builder_->to_sql().c_str());
+
+  assertEquals({1, "foo"}, builder_->get_bindings(), __LINE__);
+
+  builder_->clear();
+
+  builder_->select({"*"}).
+            from("users").unless("truthy", callback, def).where("email", "foo");
+  ASSERT_STREQ("select * from \"users\" where \"id\" = ? and \"email\" = ?",
+               builder_->to_sql().c_str());
+
+  assertEquals({2, "foo"}, builder_->get_bindings(), __LINE__);
+}
+
+TEST_F(DBQueryBuilder, testTapCallback) {
+  auto callback = [](Builder *query) {
+    query->where("id", "=", 1);
+  };
+
+  builder_->select({"*"}).from("users").tap(callback).where("email", "foo"); 
+  ASSERT_STREQ("select * from \"users\" where \"id\" = ? and \"email\" = ?",
+               builder_->to_sql().c_str());
+}
+
+TEST_F(DBQueryBuilder, testBasicWheres) {
+  builder_->select({"*"}).from("users").where("id", "=", 1);
+  ASSERT_STREQ("select * from \"users\" where \"id\" = ?",
+               builder_->to_sql().c_str());
+  assertEquals({1}, builder_->get_bindings());
+}
+
+TEST_F(DBQueryBuilder, testMySqlWrappingProtectsQuotationMarks) {
+/**
+  builder_->select({"*"}).from("some`table");
+  ASSERT_STREQ("select * from `some``table`",
+               builder_->to_sql().c_str());
+**/
+}
+
+TEST_F(DBQueryBuilder, testDateBasedWheresAcceptsTwoArguments) {
+
 }

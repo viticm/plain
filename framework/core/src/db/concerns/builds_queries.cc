@@ -25,7 +25,7 @@ pf_db::query::Builder &BuildsQueries::unless(
     value_closure_t callback, 
     value_closure_t def) {
   auto builder = tobuilder(this);
-  if (value != "" && value.get<bool>()) {
+  if (value != "" && !value.get<bool>()) {
     callback(builder, value);
   } else if (!is_null(def)) {
     def(builder, value);

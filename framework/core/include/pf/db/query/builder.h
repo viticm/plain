@@ -226,8 +226,7 @@ class PF_API Builder : public concerns::BuildsQueries {
 
    //Pass the query to a given callback.
    Builder &tap(closure_t callback) {
-     UNUSED(callback);
-     //return when(true, callback);
+     callback(this);
      return *this;
    };
 
@@ -823,11 +822,8 @@ class PF_API Builder : public concerns::BuildsQueries {
    variable_t raw(const variable_t &val);
 
    //Get the current query val bindings in a flattened array.
-   variable_array_t get_bindings() {
-     if (bindings_.empty()) return {};
-     return bindings_.begin()->second;
-   };
-
+   variable_array_t get_bindings();
+ 
    //Get the raw array of bindings.
    db_query_bindings_t *get_raw_bindings() {
      return &bindings_;

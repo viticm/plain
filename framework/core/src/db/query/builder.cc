@@ -255,7 +255,7 @@ Builder &Builder::where(const std::string &column,
   auto val_oper = prepare_value_and_operator(val.data, oper, use_default);
 
   variable_t rval{val_oper[0]};
-  std::string roper{val_oper[1]};
+  std::string roper{val_oper[1].data};
 
   // If the given operator is not found in the list of valid operators we will
   // assume that the developer is just short-cutting the '=' operators and
@@ -310,7 +310,7 @@ Builder &Builder::where(const std::string &column,
   auto val_oper = prepare_value_and_operator("closure_t", oper, use_default);
 
   variable_t rval{val_oper[0]};
-  std::string roper{val_oper[1]};
+  std::string roper{val_oper[1].data};
 
   // If the given operator is not found in the list of valid operators we will
   // assume that the developer is just short-cutting the '=' operators and
@@ -1119,4 +1119,14 @@ Builder &Builder::merge_bindings(Builder &query) {
     add_bindings(it->second, it->first);
   }
   return *this;
+}
+
+variable_array_t Builder::get_bindings() {
+  if (bindings_.empty()) return {};
+  variable_array_t r;
+  for (auto it = bindings_.begin(); it != bindings_.end(); ++it) {
+    for (const variable_t &value : it->second)
+      r.push_back(value);
+  }
+  return r;
 }
