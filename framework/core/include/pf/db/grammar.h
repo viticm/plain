@@ -67,7 +67,7 @@ class PF_API Grammar {
    std::string wrap_segments(const variable_array_t &segments);
 
    //Wrap a single string in keyword identifiers.
-   std::string wrap_value(const variable_t &value);
+   virtual std::string wrap_value(const variable_t &value);
 
    //Convert an array of column names into a delimited string.
    std::string columnize(const std::vector<std::string> &columns);

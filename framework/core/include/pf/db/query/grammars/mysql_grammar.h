@@ -75,18 +75,18 @@ class PF_API MysqlGrammar : public grammars::Grammar {
    std::string compile_delete_with_joins(
        Builder &query, const std::string &table, const std::string &where);
  
-    //Wrap a single string in keyword identifiers.
-    std::string wrap_value(const std::string &value);
+   //Wrap a single string in keyword identifiers.
+   virtual std::string wrap_value(const variable_t &value);
 
-    //Wrap the given JSON selector.
-    std::string wrap_json_selector(const std::string &value);
+   //Wrap the given JSON selector.
+   std::string wrap_json_selector(const std::string &value);
 
-    //Determine if the given string is a JSON selector.
-    bool is_json_selector(const std::string &value) const;
-
-};
+   //Determine if the given string is a JSON selector.
+   bool is_json_selector(const std::string &value) const;
 
 };
+
+} //namespace grammars
 
 } //namespace query
 

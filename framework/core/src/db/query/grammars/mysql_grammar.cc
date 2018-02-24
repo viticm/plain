@@ -178,16 +178,16 @@ std::string MysqlGrammar::compile_delete_with_joins(
 }
  
 //Wrap a single string in keyword identifiers.
-std::string MysqlGrammar::wrap_value(const std::string &value) {
-  if ("*" == value) return value;
+std::string MysqlGrammar::wrap_value(const variable_t &value) {
+  if (value == "*") return value.data;
 
   // If the given value is a JSON selector we will wrap it differently than a 
   // traditional value. We will need to split this path and wrap each part
   // wrapped, etc. Otherwise, we will simply wrap the value as a string.
-  if (is_json_selector(value))
-    return wrap_json_selector(value);
+  if (is_json_selector(value.data))
+    return wrap_json_selector(value.data);
   
-  return "`" + str_replace("`", "``", value) + "`";
+  return "`" + str_replace("`", "``", value.data) + "`";
 }
 
 //Wrap the given JSON selector.

@@ -510,7 +510,7 @@ std::string Grammar::where_date(Builder &query, db_query_array_t &where) {
 std::string Grammar::date_based_where(
     const std::string &type, Builder &query, db_query_array_t &where) {
   std::string value = parameter(where["value"]);
-  return type + "(" + wrap(where["column"]) + ")" + 
+  return type + "(" + wrap(where["column"]) + ") " + 
          where["operator"].data + " " + value; 
 }
 

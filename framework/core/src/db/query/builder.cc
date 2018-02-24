@@ -45,7 +45,7 @@ Builder::Builder(ConnectionInterface *connection, grammars::Grammar *grammar) {
 
   union_offset_ = -1;
   
-  lock_ = false;
+  lock_ = "";
 }
 
 //The builder destruct function.
@@ -74,7 +74,7 @@ Builder &Builder::clear() {
 
   union_offset_ = -1;
   
-  lock_ = false;
+  lock_ = "";
 
   aggregate_.clear();
 
@@ -570,7 +570,7 @@ Builder &Builder::where_date(const std::string &column,
   auto val_oper = prepare_value_and_operator(val.data, oper, use_default);
 
   variable_t rval{val_oper[0]};
-  std::string roper{val_oper[1]};
+  std::string roper{val_oper[1].data};
  
   return add_date_based_where("date", column, roper, rval, boolean);
 }
@@ -584,7 +584,7 @@ Builder &Builder::where_day(const std::string &column,
   auto val_oper = prepare_value_and_operator(val.data, oper, use_default);
 
   variable_t rval{val_oper[0]};
-  std::string roper{val_oper[1]};
+  std::string roper{val_oper[1].data};
  
   return add_date_based_where("day", column, roper, rval, boolean);
 }
@@ -598,7 +598,7 @@ Builder &Builder::where_month(const std::string &column,
   auto val_oper = prepare_value_and_operator(val.data, oper, use_default);
 
   variable_t rval{val_oper[0]};
-  std::string roper{val_oper[1]};
+  std::string roper{val_oper[1].data};
  
   return add_date_based_where("month", column, roper, rval, boolean);
 }
@@ -612,7 +612,7 @@ Builder &Builder::where_year(const std::string &column,
   auto val_oper = prepare_value_and_operator(val.data, oper, use_default);
 
   variable_t rval{val_oper[0]};
-  std::string roper{val_oper[1]};
+  std::string roper{val_oper[1].data};
  
   return add_date_based_where("year", column, roper, rval, boolean);
 }

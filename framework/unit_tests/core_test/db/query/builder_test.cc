@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 #include "pf/engine/kernel.h"
 #include "pf/db/query/grammars/grammar.h"
+#include "pf/db/query/grammars/mysql_grammar.h"
 #include "pf/db/connection.h"
 #include "pf/db/query/builder.h"
 #include "pf/support/helpers.h"
@@ -33,7 +34,11 @@ class DBQueryBuilder : public testing::Test {
      unique_move(pf_db::Connection, connection, connection_);
      auto builder = new Builder(connection_.get(), nullptr);
      unique_move(Builder, builder, builder_);
-
+     
+     auto mysql_grammar = new grammars::MysqlGrammar();
+     unique_move(grammars::Grammar, mysql_grammar, mysql_grammar_);
+     auto mysql_builder = new Builder(connection_.get(), mysql_grammar_.get());
+     unique_move(Builder, mysql_builder, mysql_builder_);
    }
 
    static void TearDownTestCase() {
@@ -43,6 +48,7 @@ class DBQueryBuilder : public testing::Test {
  public:
    virtual void SetUp() {
      builder_->clear();
+     mysql_builder_->clear();
    }
    virtual void TearDown() {
    }
@@ -50,13 +56,17 @@ class DBQueryBuilder : public testing::Test {
  protected:
    static pf_engine::Kernel engine_;
    static std::unique_ptr<pf_db::Connection> connection_;
+   static std::unique_ptr<grammars::Grammar> mysql_grammar_;
    static std::unique_ptr<Builder> builder_;
+   static std::unique_ptr<Builder> mysql_builder_;
 
 };
 
 pf_engine::Kernel DBQueryBuilder::engine_;
 std::unique_ptr<pf_db::Connection> DBQueryBuilder::connection_{nullptr};
 std::unique_ptr<Builder> DBQueryBuilder::builder_{nullptr};
+std::unique_ptr<Builder> DBQueryBuilder::mysql_builder_{nullptr};
+std::unique_ptr<grammars::Grammar> DBQueryBuilder::mysql_grammar_{nullptr};
 
 TEST_F(DBQueryBuilder, construct) {
   Builder object(nullptr, nullptr);
@@ -281,5 +291,23 @@ TEST_F(DBQueryBuilder, testMySqlWrappingProtectsQuotationMarks) {
 }
 
 TEST_F(DBQueryBuilder, testDateBasedWheresAcceptsTwoArguments) {
+  auto builder = mysql_builder_.get();
+  builder->select({"*"}).from("users").where_date("created_at", "1");
+  ASSERT_STREQ("select * from `users` where date(`created_at`) = ?",
+               builder->to_sql().c_str());
 
+  builder->clear();
+  builder->select({"*"}).from("users").where_day("created_at", "1");
+  ASSERT_STREQ("select * from `users` where day(`created_at`) = ?",
+               builder->to_sql().c_str());
+
+  builder->clear();
+  builder->select({"*"}).from("users").where_month("created_at", "1");
+  ASSERT_STREQ("select * from `users` where month(`created_at`) = ?",
+               builder->to_sql().c_str());
+
+  builder->clear();
+  builder->select({"*"}).from("users").where_year("created_at", "1");
+  ASSERT_STREQ("select * from `users` where year(`created_at`) = ?",
+               builder->to_sql().c_str());
 }
