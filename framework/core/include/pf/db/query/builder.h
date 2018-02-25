@@ -497,7 +497,7 @@ class PF_API Builder : public concerns::BuildsQueries {
    //Add a "where time" statement to the query.
    Builder &where_time(const std::string &column, 
                        const std::string &oper, 
-                       int32_t val, 
+                       const variable_t &val, 
                        const std::string &boolean = "and") {
      return add_date_based_where("time", column, oper, val, boolean);
    };
@@ -505,7 +505,7 @@ class PF_API Builder : public concerns::BuildsQueries {
    //Add an "or where time" statement to the query.
    Builder &or_where_time(const std::string &column, 
                           const std::string &oper, 
-                          int32_t val) {
+                          const variable_t &val) {
      return where_time(column, oper, val, "or");
    };
 
@@ -931,7 +931,7 @@ class PF_API Builder : public concerns::BuildsQueries {
    Builder &add_date_based_where(const std::string &type,
                                  const std::string &column,
                                  const std::string &oper,
-                                 int32_t val,
+                                 const variable_t &val,
                                  const std::string &boolean = "and");
 
    //Add a full sub-select to the query.

@@ -311,3 +311,112 @@ TEST_F(DBQueryBuilder, testDateBasedWheresAcceptsTwoArguments) {
   ASSERT_STREQ("select * from `users` where year(`created_at`) = ?",
                builder->to_sql().c_str());
 }
+
+TEST_F(DBQueryBuilder, testWhereDayMySql) {
+  auto builder = mysql_builder_.get();
+  builder->select({"*"}).from("users").where_day("created_at", "=", 1);
+  ASSERT_STREQ("select * from `users` where day(`created_at`) = ?",
+               builder->to_sql().c_str());
+  assertEquals({1}, builder->get_bindings());
+}
+
+TEST_F(DBQueryBuilder, testWhereMonthMySql) {
+  auto builder = mysql_builder_.get();
+  builder->select({"*"}).from("users").where_month("created_at", "=", 5);
+  ASSERT_STREQ("select * from `users` where month(`created_at`) = ?",
+               builder->to_sql().c_str());
+  assertEquals({5}, builder->get_bindings());
+}
+
+TEST_F(DBQueryBuilder, testWhereYearMySql) {
+  auto builder = mysql_builder_.get();
+  builder->select({"*"}).from("users").where_year("created_at", "=", 2018);
+  ASSERT_STREQ("select * from `users` where year(`created_at`) = ?",
+               builder->to_sql().c_str());
+  assertEquals({2018}, builder->get_bindings());
+}
+
+TEST_F(DBQueryBuilder, testWhereTimeMySql) {
+  auto builder = mysql_builder_.get();
+  builder->select({"*"}).from("users").where_time("created_at", "=", "22:00");
+  ASSERT_STREQ("select * from `users` where time(`created_at`) = ?",
+               builder->to_sql().c_str());
+  assertEquals({"22:00"}, builder->get_bindings());
+}
+
+TEST_F(DBQueryBuilder, testWhereDatePostgres) {
+
+}
+
+TEST_F(DBQueryBuilder, testWhereDayPostgres) {
+
+}
+
+TEST_F(DBQueryBuilder, testWhereMonthPostgres) {
+
+}
+
+TEST_F(DBQueryBuilder, testWhereYearPostgres) {
+
+}
+
+TEST_F(DBQueryBuilder, testWhereDaySqlite) {
+
+}
+
+TEST_F(DBQueryBuilder, testWhereMonthSqlite) {
+
+}
+
+TEST_F(DBQueryBuilder, testWhereYearSqlite) {
+
+}
+
+TEST_F(DBQueryBuilder, testWhereDaySqlServer) {
+
+}
+
+TEST_F(DBQueryBuilder, testWhereMonthSqlServer) {
+
+}
+
+TEST_F(DBQueryBuilder, testWhereYearSqlServer) {
+
+}
+
+TEST_F(DBQueryBuilder, testWhereBetweens) {
+  builder_->select({"*"}).from("users").where_between("id", {1, 2});
+  ASSERT_STREQ("select * from \"users\" where \"id\" between ? and ?",
+               builder_->to_sql().c_str());
+  assertEquals({1, 2}, builder_->get_bindings());
+
+  builder_->clear();
+  builder_->select({"*"}).from("users").where_notbetween("id", {1, 2});
+  ASSERT_STREQ("select * from \"users\" where \"id\" not between ? and ?",
+               builder_->to_sql().c_str());
+  assertEquals({1, 2}, builder_->get_bindings());
+}
+
+TEST_F(DBQueryBuilder, testBasicOrWheres) {
+  builder_->select({"*"}).
+            from("users").where("id", "=", 1).or_where("email", "=", "foo");
+  ASSERT_STREQ("select * from \"users\" where \"id\" = ? or \"email\" = ?",
+               builder_->to_sql().c_str());
+  assertEquals({1, "foo"}, builder_->get_bindings());
+}
+
+TEST_F(DBQueryBuilder, testRawWheres) {
+  builder_->select({"*"}).
+            from("users").where_raw("id = ? or email = ?", {1, "foo"});
+  ASSERT_STREQ("select * from \"users\" where id = ? or email = ?",
+               builder_->to_sql().c_str());
+  assertEquals({1, "foo"}, builder_->get_bindings());
+}
+
+TEST_F(DBQueryBuilder, testRawOrWheres) {
+  builder_->select({"*"}).
+            from("users").where("id", "=", 1).or_where_raw("email = ?", {"foo"});
+  ASSERT_STREQ("select * from \"users\" where \"id\" = ? or email = ?",
+               builder_->to_sql().c_str());
+  assertEquals({1, "foo"}, builder_->get_bindings());
+}

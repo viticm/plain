@@ -664,7 +664,7 @@ Builder &Builder::where_sub(const std::string &column,
 Builder &Builder::add_date_based_where(const std::string &type,
                                        const std::string &column,
                                        const std::string &oper,
-                                       int32_t val,
+                                       const variable_t &val,
                                        const std::string &boolean) {
   db_query_array_t _where;
   _where.items = {

@@ -53,7 +53,7 @@ Grammar::Grammar() {
     { "exists", where_call(exists) },
     { "notexists", where_call(notexists) },
     { "day", where_call(day) },
-    { "month", where_call(raw) },
+    { "month", where_call(month) },
     { "year", where_call(year) },
     { "date", where_call(date) },
   };
@@ -358,7 +358,7 @@ std::string Grammar::where_notnull(Builder &query, db_query_array_t &where) {
 
 //Compile a "between" where clause.
 std::string Grammar::where_between(Builder &query, db_query_array_t &where) {
-  std::string between = empty(where["not"]) ? "not between" : "between";
+  std::string between = where["not"].get<bool>() ? "not between" : "between";
   return wrap(where["column"]) + " " + between + " ? and ?";
 }
 
@@ -552,9 +552,9 @@ std::string Grammar::remove_leading_boolean(const std::string &value) {
   const std::string _or{"or "};
   std::string r{value};
   auto find_and = r.find(_and);
-  if (find_and != std::string::npos) r.replace(find_and, _and.length(), "");
+  if (0 == find_and) r.replace(find_and, _and.length(), "");
   auto find_or = r.find(_or);
-  if (find_or != std::string::npos) r.replace(find_or, _or.length(), "");
+  if (0 == find_or) r.replace(find_or, _or.length(), "");
   return r;
 }
 
