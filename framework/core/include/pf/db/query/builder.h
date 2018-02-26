@@ -236,7 +236,7 @@ class PF_API Builder : public concerns::BuildsQueries {
 
    //Add a basic where clause to the query.
    Builder &where(const std::string &column, 
-                  const std::string &oper = "", 
+                  const variable_t &oper = "", 
                   const variable_t &val = "", 
                   const std::string &boolean = "and");
 
@@ -254,7 +254,7 @@ class PF_API Builder : public concerns::BuildsQueries {
 
    //Add a basic where clause to the query.
    Builder &where(closure_t column, 
-                  const std::string &oper = "", 
+                  const variable_t &oper = "", 
                   const variable_t &val = "", 
                   const std::string &boolean = "and") {
      UNUSED(oper);
@@ -267,7 +267,7 @@ class PF_API Builder : public concerns::BuildsQueries {
 
    //Add a basic where clause to the query.
    Builder &where(const std::string &column, 
-                  const std::string &oper, 
+                  const variable_t &oper, 
                   closure_t val,
                   const std::string &boolean = "and");
  
@@ -321,9 +321,11 @@ class PF_API Builder : public concerns::BuildsQueries {
    };
 
    //Add an "or where" clause comparing two columns to the query.
-   Builder &or_where_column(const std::string &first,
+   Builder &or_where_column(const std::string &_first,
                             const std::string &oper = "",
-                            const std::string &second = "");
+                            const std::string &second = "") {
+     return where_column(_first, oper, second, "or");
+   };
 
    //Add a "or where" clause comparing two columns to the query.
    Builder &or_where_column(const std::vector<variable_array_t> &_first, 

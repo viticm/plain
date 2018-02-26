@@ -77,19 +77,15 @@ class PF_API Grammar {
 
    //Get the appropriate query parameter place-holder for a value.
    std::string parameter(const variable_t &value) {
-     return DB_EXPRESSION_TYPE == value.type ? value.data : "?";
+     return is_expression(value) ? get_value(value) : "?";
    };
 
    //Get the value of a raw expression.
    std::string get_value(const variable_t &value) {
      if (!is_expression(value)) return "";
-     return value.data;
+     return DB_EXPRESSION_TYPE == value.type ? value.data : 
+            "\"" + value.data + "\"";
    }
-
-   //Determine if the given value is a raw expression.
-   bool is_expression(const variable_t &value) {
-      return DB_EXPRESSION_TYPE == value.type;
-   };
 
  protected:
 
@@ -97,6 +93,7 @@ class PF_API Grammar {
    std::string table_prefix_;
 
 };
+
 
 } //namespace pf_db
 

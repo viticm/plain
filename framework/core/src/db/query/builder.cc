@@ -245,17 +245,17 @@ void Builder::merge_wheres(std::vector<db_query_array_t> &wheres,
 
 //Add a basic where clause to the query.
 Builder &Builder::where(const std::string &column, 
-                        const std::string &oper, 
+                        const variable_t &oper, 
                         const variable_t &val, 
                         const std::string &boolean) {
   // Here we will make some assumptions about the operator. If only 2 vals are 
   // passed to the method, we will assume that the operator is an equals sign
   // and keep going. Otherwise, we'll require the operator to be passed in.
   bool use_default = (val == "") && ("and" == boolean);
-  auto val_oper = prepare_value_and_operator(val.data, oper, use_default);
+  auto val_oper = prepare_value_and_operator(val.data, oper.data, use_default);
 
   variable_t rval{val_oper[0]};
-  std::string roper{val_oper[1].data};
+  variable_t roper{val_oper[1]};
 
   // If the given operator is not found in the list of valid operators we will
   // assume that the developer is just short-cutting the '=' operators and
@@ -291,7 +291,7 @@ Builder &Builder::where(const std::string &column,
   };
   wheres_.emplace_back(std::move(_where));
 
-  if (rval.type != DB_EXPRESSION_TYPE)
+  if (!is_expression(rval))
     add_binding(rval, "where");
 
   return *this;
@@ -299,18 +299,19 @@ Builder &Builder::where(const std::string &column,
 
 //Add a basic where clause to the query.
 Builder &Builder::where(const std::string &column, 
-                        const std::string &oper, 
+                        const variable_t &oper, 
                         closure_t val, 
                         const std::string &boolean) {
 
   // Here we will make some assumptions about the operator. If only 2 vals are 
   // passed to the method, we will assume that the operator is an equals sign
   // and keep going. Otherwise, we'll require the operator to be passed in.
-  bool use_default = ("" == oper) && ("and" == boolean);
-  auto val_oper = prepare_value_and_operator("closure_t", oper, use_default);
+  bool use_default = (oper == "") && ("and" == boolean);
+  auto val_oper = 
+    prepare_value_and_operator("closure_t", oper.data, use_default);
 
   variable_t rval{val_oper[0]};
-  std::string roper{val_oper[1].data};
+  variable_t roper{val_oper[1]};
 
   // If the given operator is not found in the list of valid operators we will
   // assume that the developer is just short-cutting the '=' operators and
@@ -321,7 +322,7 @@ Builder &Builder::where(const std::string &column,
   }
 
   if (rval == "closure_t")
-    return where_sub(column, oper, val, boolean);
+    return where_sub(column, oper.data, val, boolean);
 
   // If the val is "null", we will just assume the developer wants to add a 
   // where null clause to the query. So, we will allow a short-cut here to
@@ -334,7 +335,7 @@ Builder &Builder::where(const std::string &column,
   // val to the query to ensure this is properly handled by the query.
   if (contains(column, {"->"}) && kVariableTypeBool == rval.type) {
     rval = rval == true ? "true" : "false";
-    rval.type = static_cast<var_t>(DB_EXPRESSION_TYPE);
+    rval.type = static_cast<var_t>(DB_EXPRESSION_TYPE_S);
   }
 
   // Now that we are working with just a simple query we can put the elements 
@@ -349,7 +350,7 @@ Builder &Builder::where(const std::string &column,
   };
   wheres_.emplace_back(std::move(_where));
 
-  if (rval.type != DB_EXPRESSION_TYPE)
+  if (!is_expression(rval))
     add_binding(rval, "where");
 
   return *this;
@@ -360,7 +361,7 @@ Builder &Builder::add_array_of_wheres(
     const std::vector<variable_array_t> &columns,
     const std::string &boolean,
     const std::string &method) {
-  #define get(n) (vals.size() > (n) + 1 ? vals[n].data : "")
+  #define get(n) (vals.size() > (n) ? vals[n].data : "")
   return where_nested([&columns, &method](Builder *query){
     for (auto vals : columns) {
       auto _boolean = "" == get(3) ? "and" : get(3);
@@ -477,7 +478,7 @@ Builder &Builder::where_in(const std::string &column,
   // in which case we will just skip over it since it will be the query as a raw 
   // string and not as a parameterized place-holder to be replaced by the ENV(PDO).
   for (const variable_t &val : vals) {
-    if (val.type != DB_EXPRESSION_TYPE)
+    if (!is_expression(val))
       add_binding(val, "where");
   }
 
@@ -523,10 +524,10 @@ Builder &Builder::where_in_existing_query(const std::string &column,
     {"type", isnot ? "not_insub" : "insub"}, {"column", column}, 
     {"boolean", boolean},
   };
-  wheres_.emplace_back(std::move(_where));
-
   add_bindings(_where.query->get_bindings(), "where");
-
+  
+  wheres_.emplace_back(std::move(_where));
+  
   return *this;
 }
 
@@ -626,8 +627,8 @@ Builder &Builder::add_nested_where_query(Builder *query,
       {"type", "nested"}, {"boolean", boolean}
     };
     unique_move(Builder, query, _where.query);
-    wheres_.emplace_back(std::move(_where));
     add_bindings(_where.query->get_bindings(), "where");
+    wheres_.emplace_back(std::move(_where));
   } else {
     safe_delete(query);
   }
@@ -653,9 +654,9 @@ Builder &Builder::where_sub(const std::string &column,
     {"boolean", boolean},
   };
 
-  wheres_.emplace_back(std::move(_where));
-
   add_bindings(_where.query->get_bindings(), "where");
+  
+  wheres_.emplace_back(std::move(_where));
 
   return *this;
 }
@@ -739,7 +740,7 @@ Builder &Builder::having(const std::string &column,
   };
   havings_.emplace_back(_having);
 
-  if (rval.type != DB_EXPRESSION_TYPE)
+  if (!is_expression(rval))
     add_binding(rval, "having");
 
   return *this;
@@ -835,8 +836,8 @@ Builder &Builder::_union(Builder *query, bool all) {
   _where.items = {
     {"all", all},
   };
-  unions_.emplace_back(std::move(_where));
   add_bindings(_where.query->get_bindings(), "union");
+  unions_.emplace_back(std::move(_where));
   return *this;
 }
 
@@ -943,7 +944,7 @@ Builder &Builder::clean_bindings(const std::vector<std::string> &except) {
 variable_array_t Builder::clean_bindings_expression(
     const variable_array_t &bindings) {
   return array_filter<variable_t>(bindings, [](const variable_t &val){
-    return val.type != DB_EXPRESSION_TYPE;
+    return !is_expression(val);
   });
 }
 
@@ -1123,9 +1124,11 @@ Builder &Builder::merge_bindings(Builder &query) {
 
 variable_array_t Builder::get_bindings() {
   if (bindings_.empty()) return {};
+  std::vector<std::string> 
+    names{"select", "join", "where", "having", "order", "union"};
   variable_array_t r;
-  for (auto it = bindings_.begin(); it != bindings_.end(); ++it) {
-    for (const variable_t &value : it->second)
+  for (const std::string &name : names) {
+    for (const variable_t &value : bindings_[name])
       r.push_back(value);
   }
   return r;

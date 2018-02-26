@@ -28,7 +28,7 @@ MysqlGrammar::MysqlGrammar() {
 std::string MysqlGrammar::compile_select(Builder &query) {
   auto sql = Grammar::compile_select(query);
   if (!query.unions_.empty())
-    sql = "(" + sql + ")" + compile_unions(query);
+    sql = "(" + sql + ") " + compile_unions(query);
   return sql;
 }
 

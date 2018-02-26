@@ -319,7 +319,7 @@ std::string Grammar::where_basic(Builder &query, db_query_array_t &where) {
 
 //Compile a "where in" clause.
 std::string Grammar::where_in(Builder &query, db_query_array_t &where) {
-  if (!empty(where["values"])) {
+  if (!where.values.empty()) {
     return wrap(where["column"]) + " in (" + parameterize(where.values) + ")";
   }
   return "0 = 1";
@@ -327,7 +327,7 @@ std::string Grammar::where_in(Builder &query, db_query_array_t &where) {
 
 //Compile a "where not in" clause.
 std::string Grammar::where_notin(Builder &query, db_query_array_t &where) {
-  if (!empty(where["values"])) {
+  if (!where.values.empty()) {
     return wrap(where["column"]) + " not in (" + parameterize(where.values) + ")";
   }
   return "1 = 1";
@@ -446,7 +446,7 @@ std::string Grammar::compile_orders(
 Grammar::variable_array_t Grammar::compile_orders_toarray(
     Builder &query, const std::vector<variable_set_t> &orders) {
   return collect(orders).map([this](variable_set_t &order){
-    return !empty(order["sql"]) ? 
+    return empty(order["sql"]) ? 
            wrap(order["column"]) + " " + order["direction"].data :
            order["sql"].data;
   }).items_;
@@ -473,11 +473,11 @@ std::string Grammar::compile_unions(Builder &query) {
     sql += compile_union(_union);
   }
   if (!query.union_orders_.empty())
-    sql += compile_orders(query, query.orders_);
+    sql += " " + compile_orders(query, query.union_orders_);
   if (query.union_limit_ != -1)
-    sql += compile_limit(query, query.union_limit_);
+    sql += " " + compile_limit(query, query.union_limit_);
   if (query.union_offset_ != -1)
-    sql += compile_offset(query, query.union_offset_);
+    sql += " " + compile_offset(query, query.union_offset_);
   return ltrim(sql);
 }
 
@@ -541,8 +541,9 @@ std::string Grammar::compile_limit(Builder &query, int32_t limit) {
 std::string Grammar::concatenate(variable_set_t &segments) {
   if (segments.empty()) return "";
   variable_array_t r;
-  for (auto it = segments.begin(); it != segments.end(); ++it)
-    if (it->second != "") r.push_back(it->second);
+  for (const std::string &component : select_components_) {
+    if (segments[component] != "") r.push_back(segments[component]);
+  }
   return implode(" ", r);
 }
 

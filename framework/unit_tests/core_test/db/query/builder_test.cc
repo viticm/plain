@@ -420,3 +420,136 @@ TEST_F(DBQueryBuilder, testRawOrWheres) {
                builder_->to_sql().c_str());
   assertEquals({1, "foo"}, builder_->get_bindings());
 }
+
+TEST_F(DBQueryBuilder, testBasicWhereIns) {
+  builder_->select({"*"}).from("users").where_in("id", {1, 2, 3});
+  ASSERT_STREQ("select * from \"users\" where \"id\" in (?, ?, ?)",
+               builder_->to_sql().c_str());
+  assertEquals({1, 2, 3}, builder_->get_bindings(), __LINE__);
+
+  builder_->clear();
+  builder_->select({"*"}).
+            from("users").where("id", "=", 1).or_where_in("id", {1, 2, 3});
+  ASSERT_STREQ("select * from \"users\" where \"id\" = ? or \"id\" in (?, ?, ?)",
+               builder_->to_sql().c_str());
+  assertEquals({1, 1, 2, 3}, builder_->get_bindings(), __LINE__);
+}
+
+TEST_F(DBQueryBuilder, testBasicWhereNotIns) {
+  builder_->select({"*"}).from("users").where_notin("id", {1, 2, 3});
+  ASSERT_STREQ("select * from \"users\" where \"id\" not in (?, ?, ?)",
+               builder_->to_sql().c_str());
+  assertEquals({1, 2, 3}, builder_->get_bindings(), __LINE__);
+
+  builder_->clear();
+  builder_->select({"*"}).
+            from("users").where("id", "=", 1).or_where_notin("id", {1, 2, 3});
+  ASSERT_STREQ("select * from \"users\" where \"id\" = ? or \"id\" not in (?, ?, ?)",
+               builder_->to_sql().c_str());
+  assertEquals({1, 1, 2, 3}, builder_->get_bindings(), __LINE__);
+}
+
+
+TEST_F(DBQueryBuilder, testRawWhereIns) {
+  using namespace pf_db;
+  variable_array_t a{raw(1)};
+  builder_->select({"*"}).from("users").where_in("id", a);
+  ASSERT_STREQ("select * from \"users\" where \"id\" in (1)",
+               builder_->to_sql().c_str());
+
+  builder_->clear();
+  builder_->select({"*"}).
+            from("users").where("id", "=", 1).or_where_in("id", a);
+  ASSERT_STREQ("select * from \"users\" where \"id\" = ? or \"id\" in (1)",
+               builder_->to_sql().c_str());
+}
+
+TEST_F(DBQueryBuilder, testEmptyWhereIns) {
+  using namespace pf_db;
+  variable_array_t a;
+  builder_->select({"*"}).from("users").where_in("id", a);
+  ASSERT_STREQ("select * from \"users\" where 0 = 1",
+               builder_->to_sql().c_str());
+
+  builder_->clear();
+  builder_->select({"*"}).
+            from("users").where("id", "=", 1).or_where_in("id", a);
+  ASSERT_STREQ("select * from \"users\" where \"id\" = ? or 0 = 1",
+               builder_->to_sql().c_str());
+}
+
+TEST_F(DBQueryBuilder, testEmptyWhereNotIns) {
+  using namespace pf_db;
+  variable_array_t a;
+  builder_->select({"*"}).from("users").where_notin("id", a);
+  ASSERT_STREQ("select * from \"users\" where 1 = 1",
+               builder_->to_sql().c_str());
+
+  builder_->clear();
+  builder_->select({"*"}).
+            from("users").where("id", "=", 1).or_where_notin("id", a);
+  ASSERT_STREQ("select * from \"users\" where \"id\" = ? or 1 = 1",
+               builder_->to_sql().c_str());
+}
+
+TEST_F(DBQueryBuilder, testBasicWhereColumn) {
+  builder_->select({"*"}).
+            from("users").where_column("first_name", "last_name").
+            or_where_column("first_name", "middle_name");
+  ASSERT_STREQ("select * from \"users\" where \"first_name\" = \"last_name\" \
+or \"first_name\" = \"middle_name\"",
+               builder_->to_sql().c_str());
+
+  builder_->clear();
+  builder_->select({"*"}).
+            from("users").where_column("updated_at", ">", "created_at");
+  ASSERT_STREQ("select * from \"users\" where \"updated_at\" > \"created_at\"",
+               builder_->to_sql().c_str());
+}
+
+TEST_F(DBQueryBuilder, testArrayWhereColumn) {
+  std::vector<variable_array_t> conditions = {
+    {"first_name", "last_name"},
+    {"updated_at", ">", "created_at"},
+  };
+  builder_->select({"*"}).from("users").where_column(conditions);
+  ASSERT_STREQ("select * from \"users\" where (\"first_name\" = \"last_name\" \
+and \"updated_at\" > \"created_at\")",
+               builder_->to_sql().c_str());
+}
+
+TEST_F(DBQueryBuilder, testUnions) {
+
+  auto builder = mysql_builder_.get();
+
+  builder_->select({"*"}).from("users").where("id", "=", 1);
+  auto union_builder = new Builder(connection_.get(), nullptr);
+  union_builder->select({"*"}).from("users").where("id", "=", 2);
+  builder_->_union(union_builder);
+  ASSERT_STREQ("select * from \"users\" where \"id\" = ? union select * from \
+\"users\" where \"id\" = ?",
+               builder_->to_sql().c_str());
+
+  builder->select({"*"}).from("users").where("id", "=", 1);
+  auto union_builder1 = new Builder(connection_.get(), mysql_grammar_.get());
+  union_builder1->select({"*"}).from("users").where("id", "=", 2);
+  builder->_union(union_builder1);
+  ASSERT_STREQ("(select * from `users` where `id` = ?) union (select * from \
+`users` where `id` = ?)",
+               builder->to_sql().c_str());
+ 
+  builder->clear();
+  std::string expected_sql{"(select `a` from `t1` where `a` = ? and `b` = ?) "
+  "union (select `a` from `t2` where `a` = ? and `b` = ?) order by `a` "
+  "asc limit 10"};
+  auto union_builder2 = new Builder(connection_.get(), mysql_grammar_.get());
+  union_builder2->select({"a"}).from("t2").where("a", 11).where("b", 2);
+  builder->select({"a"}).
+           from("t1").where("a", 10).where("b", 1).
+           _union(union_builder2).order_by("a").limit(10);
+  ASSERT_STREQ(expected_sql.c_str(),
+               builder->to_sql().c_str());
+  assertEquals({10, 1, 11, 2}, builder->get_bindings());
+  
+  //SQLite...
+}

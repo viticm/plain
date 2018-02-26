@@ -26,6 +26,15 @@
 
 #define DB_MODULENAME "db"
 
+/* The database environment invalid id. */
+#define DB_EID_INVALID (-1)
+
+/* The database expression variable type. */
+#define DB_EXPRESSION_TYPE (100)
+
+/* The database expression variable type(the original is a real string). */
+#define DB_EXPRESSION_TYPE_S (101)
+
 typedef enum {
   kDBColumnTypeString = 0,
   kDBColumnTypeNumber,
@@ -131,13 +140,23 @@ struct db_query_array_struct {
 using db_query_bindings_t = 
   std::map<std::string, pf_basic::type::variable_array_t>;
 
+//Get the raw variable.
+inline pf_basic::type::variable_t raw(
+    const pf_basic::type::variable_t &value) {
+  using namespace pf_basic::type;
+  auto r = value;
+  r.type = static_cast<var_t>(
+      kVariableTypeString == value.type ? DB_EXPRESSION_TYPE_S : 
+      DB_EXPRESSION_TYPE);
+  return r;
+}
+
+inline bool is_expression(const pf_basic::type::variable_t &value) {
+  return DB_EXPRESSION_TYPE_S == value.type || DB_EXPRESSION_TYPE == value.type;
+}
 
 } //namespace pf_db
 
-#define DB_EID_INVALID (-1)
-
-/* The database expression variable type. */
-#define DB_EXPRESSION_TYPE (100)
 
 //Auto environment creator.
 auto_envcreator(db, pf_db::Interface)

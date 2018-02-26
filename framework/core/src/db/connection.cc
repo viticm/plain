@@ -91,9 +91,7 @@ query::Builder *Connection::table(const std::string &name) {
 
 //Get a new raw query expression.
 variable_t Connection::raw(const variable_t &value) {
-  variable_t r{value};
-  r.type = static_cast<var_t>(DB_EXPRESSION_TYPE);
-  return value;
+  return pf_db::raw(value);
 }
 
 //Run a select statement and return a single result.
