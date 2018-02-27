@@ -44,7 +44,9 @@ class PF_API SqlserverGrammar : public grammars::Grammar {
    virtual variable_set_t compile_truncate(Builder &query);
 
    //Compile the random statement into SQL.
-   virtual std::string compile_random(const std::string &seed);
+   virtual std::string compile_random(const std::string &seed) {
+     return "NEWID()";
+   };
 
    //Compile a where exists clause.
    virtual std::string where_exists(Builder &query, const variable_set_t &where);
@@ -57,7 +59,7 @@ class PF_API SqlserverGrammar : public grammars::Grammar {
 
    //Compile an update statement into SQL.
    virtual std::string compile_update(
-       Builder &query, const variable_array_t &values);
+       Builder &query, variable_set_t &values);
 
    //Prepare the bindings for an update statement.
    virtual variable_set_t prepare_bindings_forupdate(
@@ -65,6 +67,26 @@ class PF_API SqlserverGrammar : public grammars::Grammar {
 
    //Compile a delete statement into SQL.
    virtual std::string compile_delete(Builder &query);
+
+   //Determine if the grammar supports savepoints.
+   virtual bool supports_savepoints() {
+     return true;
+   }
+
+   //Compile the SQL statement to define a savepoint.
+   virtual std::string compile_savepoint(const std::string &name) {
+     return "SAVE TRANSACTION " + name;
+   }
+
+   //Compile the SQL statement to execute a savepoint rollback.
+   virtual std::string compile_savepoint_rollback(const std::string &name) {
+     return "ROLLBACK TRANSACTION " + name;
+   }
+
+   //Get the format for database stored dates.
+   virtual std::string get_date_format() {
+     return "Y-m-d H:i:s.000";
+   }
 
  protected:
    
@@ -76,10 +98,12 @@ class PF_API SqlserverGrammar : public grammars::Grammar {
    virtual std::string compile_from(Builder &query, const std::string &table);
 
    //Compile a "where date" clause.
-   virtual std::string where_date(Builder &query, const variable_set_t &where);
+   virtual std::string where_date(Builder &query, db_query_array_t &where);
 
    //Compile the "limit" portions of the query.
-   virtual std::string compile_limit(Builder &query, int32_t limit);
+   virtual std::string compile_limit(Builder &, int32_t) {
+     return "";
+   };
 
    //Compile a single union statement.
    virtual std::string compile_union(const variable_set_t &unions);
@@ -88,19 +112,29 @@ class PF_API SqlserverGrammar : public grammars::Grammar {
    virtual std::string compile_unions(Builder &query);
 
    //Compile the lock into SQL.
-   virtual std::string compile_lock(Builder &query, const std::string &value);
+   virtual std::string compile_lock(Builder &, const std::string &) {
+     return "";
+   }
 
    //Concatenate an array of segments, removing empties.
-   virtual std::string concatenate(const std::vector<std::string> &segments);
+   virtual std::string concatenate(variable_set_t &segments);
 
    //Remove the leading boolean from a statement.
    virtual std::string remove_leading_boolean(const std::string &value);
+
+   //Compile the "offset" portions of the query.
+   virtual std::string compile_offset(Builder &, int32_t) {
+     return "";
+   };
+
+   //Compile an exists statement into SQL.
+   virtual std::string compile_exists(Builder &query);
 
  protected:
 
    //Create a full ANSI offset clause for the query.
    std::string compile_ansi_offset(
-       Builder &query, const variable_set_t &components);
+       Builder &query, variable_set_t &components);
 
    //Compile the over statement for a table expression.
    std::string compile_over(const std::string &orderings);
@@ -111,7 +145,13 @@ class PF_API SqlserverGrammar : public grammars::Grammar {
    //Compile the limit / offset row constraint for a query.
    std::string compile_row_constraint(Builder &query);
 
-   //
+   //Compile a delete query that uses joins.
+   std::string compile_delete_with_joins(
+       Builder &query, const std::string &table, const std::string &where);
+
+   //Get the table and alias for the given table.
+   std::vector<std::string> parse_update_table(const std::string &table);
+
 
 };
 

@@ -61,7 +61,7 @@ class PF_API Grammar : public pf_db::Grammar {
    virtual std::string compile_insert_getid(
        Builder &query, 
        std::vector<variable_set_t> &values, 
-       const std::string &sequence);
+       const std::string &sequence = "");
 
    //Compile a truncate table statement into SQL.
    virtual variable_set_t compile_truncate(Builder &query);
@@ -238,7 +238,7 @@ class PF_API Grammar : public pf_db::Grammar {
  protected:
 
    //Compile the "offset" portions of the query.
-   std::string compile_offset(Builder &query, int32_t offset);
+   virtual std::string compile_offset(Builder &query, int32_t offset);
 
 };
 

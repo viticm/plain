@@ -43,17 +43,11 @@ class PF_API Grammar {
    void wrap_array(variable_array_t &values);
 
    //Wrap a table in keyword identifiers.
-   std::string wrap_table(variable_t &table) {
-     if (table.type != DB_EXPRESSION_TYPE) {
+   virtual std::string wrap_table(const variable_t &table) {
+     if (!is_expression(table)) {
        return wrap(table_prefix_ + table.data, true);
      }
      return table.data;
-   };
-
-   //Wrap a table in keyword identifiers.
-   std::string wrap_table(const std::string &table) {
-     variable_t _table{table};
-     return wrap_table(_table);
    };
 
    //Wrap a value in keyword identifiers.
@@ -85,6 +79,13 @@ class PF_API Grammar {
      if (!is_expression(value)) return "";
      return DB_EXPRESSION_TYPE == value.type ? value.data : 
             "\"" + value.data + "\"";
+   }
+
+ public:
+   
+   //Get the format for database stored dates.
+   virtual std::string get_date_format() {
+     return "Y-m-d H:i:s";
    }
 
  protected:

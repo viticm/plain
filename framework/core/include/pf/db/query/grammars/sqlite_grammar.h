@@ -32,7 +32,7 @@ class PF_API SqliteGrammar : public grammars::Grammar {
 
    //Compile an insert statement into SQL.
    virtual std::string compile_insert(
-       Builder &query, const variable_array_t &values);
+       Builder &query, std::vector<variable_set_t> &values);
 
    //Compile a truncate table statement into SQL.
    virtual variable_set_t compile_truncate(Builder &query);
@@ -46,23 +46,31 @@ class PF_API SqliteGrammar : public grammars::Grammar {
  protected:
    
    //Compile a single union statement.
-   virtual std::string compile_union(const variable_set_t &unions);
+   virtual std::string compile_union(db_query_array_t &_union);
 
    //Compile a "where day" clause.
-   virtual std::string where_day(Builder &query, const variable_set_t &where);
+   virtual std::string where_day(Builder &query, db_query_array_t &where) {
+     return date_based_where("%d", query, where);
+   };
 
    //Compile a "where month" clause.
-   virtual std::string where_month(Builder &query, const variable_set_t &where);
+   virtual std::string where_month(Builder &query, db_query_array_t &where) {
+     return date_based_where("%m", query, where);
+   };
 
    //Compile a "where year" clause.
-   virtual std::string where_year(Builder &query, const variable_set_t &where);
+   virtual std::string where_year(Builder &query, db_query_array_t &where) {
+     return date_based_where("%Y", query, where);
+   };
 
    //Compile a "where date" clause.
-   virtual std::string where_date(Builder &query, const variable_set_t &where);
+   virtual std::string where_date(Builder &query, db_query_array_t &where) {
+     return date_based_where("%Y-%m-%d", query, where);
+   };
 
    //Compile a date based where clause.
    virtual std::string date_based_where(
-       const std::string &type, Builder &query, const variable_set_t &where);
+       const std::string &type, Builder &query, db_query_array_t &where);
 
 };
 

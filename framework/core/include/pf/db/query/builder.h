@@ -118,7 +118,7 @@ class PF_API Builder : public concerns::BuildsQueries {
 
    //Add a new "raw" select expression to the query.
    Builder &select_raw(
-       const std::string &expression, const variable_array_t &bindings);
+       const std::string &expression, const variable_array_t &bindings = {});
 
    //Add a subselect expression to the query.
    Builder &select_sub(Builder &query, const std::string &as);
