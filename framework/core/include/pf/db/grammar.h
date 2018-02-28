@@ -66,6 +66,9 @@ class PF_API Grammar {
    //Convert an array of column names into a delimited string.
    std::string columnize(const std::vector<std::string> &columns);
 
+   //Convert an array of column names into a delimited string.
+   std::string columnize(const variable_array_t &columns);
+
    //Create query parameter place-holders for an array.
    std::string parameterize(variable_set_t &values);
 

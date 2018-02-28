@@ -46,6 +46,7 @@ Builder::Builder(ConnectionInterface *connection, grammars::Grammar *grammar) {
   union_offset_ = -1;
   
   lock_ = "";
+  lock_.type = kVariableTypeInvalid;
 }
 
 //The builder destruct function.
@@ -75,6 +76,7 @@ Builder &Builder::clear() {
   union_offset_ = -1;
   
   lock_ = "";
+  lock_.type = kVariableTypeInvalid;
 
   aggregate_.clear();
 
@@ -204,7 +206,7 @@ Builder &Builder::join(const std::string &table,
   if (_where) {
     _join->where(_first, oper, second);
   } else {
-    _join->on(_first, oper, second);
+    reinterpret_cast<Builder *>(_join.get())->on(_first, oper, second);
   }
   
   add_bindings(_join->get_bindings(), "join");
@@ -287,7 +289,7 @@ Builder &Builder::where(const std::string &column,
   db_query_array_t _where;
   _where.items = { //PHP compact can collect the variable with names.
     {"type", type}, {"column", column}, {"operator", roper}, 
-    {"val", rval}, {"boolean", boolean}
+    {"value", rval}, {"boolean", boolean}
   };
   wheres_.emplace_back(std::move(_where));
 
@@ -346,7 +348,7 @@ Builder &Builder::where(const std::string &column,
   db_query_array_t _where;
   _where.items = { //PHP compact can collect the variable with names.
     {"type", type}, {"column", column}, {"operator", roper}, 
-    {"val", rval}, {"boolean", boolean}
+    {"value", rval}, {"boolean", boolean}
   };
   wheres_.emplace_back(std::move(_where));
 
@@ -504,9 +506,9 @@ Builder &Builder::where_insub(const std::string &column,
     {"boolean", boolean},
   };
 
-  wheres_.emplace_back(std::move(_where));
-
   add_bindings(_where.query->get_bindings(), "where");
+  
+  wheres_.emplace_back(std::move(_where));
 
   return *this;
 }
@@ -670,7 +672,7 @@ Builder &Builder::add_date_based_where(const std::string &type,
   db_query_array_t _where;
   _where.items = {
     {"type", type}, {"column", column}, {"operator", oper}, 
-    {"boolean", boolean}, {"val", val}
+    {"boolean", boolean}, {"value", val}
   };
   wheres_.emplace_back(std::move(_where));
   add_binding(val, "where");
@@ -707,8 +709,8 @@ Builder &Builder::add_where_exists_query(Builder *query,
 }
 
 //Add a "group by" clause to the query.
-Builder &Builder::group_by(const std::vector<std::string> &groups) {
-  for (const std::string &group : groups)
+Builder &Builder::group_by(const variable_array_t &groups) {
+  for (const variable_t &group : groups)
     groups_.emplace_back(group);
   return *this;
 }
@@ -736,7 +738,7 @@ Builder &Builder::having(const std::string &column,
   }
   variable_set_t _having = {
     {"type", "basic"}, {"column", column}, {"operator", roper}, 
-    {"val", rval}, {"boolean", boolean},
+    {"value", rval}, {"boolean", boolean},
   };
   havings_.emplace_back(_having);
 
@@ -824,15 +826,15 @@ void Builder::remove_existing_orders_for(const std::string &column,
 
 //Add a union statement to the query.
 Builder &Builder::_union(closure_t callback, bool all) {
-  auto query = new_query();
-  callback(query);
+  std::unique_ptr<Builder> query(new_query());
+  callback(query.get());
   return _union(query, all);
 }
 
 //Add a union statement to the query.
-Builder &Builder::_union(Builder *query, bool all) {
+Builder &Builder::_union(std::unique_ptr<Builder> &query, bool all) {
   db_query_array_t _where;
-  unique_move(Builder, query, _where.query);
+  _where.query = std::move(query);
   _where.items = {
     {"all", all},
   };

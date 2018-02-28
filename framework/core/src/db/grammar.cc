@@ -44,7 +44,7 @@ std::string Grammar::wrap_value(const variable_t &value) {
 
 //Wrap a value in keyword identifiers.
 std::string Grammar::wrap(const variable_t &value, bool prefix_alias) {
-  if (DB_EXPRESSION_TYPE == value.type) return value.data;
+  if (is_expression(value)) return value.data;
   // If the value being wrapped has a column alias we will need to separate out 
   // the pieces so we can wrap each of the segments of the expression on it 
   // own, and then joins them both back together with the "as" connector.
@@ -53,7 +53,7 @@ std::string Grammar::wrap(const variable_t &value, bool prefix_alias) {
       temp.begin(), temp.end(), temp.begin(), (int (*)(int))std::tolower);
   if (temp.find(" as ") != std::string::npos) 
     return wrap_aliased_value(temp, prefix_alias);
-  std::cout << "wrap: " << value.data << "|" << std::endl;
+  std::cout << "wrap: |" << value.data << "|" << std::endl;
   return wrap_segments(explode(".", value.data));
 }
 
@@ -61,6 +61,14 @@ std::string Grammar::wrap(const variable_t &value, bool prefix_alias) {
 std::string Grammar::columnize(const std::vector<std::string> &columns) {
   std::vector<std::string> temp;
   for (const std::string &value : columns)
+    temp.push_back(wrap(value));
+  return implode(", ", temp);
+}
+
+//Convert an array of column names into a delimited string.
+std::string Grammar::columnize(const variable_array_t &columns) {
+  std::vector<std::string> temp;
+  for (const variable_t &value : columns)
     temp.push_back(wrap(value));
   return implode(", ", temp);
 }

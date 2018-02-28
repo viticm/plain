@@ -150,7 +150,7 @@ class PF_API Grammar : public pf_db::Grammar {
 
    //Compile the "group by" portions of the query.
    std::string compile_groups(
-       Builder &query, const std::vector<std::string> &groups);
+       Builder &query, const variable_array_t &groups);
 
    //Compile the "having" portions of the query.
    std::string compile_havings(

@@ -95,16 +95,17 @@ variable_set_t PostgresGrammar::compile_truncate(Builder &query) {
 //Compile a "where date" clause.
 std::string PostgresGrammar::where_date(
     Builder &query, db_query_array_t &where) {
-  auto value = parameter(where["val"]);
-  return wrap(where["column"]) + "::date " + where["oper"].data + " " + value;
+  auto value = parameter(where["value"]);
+  std::cout << "where_date: " << where["operator"].data << std::endl;
+  return wrap(where["column"]) + "::date " + where["operator"].data + " " + value;
 }
 
 //Compile a date based where clause.
 std::string PostgresGrammar::date_based_where(
     const std::string &type, Builder &query, db_query_array_t &where) {
-  auto value = parameter(where["val"]);
+  auto value = parameter(where["value"]);
   return "extract(" + type + " from " + wrap(where["column"]) + 
-         ") " + where["oper"].data + " " + value;
+         ") " + where["operator"].data + " " + value;
 }
 
 //Compile the lock into SQL.

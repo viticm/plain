@@ -2,6 +2,9 @@
 #include "pf/engine/kernel.h"
 #include "pf/db/query/grammars/grammar.h"
 #include "pf/db/query/grammars/mysql_grammar.h"
+#include "pf/db/query/grammars/postgres_grammar.h"
+#include "pf/db/query/grammars/sqlserver_grammar.h"
+#include "pf/db/query/grammars/sqlite_grammar.h"
 #include "pf/db/connection.h"
 #include "pf/db/query/builder.h"
 #include "pf/support/helpers.h"
@@ -30,15 +33,38 @@ class DBQueryBuilder : public testing::Test {
 
      engine_.init();
 
+     //Normal.
      auto connection = new pf_db::Connection(engine_.get_db());
      unique_move(pf_db::Connection, connection, connection_);
      auto builder = new Builder(connection_.get(), nullptr);
      unique_move(Builder, builder, builder_);
      
+     //Mysql.
      auto mysql_grammar = new grammars::MysqlGrammar();
      unique_move(grammars::Grammar, mysql_grammar, mysql_grammar_);
      auto mysql_builder = new Builder(connection_.get(), mysql_grammar_.get());
      unique_move(Builder, mysql_builder, mysql_builder_);
+
+     //Postgres.
+     auto postgres_grammar = new grammars::PostgresGrammar();
+     unique_move(grammars::Grammar, postgres_grammar, postgres_grammar_);
+     auto postgres_builder = 
+       new Builder(connection_.get(), postgres_grammar_.get());
+     unique_move(Builder, postgres_builder, postgres_builder_);
+
+     //Sqlserver.
+     auto sqlserver_grammar = new grammars::SqlserverGrammar();
+     unique_move(grammars::Grammar, sqlserver_grammar, sqlserver_grammar_);
+     auto sqlserver_builder = 
+       new Builder(connection_.get(), sqlserver_grammar_.get());
+     unique_move(Builder, sqlserver_builder, sqlserver_builder_);
+
+     //Sqlite.
+     auto sqlite_grammar = new grammars::SqliteGrammar();
+     unique_move(grammars::Grammar, sqlite_grammar, sqlite_grammar_);
+     auto sqlite_builder = 
+       new Builder(connection_.get(), sqlite_grammar_.get());
+     unique_move(Builder, sqlite_builder, sqlite_builder_);
    }
 
    static void TearDownTestCase() {
@@ -49,6 +75,9 @@ class DBQueryBuilder : public testing::Test {
    virtual void SetUp() {
      builder_->clear();
      mysql_builder_->clear();
+     postgres_builder_->clear();
+     sqlite_builder_->clear();
+     sqlserver_builder_->clear();
    }
    virtual void TearDown() {
    }
@@ -57,8 +86,14 @@ class DBQueryBuilder : public testing::Test {
    static pf_engine::Kernel engine_;
    static std::unique_ptr<pf_db::Connection> connection_;
    static std::unique_ptr<grammars::Grammar> mysql_grammar_;
+   static std::unique_ptr<grammars::Grammar> postgres_grammar_;
+   static std::unique_ptr<grammars::Grammar> sqlserver_grammar_;
+   static std::unique_ptr<grammars::Grammar> sqlite_grammar_;
    static std::unique_ptr<Builder> builder_;
    static std::unique_ptr<Builder> mysql_builder_;
+   static std::unique_ptr<Builder> postgres_builder_;
+   static std::unique_ptr<Builder> sqlserver_builder_;
+   static std::unique_ptr<Builder> sqlite_builder_;
 
 };
 
@@ -66,7 +101,13 @@ pf_engine::Kernel DBQueryBuilder::engine_;
 std::unique_ptr<pf_db::Connection> DBQueryBuilder::connection_{nullptr};
 std::unique_ptr<Builder> DBQueryBuilder::builder_{nullptr};
 std::unique_ptr<Builder> DBQueryBuilder::mysql_builder_{nullptr};
+std::unique_ptr<Builder> DBQueryBuilder::postgres_builder_{nullptr};
+std::unique_ptr<Builder> DBQueryBuilder::sqlserver_builder_{nullptr};
+std::unique_ptr<Builder> DBQueryBuilder::sqlite_builder_{nullptr};
 std::unique_ptr<grammars::Grammar> DBQueryBuilder::mysql_grammar_{nullptr};
+std::unique_ptr<grammars::Grammar> DBQueryBuilder::postgres_grammar_{nullptr};
+std::unique_ptr<grammars::Grammar> DBQueryBuilder::sqlserver_grammar_{nullptr};
+std::unique_ptr<grammars::Grammar> DBQueryBuilder::sqlite_grammar_{nullptr};
 
 TEST_F(DBQueryBuilder, construct) {
   Builder object(nullptr, nullptr);
@@ -345,43 +386,83 @@ TEST_F(DBQueryBuilder, testWhereTimeMySql) {
 }
 
 TEST_F(DBQueryBuilder, testWhereDatePostgres) {
-
+  auto builder = postgres_builder_.get();
+  builder->select({"*"}).from("users").where_date("created_at", "=", "2018-02-28");
+  ASSERT_STREQ("select * from \"users\" where \"created_at\"::date = ?",
+               builder->to_sql().c_str());
+  assertEquals({"2018-02-28"}, builder->get_bindings());
 }
 
 TEST_F(DBQueryBuilder, testWhereDayPostgres) {
-
+  auto builder = postgres_builder_.get();
+  builder->select({"*"}).from("users").where_day("created_at", "=", 1);
+  ASSERT_STREQ("select * from \"users\" where extract(day from \"created_at\") = ?",
+               builder->to_sql().c_str());
+  assertEquals({1}, builder->get_bindings());
 }
 
 TEST_F(DBQueryBuilder, testWhereMonthPostgres) {
-
+  auto builder = postgres_builder_.get();
+  builder->select({"*"}).from("users").where_month("created_at", "=", 5);
+  ASSERT_STREQ("select * from \"users\" where extract(month from \"created_at\") = ?",
+               builder->to_sql().c_str());
+  assertEquals({5}, builder->get_bindings());
 }
 
 TEST_F(DBQueryBuilder, testWhereYearPostgres) {
-
+  auto builder = postgres_builder_.get();
+  builder->select({"*"}).from("users").where_year("created_at", "=", 2018);
+  ASSERT_STREQ("select * from \"users\" where extract(year from \"created_at\") = ?",
+               builder->to_sql().c_str());
+  assertEquals({2018}, builder->get_bindings());
 }
 
 TEST_F(DBQueryBuilder, testWhereDaySqlite) {
-
+  auto builder = sqlite_builder_.get();
+  builder->select({"*"}).from("users").where_day("created_at", "=", 1);
+  ASSERT_STREQ("select * from \"users\" where strftime('%d', \"created_at\") = ?",
+               builder->to_sql().c_str());
+  assertEquals({1}, builder->get_bindings());
 }
 
 TEST_F(DBQueryBuilder, testWhereMonthSqlite) {
-
+  auto builder = sqlite_builder_.get();
+  builder->select({"*"}).from("users").where_month("created_at", "=", 5);
+  ASSERT_STREQ("select * from \"users\" where strftime('%m', \"created_at\") = ?",
+               builder->to_sql().c_str());
+  assertEquals({5}, builder->get_bindings());
 }
 
 TEST_F(DBQueryBuilder, testWhereYearSqlite) {
-
+  auto builder = sqlite_builder_.get();
+  builder->select({"*"}).from("users").where_year("created_at", "=", 2018);
+  ASSERT_STREQ("select * from \"users\" where strftime('%Y', \"created_at\") = ?",
+               builder->to_sql().c_str());
+  assertEquals({2018}, builder->get_bindings());
 }
 
 TEST_F(DBQueryBuilder, testWhereDaySqlServer) {
-
+  auto builder = sqlserver_builder_.get();
+  builder->select({"*"}).from("users").where_day("created_at", "=", 1);
+  ASSERT_STREQ("select * from [users] where day([created_at]) = ?",
+               builder->to_sql().c_str());
+  assertEquals({1}, builder->get_bindings());
 }
 
 TEST_F(DBQueryBuilder, testWhereMonthSqlServer) {
-
+  auto builder = sqlserver_builder_.get();
+  builder->select({"*"}).from("users").where_month("created_at", "=", 5);
+  ASSERT_STREQ("select * from [users] where month([created_at]) = ?",
+               builder->to_sql().c_str());
+  assertEquals({5}, builder->get_bindings());
 }
 
 TEST_F(DBQueryBuilder, testWhereYearSqlServer) {
-
+  auto builder = sqlserver_builder_.get();
+  builder->select({"*"}).from("users").where_year("created_at", "=", 2018);
+  ASSERT_STREQ("select * from [users] where year([created_at]) = ?",
+               builder->to_sql().c_str());
+  assertEquals({2018}, builder->get_bindings());
 }
 
 TEST_F(DBQueryBuilder, testWhereBetweens) {
@@ -523,7 +604,7 @@ TEST_F(DBQueryBuilder, testUnions) {
   auto builder = mysql_builder_.get();
 
   builder_->select({"*"}).from("users").where("id", "=", 1);
-  auto union_builder = new Builder(connection_.get(), nullptr);
+  std::unique_ptr<Builder> union_builder(new Builder(connection_.get(), nullptr));
   union_builder->select({"*"}).from("users").where("id", "=", 2);
   builder_->_union(union_builder);
   ASSERT_STREQ("select * from \"users\" where \"id\" = ? union select * from \
@@ -531,7 +612,8 @@ TEST_F(DBQueryBuilder, testUnions) {
                builder_->to_sql().c_str());
 
   builder->select({"*"}).from("users").where("id", "=", 1);
-  auto union_builder1 = new Builder(connection_.get(), mysql_grammar_.get());
+  std::unique_ptr<Builder> union_builder1(
+      new Builder(connection_.get(), mysql_grammar_.get()));
   union_builder1->select({"*"}).from("users").where("id", "=", 2);
   builder->_union(union_builder1);
   ASSERT_STREQ("(select * from `users` where `id` = ?) union (select * from \
@@ -542,7 +624,8 @@ TEST_F(DBQueryBuilder, testUnions) {
   std::string expected_sql{"(select `a` from `t1` where `a` = ? and `b` = ?) "
   "union (select `a` from `t2` where `a` = ? and `b` = ?) order by `a` "
   "asc limit 10"};
-  auto union_builder2 = new Builder(connection_.get(), mysql_grammar_.get());
+  std::unique_ptr<Builder> union_builder2(
+      new Builder(connection_.get(), mysql_grammar_.get()));
   union_builder2->select({"a"}).from("t2").where("a", 11).where("b", 2);
   builder->select({"a"}).
            from("t1").where("a", 10).where("b", 1).
@@ -552,4 +635,182 @@ TEST_F(DBQueryBuilder, testUnions) {
   assertEquals({10, 1, 11, 2}, builder->get_bindings());
   
   //SQLite...
+  expected_sql = "select * from (select \"name\" from \"users\" where \"id\" \
+= ?) union select * from (select \"name\" from \"users\" where \"id\" = ?)";
+  sqlite_builder_->select({"name"}).from("users").where("id", "=", 1);
+  std::unique_ptr<Builder> union_builder3(
+      new Builder(connection_.get(), sqlite_grammar_.get()));
+  union_builder3->select({"name"}).from("users").where("id", "=", 2);
+  sqlite_builder_->_union(union_builder3);
+  ASSERT_STREQ(expected_sql.c_str(),
+               sqlite_builder_->to_sql().c_str());
+  assertEquals({1, 2}, sqlite_builder_->get_bindings());
+}
+
+TEST_F(DBQueryBuilder, testUnionAlls) {
+  builder_->select({"*"}).from("users").where("id", "=", 1);
+  std::unique_ptr<Builder> union_builder(new Builder(connection_.get(), nullptr));
+  union_builder->select({"*"}).from("users").where("id", "=", 2);
+  builder_->union_all(union_builder);
+  ASSERT_STREQ("select * from \"users\" where \"id\" = ? union all select * from \
+\"users\" where \"id\" = ?",
+               builder_->to_sql().c_str());
+  assertEquals({1, 2}, builder_->get_bindings());
+}
+
+TEST_F(DBQueryBuilder, testMultipleUnions) {
+  builder_->select({"*"}).from("users").where("id", "=", 1);
+  std::unique_ptr<Builder> union_builder(new Builder(connection_.get(), nullptr));
+  union_builder->select({"*"}).from("users").where("id", "=", 2);
+  std::unique_ptr<Builder> union_builder1(new Builder(connection_.get(), nullptr));
+  union_builder1->select({"*"}).from("users").where("id", "=", 3);
+  builder_->_union(union_builder);
+  builder_->_union(union_builder1);
+  ASSERT_STREQ("select * from \"users\" where \"id\" = ? union select * from \
+\"users\" where \"id\" = ? union select * from \"users\" where \"id\" = ?",
+               builder_->to_sql().c_str());
+  assertEquals({1, 2, 3}, builder_->get_bindings());
+}
+
+TEST_F(DBQueryBuilder, testMultipleUnionAlls) {
+  builder_->select({"*"}).from("users").where("id", "=", 1);
+  std::unique_ptr<Builder> union_builder(new Builder(connection_.get(), nullptr));
+  union_builder->select({"*"}).from("users").where("id", "=", 2);
+  std::unique_ptr<Builder> union_builder1(new Builder(connection_.get(), nullptr));
+  union_builder1->select({"*"}).from("users").where("id", "=", 3);
+  builder_->union_all(union_builder);
+  builder_->union_all(union_builder1);
+  ASSERT_STREQ("select * from \"users\" where \"id\" = ? union all select * from \
+\"users\" where \"id\" = ? union all select * from \"users\" where \"id\" = ?",
+               builder_->to_sql().c_str());
+  assertEquals({1, 2, 3}, builder_->get_bindings());
+}
+
+TEST_F(DBQueryBuilder, testUnionOrderBys) {
+  builder_->select({"*"}).from("users").where("id", "=", 1);
+  std::unique_ptr<Builder> union_builder(new Builder(connection_.get(), nullptr));
+  union_builder->select({"*"}).from("users").where("id", "=", 2);
+  builder_->_union(union_builder);
+  builder_->order_by("id", "desc");
+  ASSERT_STREQ("select * from \"users\" where \"id\" = ? union select * from \
+\"users\" where \"id\" = ? order by \"id\" desc",
+               builder_->to_sql().c_str());
+  assertEquals({1, 2}, builder_->get_bindings());
+}
+
+TEST_F(DBQueryBuilder, testUnionLimitsAndOffsets) {
+  builder_->select({"*"}).from("users");
+  std::unique_ptr<Builder> union_builder(new Builder(connection_.get(), nullptr));
+  union_builder->select({"*"}).from("dogs");
+  builder_->_union(union_builder);
+  builder_->skip(5).take(10);
+  ASSERT_STREQ("select * from \"users\" union select * from \"dogs\" limit 10 offset 5",
+               builder_->to_sql().c_str());
+}
+
+TEST_F(DBQueryBuilder, testUnionWithJoin) {
+  builder_->select({"*"}).from("users");
+  std::unique_ptr<Builder> union_builder(new Builder(connection_.get(), nullptr));
+  union_builder->select({"*"}).from("dogs");
+  union_builder->join("breeds", [](Builder *join){
+    join->on("dogs.breed_id", "=", "breeds.id").where("breeds.is_native", "=", 1);
+  });
+  builder_->_union(union_builder);
+  ASSERT_STREQ("select * from \"users\" union select * from \"dogs\" inner join \
+\"breeds\" on \"dogs\".\"breed_id\" = \"breeds\".\"id\" and \"breeds\".\"is_native\" = ?",
+               builder_->to_sql().c_str());
+  assertEquals({1}, builder_->get_bindings());
+}
+
+TEST_F(DBQueryBuilder, testMySqlUnionOrderBys) {
+  auto builder = mysql_builder_.get();
+  builder->select({"*"}).from("users").where("id", "=", 1);
+  std::unique_ptr<Builder> union_builder(
+      new Builder(connection_.get(), mysql_grammar_.get()));
+  union_builder->select({"*"}).from("users").where("id", "=", 2);
+  builder->_union(union_builder);
+  builder->order_by("id", "desc");
+  ASSERT_STREQ("(select * from `users` where `id` = ?) union (select * from \
+`users` where `id` = ?) order by `id` desc",
+               builder->to_sql().c_str());
+  assertEquals({1, 2}, builder->get_bindings());
+}
+
+TEST_F(DBQueryBuilder, testMySqlUnionLimitsAndOffsets) {
+  auto builder = mysql_builder_.get();
+  builder->select({"*"}).from("users");
+  std::unique_ptr<Builder> union_builder(
+      new Builder(connection_.get(), mysql_grammar_.get()));
+  union_builder->select({"*"}).from("dogs");
+  builder->_union(union_builder);
+  builder->skip(5).take(10);
+  ASSERT_STREQ("(select * from `users`) union (select * from `dogs`) \
+limit 10 offset 5",
+               builder->to_sql().c_str());
+}
+
+TEST_F(DBQueryBuilder, testSubSelectWhereIns) {
+  builder_->select({"*"}).from("users").where_in("id", [](Builder *query){
+    query->select({"id"}).from("users").where("age", ">", 25).take(3);
+  });
+  ASSERT_STREQ("select * from \"users\" where \"id\" in (select \"id\" from \
+\"users\" where \"age\" > ? limit 3)",
+               builder_->to_sql().c_str());
+  assertEquals({25}, builder_->get_bindings());
+
+  builder_->clear();
+  builder_->select({"*"}).from("users").where_notin("id", [](Builder *query){
+    query->select({"id"}).from("users").where("age", ">", 25).take(3);
+  });
+  ASSERT_STREQ("select * from \"users\" where \"id\" not in (select \"id\" from \
+\"users\" where \"age\" > ? limit 3)",
+               builder_->to_sql().c_str());
+  assertEquals({25}, builder_->get_bindings());
+}
+
+TEST_F(DBQueryBuilder, testBasicWhereNulls) {
+  builder_->select({"*"}).from("users").where_null("id");
+  ASSERT_STREQ("select * from \"users\" where \"id\" is null",
+               builder_->to_sql().c_str());
+
+  builder_->clear();
+  builder_->select({"*"}).from("users").where("id", "=", 1).or_where_null("id");
+  ASSERT_STREQ("select * from \"users\" where \"id\" = ? or \"id\" is null",
+               builder_->to_sql().c_str());
+  assertEquals({1}, builder_->get_bindings());
+}
+
+TEST_F(DBQueryBuilder, testBasicWhereNotNulls) {
+  builder_->select({"*"}).from("users").where_notnull("id");
+  ASSERT_STREQ("select * from \"users\" where \"id\" is not null",
+               builder_->to_sql().c_str());
+
+  builder_->clear();
+  builder_->select({"*"}).from("users").where("id", "=", 1).or_where_notnull("id");
+  ASSERT_STREQ("select * from \"users\" where \"id\" = ? or \"id\" is not null",
+               builder_->to_sql().c_str());
+  assertEquals({1}, builder_->get_bindings());
+}
+
+TEST_F(DBQueryBuilder, testGroupBys) {
+  using namespace pf_db;
+  builder_->select({"*"}).from("users").group_by({"email"});
+  ASSERT_STREQ("select * from \"users\" group by \"email\"",
+               builder_->to_sql().c_str());
+
+  builder_->clear();
+  builder_->select({"*"}).from("users").group_by({"id", "email"});
+  ASSERT_STREQ("select * from \"users\" group by \"id\", \"email\"",
+               builder_->to_sql().c_str());
+
+  builder_->clear();
+  variable_array_t groups;
+  groups.emplace_back(raw("DATE(created_at)"));
+  builder_->select({"*"}).from("users").group_by(groups);
+  ASSERT_STREQ("select * from \"users\" group by DATE(created_at)",
+               builder_->to_sql().c_str());
+}
+
+TEST_F(DBQueryBuilder, testOrderBys) {
+
 }

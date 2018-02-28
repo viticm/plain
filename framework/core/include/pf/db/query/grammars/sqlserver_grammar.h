@@ -36,26 +36,13 @@ class PF_API SqlserverGrammar : public grammars::Grammar {
    //Compile a select query into SQL.
    virtual std::string compile_select(Builder &query);
 
-   //Compile an insert statement into SQL.
-   virtual std::string compile_insert(
-       Builder &query, const variable_array_t &values);
-
    //Compile a truncate table statement into SQL.
    virtual variable_set_t compile_truncate(Builder &query);
 
    //Compile the random statement into SQL.
-   virtual std::string compile_random(const std::string &seed) {
+   virtual std::string compile_random(const std::string &) {
      return "NEWID()";
    };
-
-   //Compile a where exists clause.
-   virtual std::string where_exists(Builder &query, const variable_set_t &where);
-
-   //Compile an insert and get ID statement into SQL.
-   virtual std::string compile_insert_getid(
-       Builder &query, 
-       const variable_array_t &values, 
-       const std::string &sequence);
 
    //Compile an update statement into SQL.
    virtual std::string compile_update(

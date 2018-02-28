@@ -202,7 +202,8 @@ Grammar::variable_set_t Grammar::compile_components(Builder &query) {
   // function for the component which is responsible for making the SQL.
   for (const std::string &component : select_components_) {
     sql[component] = call_compile(query, component);
-    std::cout << "component: " << component << " sql: " << sql[component] << std::endl;
+    if (sql[component] != "")
+      std::cout << "component: " << component << " sql: |" << sql[component] << "|" << std::endl;
   }
   return sql;
 }
@@ -336,14 +337,14 @@ std::string Grammar::where_notin(Builder &query, db_query_array_t &where) {
 //Compile a where in sub-select clause.
 std::string Grammar::where_insub(Builder &query, db_query_array_t &where) {
   if (is_null(where.query)) return "";
-  return wrap(where["column"]) + " in (" + compile_select(where_query(where));
+  return wrap(where["column"]) + " in (" + compile_select(where_query(where)) + ")";
 }
 
 //Compile a where not in sub-select clause.
 std::string Grammar::where_not_insub(
     Builder &query, db_query_array_t &where) {
   if (is_null(where.query)) return "";
-  return wrap(where["column"]) + " not in (" + compile_select(where_query(where));
+  return wrap(where["column"]) + " not in (" + compile_select(where_query(where)) + ")";
 }
 
 //Compile a "where null" clause.
@@ -403,7 +404,7 @@ std::string Grammar::where_notexists(
 
 //Compile the "group by" portions of the query.
 std::string Grammar::compile_groups(
-    Builder &query, const std::vector<std::string> &groups) {
+    Builder &query, const variable_array_t &groups) {
   return "group by " + columnize(groups);
 }
 

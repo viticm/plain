@@ -96,9 +96,12 @@ std::string SqliteGrammar::compile_union(db_query_array_t &_union) {
 std::string SqliteGrammar::date_based_where(
     const std::string &type, Builder &query, db_query_array_t &where) {
   std::string value = where["value"].data;
-  for (size_t i = 0; i < 2 - value.size(); ++i)
-    value += "0";
+  if (value.size() < 2) {
+    for (size_t i = 0; i < 2 - value.size(); ++i)
+      value = "0" + value;
+  }
+  std::cout << "value: " << value << std::endl;
   value = parameter(value);
   return "strftime('" + type + "', " + wrap(where["column"]) + ") " + 
-          where["oper"].data + value;
+          where["operator"].data + " " + value;
 }

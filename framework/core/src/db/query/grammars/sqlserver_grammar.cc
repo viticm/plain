@@ -34,12 +34,6 @@ std::string SqlserverGrammar::compile_select(Builder &query) {
   return compile_ansi_offset(query, components);
 }
 
-//Compile an insert statement into SQL.
-std::string SqlserverGrammar::compile_insert(
-    Builder &query, const variable_array_t &values) {
-
-}
-
 //Compile a truncate table statement into SQL.
 variable_set_t SqlserverGrammar::compile_truncate(Builder &query) {
   return {{"truncate table " + wrap_table(query.from_), ""}};
@@ -52,20 +46,6 @@ std::string SqlserverGrammar::compile_exists(Builder &query) {
   auto sql = compile_select(query.select_raw("1 [exists]").limit(1));
   query.columns_ = columns;
   return sql;
-}
-
-//Compile a where exists clause.
-std::string SqlserverGrammar::where_exists(
-    Builder &query, const variable_set_t &where) {
-
-}
-
-//Compile an insert and get ID statement into SQL.
-std::string SqlserverGrammar::compile_insert_getid(
-    Builder &query, 
-    const variable_array_t &values, 
-    const std::string &sequence) {
-
 }
 
 //Compile an update statement into SQL.
@@ -175,9 +155,9 @@ std::string SqlserverGrammar::compile_from(
 //Compile a "where date" clause.
 std::string SqlserverGrammar::where_date(
     Builder &query, db_query_array_t &where) {
-  auto value = parameter(where["val"]);
+  auto value = parameter(where["value"]);
   return "cast(" + wrap(where["column"]) +" as date) " + 
-         where["oper"].data + " " + value;
+         where["operator"].data + " " + value;
 }
 
 //Create a full ANSI offset clause for the query.

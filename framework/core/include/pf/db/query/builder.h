@@ -65,7 +65,7 @@ class PF_API Builder : public concerns::BuildsQueries {
    std::vector<db_query_array_t> wheres_;
 
    //The groupings for the query.
-   std::vector<std::string> groups_;
+   variable_array_t groups_;
 
    //The having constraints for the query.
    std::vector<variable_set_t> havings_;
@@ -581,7 +581,7 @@ class PF_API Builder : public concerns::BuildsQueries {
                           const std::string &parameters);
 
    //Add a "group by" clause to the query.
-   Builder &group_by(const std::vector<std::string> &groups);
+   Builder &group_by(const variable_array_t &groups);
 
    //Add a "having" clause to the query.
    Builder &having(const std::string &column, 
@@ -669,11 +669,11 @@ class PF_API Builder : public concerns::BuildsQueries {
 
    //Add a union statement to the query.
    // * This function will delete the query pointer.
-   Builder &_union(Builder *query, bool all = false);
+   Builder &_union(std::unique_ptr<Builder> &query, bool all = false);
 
    //Add a union all statement to the query.
    // * This function will delete the query pointer.
-   Builder &union_all(Builder *query) {
+   Builder &union_all(std::unique_ptr<Builder> &query) {
      return _union(query, true);
    };
 
@@ -875,9 +875,10 @@ class PF_API Builder : public concerns::BuildsQueries {
  public:
    //Add an "on" clause to the join.
    virtual Builder &on(const std::string &, 
-                      const std::string &, 
-                      const std::string &, 
-                      const std::string &) {
+                       const std::string &oper = "", 
+                       const std::string &second = "", 
+                       const std::string &boolean = "and") {
+     UNUSED(oper); UNUSED(second); UNUSED(boolean);
      return *this;
    };
 
@@ -885,14 +886,16 @@ class PF_API Builder : public concerns::BuildsQueries {
    virtual Builder &on(closure_t, 
                        const std::string &, 
                        const std::string &, 
-                       const std::string &) {
+                       const std::string &boolean = "and") {
+      UNUSED(boolean);
       return *this;
    };
 
    //Add an "or on" clause to the join.
    virtual Builder &or_on(const std::string &,
-                  const std::string &,
-                  const std::string &) {
+                          const std::string &oper = "",
+                          const std::string &second = "") {
+     UNUSED(oper); UNUSED(second);
      return *this;
    };
 
