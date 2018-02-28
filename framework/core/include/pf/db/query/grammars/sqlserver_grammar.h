@@ -62,8 +62,8 @@ class PF_API SqlserverGrammar : public grammars::Grammar {
        Builder &query, variable_set_t &values);
 
    //Prepare the bindings for an update statement.
-   virtual variable_set_t prepare_bindings_forupdate(
-       const variable_set_t &bindings, const variable_array_t &values);
+   virtual variable_array_t prepare_bindings_forupdate(
+       db_query_bindings_t &bindings, const variable_array_t &values);
 
    //Compile a delete statement into SQL.
    virtual std::string compile_delete(Builder &query);
@@ -88,6 +88,14 @@ class PF_API SqlserverGrammar : public grammars::Grammar {
      return "Y-m-d H:i:s.000";
    }
 
+   //Wrap a table in keyword identifiers.
+   virtual std::string wrap_table(const variable_t &table) {
+     return wrap_table_value_function(Grammar::wrap_table(table));
+   }
+
+   //Wrap a single string in keyword identifiers.
+   virtual std::string wrap_value(const variable_t &value);
+
  protected:
    
    //Compile the "select *" portion of the query.
@@ -105,22 +113,10 @@ class PF_API SqlserverGrammar : public grammars::Grammar {
      return "";
    };
 
-   //Compile a single union statement.
-   virtual std::string compile_union(const variable_set_t &unions);
-
-   //Compile the "union" queries attached to the main query.
-   virtual std::string compile_unions(Builder &query);
-
    //Compile the lock into SQL.
    virtual std::string compile_lock(Builder &, const std::string &) {
      return "";
    }
-
-   //Concatenate an array of segments, removing empties.
-   virtual std::string concatenate(variable_set_t &segments);
-
-   //Remove the leading boolean from a statement.
-   virtual std::string remove_leading_boolean(const std::string &value);
 
    //Compile the "offset" portions of the query.
    virtual std::string compile_offset(Builder &, int32_t) {
@@ -152,6 +148,8 @@ class PF_API SqlserverGrammar : public grammars::Grammar {
    //Get the table and alias for the given table.
    std::vector<std::string> parse_update_table(const std::string &table);
 
+   //Wrap a table in keyword identifiers.
+   std::string wrap_table_value_function(const std::string &table);
 
 };
 

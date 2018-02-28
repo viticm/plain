@@ -107,9 +107,26 @@ std::string SqlserverGrammar::compile_update(
 }
 
 //Prepare the bindings for an update statement.
-variable_set_t SqlserverGrammar::prepare_bindings_forupdate(
-    const variable_set_t &bindings, const variable_array_t &values) {
-
+variable_array_t SqlserverGrammar::prepare_bindings_forupdate(
+    db_query_bindings_t &bindings, const variable_array_t &values) {
+  // Update statements with joins in SQL Servers utilize an unique syntax. We need to
+  // take all of the bindings and put them on the end of this array since they are
+  // added to the end of the "where" clause statements as typical where clauses.
+  variable_array_t r;
+  variable_array_t bindings_without_join;
+  for (const std::string &key : DB_BINDING_KEYS) {
+    if (key != "join") {
+      for (const variable_t &value : bindings[key])
+        bindings_without_join.emplace_back(value);
+    }
+  }
+  for (const variable_t &value : values)
+    r.emplace_back(value);
+  for (const variable_t &value : bindings["join"])
+    r.emplace_back(value);
+  for (const variable_t &value: bindings_without_join)
+    r.emplace_back(value);
+  return r;
 }
 
 //Compile a delete statement into SQL.
@@ -161,26 +178,6 @@ std::string SqlserverGrammar::where_date(
   auto value = parameter(where["val"]);
   return "cast(" + wrap(where["column"]) +" as date) " + 
          where["oper"].data + " " + value;
-}
-
-//Compile a single union statement.
-std::string SqlserverGrammar::compile_union(const variable_set_t &unions) {
-
-}
-
-//Compile the "union" queries attached to the main query.
-std::string SqlserverGrammar::compile_unions(Builder &query) {
-
-}
-
-//Concatenate an array of segments, removing empties.
-std::string SqlserverGrammar::concatenate(variable_set_t &segments) {
-
-}
-
-//Remove the leading boolean from a statement.
-std::string SqlserverGrammar::remove_leading_boolean(const std::string &value) {
-
 }
 
 //Create a full ANSI offset clause for the query.
@@ -251,5 +248,35 @@ std::string SqlserverGrammar::compile_delete_with_joins(
 //Get the table and alias for the given table.
 std::vector<std::string> SqlserverGrammar::parse_update_table(
     const std::string &table) {
+  std::string _table, alias;
+  _table = alias = wrap_table(table);
+  std::string temp{table};
+  std::transform(
+      temp.begin(), temp.end(), temp.begin(), (int (*)(int))std::tolower);
+  if (temp.find("] as [") != std::string::npos) 
+    alias = "[" + explode("] as [", temp)[0].data;
 
+  return {_table, alias};
+}
+
+//Wrap a single string in keyword identifiers.
+std::string SqlserverGrammar::wrap_value(const variable_t &value) {
+  return value == "*" ? value.data
+          : "[" + str_replace("]", "]]", value.data) + "]";
+}
+
+//Wrap a table in keyword identifiers.
+std::string SqlserverGrammar::wrap_table_value_function(
+    const std::string &table) {
+  std::string r{table};
+  auto size = table.size();
+  if (table.size() >= 5) { //Need preg math: ^(.+?)(\(.*?\))]$ like: [a](b)
+    auto find_pos = table.find("(");
+    if (find_pos != std::string::npos && 
+        ']' == table[size - 1] && ')' == table[size - 2]) {
+      r = table.substr(0, find_pos) + "]" +
+            table.substr(find_pos, table.find(")") - find_pos + 1);
+    }
+  }
+  return r;
 }

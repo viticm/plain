@@ -63,11 +63,16 @@ variable_array_t PostgresGrammar::prepare_bindings_forupdate(
   // added to the end of the "where" clause statements as typical where clauses.
   variable_array_t r;
   variable_array_t bindings_without_join;
-  for (auto it = bindings.begin(); it != bindings.end(); ++it)
-    if (it->first != "join") bindings_without_join.emplace_back(it->second);
+  for (const std::string &key : DB_BINDING_KEYS) {
+    if (key != "join") {
+      for (const variable_t &value : bindings[key])
+        bindings_without_join.emplace_back(value);
+    }
+  }
   for (const variable_t &value : values)
     r.emplace_back(value);
-  r.emplace_back(bindings["join"]);
+  for (const variable_t &value : bindings["join"])
+    r.emplace_back(value);
   for (const variable_t &value: bindings_without_join)
     r.emplace_back(value);
   return r;
@@ -84,7 +89,7 @@ std::string PostgresGrammar::compile_delete(Builder &query) {
 //Compile a truncate table statement into SQL.
 variable_set_t PostgresGrammar::compile_truncate(Builder &query) {
   std::string key = "truncate " + wrap_table(query.from_) + " restart identity";
-  return {key, {}};
+  return {{key, ""}};
 }
 
 //Compile a "where date" clause.

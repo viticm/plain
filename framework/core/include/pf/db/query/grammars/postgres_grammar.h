@@ -69,6 +69,9 @@ public:
    //Compile the lock into SQL.
    virtual std::string compile_lock(Builder &query, const variable_t &value);
 
+   //Wrap a single string in keyword identifiers.
+   virtual std::string wrap_value(const variable_t &value);
+
  protected:
 
    //Compile the columns for the update statement.
@@ -86,9 +89,6 @@ public:
    //Compile a delete query that uses joins.
    std::string compile_delete_with_joins(
        Builder &query, const std::string &table);
-
-   //Wrap a single string in keyword identifiers.
-   std::string wrap_value(const variable_t &value);
 
    //Wrap the given JSON selector.
    std::string wrap_json_selector(const std::string &value);

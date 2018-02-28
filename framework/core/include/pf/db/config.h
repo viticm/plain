@@ -35,6 +35,9 @@
 /* The database expression variable type(the original is a real string). */
 #define DB_EXPRESSION_TYPE_S (101)
 
+/* The database binding keys. */
+#define DB_BINDING_KEYS {"select", "join", "where", "having", "order", "union"} 
+
 typedef enum {
   kDBColumnTypeString = 0,
   kDBColumnTypeNumber,

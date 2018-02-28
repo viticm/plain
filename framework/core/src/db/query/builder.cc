@@ -1124,10 +1124,8 @@ Builder &Builder::merge_bindings(Builder &query) {
 
 variable_array_t Builder::get_bindings() {
   if (bindings_.empty()) return {};
-  std::vector<std::string> 
-    names{"select", "join", "where", "having", "order", "union"};
   variable_array_t r;
-  for (const std::string &name : names) {
+  for (const std::string &name : DB_BINDING_KEYS) {
     for (const variable_t &value : bindings_[name])
       r.push_back(value);
   }
