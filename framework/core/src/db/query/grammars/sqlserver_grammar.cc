@@ -274,8 +274,8 @@ std::string SqlserverGrammar::wrap_table_value_function(
     auto find_pos = table.find("(");
     if (find_pos != std::string::npos && 
         ']' == table[size - 1] && ')' == table[size - 2]) {
-      r = table.substr(0, find_pos) + "]" +
-            table.substr(find_pos, table.find(")") - find_pos + 1);
+      r = table.substr(0, find_pos) + "]" + /* [a] */
+            table.substr(find_pos, table.find(")") - find_pos + 1); /* (b) */
     }
   }
   return r;
