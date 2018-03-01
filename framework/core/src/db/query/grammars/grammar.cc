@@ -282,9 +282,9 @@ std::string Grammar::call_compile(Builder &query, const std::string &component) 
     r = compile_havings(query, query.havings_);
   } else if ("orders" == component && !query.orders_.empty()) {
     r = compile_orders(query, query.orders_);
-  } else if ("limit" == component && query.limit_ > 0) {
+  } else if ("limit" == component && query.limit_ >= 0) {
     r = compile_limit(query, query.limit_);
-  } else if ("offset" == component && query.offset_ > 0) {
+  } else if ("offset" == component && query.offset_ >= 0) {
     r = compile_offset(query, query.offset_);
   } else if ("unions" == component && !query.unions_.empty()) {
     r = compile_unions(query);
@@ -390,7 +390,7 @@ std::string Grammar::where_sub(Builder &query, db_query_array_t &where) {
   if (is_null(where.query)) return "";
   auto select = compile_select(where_query(where));
 
-  return wrap(where["column"]) + " " + where["operator"].data + "(" + select + 
+  return wrap(where["column"]) + " " + where["operator"].data + " (" + select + 
          ")";
 }
 
@@ -422,7 +422,7 @@ std::string Grammar::compile_having(variable_set_t &having) {
   // If the having clause is "raw", we can just return the clause straight away 
   // without doing any more processing on it. Otherwise, we will compile the
   // clause into SQL based on the components that make it up from builder.
-  if ("Raw" == having["type"])
+  if (having["type"] == "raw")
     return having["boolean"].data + " " + having["sql"].data;
 
   return compile_basic_having(having);
@@ -433,7 +433,7 @@ std::string Grammar::compile_basic_having(variable_set_t &having) {
   auto column = wrap(having["column"]);
   auto param = parameter(having["value"]);
   return having["boolean"].data + " " + column + " " + having["operator"].data + 
-         param;
+         " " + param;
 }
 
 //Compile the "order by" portions of the query.
@@ -517,7 +517,7 @@ std::string Grammar::date_based_where(
 
 //Compile the "select *" portion of the query.
 std::string Grammar::compile_columns(
-    Builder &query, const std::vector<std::string> &columns) {
+    Builder &query, const variable_array_t &columns) {
   // If the query is actually performing an aggregating select, we will let that
   // compiler handle the building of the select clauses, as it will need some
   // more syntax that is best handled by that function to keep things neat. 

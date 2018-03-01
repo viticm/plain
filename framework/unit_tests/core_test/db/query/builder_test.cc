@@ -812,5 +812,198 @@ TEST_F(DBQueryBuilder, testGroupBys) {
 }
 
 TEST_F(DBQueryBuilder, testOrderBys) {
+  builder_->select({"*"}).from("users").order_by("email").order_by("age", "desc");
+  ASSERT_STREQ("select * from \"users\" order by \"email\" asc, \"age\" desc",
+               builder_->to_sql().c_str());
 
+  builder_->orders_ = {};
+  ASSERT_STREQ("select * from \"users\"",
+               builder_->to_sql().c_str());
+
+  builder_->clear();
+  builder_->select({"*"}).from("users").
+            order_by("email").order_byraw("\"age\" ? desc", {"foo"});
+  ASSERT_STREQ("select * from \"users\" order by \"email\" asc, \"age\" ? desc",
+               builder_->to_sql().c_str());
+  assertEquals({"foo"}, builder_->get_bindings());
+
+  builder_->clear();
+  builder_->select({"*"}).from("users").order_bydesc("name");
+  ASSERT_STREQ("select * from \"users\" order by \"name\" desc",
+               builder_->to_sql().c_str());
+}
+
+TEST_F(DBQueryBuilder, testHavings) {
+  using namespace pf_db;
+  builder_->select({"*"}).from("users").having("email", ">", 1);
+  ASSERT_STREQ("select * from \"users\" having \"email\" > ?",
+               builder_->to_sql().c_str());
+
+  builder_->clear();
+  builder_->select({"*"}).from("users")
+                  .or_having("email", "=", "test@example.com")
+                  .or_having("email", "=", "test2@example.com");
+  ASSERT_STREQ("select * from \"users\" having \"email\" = ? or \"email\" = ?",
+               builder_->to_sql().c_str());
+
+  builder_->clear();
+  builder_->select({"*"}).from("users").group_by({"email"}).having("email", ">", 1);
+  ASSERT_STREQ("select * from \"users\" group by \"email\" having \"email\" > ?",
+               builder_->to_sql().c_str());
+
+  builder_->clear();
+  builder_->select({"email as foo_email"})
+            .from("users").having("foo_email", ">", 1);
+  ASSERT_STREQ("select \"email\" as \"foo_email\" from \"users\" having \
+\"foo_email\" > ?",
+               builder_->to_sql().c_str());
+
+  builder_->clear();
+  variable_array_t columns;
+  columns.emplace_back("category");
+  columns.emplace_back(raw("count(*) as \"total\""));
+  auto value1 = raw(3);
+  builder_->select(columns).from("item")
+            .where("department", "=", "popular").group_by({"category"})
+            .having("total", ">", value1);
+  ASSERT_STREQ("select \"category\", count(*) as \"total\" from \"item\" \
+where \"department\" = ? group by \"category\" having \"total\" > 3",
+               builder_->to_sql().c_str());
+
+  builder_->clear();
+  builder_->select(columns).from("item")
+            .where("department", "=", "popular").group_by({"category"})
+            .having("total", ">", 3);
+  ASSERT_STREQ("select \"category\", count(*) as \"total\" from \"item\" \
+where \"department\" = ? group by \"category\" having \"total\" > ?",
+               builder_->to_sql().c_str());
+  assertEquals({"popular", 3}, builder_->get_bindings());
+}
+
+TEST_F(DBQueryBuilder, testHavingShortcut) {
+  builder_->select({"*"}).from("users").having("email", 1).or_having("email", 2);
+  ASSERT_STREQ("select * from \"users\" having \"email\" = ? or \"email\" = ?",
+               builder_->to_sql().c_str());
+}
+
+TEST_F(DBQueryBuilder, testHavingFollowedBySelectGet) {
+
+}
+
+TEST_F(DBQueryBuilder, testRawHavings) {
+  builder_->select({"*"}).from("users").having_raw("user_foo < user_bar");
+  ASSERT_STREQ("select * from \"users\" having user_foo < user_bar",
+               builder_->to_sql().c_str());
+
+  builder_->clear();
+  builder_->select({"*"}).from("users")
+            .having("baz", "=", 1).or_having_raw("user_foo < user_bar");
+  ASSERT_STREQ("select * from \"users\" having \"baz\" = ? or user_foo \
+< user_bar",
+               builder_->to_sql().c_str());
+}
+
+TEST_F(DBQueryBuilder, testLimitsAndOffsets) {
+  builder_->select({"*"}).from("users").offset(5).limit(10);
+  ASSERT_STREQ("select * from \"users\" limit 10 offset 5",
+               builder_->to_sql().c_str());
+
+  builder_->clear();
+  builder_->select({"*"}).from("users").skip(5).take(10);
+  ASSERT_STREQ("select * from \"users\" limit 10 offset 5",
+               builder_->to_sql().c_str());
+
+  builder_->clear();
+  builder_->select({"*"}).from("users").skip(0).take(0);
+  ASSERT_STREQ("select * from \"users\" limit 0 offset 0",
+               builder_->to_sql().c_str());
+
+  builder_->clear();
+  builder_->select({"*"}).from("users").skip(-5).take(-10);
+  ASSERT_STREQ("select * from \"users\" offset 0",
+               builder_->to_sql().c_str());
+}
+
+TEST_F(DBQueryBuilder, testForPage) {
+  builder_->select({"*"}).from("users").for_page(2, 15);
+  ASSERT_STREQ("select * from \"users\" limit 15 offset 15",
+               builder_->to_sql().c_str());
+
+  builder_->clear();
+  builder_->select({"*"}).from("users").for_page(0, 15);
+  ASSERT_STREQ("select * from \"users\" limit 15 offset 0",
+               builder_->to_sql().c_str());
+
+  builder_->clear();
+  builder_->select({"*"}).from("users").for_page(-2, 15);
+  ASSERT_STREQ("select * from \"users\" limit 15 offset 0",
+               builder_->to_sql().c_str());
+
+  builder_->clear();
+  builder_->select({"*"}).from("users").for_page(2, 0);
+  ASSERT_STREQ("select * from \"users\" limit 0 offset 0",
+               builder_->to_sql().c_str());
+
+  builder_->clear();
+  builder_->select({"*"}).from("users").for_page(0, 0);
+  ASSERT_STREQ("select * from \"users\" limit 0 offset 0",
+               builder_->to_sql().c_str());
+
+  builder_->clear();
+  builder_->select({"*"}).from("users").for_page(-2, 0);
+  ASSERT_STREQ("select * from \"users\" limit 0 offset 0",
+               builder_->to_sql().c_str());
+}
+
+TEST_F(DBQueryBuilder, testGetCountForPaginationWithBindings) {
+
+}
+
+TEST_F(DBQueryBuilder, testGetCountForPaginationWithColumnAliases) {
+
+}
+
+TEST_F(DBQueryBuilder, testWhereShortcut) {
+  builder_->select({"*"}).from("users").where("id", 1).or_where("name", "foo");
+  ASSERT_STREQ("select * from \"users\" where \"id\" = ? or \"name\" = ?",
+               builder_->to_sql().c_str());
+  assertEquals({1, "foo"}, builder_->get_bindings());
+}
+
+TEST_F(DBQueryBuilder, testWhereWithArrayConditions) {
+  builder_->select({"*"}).from("users").where({{"foo", 1}, {"bar", 2}});
+  ASSERT_STREQ("select * from \"users\" where (\"foo\" = ? and \"bar\" = ?)",
+               builder_->to_sql().c_str());
+  assertEquals({1, 2}, builder_->get_bindings());
+
+  builder_->clear();
+  builder_->select({"*"}).from("users").where({{"foo", 1}, {"bar", ">", 2}});
+  ASSERT_STREQ("select * from \"users\" where (\"foo\" = ? and \"bar\" > ?)",
+               builder_->to_sql().c_str());
+  assertEquals({1, 2}, builder_->get_bindings());
+}
+
+TEST_F(DBQueryBuilder, testNestedWheres) {
+  builder_->select({"*"}).from("users").where("email", "=", "foo")
+            .or_where([](Builder *query){
+    query->where("name", "=", "bar").where("age", "=", 25); 
+  });
+  ASSERT_STREQ("select * from \"users\" where \"email\" = ? or (\"name\" = ? \
+and \"age\" = ?)",
+               builder_->to_sql().c_str());
+  assertEquals({"foo", "bar", 25}, builder_->get_bindings());
+}
+
+TEST_F(DBQueryBuilder, testFullSubSelects) {
+  using namespace pf_db;
+  builder_->select({"*"}).from("users").where("email", "=", "foo")
+            .or_where("id", "=", (Builder::closure_t)([](Builder *query){
+    auto column = raw("max(id)");
+    variable_array_t columns{column,};
+    query->select(columns).from("users").where("email", "=", "bar");
+  }));
+  ASSERT_STREQ("select * from \"users\" where \"email\" = ? or \"id\" = \
+(select max(id) from \"users\" where \"email\" = ?)",
+               builder_->to_sql().c_str());
+  assertEquals({"foo", "bar"}, builder_->get_bindings());
 }

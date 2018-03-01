@@ -100,7 +100,7 @@ Builder &Builder::clear() {
 }
 
 //Set the columns to be selected.
-Builder &Builder::select(const std::vector<std::string> &columns) {
+Builder &Builder::select(const variable_array_t &columns) {
   columns_ = columns;
   return *this;
 }
@@ -254,7 +254,7 @@ Builder &Builder::where(const std::string &column,
   // passed to the method, we will assume that the operator is an equals sign
   // and keep going. Otherwise, we'll require the operator to be passed in.
   bool use_default = (val == "") && ("and" == boolean);
-  auto val_oper = prepare_value_and_operator(val.data, oper.data, use_default);
+  auto val_oper = prepare_value_and_operator(val, oper, use_default);
 
   variable_t rval{val_oper[0]};
   variable_t roper{val_oper[1]};
@@ -309,8 +309,7 @@ Builder &Builder::where(const std::string &column,
   // passed to the method, we will assume that the operator is an equals sign
   // and keep going. Otherwise, we'll require the operator to be passed in.
   bool use_default = (oper == "") && ("and" == boolean);
-  auto val_oper = 
-    prepare_value_and_operator("closure_t", oper.data, use_default);
+  auto val_oper = prepare_value_and_operator("closure_t", oper, use_default);
 
   variable_t rval{val_oper[0]};
   variable_t roper{val_oper[1]};
@@ -394,8 +393,8 @@ Builder &Builder::add_array_of_wheres(variable_set_t &columns,
 }
 
 //Prepare the val and operator for a where clause.
-variable_array_t Builder::prepare_value_and_operator(const std::string &val, 
-                                                     const std::string &oper, 
+variable_array_t Builder::prepare_value_and_operator(const variable_t &val, 
+                                                     const variable_t &oper, 
                                                      bool use_default) {
   if (use_default) {
     return {oper, "="};
@@ -406,9 +405,9 @@ variable_array_t Builder::prepare_value_and_operator(const std::string &val,
 }
 
 //Determine if the given operator and val combination is legal.
-bool Builder::invalid_operator_and_value(const std::string &oper, 
+bool Builder::invalid_operator_and_value(const variable_t &oper, 
                                          const variable_t &val) {
-  return empty(val) && in_array(oper, operators_) && 
+  return (empty(val) || val == "") && in_array(oper.data, operators_) && 
          !in_array(oper, {"=", "<>", "!="});
 }
 
@@ -570,7 +569,7 @@ Builder &Builder::where_date(const std::string &column,
                              const variable_t &val,
                              const std::string &boolean) {
   bool use_default = (val == "") && ("and" == boolean);
-  auto val_oper = prepare_value_and_operator(val.data, oper, use_default);
+  auto val_oper = prepare_value_and_operator(val, oper, use_default);
 
   variable_t rval{val_oper[0]};
   std::string roper{val_oper[1].data};
@@ -584,7 +583,7 @@ Builder &Builder::where_day(const std::string &column,
                             const variable_t &val, 
                             const std::string &boolean) {
   bool use_default = (val == "") && ("and" == boolean);
-  auto val_oper = prepare_value_and_operator(val.data, oper, use_default);
+  auto val_oper = prepare_value_and_operator(val, oper, use_default);
 
   variable_t rval{val_oper[0]};
   std::string roper{val_oper[1].data};
@@ -598,7 +597,7 @@ Builder &Builder::where_month(const std::string &column,
                               const variable_t &val, 
                               const std::string &boolean) {
   bool use_default = (val == "") && ("and" == boolean);
-  auto val_oper = prepare_value_and_operator(val.data, oper, use_default);
+  auto val_oper = prepare_value_and_operator(val, oper, use_default);
 
   variable_t rval{val_oper[0]};
   std::string roper{val_oper[1].data};
@@ -612,7 +611,7 @@ Builder &Builder::where_year(const std::string &column,
                              const variable_t &val, 
                              const std::string &boolean) {
   bool use_default = (val == "") && ("and" == boolean);
-  auto val_oper = prepare_value_and_operator(val.data, oper, use_default);
+  auto val_oper = prepare_value_and_operator(val, oper, use_default);
 
   variable_t rval{val_oper[0]};
   std::string roper{val_oper[1].data};
@@ -621,18 +620,16 @@ Builder &Builder::where_year(const std::string &column,
 }
 
 //Add another query builder as a nested where to the query builder.
-Builder &Builder::add_nested_where_query(Builder *query,
+Builder &Builder::add_nested_where_query(std::unique_ptr<Builder> &query,
                                          const std::string &boolean) {
   if (!query->wheres_.empty()) {
     db_query_array_t _where;
     _where.items = {
       {"type", "nested"}, {"boolean", boolean}
     };
-    unique_move(Builder, query, _where.query);
+    _where.query = std::move(query);
     add_bindings(_where.query->get_bindings(), "where");
     wheres_.emplace_back(std::move(_where));
-  } else {
-    safe_delete(query);
   }
   return *this;
 }
@@ -717,17 +714,17 @@ Builder &Builder::group_by(const variable_array_t &groups) {
 
 //Add a "having" clause to the query.
 Builder &Builder::having(const std::string &column, 
-                         const std::string &oper, 
+                         const variable_t &oper, 
                          const variable_t &val, 
                          const std::string &boolean) {
   // Here we will make some assumptions about the operator. If only 2 vals are
   // passed to the method, we will assume that the operator is an equals sign 
   // and keep going. Otherwise, we'll require the operator to be passed in.
   bool use_default = (val == "") && ("and" == boolean);
-  auto val_oper = prepare_value_and_operator(val.data, oper, use_default);
+  auto val_oper = prepare_value_and_operator(val, oper, use_default);
 
   variable_t rval{val_oper[0]};
-  std::string roper{val_oper[1]};
+  variable_t roper{val_oper[1]};
 
   // If the given operator is not found in the list of valid operators we will
   // assume that the developer is just short-cutting the '=' operators and
@@ -755,7 +752,9 @@ Builder &Builder::having_raw(const std::string &sql,
   variable_set_t _having = {
     {"type", "raw"}, {"sql", sql}, {"boolean", boolean},
   };
-  add_bindings(bindings, "having");
+  havings_.emplace_back(_having);
+  if (!bindings.empty())
+    add_bindings(bindings, "having");
   return *this;
 }
 
@@ -805,13 +804,12 @@ Builder &Builder::offset(int32_t val) {
 
 //Set the "limit" val of the query.
 Builder &Builder::limit(int32_t val) {
-  if (val > 0) {
+  if (val >= 0) {
     if (unions_.empty())
       limit_ = val;
     else
       union_limit_ = val;
   }
-  val = max(0, val);
   return *this;
 }
 
@@ -863,7 +861,7 @@ variable_t Builder::value(const std::string &column) {
 }
 
 //Execute the query as a "select" statement.
-db_fetch_array_t Builder::get(const std::vector<std::string> &columns) {
+db_fetch_array_t Builder::get(const variable_array_t &columns) {
   auto original = columns_;
   if (original.empty()) {
     columns_ = columns;
@@ -952,7 +950,7 @@ variable_array_t Builder::clean_bindings_expression(
 
 //Execute an aggregate function on the database.
 variable_t Builder::aggregate(const std::string &function, 
-                              const std::vector<std::string> &columns) {
+                              const variable_array_t &columns) {
   //Need safe delete the query pointer.
   auto _query = new_query();
   std::unique_ptr<Builder> query;
@@ -969,7 +967,7 @@ variable_t Builder::aggregate(const std::string &function,
 
 //Execute a numeric aggregate function on the database.
 variable_t Builder::numeric_aggregate(const std::string &function, 
-                                      const std::vector<std::string> &columns) {
+                                      const variable_array_t &columns) {
   auto result = aggregate(function ,columns);
   
   // If there is no result, we can obviously just return 0 here. Next, we will check 
@@ -988,7 +986,7 @@ variable_t Builder::numeric_aggregate(const std::string &function,
 
 //Set the aggregate property without running the query.
 Builder &Builder::set_aggregate(const std::string &function, 
-                                const std::vector<std::string> &columns) {
+                                const variable_array_t &columns) {
   std::string _columns = pf_support::implode(", ", columns);
   aggregate_["function"] = function;
   aggregate_["columns"] = _columns;
