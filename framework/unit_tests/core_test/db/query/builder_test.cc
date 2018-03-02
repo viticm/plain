@@ -1007,3 +1007,69 @@ TEST_F(DBQueryBuilder, testFullSubSelects) {
                builder_->to_sql().c_str());
   assertEquals({"foo", "bar"}, builder_->get_bindings());
 }
+
+TEST_F(DBQueryBuilder, testWhereExists) {
+  using namespace pf_db;
+  builder_->select({"*"}).from("orders").where_exists([](Builder *query){
+    query->select({"*"}).from("products")
+           .where("products.id", "=", raw("\"orders\".\"id\""));
+  });
+  ASSERT_STREQ("select * from \"orders\" where exists (select * from \
+\"products\" where \"products\".\"id\" = \"orders\".\"id\")",
+               builder_->to_sql().c_str());
+
+  builder_->clear();
+  builder_->select({"*"}).from("orders").where_not_exists([](Builder *query){
+    query->select({"*"}).from("products")
+           .where("products.id", "=", raw("\"orders\".\"id\""));
+  });
+  ASSERT_STREQ("select * from \"orders\" where not exists (select * from \
+\"products\" where \"products\".\"id\" = \"orders\".\"id\")",
+               builder_->to_sql().c_str());
+
+  builder_->clear();
+  builder_->select({"*"}).from("orders").where("id", "=", 1)
+            .or_where_exists([](Builder *query){
+    query->select({"*"}).from("products")
+           .where("products.id", "=", raw("\"orders\".\"id\""));
+  });
+  ASSERT_STREQ("select * from \"orders\" where \"id\" = ? or exists (select * from \
+\"products\" where \"products\".\"id\" = \"orders\".\"id\")",
+               builder_->to_sql().c_str());
+
+  builder_->clear();
+  builder_->select({"*"}).from("orders").where("id", "=", 1)
+            .or_where_not_exists([](Builder *query){
+    query->select({"*"}).from("products")
+           .where("products.id", "=", raw("\"orders\".\"id\""));
+  });
+  ASSERT_STREQ("select * from \"orders\" where \"id\" = ? or not exists (select * from \
+\"products\" where \"products\".\"id\" = \"orders\".\"id\")",
+               builder_->to_sql().c_str());
+}
+
+TEST_F(DBQueryBuilder, testBasicJoins) {
+  builder_->select({"*"}).from("users")
+            .join("contacts", "users.id", "contacts.id");
+  ASSERT_STREQ("select * from \"users\" inner join \"contacts\" on \
+\"users\".\"id\" = \"contacts\".\"id\"",
+               builder_->to_sql().c_str());
+
+  builder_->clear();
+  builder_->select({"*"}).from("users")
+            .join("contacts", "users.id", "=", "contacts.id")
+            .left_join("photos", "users.id", "=", "photos.id");
+  ASSERT_STREQ("select * from \"users\" inner join \"contacts\" on \
+\"users\".\"id\" = \"contacts\".\"id\" left join \"photos\" on \
+\"users\".\"id\" = \"photos\".\"id\"",
+               builder_->to_sql().c_str());
+
+  builder_->clear();
+  builder_->select({"*"}).from("users")
+            .left_join_where("photos", "users.id", "=", "bar")
+            .join_where("photos", "users.id", "=", "foo");
+  ASSERT_STREQ("select * from \"users\" left join \"photos\" on \
+\"users\".\"id\" = ? inner join \"photos\" on \"users\".\"id\" = ?",
+               builder_->to_sql().c_str());
+  assertEquals({"bar", "foo"}, builder_->get_bindings());
+}

@@ -79,9 +79,7 @@ class PF_API Grammar {
 
    //Get the value of a raw expression.
    std::string get_value(const variable_t &value) {
-     if (!is_expression(value)) return "";
-     return DB_EXPRESSION_TYPE == value.type ? value.data : 
-            "\"" + value.data + "\"";
+     return value.data;
    }
 
  public:

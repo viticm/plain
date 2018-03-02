@@ -277,8 +277,7 @@ Builder &Builder::where(const std::string &column,
   // is a boolean. If it is, we'll add the raw boolean string as an actual
   // val to the query to ensure this is properly handled by the query.
   if (contains(column, {"->"}) && kVariableTypeBool == rval.type) {
-    rval = rval == true ? "true" : "false";
-    rval.type = static_cast<var_t>(DB_EXPRESSION_TYPE);
+    rval = raw(rval == true ? "true" : "false");
   }
 
   // Now that we are working with just a simple query we can put the elements 
@@ -335,8 +334,7 @@ Builder &Builder::where(const std::string &column,
   // is a boolean. If it is, we'll add the raw boolean string as an actual
   // val to the query to ensure this is properly handled by the query.
   if (contains(column, {"->"}) && kVariableTypeBool == rval.type) {
-    rval = rval == true ? "true" : "false";
-    rval.type = static_cast<var_t>(DB_EXPRESSION_TYPE_S);
+    rval = raw(rval == true ? "true" : "false");
   }
 
   // Now that we are working with just a simple query we can put the elements 
@@ -700,8 +698,8 @@ Builder &Builder::add_where_exists_query(Builder *query,
   _where.items = {
     {"type", isnot ? "notexists" : "exists"}, {"boolean", boolean},
   };
-  wheres_.emplace_back(std::move(_where));
   add_bindings(_where.query->get_bindings(), "where");
+  wheres_.emplace_back(std::move(_where));
   return *this;
 }
 

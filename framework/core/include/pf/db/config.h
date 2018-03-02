@@ -32,7 +32,7 @@
 /* The database expression variable type. */
 #define DB_EXPRESSION_TYPE (100)
 
-/* The database expression variable type(the original is a real string). */
+/* The database expression variable type(the original is a real string). *not use */
 #define DB_EXPRESSION_TYPE_S (101)
 
 /* The database binding keys. */
@@ -148,14 +148,12 @@ inline pf_basic::type::variable_t raw(
     const pf_basic::type::variable_t &value) {
   using namespace pf_basic::type;
   auto r = value;
-  r.type = static_cast<var_t>(
-      kVariableTypeString == value.type ? DB_EXPRESSION_TYPE_S : 
-      DB_EXPRESSION_TYPE);
+  r.type = static_cast<var_t>(DB_EXPRESSION_TYPE);
   return r;
 }
 
 inline bool is_expression(const pf_basic::type::variable_t &value) {
-  return DB_EXPRESSION_TYPE_S == value.type || DB_EXPRESSION_TYPE == value.type;
+  return DB_EXPRESSION_TYPE == value.type;
 }
 
 } //namespace pf_db
