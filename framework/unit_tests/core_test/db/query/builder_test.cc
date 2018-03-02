@@ -1073,3 +1073,210 @@ TEST_F(DBQueryBuilder, testBasicJoins) {
                builder_->to_sql().c_str());
   assertEquals({"bar", "foo"}, builder_->get_bindings());
 }
+
+TEST_F(DBQueryBuilder, testCrossJoins) {
+  builder_->select({"*"}).from("sizes").cross_join("colors");
+  ASSERT_STREQ("select * from \"sizes\" cross join \"colors\"",
+               builder_->to_sql().c_str());
+
+  builder_->clear();
+  builder_->select({"*"}).from("tableB")
+            .join("tableA", "tableA.column1", "=", "tableB.column2", "cross");
+  ASSERT_STREQ("select * from \"tableB\" cross join \"tableA\" on \
+\"tableA\".\"column1\" = \"tableB\".\"column2\"",
+               builder_->to_sql().c_str());
+
+  builder_->clear();
+  builder_->select({"*"}).from("tableB")
+            .cross_join("tableA", "tableA.column1", "=", "tableB.column2");
+  ASSERT_STREQ("select * from \"tableB\" cross join \"tableA\" on \
+\"tableA\".\"column1\" = \"tableB\".\"column2\"",
+               builder_->to_sql().c_str());
+}
+
+TEST_F(DBQueryBuilder, testComplexJoin) {
+  builder_->select({"*"}).from("users").join("contacts", [](Builder *join){
+    join->on("users.id", "=", "contacts.id")
+          .or_on("users.name", "=", "contacts.name");
+  });
+  ASSERT_STREQ("select * from \"users\" inner join \"contacts\" on \"users\".\
+\"id\" = \"contacts\".\"id\" or \"users\".\"name\" = \"contacts\".\"name\"",
+               builder_->to_sql().c_str());
+
+  builder_->clear();
+  builder_->select({"*"}).from("users").join("contacts", [](Builder *join){
+    join->where("users.id", "=", "foo")
+          .or_where("users.name", "=", "bar");
+  });
+  ASSERT_STREQ("select * from \"users\" inner join \"contacts\" on \"users\".\
+\"id\" = ? or \"users\".\"name\" = ?",
+               builder_->to_sql().c_str());
+  assertEquals({"foo", "bar"}, builder_->get_bindings());
+
+  // Run the assertions again
+  ASSERT_STREQ("select * from \"users\" inner join \"contacts\" on \"users\".\
+\"id\" = ? or \"users\".\"name\" = ?",
+               builder_->to_sql().c_str());
+  assertEquals({"foo", "bar"}, builder_->get_bindings());
+}
+
+TEST_F(DBQueryBuilder, testJoinWhereNull) {
+  builder_->select({"*"}).from("users").join("contacts", [](Builder *join){
+    join->on("users.id", "=", "contacts.id").where_null("contacts.deleted_at");
+  });
+  ASSERT_STREQ("select * from \"users\" inner join \"contacts\" on \"users\".\
+\"id\" = \"contacts\".\"id\" and \"contacts\".\"deleted_at\" is null",
+               builder_->to_sql().c_str());
+
+  builder_->clear();
+  builder_->select({"*"}).from("users").join("contacts", [](Builder *join){
+    join->on("users.id", "=", "contacts.id").or_where_null("contacts.deleted_at");
+  });
+  ASSERT_STREQ("select * from \"users\" inner join \"contacts\" on \"users\".\
+\"id\" = \"contacts\".\"id\" or \"contacts\".\"deleted_at\" is null",
+               builder_->to_sql().c_str());
+}
+
+TEST_F(DBQueryBuilder, testJoinWhereNotNull) {
+  builder_->select({"*"}).from("users").join("contacts", [](Builder *join){
+    join->on("users.id", "=", "contacts.id").where_notnull("contacts.deleted_at");
+  });
+  ASSERT_STREQ("select * from \"users\" inner join \"contacts\" on \"users\".\
+\"id\" = \"contacts\".\"id\" and \"contacts\".\"deleted_at\" is not null",
+               builder_->to_sql().c_str());
+
+  builder_->clear();
+  builder_->select({"*"}).from("users").join("contacts", [](Builder *join){
+    join->on("users.id", "=", "contacts.id").or_where_notnull("contacts.deleted_at");
+  });
+  ASSERT_STREQ("select * from \"users\" inner join \"contacts\" on \"users\".\
+\"id\" = \"contacts\".\"id\" or \"contacts\".\"deleted_at\" is not null",
+               builder_->to_sql().c_str());
+}
+
+TEST_F(DBQueryBuilder, testJoinWhereIn) {
+  builder_->select({"*"}).from("users").join("contacts", [](Builder *join){
+    join->on("users.id", "=", "contacts.id")
+          .where_in("contacts.name", {48, "baz", "null"});
+  });
+  ASSERT_STREQ("select * from \"users\" inner join \"contacts\" on \"users\".\
+\"id\" = \"contacts\".\"id\" and \"contacts\".\"name\" in (?, ?, ?)",
+               builder_->to_sql().c_str());
+  assertEquals({48, "baz", "null"}, builder_->get_bindings());
+
+  builder_->clear();
+  builder_->select({"*"}).from("users").join("contacts", [](Builder *join){
+    join->on("users.id", "=", "contacts.id")
+          .or_where_in("contacts.name", {48, "baz", "null"});
+  });
+  ASSERT_STREQ("select * from \"users\" inner join \"contacts\" on \"users\".\
+\"id\" = \"contacts\".\"id\" or \"contacts\".\"name\" in (?, ?, ?)",
+               builder_->to_sql().c_str());
+  assertEquals({48, "baz", "null"}, builder_->get_bindings());
+}
+
+TEST_F(DBQueryBuilder, testJoinWhereNotIn) {
+  builder_->select({"*"}).from("users").join("contacts", [](Builder *join){
+    join->on("users.id", "=", "contacts.id")
+          .where_notin("contacts.name", {48, "baz", "null"});
+  });
+  ASSERT_STREQ("select * from \"users\" inner join \"contacts\" on \"users\".\
+\"id\" = \"contacts\".\"id\" and \"contacts\".\"name\" not in (?, ?, ?)",
+               builder_->to_sql().c_str());
+  assertEquals({48, "baz", "null"}, builder_->get_bindings());
+
+  builder_->clear();
+  builder_->select({"*"}).from("users").join("contacts", [](Builder *join){
+    join->on("users.id", "=", "contacts.id")
+          .or_where_notin("contacts.name", {48, "baz", "null"});
+  });
+  ASSERT_STREQ("select * from \"users\" inner join \"contacts\" on \"users\".\
+\"id\" = \"contacts\".\"id\" or \"contacts\".\"name\" not in (?, ?, ?)",
+               builder_->to_sql().c_str());
+  assertEquals({48, "baz", "null"}, builder_->get_bindings());
+}
+
+TEST_F(DBQueryBuilder, testJoinsWithNestedConditions) {
+  builder_->select({"*"}).from("users").left_join("contacts", [](Builder *join){
+    join->on("users.id", "=", "contacts.id").where([](Builder *_join){
+      _join->where("contacts.country", "=", "US")
+             .or_where("contacts.is_partner", "=", 1);
+    });
+  });
+  ASSERT_STREQ("select * from \"users\" left join \"contacts\" on \"users\".\
+\"id\" = \"contacts\".\"id\" and (\"contacts\".\"country\" = ? or \"contacts\".\
+\"is_partner\" = ?)",
+               builder_->to_sql().c_str());
+  assertEquals({"US", 1}, builder_->get_bindings());
+ 
+  builder_->clear();
+  builder_->select({"*"}).from("users").left_join("contacts", [](Builder *join){
+    join->on("users.id", "=", "contacts.id")
+          .where("contacts.is_active", "=", 1).or_on([](Builder *_join){
+      _join->or_where([](Builder *join1){
+        join1->where("contacts.country", "=", "UK")
+               .or_on("contacts.type", "=", "users.type");
+      }).where([](Builder *join2){
+        join2->where("contacts.country", "=", "US")
+               .or_where_null("contacts.is_partner");
+      });
+    });
+  });
+  ASSERT_STREQ("select * from \"users\" left join \"contacts\" on \"users\".\
+\"id\" = \"contacts\".\"id\" and \"contacts\".\"is_active\" = ? or \
+((\"contacts\".\"country\" = ? or \"contacts\".\"type\" = \"users\".\"type\")\
+ and (\"contacts\".\"country\" = ? or \"contacts\".\"is_partner\" is null))",
+               builder_->to_sql().c_str());
+  assertEquals({1, "UK", "US"}, builder_->get_bindings());
+}
+
+TEST_F(DBQueryBuilder, testJoinsWithAdvancedConditions) {
+  builder_->select({"*"}).from("users").left_join("contacts", [](Builder *join){
+    join->on("users.id", "contacts.id").where([](Builder *_join){
+      _join->where("role", "admin").or_where_null("contacts.disabled")
+             .or_where_raw("year(contacts.created_at) = 2018");
+    });
+  });
+  ASSERT_STREQ("select * from \"users\" left join \"contacts\" on \"users\".\
+\"id\" = \"contacts\".\"id\" and (\"role\" = ? or \"contacts\".\"disabled\" is \
+null or year(contacts.created_at) = 2018)",
+               builder_->to_sql().c_str());
+  assertEquals({"admin"}, builder_->get_bindings());
+}
+
+TEST_F(DBQueryBuilder, testRawExpressionsInSelect) {
+  using namespace pf_db;
+  variable_array_t columns;
+  columns.emplace_back(raw("substr(foo, 6)"));
+  builder_->select(columns).from("users");
+  ASSERT_STREQ("select substr(foo, 6) from \"users\"",
+               builder_->to_sql().c_str());
+}
+
+TEST_F(DBQueryBuilder, testFindReturnsFirstResultByID) {
+
+}
+
+TEST_F(DBQueryBuilder, testFirstMethodReturnsFirstResult) {
+
+}
+
+TEST_F(DBQueryBuilder, testListMethodsGetsArrayOfColumnValues) {
+
+}
+
+TEST_F(DBQueryBuilder, testImplode) {
+
+}
+
+TEST_F(DBQueryBuilder, testValueMethodReturnsSingleColumn) {
+
+}
+
+TEST_F(DBQueryBuilder, testAggregateFunctions) {
+
+}
+
+TEST_F(DBQueryBuilder, testSqlServerExists) {
+
+}

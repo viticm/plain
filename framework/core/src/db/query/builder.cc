@@ -171,10 +171,7 @@ Builder &Builder::add_select(const std::vector<std::string> &column) {
 //Add a join clause to the query.
 Builder &Builder::join(const std::string &table, 
                        std::function<void(Builder *)> callback,
-                       const std::string &, 
-                       const std::string &, 
-                       const std::string &type, 
-                       bool) {
+                       const std::string &type) {
   std::unique_ptr<JoinClause> _join(new JoinClause(this, type, table));
 
   // If the first "column" of the join is really a Closure instance the developer

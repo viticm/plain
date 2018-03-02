@@ -172,10 +172,7 @@ class PF_API Builder : public concerns::BuildsQueries {
    //Add a join clause to the query.
    Builder &join(const std::string &table, 
                  std::function<void(Builder *)> callback,
-                 const std::string &oper = "", 
-                 const std::string &second = "", 
-                 const std::string &type = "inner", 
-                 bool where = false);
+                 const std::string &type = "inner");
 
    //Add a "join where" clause to the query.
    Builder &join_where(const std::string &table, 
@@ -194,6 +191,12 @@ class PF_API Builder : public concerns::BuildsQueries {
      return join(table, _first, oper, second, "left");
    };
 
+   //Add a left join to the query.
+   Builder &left_join(const std::string &table, 
+                      std::function<void(Builder *)> callback) {
+     return join(table, callback, "left");
+   };
+
    //Add a "join where" clause to the query.
    Builder &left_join_where(const std::string &table,
                             const std::string &_first,
@@ -209,7 +212,13 @@ class PF_API Builder : public concerns::BuildsQueries {
                        const std::string &second = "") {
      return join(table, _first, oper, second, "right");
    };
-  
+    
+   //Add a right join to the query.
+   Builder &right_join(const std::string &table, 
+                       std::function<void(Builder *)> callback) {
+     return join(table, callback, "right");
+   };
+ 
    //Add a "right join where" clause to the query.
    Builder &right_join_where(const std::string &table,
                              const std::string &_first,
@@ -361,12 +370,12 @@ class PF_API Builder : public concerns::BuildsQueries {
 
    //Add a raw where clause to the query.
    Builder &where_raw(const std::string &sql, 
-                      const variable_array_t &bindings, 
+                      const variable_array_t &bindings = {}, 
                       const std::string &boolean = "and");
 
    //Add a raw or where clause to the query.
    Builder &or_where_raw(const std::string &sql, 
-                         const variable_array_t &bindings) {
+                         const variable_array_t &bindings = {}) {
      return where_raw(sql, bindings, "or");
    };
 
