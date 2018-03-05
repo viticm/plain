@@ -1280,3 +1280,51 @@ TEST_F(DBQueryBuilder, testAggregateFunctions) {
 TEST_F(DBQueryBuilder, testSqlServerExists) {
 
 }
+
+TEST_F(DBQueryBuilder, testAggregateResetFollowedByGet) {
+
+}
+
+TEST_F(DBQueryBuilder, testAggregateResetFollowedBySelectGet) {
+
+}
+
+TEST_F(DBQueryBuilder, testAggregateResetFollowedByGetWithColumns) {
+
+}
+
+TEST_F(DBQueryBuilder, testAggregateWithSubSelect) {
+
+}
+
+TEST_F(DBQueryBuilder, testSubqueriesBindings) {
+  using namespace pf_db;  
+  std::unique_ptr<Builder> builder1(new Builder(connection_.get(), nullptr));
+  std::unique_ptr<Builder> builder2(new Builder(connection_.get(), nullptr));
+  builder1->select({"*"}).from("users").order_byraw("id = ?", {2});
+  builder2->select({"*"}).from("users")
+            .where("id", 3).group_by({"id"}).having("id", "!=", 4);
+  builder_->group_by({"a"}).having("a", "=", 1)._union(builder1)._union(builder2);
+  assertEquals({1, 2, 3, 4}, builder_->get_bindings(), __LINE__);
+  
+  builder_->clear();
+  builder_->select({"*"}).from("users")
+            .where("email", "=", (Builder::closure_t)([](Builder *query){
+    variable_array_t columns;
+    columns.emplace_back(raw("max(id)"));
+    query->select(columns)
+          .where("email", "=", "bar")
+          .order_byraw("(email like ?", {"%.com"})
+          .group_by({"id"}).having("id", "=", 4);
+  })).or_where("id", "=", "foo").group_by({"id"}).having("id", "=", 5);
+
+  assertEquals({"bar", 4, "%.com", "foo", 5}, builder_->get_bindings(), __LINE__);
+}
+
+TEST_F(DBQueryBuilder, testInsertMethod) {
+
+}
+
+TEST_F(DBQueryBuilder, testSQLiteMultipleInserts) {
+
+}
