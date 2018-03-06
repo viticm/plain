@@ -124,7 +124,7 @@ std::string SqlserverGrammar::compile_delete(Builder &query) {
 
 //Compile the "select *" portion of the query.
 std::string SqlserverGrammar::compile_columns(
-    Builder &query, const std::vector<std::string> &columns) {
+    Builder &query, const variable_array_t &columns) {
   if (!query.aggregate_.empty()) return "";
   
   std::string select = query.distinct_ ? "select distinct " : "select ";
@@ -132,7 +132,7 @@ std::string SqlserverGrammar::compile_columns(
   // If there is a limit on the query, but not an offset, we will add the top 
   // clause to the query, which serves as a "limit" type clause within the 
   // SQL Server system similar to the limit keywords available in MySQL.
-  if (query.limit_ > 0 and query.offset_ <= 0)
+  if (query.limit_ > 0 && query.offset_ <= 0)
     select += "top " + std::to_string(query.limit_) + " ";
 
   return select + columnize(columns);
@@ -166,13 +166,13 @@ std::string SqlserverGrammar::compile_ansi_offset(
   // An ORDER BY clause is required to make this offset query work, so if one does 
   // not exist we'll just create a dummy clause to trick the database and so it
   // does not complain about the queries for not having an "order by" clause.
-  if (components.find("orders") == components.end())
+  if (components["orders"] == "")
     components["orders"] = "order by (select 0)";
 
   // We need to add the row number to the query so we can compare it to the offset
   // and limit values given for the statements. So we will add an expression to
   // the "select" that will give back the row numbers on each of the records.
-  components["columns"] += compile_over(components["orders"]);
+  components["columns"] += compile_over(components["orders"].data);
 
   components.erase(components.find("orders"));
 

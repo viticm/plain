@@ -270,11 +270,11 @@ class PF_API Builder : public concerns::BuildsQueries {
      return where_nested(column, boolean);
    };
 
-   //Add a basic where clause to the query.
-   Builder &where(const std::string &column, 
-                  const variable_t &oper, 
-                  closure_t val,
-                  const std::string &boolean = "and");
+   //Add a basic where clause to the query(with a function).
+   Builder &wheref(const std::string &column, 
+                   const variable_t &oper, 
+                   closure_t val,
+                   const std::string &boolean = "and");
  
    //Add an array of where clauses to the query.
    Builder &add_array_of_wheres(const std::vector<variable_array_t> &columns,
@@ -298,11 +298,11 @@ class PF_API Builder : public concerns::BuildsQueries {
      return where_nested(column, "or");
    }
 
-   //Add a "or where" clause to the query.
-   Builder &or_where(const std::string &column, 
-                     const variable_t &oper, 
-                     closure_t val) {
-     return where(column, oper, val, "or");
+   //Add a "or where" clause to the query(with function).
+   Builder &or_wheref(const std::string &column, 
+                      const variable_t &oper, 
+                      closure_t val) {
+     return wheref(column, oper, val, "or");
    }
 
    //Add a "or where" clause to the query.

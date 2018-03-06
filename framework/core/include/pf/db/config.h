@@ -152,6 +152,11 @@ inline pf_basic::type::variable_t raw(
   return r;
 }
 
+inline pf_basic::type::variable_t null() {
+  pf_basic::type::variable_t r;
+  return r;
+}
+
 inline bool is_expression(const pf_basic::type::variable_t &value) {
   return DB_EXPRESSION_TYPE == value.type;
 }

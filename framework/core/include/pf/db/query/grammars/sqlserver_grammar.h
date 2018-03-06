@@ -87,7 +87,7 @@ class PF_API SqlserverGrammar : public grammars::Grammar {
    
    //Compile the "select *" portion of the query.
    virtual std::string compile_columns(
-       Builder &query, const std::vector<std::string> &columns);
+       Builder &query, const variable_array_t &columns);
 
    //Compile the "from" portion of the query.
    virtual std::string compile_from(Builder &query, const std::string &table);

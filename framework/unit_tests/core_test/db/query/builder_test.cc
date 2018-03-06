@@ -997,11 +997,11 @@ and \"age\" = ?)",
 TEST_F(DBQueryBuilder, testFullSubSelects) {
   using namespace pf_db;
   builder_->select({"*"}).from("users").where("email", "=", "foo")
-            .or_where("id", "=", (Builder::closure_t)([](Builder *query){
+            .or_wheref("id", "=", [](Builder *query){
     auto column = raw("max(id)");
     variable_array_t columns{column,};
     query->select(columns).from("users").where("email", "=", "bar");
-  }));
+  });
   ASSERT_STREQ("select * from \"users\" where \"email\" = ? or \"id\" = \
 (select max(id) from \"users\" where \"email\" = ?)",
                builder_->to_sql().c_str());
@@ -1309,14 +1309,14 @@ TEST_F(DBQueryBuilder, testSubqueriesBindings) {
   
   builder_->clear();
   builder_->select({"*"}).from("users")
-            .where("email", "=", (Builder::closure_t)([](Builder *query){
+            .wheref("email", "=", [](Builder *query){
     variable_array_t columns;
     columns.emplace_back(raw("max(id)"));
     query->select(columns)
           .where("email", "=", "bar")
           .order_byraw("(email like ?", {"%.com"})
           .group_by({"id"}).having("id", "=", 4);
-  })).or_where("id", "=", "foo").group_by({"id"}).having("id", "=", 5);
+  }).or_where("id", "=", "foo").group_by({"id"}).having("id", "=", 5);
 
   assertEquals({"bar", 4, "%.com", "foo", 5}, builder_->get_bindings(), __LINE__);
 }
@@ -1327,4 +1327,235 @@ TEST_F(DBQueryBuilder, testInsertMethod) {
 
 TEST_F(DBQueryBuilder, testSQLiteMultipleInserts) {
 
+}
+
+TEST_F(DBQueryBuilder, testInsertGetIdMethod) {
+
+}
+
+TEST_F(DBQueryBuilder, testInsertGetIdMethodRemovesExpressions) {
+
+}
+
+TEST_F(DBQueryBuilder, testInsertMethodRespectsRawBindings) {
+
+}
+
+TEST_F(DBQueryBuilder, testMultipleInsertsWithExpressionValues) {
+
+}
+
+TEST_F(DBQueryBuilder, testUpdateMethod) {
+
+}
+
+TEST_F(DBQueryBuilder, testUpdateMethodWithJoins) {
+
+}
+
+TEST_F(DBQueryBuilder, testUpdateMethodWithJoinsOnSqlServer) {
+
+}
+
+TEST_F(DBQueryBuilder, testUpdateMethodWithJoinsOnMySql) {
+
+}
+
+TEST_F(DBQueryBuilder, testUpdateMethodWithJoinsOnSQLite) {
+
+}
+
+TEST_F(DBQueryBuilder, testUpdateMethodWithJoinsAndAliasesOnSqlServer) {
+
+}
+
+TEST_F(DBQueryBuilder, testUpdateMethodWithoutJoinsOnPostgres) {
+
+}
+
+TEST_F(DBQueryBuilder, testUpdateMethodWithJoinsOnPostgres) {
+
+}
+
+TEST_F(DBQueryBuilder, testUpdateMethodRespectsRaw) {
+
+}
+
+TEST_F(DBQueryBuilder, testUpdateOrInsertMethod) {
+
+}
+
+TEST_F(DBQueryBuilder, testDeleteMethod) {
+
+}
+
+TEST_F(DBQueryBuilder, testDeleteWithJoinMethod) {
+
+}
+
+TEST_F(DBQueryBuilder, testTruncateMethod) {
+
+}
+
+TEST_F(DBQueryBuilder, testPostgresInsertGetId) {
+
+}
+
+TEST_F(DBQueryBuilder, testMySqlWrapping) {
+  mysql_builder_->select({"*"}).from("users");
+  ASSERT_STREQ("select * from `users`",
+               mysql_builder_->to_sql().c_str());
+}
+
+TEST_F(DBQueryBuilder, testMySqlUpdateWrappingJson) {
+
+}
+
+TEST_F(DBQueryBuilder, testMySqlUpdateWithJsonRemovesBindingsCorrectly) {
+
+}
+
+TEST_F(DBQueryBuilder, testMySqlWrappingJsonWithString) {
+  mysql_builder_->select({"*"}).from("users").where("items->sku", "=", "foo-bar");
+  ASSERT_STREQ("select * from `users` where `items`->'$.\"sku\"' = ?",
+               mysql_builder_->to_sql().c_str());
+  ASSERT_TRUE(1 == (*mysql_builder_->get_raw_bindings())["where"].size());
+  ASSERT_STREQ("foo-bar", 
+               (*mysql_builder_->get_raw_bindings())["where"][0].data.c_str());
+}
+
+TEST_F(DBQueryBuilder, testMySqlWrappingJsonWithInteger) {
+  mysql_builder_->select({"*"}).from("users").where("items->price", "=", 1);
+  ASSERT_STREQ("select * from `users` where `items`->'$.\"price\"' = ?",
+               mysql_builder_->to_sql().c_str());
+}
+
+TEST_F(DBQueryBuilder, testMySqlWrappingJsonWithDouble) {
+  mysql_builder_->select({"*"}).from("users").where("items->price", "=", 1.5);
+  ASSERT_STREQ("select * from `users` where `items`->'$.\"price\"' = ?",
+               mysql_builder_->to_sql().c_str());
+}
+
+TEST_F(DBQueryBuilder, testMySqlWrappingJsonWithBoolean) {
+  mysql_builder_->select({"*"}).from("users").where("items->available", "=", true);
+  ASSERT_STREQ("select * from `users` where `items`->'$.\"available\"' = true",
+               mysql_builder_->to_sql().c_str());
+}
+
+TEST_F(DBQueryBuilder, testMySqlWrappingJsonWithBooleanAndIntegerThatLooksLikeOne) {
+  mysql_builder_->select({"*"}).from("users")
+                  .where("items->available", "=", true)
+                  .where("items->active", "=", false)
+                  .where("items->number_available", "=", 0);
+  ASSERT_STREQ("select * from `users` where `items`->'$.\"available\"' = \
+true and `items`->'$.\"active\"' = false and \
+`items`->'$.\"number_available\"' = ?",
+               mysql_builder_->to_sql().c_str());
+}
+
+TEST_F(DBQueryBuilder, testMySqlWrappingJson) {
+  auto builder = mysql_builder_.get();
+  builder->select({"*"}).from("users").where_raw("items->\"$.price\" = 1");
+  ASSERT_STREQ("select * from `users` where items->\"$.price\" = 1",
+               builder->to_sql().c_str());
+
+  builder->clear();
+  builder->select({"items->price"}).from("users")
+           .where("items->price", "=", 1).order_by("items->price");
+  ASSERT_STREQ("select `items`->'$.\"price\"' from `users` where \
+`items`->'$.\"price\"' = ? order by `items`->'$.\"price\"' asc",
+               builder->to_sql().c_str());
+
+  builder->clear();
+  builder->select({"*"}).from("users").where("items->price->in_usd", "=", 1);
+  ASSERT_STREQ("select * from `users` where `items`->'$.\"price\".\"in_usd\"' = ?",
+               builder->to_sql().c_str());
+
+  builder->clear();
+  builder->select({"*"}).from("users")
+           .where("items->price->in_usd", "=", 1)
+           .where("items->age", "=", 2);
+  ASSERT_STREQ("select * from `users` where `items`->'$.\"price\".\"in_usd\"' \
+= ? and `items`->'$.\"age\"' = ?",
+               builder->to_sql().c_str());
+}
+
+TEST_F(DBQueryBuilder, testPostgresWrappingJson) {
+  auto builder = postgres_builder_.get();
+  builder->select({"items->price"}).from("users")
+           .where("items->price", "=", 1).order_by("items->price");
+  ASSERT_STREQ("select \"items\"->>'price' from \"users\" where \
+\"items\"->>'price' = ? order by \"items\"->>'price' asc",
+               builder->to_sql().c_str());
+  
+  builder->clear();
+  builder->select({"*"}).from("users").where("items->price->in_usd", "=", 1);
+  ASSERT_STREQ("select * from \"users\" where \"items\"->'price'->>'in_usd' = ?",
+               builder->to_sql().c_str());
+
+  builder->clear();
+  builder->select({"*"}).from("users")
+           .where("items->price->in_usd", "=", 1)
+           .where("items->age", "=", 2);
+  ASSERT_STREQ("select * from \"users\" where \"items\"->'price'->>'in_usd' \
+= ? and \"items\"->>'age' = ?",
+               builder->to_sql().c_str());
+}
+
+TEST_F(DBQueryBuilder, testSQLiteOrderBy) {
+  auto builder = sqlite_builder_.get();
+  builder->select({"*"}).from("users").order_by("email", "desc");
+  ASSERT_STREQ("select * from \"users\" order by \"email\" desc",
+               builder->to_sql().c_str());
+}
+
+TEST_F(DBQueryBuilder, testSqlServerLimitsAndOffsets) {
+  auto builder = sqlserver_builder_.get();
+  builder->select({"*"}).from("users").take(10);
+  ASSERT_STREQ("select top 10 * from [users]",
+               builder->to_sql().c_str());
+
+  builder->clear();
+  builder->select({"*"}).from("users").skip(10);
+  ASSERT_STREQ("select * from (select *, row_number() over (order by (select 0))\
+ as row_num from [users]) as temp_table where row_num >= 11",
+               builder->to_sql().c_str());
+
+  builder->clear();
+  builder->select({"*"}).from("users").skip(10).take(10);
+  ASSERT_STREQ("select * from (select *, row_number() over (order by (select 0))\
+ as row_num from [users]) as temp_table where row_num between 11 and 20",
+               builder->to_sql().c_str());
+
+  builder->clear();
+  builder->select({"*"}).from("users").skip(10).take(10).order_by("email", "desc");
+  ASSERT_STREQ("select * from (select *, row_number() over (order by [email] desc)\
+ as row_num from [users]) as temp_table where row_num between 11 and 20",
+               builder->to_sql().c_str());
+}
+
+TEST_F(DBQueryBuilder, testMergeWheresCanMergeWheresAndBindings) {
+
+}
+
+TEST_F(DBQueryBuilder, testProvidingNullWithOperatorsBuildsCorrectly) {
+  using namespace pf_db;
+  builder_->select({"*"}).from("users").where("foo", null());
+  ASSERT_STREQ("select * from \"users\" where \"foo\" is null",
+               builder_->to_sql().c_str());
+
+  builder_->clear();
+  builder_->select({"*"}).from("users").where("foo", "=", null());
+  ASSERT_STREQ("select * from \"users\" where \"foo\" is null",
+               builder_->to_sql().c_str());
+
+  builder_->clear();
+  builder_->select({"*"}).from("users").where("foo", "!=", null());
+  ASSERT_STREQ("select * from \"users\" where \"foo\" is not null",
+               builder_->to_sql().c_str());
+
+  builder_->clear();
+  builder_->select({"*"}).from("users").where("foo", "<>", null());
+  ASSERT_STREQ("select * from \"users\" where \"foo\" is not null",
+               builder_->to_sql().c_str());
 }

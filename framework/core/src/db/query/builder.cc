@@ -250,7 +250,7 @@ Builder &Builder::where(const std::string &column,
   // Here we will make some assumptions about the operator. If only 2 vals are 
   // passed to the method, we will assume that the operator is an equals sign
   // and keep going. Otherwise, we'll require the operator to be passed in.
-  bool use_default = (val == "") && ("and" == boolean);
+  bool use_default = (!empty(val) && val == "") && ("and" == boolean);
   auto val_oper = prepare_value_and_operator(val, oper, use_default);
 
   variable_t rval{val_oper[0]};
@@ -263,6 +263,8 @@ Builder &Builder::where(const std::string &column,
     rval = roper;
     roper = "=";
   }
+
+  std::cout << "rval: " << empty(rval) << std::endl;
 
   // If the val is "null", we will just assume the developer wants to add a 
   // where null clause to the query. So, we will allow a short-cut here to
@@ -295,16 +297,16 @@ Builder &Builder::where(const std::string &column,
   return *this;
 }
 
-//Add a basic where clause to the query.
-Builder &Builder::where(const std::string &column, 
-                        const variable_t &oper, 
-                        closure_t val, 
-                        const std::string &boolean) {
+//Add a basic where clause to the query(with function).
+Builder &Builder::wheref(const std::string &column, 
+                         const variable_t &oper, 
+                         closure_t val, 
+                         const std::string &boolean) {
 
   // Here we will make some assumptions about the operator. If only 2 vals are 
   // passed to the method, we will assume that the operator is an equals sign
   // and keep going. Otherwise, we'll require the operator to be passed in.
-  bool use_default = (oper == "") && ("and" == boolean);
+  bool use_default = (!empty(oper) && oper == "") && ("and" == boolean);
   auto val_oper = prepare_value_and_operator("closure_t", oper, use_default);
 
   variable_t rval{val_oper[0]};
@@ -563,7 +565,7 @@ Builder &Builder::where_date(const std::string &column,
                              const std::string &oper,
                              const variable_t &val,
                              const std::string &boolean) {
-  bool use_default = (val == "") && ("and" == boolean);
+  bool use_default = (!empty(val) && val == "") && ("and" == boolean);
   auto val_oper = prepare_value_and_operator(val, oper, use_default);
 
   variable_t rval{val_oper[0]};
@@ -577,7 +579,7 @@ Builder &Builder::where_day(const std::string &column,
                             const std::string &oper, 
                             const variable_t &val, 
                             const std::string &boolean) {
-  bool use_default = (val == "") && ("and" == boolean);
+  bool use_default = (!empty(val) && val == "") && ("and" == boolean);
   auto val_oper = prepare_value_and_operator(val, oper, use_default);
 
   variable_t rval{val_oper[0]};
@@ -591,7 +593,7 @@ Builder &Builder::where_month(const std::string &column,
                               const std::string &oper, 
                               const variable_t &val, 
                               const std::string &boolean) {
-  bool use_default = (val == "") && ("and" == boolean);
+  bool use_default = (!empty(val) && val == "") && ("and" == boolean);
   auto val_oper = prepare_value_and_operator(val, oper, use_default);
 
   variable_t rval{val_oper[0]};
@@ -605,7 +607,7 @@ Builder &Builder::where_year(const std::string &column,
                              const std::string &oper, 
                              const variable_t &val, 
                              const std::string &boolean) {
-  bool use_default = (val == "") && ("and" == boolean);
+  bool use_default = (!empty(val) && val == "") && ("and" == boolean);
   auto val_oper = prepare_value_and_operator(val, oper, use_default);
 
   variable_t rval{val_oper[0]};
@@ -715,7 +717,7 @@ Builder &Builder::having(const std::string &column,
   // Here we will make some assumptions about the operator. If only 2 vals are
   // passed to the method, we will assume that the operator is an equals sign 
   // and keep going. Otherwise, we'll require the operator to be passed in.
-  bool use_default = (val == "") && ("and" == boolean);
+  bool use_default = (!empty(val) && val == "") && ("and" == boolean);
   auto val_oper = prepare_value_and_operator(val, oper, use_default);
 
   variable_t rval{val_oper[0]};
