@@ -1559,3 +1559,195 @@ TEST_F(DBQueryBuilder, testProvidingNullWithOperatorsBuildsCorrectly) {
   ASSERT_STREQ("select * from \"users\" where \"foo\" is not null",
                builder_->to_sql().c_str());
 }
+
+TEST_F(DBQueryBuilder, testDynamicWhere) {
+
+}
+
+TEST_F(DBQueryBuilder, testDynamicWhereIsNotGreedy) {
+
+}
+
+TEST_F(DBQueryBuilder, testCallTriggersDynamicWhere) {
+
+}
+
+TEST_F(DBQueryBuilder, testBuilderThrowsExpectedExceptionWithUndefinedMethod) {
+
+}
+
+TEST_F(DBQueryBuilder, testMySqlLock) {
+  auto builder = mysql_builder_.get();
+  builder->select({"*"}).from("foo").where("bar", "=", "baz").lock();
+  ASSERT_STREQ("select * from `foo` where `bar` = ? for update",
+               builder->to_sql().c_str());
+
+  builder->clear();
+  builder->select({"*"}).from("foo").where("bar", "=", "baz").lock(false);
+  ASSERT_STREQ("select * from `foo` where `bar` = ? lock in share mode",
+               builder->to_sql().c_str());
+
+  builder->clear();
+  builder->select({"*"}).from("foo")
+           .where("bar", "=", "baz").lock("lock in share mode");
+  ASSERT_STREQ("select * from `foo` where `bar` = ? lock in share mode",
+               builder->to_sql().c_str());
+}
+
+TEST_F(DBQueryBuilder, testPostgresLock) {
+  auto builder = postgres_builder_.get();
+  builder->select({"*"}).from("foo").where("bar", "=", "baz").lock();
+  ASSERT_STREQ("select * from \"foo\" where \"bar\" = ? for update",
+               builder->to_sql().c_str());
+
+  builder->clear();
+  builder->select({"*"}).from("foo").where("bar", "=", "baz").lock(false);
+  ASSERT_STREQ("select * from \"foo\" where \"bar\" = ? for share",
+               builder->to_sql().c_str());
+
+  builder->clear();
+  builder->select({"*"}).from("foo")
+           .where("bar", "=", "baz").lock("for key share");
+  ASSERT_STREQ("select * from \"foo\" where \"bar\" = ? for key share",
+               builder->to_sql().c_str());
+}
+
+TEST_F(DBQueryBuilder, testSqlServerLock) {
+  auto builder = sqlserver_builder_.get();
+  builder->select({"*"}).from("foo").where("bar", "=", "baz").lock();
+  ASSERT_STREQ("select * from [foo] with(rowlock,updlock,holdlock) where [bar] = ?",
+               builder->to_sql().c_str());
+
+  builder->clear();
+  builder->select({"*"}).from("foo").where("bar", "=", "baz").lock(false);
+  ASSERT_STREQ("select * from [foo] with(rowlock,holdlock) where [bar] = ?",
+               builder->to_sql().c_str());
+
+  builder->clear();
+  builder->select({"*"}).from("foo")
+           .where("bar", "=", "baz").lock("with(holdlock)");
+  ASSERT_STREQ("select * from [foo] with(holdlock) where [bar] = ?",
+               builder->to_sql().c_str());
+}
+
+TEST_F(DBQueryBuilder, testSelectWithLockUsesWritePdo) {
+
+}
+
+TEST_F(DBQueryBuilder, testBindingOrder) {
+  std::string expected_sql{"select * from \"users\" inner join \"othertable\" \
+on \"bar\" = ? where \"registered\" = ? group by \"city\" having \
+\"population\" > ? order by match (\"foo\") against(?)"};
+  variable_array_t expected_bindings{"foo", 1, 3, "bar"};
+
+  builder_->select({"*"}).from("users").join("othertable", [](Builder *join){
+    join->where("bar", "=", "foo");
+  }).where("registered", 1).group_by({"city"}).having("population", ">", 3)
+  .order_byraw("match (\"foo\") against(?)", {"bar"});
+  ASSERT_STREQ(expected_sql.c_str(), builder_->to_sql().c_str());
+  assertEquals(expected_bindings, builder_->get_bindings());
+
+  builder_->clear();
+  builder_->select({"*"}).from("users")
+            .order_byraw("match (\"foo\") against(?)", {"bar"})
+            .having("population", ">", 3).group_by({"city"})
+            .where("registered", 1).join("othertable", [](Builder *join){
+    join->where("bar", "=", "foo");
+  });
+  ASSERT_STREQ(expected_sql.c_str(), builder_->to_sql().c_str());
+  assertEquals(expected_bindings, builder_->get_bindings(), __LINE__);
+}
+
+TEST_F(DBQueryBuilder, testAddBindingWithArrayMergesBindings) {
+  builder_->add_bindings({"foo", "bar"});
+  builder_->add_binding("baz");
+  assertEquals({"foo", "bar", "baz"}, builder_->get_bindings());
+}
+
+TEST_F(DBQueryBuilder, testAddBindingWithArrayMergesBindingsInCorrectOrder) {
+  builder_->add_bindings({"bar", "baz"}, "having");
+  builder_->add_binding("foo", "where");
+  assertEquals({"foo", "bar", "baz"}, builder_->get_bindings());
+}
+
+TEST_F(DBQueryBuilder, testMergeBuildersBindingOrder) {
+  builder_->add_binding("foo", "where");
+  builder_->add_binding("baz", "having");
+  
+  std::unique_ptr<Builder> other_builder(new Builder(connection_.get(), nullptr));
+  other_builder->add_binding("bar", "where");
+
+  builder_->merge_bindings(*other_builder.get());
+  assertEquals({"foo", "bar", "baz"}, builder_->get_bindings());
+}
+
+TEST_F(DBQueryBuilder, testSubSelect) {
+  std::string expected_sql{"select \"foo\", \"bar\", (select \"baz\" from \
+\"two\" where \"subkey\" = ?) as \"sub\" from \"one\" where \"key\" = ?"};
+  variable_array_t expected_bindings{"subval", "val"};
+
+  auto builder = postgres_builder_.get();
+  builder->from("one").select({"foo", "bar"}).where("key", "=", "val");
+  builder->select_sub([](Builder *query){
+    query->from("two").select({"baz"}).where("subkey", "=", "subval");
+  }, "sub");
+  ASSERT_STREQ(expected_sql.c_str(), builder->to_sql().c_str());
+  assertEquals(expected_bindings, builder->get_bindings(), __LINE__);
+
+  builder->clear();
+  std::unique_ptr<Builder> sub_builder(
+      new Builder(connection_.get(), postgres_grammar_.get()));
+  builder->from("one").select({"foo", "bar"}).where("key", "=", "val");
+  sub_builder->from("two").select({"baz"}).where("subkey", "=", "subval");
+  builder->select_sub(*sub_builder.get(), "sub");
+  ASSERT_STREQ(expected_sql.c_str(), builder->to_sql().c_str());
+  assertEquals(expected_bindings, builder->get_bindings(), __LINE__);
+}
+
+TEST_F(DBQueryBuilder, testSqlServerWhereDate) {
+  sqlserver_builder_->select({"*"}).from("users")
+                      .where_date("created_at", "=", "2018-03-07");
+  ASSERT_STREQ("select * from [users] where cast([created_at] as date) = ?",
+               sqlserver_builder_->to_sql().c_str());
+  assertEquals({"2018-03-07"}, sqlserver_builder_->get_bindings());
+}
+
+TEST_F(DBQueryBuilder, testUppercaseLeadingBooleansAreRemoved) {
+  builder_->select({"*"}).from("users").where("name", "=", "Taylor", "AND");
+  ASSERT_STREQ("select * from \"users\" where \"name\" = ?",
+               builder_->to_sql().c_str());
+}
+
+TEST_F(DBQueryBuilder, testLowercaseLeadingBooleansAreRemoved) {
+  builder_->select({"*"}).from("users").where("name", "=", "Taylor", "and");
+  ASSERT_STREQ("select * from \"users\" where \"name\" = ?",
+               builder_->to_sql().c_str());
+}
+
+TEST_F(DBQueryBuilder, testCaseInsensitiveLeadingBooleansAreRemoved) {
+  builder_->select({"*"}).from("users").where("name", "=", "Taylor", "And");
+  ASSERT_STREQ("select * from \"users\" where \"name\" = ?",
+               builder_->to_sql().c_str());
+}
+
+TEST_F(DBQueryBuilder, testTableValuedFunctionAsTableInSqlServer) {
+  auto builder = sqlserver_builder_.get();
+  builder->select({"*"}).from("users()");
+  ASSERT_STREQ("select * from [users]()", builder->to_sql().c_str());
+
+  builder->clear();
+  builder->select({"*"}).from("users(1,2)");
+  ASSERT_STREQ("select * from [users](1,2)", builder->to_sql().c_str());
+}
+
+TEST_F(DBQueryBuilder, testChunkWithLastChunkComplete) {
+
+}
+
+TEST_F(DBQueryBuilder, testChunkWithLastChunkPartial) {
+
+}
+
+TEST_F(DBQueryBuilder, testChunkCanBeStoppedByReturningFalse) {
+
+}

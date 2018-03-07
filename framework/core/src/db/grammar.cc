@@ -11,7 +11,7 @@ using namespace pf_basic::string;
 std::string Grammar::wrap_aliased_value(
     const variable_t &value, bool prefix_alias) {
   auto segments = explode(" as ", value.data);
-  std::cout << "wrap_aliased_value: " << segments.size() << std::endl;
+  //std::cout << "wrap_aliased_value: " << segments.size() << std::endl;
   if (segments.size() != 2) return "";
   // If we are wrapping a table we need to prefix the alias with the table prefix
   // as well in order to generate proper syntax. If this is a column of course
@@ -24,9 +24,9 @@ std::string Grammar::wrap_aliased_value(
 //Wrap the given value segments.
 std::string Grammar::wrap_segments(const variable_array_t &segments) {
   variable_array_t r;
-  std::cout << "wrap_segments: " << segments.size() << std::endl;
+  //std::cout << "wrap_segments: " << segments.size() << std::endl;
   for (size_t i = 0; i < segments.size(); ++i) {
-    std::cout << "wrap_segments xx: " << segments[i].data << "|" << std::endl;
+    //std::cout << "wrap_segments xx: " << segments[i].data << "|" << std::endl;
     if (0 == i && segments.size() > 1)
       r.push_back(wrap_table(segments[i].data));
     else
@@ -53,7 +53,7 @@ std::string Grammar::wrap(const variable_t &value, bool prefix_alias) {
       temp.begin(), temp.end(), temp.begin(), (int (*)(int))std::tolower);
   if (temp.find(" as ") != std::string::npos) 
     return wrap_aliased_value(temp, prefix_alias);
-  std::cout << "wrap: |" << value.data << "|" << std::endl;
+  //std::cout << "wrap: |" << value.data << "|" << std::endl;
   return wrap_segments(explode(".", value.data));
 }
 

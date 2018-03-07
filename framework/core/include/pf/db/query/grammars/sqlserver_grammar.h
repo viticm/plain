@@ -101,7 +101,7 @@ class PF_API SqlserverGrammar : public grammars::Grammar {
    };
 
    //Compile the lock into SQL.
-   virtual std::string compile_lock(Builder &, const std::string &) {
+   virtual std::string compile_lock(Builder &, const variable_t &) {
      return "";
    }
 

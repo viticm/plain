@@ -136,7 +136,7 @@ class PF_API Builder : public concerns::BuildsQueries {
        const std::string &query, std::string &sql, variable_array_t &bindings);
 
    //Add a new select column to the query.
-   Builder &add_select(const std::vector<std::string> &column);
+   Builder &add_select(const variable_array_t &column);
 
    //Add a new select column to the query.
    /**

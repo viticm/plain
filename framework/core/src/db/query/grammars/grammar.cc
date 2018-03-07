@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "pf/basic/string.h"
 #include "pf/support/helpers.h"
 #include "pf/db/concerns/builds_queries.h"
@@ -202,8 +203,10 @@ Grammar::variable_set_t Grammar::compile_components(Builder &query) {
   // function for the component which is responsible for making the SQL.
   for (const std::string &component : select_components_) {
     sql[component] = call_compile(query, component);
+    /**
     if (sql[component] != "")
       std::cout << "component: " << component << " sql: |" << sql[component] << "|" << std::endl;
+    **/
   }
   return sql;
 }
@@ -257,7 +260,9 @@ Grammar::variable_array_t Grammar::compile_wheres_toarray(Builder &query) {
   for (db_query_array_t &where : query.wheres_) {
     std::string r = where["boolean"].data + " " + 
                     safe_call_where(where["type"], query, where);
+    /**
     std::cout << "compile_wheres_toarray: " << r << " " << where["type"] << std::endl;
+    **/
     array.emplace_back(r);
   }
   return array;
@@ -552,10 +557,13 @@ std::string Grammar::concatenate(variable_set_t &segments) {
 std::string Grammar::remove_leading_boolean(const std::string &value) {
   const std::string _and{"and "};
   const std::string _or{"or "};
+  std::string temp{value};
+  std::transform(
+      temp.begin(), temp.end(), temp.begin(), (int (*)(int))std::tolower);
   std::string r{value};
-  auto find_and = r.find(_and);
+  auto find_and = temp.find(_and);
   if (0 == find_and) r.replace(find_and, _and.length(), "");
-  auto find_or = r.find(_or);
+  auto find_or = temp.find(_or);
   if (0 == find_or) r.replace(find_or, _or.length(), "");
   return r;
 }

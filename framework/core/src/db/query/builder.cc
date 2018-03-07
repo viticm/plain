@@ -108,7 +108,7 @@ Builder &Builder::select(const variable_array_t &columns) {
 //Add a new "raw" select expression to the query.
 Builder &Builder::select_raw(
     const std::string &expression, const variable_array_t &bindings) {
-  add_select({expression});
+  add_select({raw(expression)});
   if (!bindings.empty())
     add_bindings(bindings, "select");
 
@@ -162,8 +162,8 @@ void Builder::parse_subselect(
 }
 
 //Add a new select column to the query.
-Builder &Builder::add_select(const std::vector<std::string> &column) {
-  for (const std::string &col : column)
+Builder &Builder::add_select(const variable_array_t &column) {
+  for (const variable_t &col : column)
     columns_.emplace_back(col);
   return *this;
 }
@@ -264,7 +264,7 @@ Builder &Builder::where(const std::string &column,
     roper = "=";
   }
 
-  std::cout << "rval: " << empty(rval) << std::endl;
+  //std::cout << "rval: " << empty(rval) << std::endl;
 
   // If the val is "null", we will just assume the developer wants to add a 
   // where null clause to the query. So, we will allow a short-cut here to

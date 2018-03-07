@@ -100,7 +100,6 @@ std::string SqliteGrammar::date_based_where(
     for (size_t i = 0; i < 2 - value.size(); ++i)
       value = "0" + value;
   }
-  std::cout << "value: " << value << std::endl;
   value = parameter(value);
   return "strftime('" + type + "', " + wrap(where["column"]) + ") " + 
           where["operator"].data + " " + value;

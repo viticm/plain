@@ -96,7 +96,6 @@ variable_set_t PostgresGrammar::compile_truncate(Builder &query) {
 std::string PostgresGrammar::where_date(
     Builder &query, db_query_array_t &where) {
   auto value = parameter(where["value"]);
-  std::cout << "where_date: " << where["operator"].data << std::endl;
   return wrap(where["column"]) + "::date " + where["operator"].data + " " + value;
 }
 
