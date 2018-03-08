@@ -121,6 +121,27 @@ class SqlserverGrammar;
 
 }
 
+namespace schema {
+
+class Blueprint;
+class Builder;
+class MySqlBuilder;
+class PostgresBuilder;
+
+namespace grammars {
+
+class ChangeColumn;
+class RenameColumn;
+class Grammar;
+class MySqlGrammar;
+class PostgresGrammar;
+class SQLiteGrammar;
+class SqlServerGrammar;
+
+}
+
+}
+
 //The query array, has an variable set and query pointer.
 typedef struct PF_API db_query_array_struct db_query_array_t;
 struct db_query_array_struct {
