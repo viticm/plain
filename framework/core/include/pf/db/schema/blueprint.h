@@ -50,6 +50,10 @@ PF_API class Blueprint {
 
  public:
 
+   //Get the raw SQL statements for the blueprint. 
+   std::vector<std::string> to_sql(
+       Connection *connection, grammars::Grammar *grammar);
+
    //Execute the blueprint against the database.
    void build(Connection *connection, grammars::Grammar *grammar);
 
