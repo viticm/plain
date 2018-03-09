@@ -41,7 +41,7 @@ class PF_API Builder {
    };
 
    //Determine if the given table exists.
-   bool has_table(const std::string &table);
+   virtual bool has_table(const std::string &table);
 
    //Determine if the given table has a given column.
    bool has_column(const std::string &column);
@@ -54,7 +54,7 @@ class PF_API Builder {
        const std::string &table, const std::string &column);
 
    //Get the column listing for a given table.
-   std::vector<std::string> get_column_listing(const std::string &table);
+   virtual std::vector<std::string> get_column_listing(const std::string &table);
 
    //Modify a table on the schema.
    void table(const std::string &table, Blueprint::closure_t callback);

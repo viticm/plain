@@ -17,7 +17,7 @@ namespace pf_db {
 
 namespace schema {
 
-PF_API class Blueprint {
+class PF_API Blueprint {
 
  public:
 
