@@ -11,7 +11,7 @@
 #ifndef PF_DB_SCHEMA_GRAMMARS_MYSQL_GRAMMAR_H_
 #define PF_DB_SCHEMA_GRAMMARS_MYSQL_GRAMMAR_H_
 
-#include "pf/db/schema/grammars/mysql_grammar.h"
+#include "pf/db/schema/grammars/grammar.h"
 
 namespace pf_db {
 
@@ -29,6 +29,7 @@ class PF_API MysqlGrammar : public Grammar {
    using variable_array_t = pf_basic::type::variable_array_t;
    using variable_set_t = pf_basic::type::variable_set_t;
    using variable_t = pf_basic::type::variable_t;
+   using fluent_t = db_schema_fluent_t;
 
  public:
 
@@ -46,50 +47,50 @@ table_schema = ? and table_name = ?";
 
    //Compile a create table command.
    std::string compile_create(Blueprint *blueprint, 
-                              const std::string &command, 
+                              fluent_t &command, 
                               Connection *connection);
 
    //Compile an add column command.
-   std::string compile_add(Blueprint *blueprint, const std::string &command);
+   std::string compile_add(Blueprint *blueprint, fluent_t &command);
 
    //Compile a primary key command.
-   std::string compile_primary(Blueprint *blueprint, const std::string &command);
+   std::string compile_primary(Blueprint *blueprint, fluent_t &command);
 
    //Compile a unique key command.
-   std::string compile_unique(Blueprint *blueprint, const std::string &command);
+   std::string compile_unique(Blueprint *blueprint, fluent_t &command);
 
    //Compile a plain index key command.
-   std::string compile_index(Blueprint *blueprint, const std::string &command);
+   std::string compile_index(Blueprint *blueprint, fluent_t &command);
 
    //Compile a drop table command.
-   std::string compile_drop(Blueprint *blueprint, const std::string &command);
+   std::string compile_drop(Blueprint *blueprint, fluent_t &command);
 
    //Compile a drop table (if exists) command.
    std::string compile_drop_if_exists(
-       Blueprint *blueprint, const std::string &command);
+       Blueprint *blueprint, fluent_t &command);
 
    //Compile a drop column command.
    std::string compile_drop_column(
-       Blueprint *blueprint, const std::string &command);
+       Blueprint *blueprint, fluent_t &command);
 
    //Compile a drop primary key command.
    std::string compile_drop_primary(
-       Blueprint *blueprint, const std::string &command);
+       Blueprint *blueprint, fluent_t &command);
 
    //Compile a drop unique key command.
    std::string compile_drop_unique(
-       Blueprint *blueprint, const std::string &command);
+       Blueprint *blueprint, fluent_t &command);
 
    //Compile a drop index command.
    std::string compile_drop_index(
-       Blueprint *blueprint, const std::string &command);
+       Blueprint *blueprint, fluent_t &command);
 
    //Compile a drop foreign key command.
    std::string compile_drop_foreign(
-       Blueprint *blueprint, const std::string &command);
+       Blueprint *blueprint, fluent_t &command);
 
    //Compile a rename table command.
-   std::string compile_rename(Blueprint *blueprint, const std::string &command);
+   std::string compile_rename(Blueprint *blueprint, fluent_t &command);
 
    //Compile the command to enable foreign key constraints.
    std::string compile_enable_foreign_key_constraints() const {
@@ -114,7 +115,7 @@ table_schema = ? and table_name = ?";
 
    //Create the main create table clause.
    std::string compile_create_table(Blueprint *blueprint, 
-                                    const std::string &command, 
+                                    fluent_t &command, 
                                     Connection *connection);
 
    //Append the character set specifications to a command.
@@ -129,7 +130,7 @@ table_schema = ? and table_name = ?";
 
    //Compile an index creation command.
    std::string compile_key(Blueprint *blueprint, 
-                           const std::string &command, 
+                           fluent_t &command, 
                            const std::string &type);
 
    //Create the column definition for a char type.

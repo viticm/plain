@@ -161,6 +161,22 @@ struct db_query_array_struct {
 
 };
 
+//The fluent for db schema garmmar.
+typedef struct PF_API db_schema_fluent_struct db_schema_fluent_t;
+struct db_schema_fluent_struct {
+
+  //The variable set.
+  pf_basic::type::variable_set_t items;
+
+  //The columns.
+  std::vector<std::string> columns;
+
+  pf_basic::type::variable_t operator [] (const std::string &key) {
+    return items[key];
+  };
+
+};
+
 using db_query_bindings_t = 
   std::map<std::string, pf_basic::type::variable_array_t>;
 

@@ -30,19 +30,20 @@ class PF_API Grammar : public pf_db::Grammar {
    using variable_array_t = pf_basic::type::variable_array_t;
    using variable_set_t = pf_basic::type::variable_set_t;
    using variable_t = pf_basic::type::variable_t;
+   using fluent_t = db_schema_fluent_t;
 
  public:
 
    //Compile a rename column command.
    variable_array_t compile_rename_column(
-       Blueprint *blueprint, const std::string &command, Connection *connection);
+       Blueprint *blueprint, fluent_t &command, Connection *connection);
 
    //Compile a change column command into a series of SQL statements.
    variable_array_t compile_change(
-       Blueprint *blueprint, const std::string &command, Connection *connection);
+       Blueprint *blueprint, fluent_t &command, Connection *connection);
 
    //Compile a foreign key command.
-   std::string compile_foreign(Blueprint *blueprint, const std::string &command);
+   std::string compile_foreign(Blueprint *blueprint, fluent_t &command);
 
    //Add a prefix to an array of values.
    variable_array_t prefix_array(
