@@ -12,6 +12,7 @@
 #define PF_DB_SCHEAM_BLUEPRINT_H_
 
 #include "pf/db/schema/config.h"
+#include "pf/db/schema/builder.h"
 
 namespace pf_db {
 
@@ -25,6 +26,7 @@ class PF_API Blueprint {
    using variable_array_t = pf_basic::type::variable_array_t;
    using variable_set_t = pf_basic::type::variable_set_t;
    using variable_t = pf_basic::type::variable_t;
+   using command_t = db_schema_command_t;
 
  public:
 
@@ -64,186 +66,325 @@ class PF_API Blueprint {
    void temporary();
 
    //Indicate that the table should be dropped.
-   void drop();
+   void drop() {
+     add_command("drop", params);
+   };
 
    //Indicate that the table should be dropped if it exists.
-   void drop_ifexists();
-
+   void drop_ifexists() {
+     variable_set_t params;
+     add_command("drop_ifexists");
+   };
    //Indicate that the given columns should be dropped.
-   void drop_column(const std::vector<std::string> &columns);
+   void drop_column(const std::vector<std::string> &columns) {
+     variable_set_t params;
+     for (const std::string &column : columns)
+       params[column] = column;
+     add_command("drop_column", params);
+   };
 
    //Indicate that the given columns should be renamed.
-   void rename_column(const std::vector &from, const std::string &to);
+   void rename_column(const std::vector &from, const std::string &to) {
+     variable_array_t params;
+     params["from"] = from;
+     params["to"] = to;
+     add_command("rename_column", params);
+   };
 
    //Indicate that the given primary key should be dropped.
-   void drop_primary(const std::string &index = "");
+   void drop_primary(const std::string &index = "") {
+     drop_index_command("drop_primary", "primary", index);
+   };
 
    //Indicate that the given unique key should be dropped.
-   void drop_unique(const std::string &index);
+   void drop_unique(const std::string &index) {
+     drop_index_command("drop_primary", "unique", index);
+   };
 
    //Indicate that the given index should be dropped.
-   void drop_index(const std::string &index);
+   void drop_index(const std::string &index) {
+     drop_index_command("drop_primary", "index", index);
+   };
 
    //Indicate that the given foreign key should be dropped.
-   void drop_foreign(const std::string &index);
+   void drop_foreign(const std::string &index) {
+     drop_index_command("drop_primary", "foreign", index);
+   };
 
    //Indicate that the timestamp columns should be dropped.
-   void drop_timestamps();
+   void drop_timestamps() {
+     drop_column({"created_at", "updated_at"});
+   };
 
    //Indicate that the timestamp columns should be dropped.
-   void drop_timestamps_tz();
+   void drop_timestamps_tz() {
+     drop_timestamps();
+   };
 
    //Indicate that the soft delete column should be dropped.
-   void drop_soft_deletes();
+   void drop_soft_deletes() {
+     drop_column({"deleted_at"});
+   };
 
    //Indicate that the soft delete column should be dropped.
-   void drop_soft_deletes_tz();
+   void drop_soft_deletes_tz() {
+     drop_soft_deletes();
+   };
 
    //Indicate that the remember token column should be dropped.
-   void drop_remember_token();
+   void drop_remember_token() {
+     drop_column({"remember_token"});
+   };
 
    //Rename the table to a given name.
-   void rename(const std::string &to);
+   void rename(const std::string &to) {
+     variable_set_t params;
+     params["to"] = to;
+     add_command("rename", params);
+   };
 
    //Specify the primary key(s) for the table.
    void primary(const std::vector<std::vector> columns,
                 const std::string &name = "",
-                const std::string &algorithm = "");
+                const std::string &algorithm = "") {
+     index_command("primary", columns, name, algorithm);
+   };
 
    //Specify a unique index for the table.
    void unique(const std::vector<std::vector> columns,
                const std::string &name = "",
-               const std::string &algorithm = "");
+               const std::string &algorithm = "") {
+     index_command("unique", columns, name, algorithm);
+   };
 
    //Specify an index for the table.
    void index(const std::vector<std::vector> columns,
               const std::string &name = "",
-              const std::string &algorithm = "");
+              const std::string &algorithm = "") {
+     index_command("index", columns, name, algorithm);
+   };
 
    //Specify a foreign key for the table.
    void foreign(const std::vector<std::vector> columns, 
-                const std::string &name = "");
+                const std::string &name = "") {
+     index_command("foreign", columns, name);
+   };
 
    //Create a new auto-incrementing integer (4-byte) column on the table.
-   void increments(const std::string &column);
+   void increments(const std::string &column) {
+     unsigned_integer(column, true);
+   };
 
    //Create a new auto-incrementing tiny integer (1-byte) column on the table.
-   void tiny_increments(const std::string &column);
+   void tiny_increments(const std::string &column) {
+     unsigned_tiny_integer(column, true);
+   };
 
    //Create a new auto-incrementing small integer (2-byte) column on the table.
-   void small_increments(const std::string &column);
+   void small_increments(const std::string &column) {
+     unsigned_small_integer(column, true);
+   };
 
    //Create a new auto-incrementing medium integer (3-byte) column on the table.
-   void medium_increments(const std::string &column);
+   void medium_increments(const std::string &column) {
+     unsigned_medium_integer(column, true);
+   };
 
    //Create a new auto-incrementing big integer (8-byte) column on the table.
-   void big_increments(const std::string &column);
+   void big_increments(const std::string &column) {
+     unsigned_big_integer(column, true);
+   };
 
    //Create a new char column on the table.
-   void _char(const std::string &column, int32_t length = -1);
+   void _char(const std::string &column, int32_t length = -1) {
+     int32_t rlength = -1 == length ? Builder::default_string_length_ : length;
+     variable_set_t params = {{"length", rlength}, };
+     add_column("char", column, params);     
+   };
 
    //Create a new string column on the table.
-   void string(const std::string &column, int32_t length = -1);
+   void string(const std::string &column, int32_t length = -1) {
+     int32_t rlength = -1 == length ? Builder::default_string_length_ : length;
+     variable_set_t params = {{"length", rlength}, };
+     add_column("string", column, params);
+   };
 
    //Create a new text column on the table.
-   void text(const std::string &column);
+   void text(const std::string &column) {
+     add_column("text", column);
+   };
 
    //Create a new medium text column on the table.
-   void medium_text(const std::string &column);
+   void medium_text(const std::string &column) {
+     add_column("medium_text", column);
+   };
 
    //Create a new long text column on the table.
-   void long_text(const std::string &column);
+   void long_text(const std::string &column) {
+     add_column("long_text", column);
+   };
 
    //Create a new integer (4-byte) column on the table.
    void integer(const std::string &column, 
                 bool auto_increment = false, 
-                bool _unsigned = false);
+                bool _unsigned = false) {
+     variable_set_t params;
+     params["auto_increment"] = auto_increment;
+     params["unsigned"] = _unsigned;
+     add_column("integer", column, params);
+   };
 
    //Create a new tiny integer (1-byte) column on the table.
    void tiny_integer(const std::string &column, 
                      bool auto_increment = false, 
-                     bool _unsigned = false);
+                     bool _unsigned = false) {
+     variable_set_t params;
+     params["auto_increment"] = auto_increment;
+     params["unsigned"] = _unsigned;
+     add_column("tiny_integer", column, params);
+   };
 
    //Create a new small integer (2-byte) column on the table.
    void small_integer(const std::string &column, 
                       bool auto_increment = false, 
-                      bool _unsigned = false);
+                      bool _unsigned = false) {
+     variable_set_t params;
+     params["auto_increment"] = auto_increment;
+     params["unsigned"] = _unsigned;
+     add_column("small_integer", column, params);
+   };
 
    //Create a new medium integer (3-byte) column on the table.
    void medium_integer(const std::string &column, 
                        bool auto_increment = false, 
-                       bool _unsigned = false);
+                       bool _unsigned = false) {
+     variable_set_t params;
+     params["auto_increment"] = auto_increment;
+     params["unsigned"] = _unsigned;
+     add_column("medium_integer", column, params);
+   };
   
    //Create a new big integer (8-byte) column on the table.
    void big_integer(const std::string &column, 
                     bool auto_increment = false, 
-                    bool _unsigned = false);
+                    bool _unsigned = false) {
+     variable_set_t params;
+     params["auto_increment"] = auto_increment;
+     params["unsigned"] = _unsigned;
+     add_column("big_integer", column, params);
+   };
  
    //Create a new unsigned integer (4-byte) column on the table.
    void unsigned_integer(const std::string &column, 
-                         bool auto_increment = false);
+                         bool auto_increment = false) {
+     integer(column, auto_increment, true);
+   };
 
    //Create a new unsigned tiny integer (1-byte) column on the table.
    void unsigned_tiny_integer(const std::string &column, 
-                              bool auto_increment = false);
+                              bool auto_increment = false) {
+     tiny_integer(column, auto_increment, true);
+   };
 
    //Create a new unsigned small integer (2-byte) column on the table.
    void unsigned_small_integer(const std::string &column, 
-                               bool auto_increment = false);
-
+                               bool auto_increment = false) {
+     small_integer(column, auto_increment, true);
+   };
 
    //Create a new unsigned medium integer (3-byte) column on the table.
    void unsigned_medium_integer(const std::string &column, 
-                                bool auto_increment = false);
+                                bool auto_increment = false) {
+     medium_integer(column, auto_increment, true);
+   };
 
    //Create a new unsigned big integer (8-byte) column on the table.
    void unsigned_big_integer(const std::string &column, 
-                             bool auto_increment = false);
+                             bool auto_increment = false) {
+     big_integer(column, auto_increment, true);
+   };
 
    //Create a new float column on the table.
-   void _float(const std::string &column, int32_t total = 8, places = 2);
+   void _float(const std::string &column, int32_t total = 8, places = 2) {
+     variable_set_t params;
+     params["total"] = total;
+     params["places"] = places;
+     add_column("float", column, params);
+   };
 
    //Create a new double column on the table.
-   void _double(const std::string &column, int32_t total = -1, places = -1);
+   void _double(const std::string &column, int32_t total = -1, places = -1) {
+     variable_set_t params;
+     params["total"] = total;
+     params["places"] = places;
+     add_column("double", column, params);
+   };
 
    //Create a new decimal column on the table.
-   void decimal(const std::string &column, int32_t total = 8, places = 2);
+   void decimal(const std::string &column, int32_t total = 8, places = 2) {
+     variable_set_t params;
+     params["total"] = total;
+     params["places"] = places;
+     add_column("decimal", column, params);
+   };
 
    //Create a new boolean column on the table.
-   void boolean(const std::string &column);
+   void boolean(const std::string &column) {
+     add_column("boolean", column);
+   };
 
    //Create a new enum column on the table.
    void _enum(const std::string &column, const std::vector<int32_t> &allowed);
 
    //Create a new json column on the table.
-   void json(const std::string &column);
+   void json(const std::string &column) {
+     add_column("json", column);
+   };
 
    //Create a new jsonb column on the table.
-   void jsonb(const std::string &column);
+   void jsonb(const std::string &column) {
+     add_column("jsonb", column);
+   };
 
    //Create a new date column on the table.
-   void date(const std::string &column);
+   void date(const std::string &column) {
+     add_column("date", column);
+   };
 
    //Create a new date-time column on the table.
-   void date_time(const std::string &column);
+   void date_time(const std::string &column) {
+     add_column("date_time", column);
+   };
 
    //Create a new date-time column (with time zone) on the table.
-   void date_time_tz(const std::string &column);
+   void date_time_tz(const std::string &column) {
+     add_column("date_time_tz", column);
+   };
 
    //Create a new time column on the table.
-   void time(const std::string &column);
+   void time(const std::string &column) {
+     add_column("time", column);
+   };
 
    //Create a new time column (with time zone) on the table.
-   void time_tz(const std::string &column);
+   void time_tz(const std::string &column) {
+     add_column("time_tz", column);
+   };
 
    //Create a new timestamp column on the table.
-   void timestamp(const std::string &column);
+   void timestamp(const std::string &column) {
+     add_column("timestamp", column);
+   };
 
    //Create a new timestamp (with time zone) column on the table.
-   void timestamp_tz(const std::string &column);
+   void timestamp_tz(const std::string &column) {
+     add_column("timestamp_tz", column);
+   };
 
    //Add nullable creation and update timestamps to the table.
-   void timestamps(const std::string &column);
+   void timestamps(const std::string &column) {
+     
+   };
 
    //Add nullable creation and update timestamps to the table.
    void nullable_timestamps();
@@ -282,7 +423,14 @@ class PF_API Blueprint {
    //Add a new column to the blueprint.
    void add_column(const std::string &type, 
                    const std::string &name, 
-                   const variable_array_t &param = {});
+                   variable_set_t &param);
+
+   //Add a new column to the blueprint.
+   void add_column(const std::string &type, 
+                   const std::string &name) {
+     variable_set_t param;
+     add_column(type, name, param);
+   };
 
    //Remove a column from the schema blueprint.
    void remove_column(const std::string &name);
@@ -317,7 +465,7 @@ class PF_API Blueprint {
    variable_array_t columns_;
 
    //The commands that should be run for the table.
-   std::vector<std::string> commands_;
+   std::vector<command_t> commands_;
 
  protected:
 
@@ -345,11 +493,22 @@ class PF_API Blueprint {
    void create_index_name(const std::string &type, const std::string &index);
 
    //Add a new command to the blueprint.
-   void add_command(const std::string &name, const variable_array_t &param = {});
+   command_t add_command(const std::string &name, variable_set_t &param) {
+     command_t command;
+     command.name = name;
+     command.params = param;
+     commands_.emplace_back(command);
+     return command;
+   };
+
+   //Add a new command to the blueprint.
+   command_t add_command(const std::string &name) {
+     variable_set_t params;
+     return add_command(name, params);
+   };
 
    //Create a new Fluent command.
-   void create_command(
-       const std::string &name, const variable_array_t &param = {});
+   command_t create_command(const std::string &name, variable_set_t &param);
 
 }
 

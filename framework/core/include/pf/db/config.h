@@ -177,6 +177,19 @@ struct db_schema_fluent_struct {
 
 };
 
+//The command for db schema garmmar.
+typedef struct PF_API db_schema_command_struct db_schema_command_t;
+struct db_schema_command_struct {
+
+  //The name.
+  std::string name;
+
+  //The parameters.
+  pf_basic::type::variable_set_t params;
+
+};
+
+
 using db_query_bindings_t = 
   std::map<std::string, pf_basic::type::variable_array_t>;
 
