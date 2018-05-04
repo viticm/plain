@@ -44,10 +44,11 @@ class PF_API Builder {
    virtual bool has_table(const std::string &table);
 
    //Determine if the given table has a given column.
-   bool has_column(const std::string &column);
+   bool has_column(const std::string &table, const std::string &column);
 
    //Determine if the given table has given columns.
-   bool has_columns(const std::vector<std::string> &columns);
+   bool has_columns(const std::string &table, 
+                    const std::vector<std::string> &columns);
 
    //Get the data type for the given column name.
    std::string get_column_type(
@@ -57,7 +58,10 @@ class PF_API Builder {
    virtual std::vector<std::string> get_column_listing(const std::string &table);
 
    //Modify a table on the schema.
-   void table(const std::string &table, Blueprint::closure_t callback);
+   void table(const std::string &_table, Blueprint::closure_t callback) {
+     std::unique_ptr<Blueprint> blueprint(create_blueprint(_table, callback));
+     build(blueprint);
+   };
 
    //Create a new table on the schema.
    void create(const std::string &table, Blueprint::closure_t callback); 
@@ -95,7 +99,7 @@ class PF_API Builder {
 
    //Create a new command set with a Closure.
    Blueprint *create_blueprint(
-       const std::string &table, closure_t callback = nullptr);
+       const std::string &table, Blueprint::closure_t callback = nullptr);
 
    //Get the database connection instance.
    Connection *get_connection() {

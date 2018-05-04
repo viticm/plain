@@ -5,8 +5,8 @@
 #include "pf/basic/base64.h"
 #include "pf/sys/assert.h"
 #include "pf/basic/io.tcc"
-#include "pf/basic/string.h"
 #include "pf/basic/time_manager.h"
+#include "pf/basic/string.h"
 
 namespace pf_basic {
 
@@ -664,6 +664,16 @@ std::string str_replace(const std::string &search ,
   }
   return r;
 }
+
+std::string str_replaces(const std::vector<std::string> &search , 
+                         const std::string &replace, 
+                         const std::string &subject, 
+                         int32_t count) {
+  std::string r{subject};
+  for (const std::string &item : search)
+    r = str_replace(item, replace, subject, count);
+  return r;
+};
 
 } //namespace string
 

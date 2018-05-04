@@ -35,12 +35,12 @@ class PF_API SqliteGrammar : public Grammar {
  public:
 
    //Compile the query to determine the list of tables.
-   std::string compile_table_exists() const {
+   virtual std::string compile_table_exists() const {
      return "select * from sqlite_master where type = 'table' and name = ?";
    };
 
    //Compile the query to determine the list of columns.
-   std::string compile_column_listing(const std::string &table) const {
+   virtual std::string compile_column_listing(const std::string &table) const {
      return "pragma table_info(" + 
        wrap_table(str_replace(".", "__", table)) + ")";
    }

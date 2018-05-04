@@ -44,7 +44,7 @@ class PF_API Connection : public ConnectionInterface {
 
    //Run a select statement against the database.
    virtual db_fetch_array_t select(const std::string &query, 
-                                   const variable_array_t &bindings);
+                                   const variable_array_t &bindings = {});
 
    //Begin a fluent query against a database table.
    virtual query::Builder *table(const std::string &name);
@@ -109,6 +109,14 @@ class PF_API Connection : public ConnectionInterface {
    virtual query::grammars::Grammar *get_schema_grammar() {
      return nullptr;
    };
+
+   //Get the table prefix for the connection.
+   std::string get_table_prefix() const {
+     return table_prefix_;
+   }
+
+   //Set the table prefix in use by the connection.
+   void set_table_prefix(const std::string &prefix);
 
  public:
 

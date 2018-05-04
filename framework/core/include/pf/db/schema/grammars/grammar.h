@@ -53,10 +53,16 @@ class PF_API Grammar : public pf_db::Grammar {
    std::string wrap_table(const variable_t &table);
 
    //Wrap a value in keyword identifiers.
-   virtual wrap(const const variable_t &value, bool prefix_alias = false);
+   virtual std::string wrap(const variable_t &value, bool prefix_alias = false);
 
    //Create an empty Doctrine DBAL TableDiff from the Blueprint.
    bool get_doctrine_table_diff(Blueprint *blueprint, void *schema);
+
+   //Compile the query to determine the list of tables.
+   virtual std::string compile_table_exists() const;
+
+   //Compile the query to determine the list of columns.
+   virtual std::string compile_column_listing(const std::string &table) const;
 
  protected:
 

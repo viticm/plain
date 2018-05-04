@@ -182,3 +182,9 @@ int32_t Connection::transaction_level() const {
 void Connection::pretend(closure_t callback) {
 
 }
+
+//Set the table prefix in use by the connection.
+void Connection::set_table_prefix(const std::string &prefix) {
+  table_prefix_ = prefix;
+  query_grammar_->set_table_prefix(prefix);
+}

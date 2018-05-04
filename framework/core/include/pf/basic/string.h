@@ -84,6 +84,12 @@ PF_API std::string str_replace(const std::string &search ,
                                const std::string &subject, 
                                int32_t count = -1);
 
+// Reemplaza todas las apariciones del string buscado con el string de reemplazo.
+PF_API std::string str_replaces(const std::vector<std::string> &search , 
+                                const std::string &replace, 
+                                const std::string &subject, 
+                                int32_t count = -1);
+
 } //namespace string
 
 } //namespace pf_basic

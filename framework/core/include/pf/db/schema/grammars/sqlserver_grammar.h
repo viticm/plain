@@ -35,12 +35,12 @@ class PF_API SqlserverGrammar : public Grammar {
  public:
 
    //Compile the query to determine the list of tables.
-   std::string compile_table_exists() const {
+   virtual std::string compile_table_exists() const {
      return "select * from sysobjects where type = 'U' and name = ?";
    };
 
    //Compile the query to determine the list of columns.
-   std::string compile_column_listing(const std::string &table) const {
+   virtual std::string compile_column_listing(const std::string &table) const {
      return "select col.name from sys.columns as col \
 join sys.objects as obj on col.object_id = obj.object_id \
 where obj.type = 'U' and obj.name = '" + table + "'";

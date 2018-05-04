@@ -34,13 +34,13 @@ class PF_API PostgresGrammar : public Grammar {
  public:
 
    //Compile the query to determine the list of tables.
-   std::string compile_table_exists() const {
+   virtual std::string compile_table_exists() const {
      return "select * from information_schema.tables where table_schema = ? \
 and table_name = ?";
    };
 
    //Compile the query to determine the list of columns.
-   std::string compile_column_listing(const std::string &table) const {
+   virtual std::string compile_column_listing(const std::string &table) const {
      return "select column_name from information_schema.columns where \
 table_name = '" + table + "'";
    }
