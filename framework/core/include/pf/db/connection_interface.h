@@ -94,6 +94,21 @@ class PF_API ConnectionInterface {
    //Get the schema grammar used by the connection.
    virtual query::grammars::Grammar *get_schema_grammar() = 0;
 
+   //Get the table prefix for the connection.
+   virtual std::string get_table_prefix() const = 0;
+
+   //Set the table prefix in use by the connection.
+   virtual void set_table_prefix(const std::string &prefix) = 0;
+
+   //Get the name of the connected database.
+   virtual std::string get_database_name() const = 0;
+
+   //Set the name of the connected database.
+   virtual std::string set_database_name(const std::string &database) = 0;
+
+   //Get the config of connection.
+   virtual variable_t get_config(const std::string &name);
+
 };
 
 } //namespace pf_db

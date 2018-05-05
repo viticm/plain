@@ -53,16 +53,20 @@ class PF_API Blueprint {
 
    //Get the raw SQL statements for the blueprint. 
    std::vector<std::string> to_sql(
-       Connection *connection, grammars::Grammar *grammar);
+       ConnectionInterface *connection, grammars::Grammar *grammar);
 
    //Execute the blueprint against the database.
-   void build(Connection *connection, grammars::Grammar *grammar);
+   void build(ConnectionInterface *connection, grammars::Grammar *grammar);
 
    //Indicate that the table needs to be created.
-   void create();
+   void create() {
+     add_command("create");
+   };
 
    //Indicate that the table needs to be temporary.
-   void temporary();
+   void temporary() {
+     temporary_ = true;
+   };
 
    //Indicate that the table should be dropped.
    void drop() {
@@ -70,9 +74,9 @@ class PF_API Blueprint {
    };
 
    //Indicate that the table should be dropped if it exists.
-   void drop_ifexists() {
+   void drop_if_exists() {
      variable_set_t params;
-     add_command("drop_ifexists");
+     add_command("drop_if_exists");
    };
    //Indicate that the given columns should be dropped.
    void drop_column(const std::vector<std::string> &columns) {

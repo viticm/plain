@@ -22,7 +22,7 @@ class PF_API PostgresBuilder : public Builder {
 
  public:
 
-   PostgresBuilder() {}
+   PostgresBuilder(ConnectionInterface *connection) : Builder(connection) {}
    ~PostgresBuilder() {}
 
  public:
@@ -30,7 +30,7 @@ class PF_API PostgresBuilder : public Builder {
    //Determine if the given table exists.
    virtual bool has_table(const std::string &table);
 
-}
+};
 
 } //namespace schema
 

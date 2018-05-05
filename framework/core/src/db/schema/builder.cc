@@ -72,3 +72,57 @@ void Builder::create(const std::string &table, Blueprint::closure_t callback) {
   });
   build(blueprint);
 }
+
+//Drop a table from the schema.
+void Builder::drop(const std::string &table) {
+  std::unique_ptr<Blueprint> blueprint(create_blueprint(table));
+  blueprint->tap([](Blueprint *o){
+    o->drop();
+  });
+  build(blueprint);
+}
+
+//Drop a table from the schema if it exists.
+void Builder::drop_if_exists(const std::string &table) {
+  std::unique_ptr<Blueprint> blueprint(create_blueprint(table));
+  blueprint->tap([](Blueprint *o){
+    o->drop_if_exists();
+  });
+  build(blueprint);
+}
+
+//Rename a table on the schema.
+void Builder::rename(const std::string &from, const std::string &to) {
+  std::unique_ptr<Blueprint> blueprint(create_blueprint(from));
+  blueprint->tap([&to](Blueprint *o){
+    o->rename(to);
+  });
+  build(blueprint);
+}
+
+//Enable foreign key constraints.
+bool Builder::enable_foreign_key_constraints() {
+  return connection_->statement(
+      grammar_->compile_enable_foreign_key_constraints()
+  );
+}
+
+//Disable foreign key constraints.
+bool Builder::disable_foreign_key_constraints() {
+  return connection_->statement(
+      grammar_->compile_disable_foreign_key_constraints()
+  );
+}
+
+//Execute the blueprint to build / modify the table.
+void Builder::build(std::unique_ptr<Blueprint> &blueprint) {
+  blueprint->build(connection_, grammar_);
+}
+
+//Create a new command set with a Closure.
+Blueprint *Builder::create_blueprint(
+    const std::string &table, Blueprint::closure_t callback) {
+  if (!is_null(resolver_))
+    return resolver_(table, callback);
+  return new Blueprint(table, callback);
+}

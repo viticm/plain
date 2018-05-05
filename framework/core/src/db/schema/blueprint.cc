@@ -1,6 +1,8 @@
 #include <algorithm>
 #include "pf/basic/string.h"
 #include "pf/support/helpers.h"
+#include "pf/db/connection_interface.h"
+#include "pf/db/schema/grammars/grammar.h"
 #include "pf/db/schema/builder.h"
 #include "pf/db/schema/blueprint.h"
 
@@ -108,4 +110,30 @@ bool Blueprint::creating() {
     }
   }
   return result;
+}
+
+//Get the raw SQL statements for the blueprint. 
+std::vector<std::string> Blueprint::to_sql(
+    ConnectionInterface *connection, grammars::Grammar *grammar) {
+  add_implied_commands();
+  std::vector<std::string> statements;
+
+  // Each type of command has a corresponding compiler function on the schema
+  // grammar which is used to build the necessary SQL statements to build
+  // the blueprint element, so we'll just call that compilers function.
+  for (fluent_t &command : commands_) {
+    auto sqls = grammar->call_compile(this, command, connection, command["name"]);
+    for (const std::string &sql : sqls) {
+      if (sql != "") statements.emplace_back(sql);
+    }
+  }
+  return statements;
+}
+
+//Execute the blueprint against the database.
+void Blueprint::build(ConnectionInterface *connection, 
+                      grammars::Grammar *grammar) {
+  auto statements = to_sql(connection, grammar);
+  for (const std::string &statement : statements)
+    connection->statement(statement);
 }

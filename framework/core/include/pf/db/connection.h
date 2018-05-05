@@ -111,12 +111,22 @@ class PF_API Connection : public ConnectionInterface {
    };
 
    //Get the table prefix for the connection.
-   std::string get_table_prefix() const {
+   virtual std::string get_table_prefix() const {
      return table_prefix_;
    }
 
    //Set the table prefix in use by the connection.
-   void set_table_prefix(const std::string &prefix);
+   virtual void set_table_prefix(const std::string &prefix);
+
+   //Get the name of the connected database.
+   virtual std::string get_database_name() const {
+     return database_;
+   }
+
+   //Set the name of the connected database.
+   virtual std::string set_database_name(const std::string &database) {
+     database_ = database;
+   }
 
  public:
 

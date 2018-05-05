@@ -21,12 +21,12 @@ namespace schema {
 class PF_API Builder {
 
  public:
-   Builder(Connection *connection);
-   virtual ~Builder();
+   Builder(ConnectionInterface *connection) : connection_{connection} {};
+   virtual ~Builder() {};
 
  public:
    using closure_t = 
-     std::function<void(const std::string &, Blueprint::closure_t)>;
+     std::function<Blueprint *(const std::string &, Blueprint::closure_t)>;
 
  public:
 
@@ -70,7 +70,7 @@ class PF_API Builder {
    void drop(const std::string &table);
 
    //Drop a table from the schema if it exists.
-   void drop_ifexists(const std::string &table);
+   void drop_if_exists(const std::string &table);
 
    //Rename a table on the schema.
    void rename(const std::string &from, const std::string &to);
@@ -84,7 +84,7 @@ class PF_API Builder {
  protected:
 
    //The database connection instance.
-   Connection *connection_;
+   ConnectionInterface *connection_;
 
    //The schema grammar instance.
    grammars::Grammar *grammar_;
@@ -102,7 +102,7 @@ class PF_API Builder {
        const std::string &table, Blueprint::closure_t callback = nullptr);
 
    //Get the database connection instance.
-   Connection *get_connection() {
+   ConnectionInterface *get_connection() {
      return connection_;
    }
 

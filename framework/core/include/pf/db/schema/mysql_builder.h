@@ -22,7 +22,7 @@ class PF_API MysqlBuilder : public Builder {
 
  public:
 
-   MysqlBuilder() {}
+   MysqlBuilder(ConnectionInterface *connection) : Builder(connection) {}
    ~MysqlBuilder() {}
 
  public:
@@ -33,7 +33,7 @@ class PF_API MysqlBuilder : public Builder {
    //Get the column listing for a given table.
    virtual std::vector<std::string> get_column_listing(const std::string &table);
 
-}
+};
 
 } //namespace schema
 

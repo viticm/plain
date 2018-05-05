@@ -23,7 +23,7 @@ namespace grammars {
 class PF_API Grammar : public pf_db::Grammar {
 
  public:
-   Grammar() {}
+   Grammar();
    ~Grammar() {}
 
  public:
@@ -35,22 +35,22 @@ class PF_API Grammar : public pf_db::Grammar {
  public:
 
    //Compile a rename column command.
-   variable_array_t compile_rename_column(
-       Blueprint *blueprint, fluent_t &command, Connection *connection);
+   virtual std::vector<std::string> compile_rename_column(
+       Blueprint *blueprint, fluent_t &command, ConnectionInterface *connection);
 
    //Compile a change column command into a series of SQL statements.
-   variable_array_t compile_change(
-       Blueprint *blueprint, fluent_t &command, Connection *connection);
+   virtual std::vector<std::string> compile_change(
+       Blueprint *blueprint, fluent_t &command, ConnectionInterface *connection);
 
    //Compile a foreign key command.
-   std::string compile_foreign(Blueprint *blueprint, fluent_t &command);
+   virtual std::string compile_foreign(Blueprint *blueprint, fluent_t &command);
 
    //Add a prefix to an array of values.
    variable_array_t prefix_array(
        const std::string &prefix, const variable_array_t &values);
 
    //Wrap a table in keyword identifiers.
-   std::string wrap_table(const variable_t &table);
+   virtual std::string wrap_table(const variable_t &table);
 
    //Wrap a value in keyword identifiers.
    virtual std::string wrap(const variable_t &value, bool prefix_alias = false);
@@ -59,15 +59,84 @@ class PF_API Grammar : public pf_db::Grammar {
    bool get_doctrine_table_diff(Blueprint *blueprint, void *schema);
 
    //Compile the query to determine the list of tables.
-   virtual std::string compile_table_exists() const;
+   virtual std::string compile_table_exists() const = 0;
 
    //Compile the query to determine the list of columns.
-   virtual std::string compile_column_listing(const std::string &table) const;
+   virtual std::string compile_column_listing(const std::string &table) const = 0;
+
+   //Compile the query to determine the list of columns.
+   virtual std::string compile_column_listing() const = 0;
+
+   //Compile the command to enable foreign key constraints.
+   virtual std::string compile_enable_foreign_key_constraints() const = 0;
+
+   //Compile the command to disable foreign key constraints.
+   virtual std::string compile_disable_foreign_key_constraints() const = 0;
+
+   //Compile a create table command.
+   virtual std::string compile_create(Blueprint *blueprint, 
+                                      fluent_t &command, 
+                                      ConnectionInterface *connection) = 0;
+
+   //Compile an add column command.
+   virtual std::string compile_add(
+       Blueprint *blueprint, fluent_t &command) = 0;
+
+   //Compile a primary key command.
+   virtual std::string compile_primary(
+       Blueprint *blueprint, fluent_t &command) = 0;
+
+   //Compile a unique key command.
+   virtual std::string compile_unique(
+       Blueprint *blueprint, fluent_t &command) = 0;
+
+   //Compile a plain index key command.
+   virtual std::string compile_index(
+       Blueprint *blueprint, fluent_t &command) = 0;
+
+   //Compile a drop table command.
+   virtual std::string compile_drop(
+       Blueprint *blueprint, fluent_t &command) = 0;
+
+   //Compile a drop table (if exists) command.
+   virtual std::string compile_drop_if_exists(
+       Blueprint *blueprint, fluent_t &command) = 0;
+
+   //Compile a drop column command.
+   virtual std::string compile_drop_column(
+       Blueprint *blueprint, fluent_t &command) = 0;
+
+   //Compile a drop primary key command.
+   virtual std::string compile_drop_primary(
+       Blueprint *blueprint, fluent_t &command) = 0;
+
+   //Compile a drop unique key command.
+   virtual std::string compile_drop_unique(
+       Blueprint *blueprint, fluent_t &command) = 0;
+
+   //Compile a drop index command.
+   virtual std::string compile_drop_index(
+       Blueprint *blueprint, fluent_t &command) = 0;
+
+   //Compile a drop foreign key command.
+   virtual std::string compile_drop_foreign(
+       Blueprint *blueprint, fluent_t &command) = 0;
+
+   //The function call compile.
+   std::vector<std::string> call_compile(
+       Blueprint *blueprint, 
+       fluent_t &command, 
+       ConnectionInterface *connection, 
+       const std::string &method);
 
  protected:
 
    //If this Grammar supports schema changes wrapped in a transaction.
    bool transactions_;
+
+   //The compile hash functions.
+   std::map< std::string, 
+     std::function<std::string(Blueprint *, fluent_t &)> > compile_calls_;
 
  protected:
 

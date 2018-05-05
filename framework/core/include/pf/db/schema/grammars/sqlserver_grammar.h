@@ -47,59 +47,59 @@ where obj.type = 'U' and obj.name = '" + table + "'";
    }
 
    //Compile a create table command.
-   std::string compile_create(Blueprint *blueprint, 
-                              fluent_t &command, 
-                              Connection *connection);
+   virtual std::string compile_create(Blueprint *blueprint, 
+                                      fluent_t &command, 
+                                      Connection *connection);
 
    //Compile an add column command.
-   std::string compile_add(Blueprint *blueprint, fluent_t &command);
+   virtual std::string compile_add(Blueprint *blueprint, fluent_t &command);
 
    //Compile a primary key command.
-   std::string compile_primary(Blueprint *blueprint, fluent_t &command);
+   virtual std::string compile_primary(Blueprint *blueprint, fluent_t &command);
 
    //Compile a unique key command.
-   std::string compile_unique(Blueprint *blueprint, fluent_t &command);
+   virtual std::string compile_unique(Blueprint *blueprint, fluent_t &command);
 
    //Compile a plain index key command.
-   std::string compile_index(Blueprint *blueprint, fluent_t &command);
+   virtual std::string compile_index(Blueprint *blueprint, fluent_t &command);
 
    //Compile a drop table command.
-   std::string compile_drop(Blueprint *blueprint, fluent_t &command);
+   virtual std::string compile_drop(Blueprint *blueprint, fluent_t &command);
 
    //Compile a drop table (if exists) command.
-   std::string compile_drop_if_exists(
+   virtual std::string compile_drop_if_exists(
        Blueprint *blueprint, fluent_t &command);
 
    //Compile a drop column command.
-   std::string compile_drop_column(
+   virtual std::string compile_drop_column(
        Blueprint *blueprint, fluent_t &command);
 
    //Compile a drop primary key command.
-   std::string compile_drop_primary(
+   virtual std::string compile_drop_primary(
        Blueprint *blueprint, fluent_t &command);
 
    //Compile a drop unique key command.
-   std::string compile_drop_unique(
+   virtual std::string compile_drop_unique(
        Blueprint *blueprint, fluent_t &command);
 
    //Compile a drop index command.
-   std::string compile_drop_index(
+   virtual std::string compile_drop_index(
        Blueprint *blueprint, fluent_t &command);
 
    //Compile a drop foreign key command.
-   std::string compile_drop_foreign(
+   virtual std::string compile_drop_foreign(
        Blueprint *blueprint, fluent_t &command);
 
    //Compile a rename table command.
-   std::string compile_rename(Blueprint *blueprint, fluent_t &command);
+   virtual std::string compile_rename(Blueprint *blueprint, fluent_t &command);
 
    //Compile the command to enable foreign key constraints.
-   std::string compile_enable_foreign_key_constraints() const {
+   virtual std::string compile_enable_foreign_key_constraints() const {
      return "SET CONSTRAINTS ALL IMMEDIATE;";
    }
 
    //Compile the command to disable foreign key constraints.
-   std::string compile_disable_foreign_key_constraints() const {
+   virtual std::string compile_disable_foreign_key_constraints() const {
      return "SET CONSTRAINTS ALL DEFERRED;";
    }
 
