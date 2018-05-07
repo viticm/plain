@@ -171,6 +171,9 @@ struct db_schema_fluent_struct {
   //The columns.
   std::vector<std::string> columns;
 
+  //The references.
+  std::vector<std::string> references;
+
   pf_basic::type::variable_t operator [] (const std::string &key) {
     return items[key];
   };
