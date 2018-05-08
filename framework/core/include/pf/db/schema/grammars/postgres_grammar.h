@@ -22,7 +22,7 @@ namespace grammars {
 class PF_API PostgresGrammar : public Grammar {
 
  public:
-   PostgresGrammar() {}
+   PostgresGrammar();
    ~PostgresGrammar() {}
 
  public:
@@ -48,13 +48,17 @@ table_name = '" + table + "'";
    //Compile a create table command.
    virtual std::string compile_create(Blueprint *blueprint, 
                                       fluent_t &command, 
-                                      Connection *connection);
+                                      ConnectionInterface *connection);
 
    //Compile an add column command.
    virtual std::string compile_add(Blueprint *blueprint, fluent_t &command);
 
    //Compile a primary key command.
-   virtual std::string compile_primary(Blueprint *blueprint, fluent_t &command);
+   virtual std::string compile_primary(Blueprint *blueprint, fluent_t &command) {
+     auto columns = columnize(command.columns);
+     return "alter table " + 
+            wrap_table(blueprint) + " add primary key (" + columns + ")";
+   };
 
    //Compile a unique key command.
    virtual std::string compile_unique(Blueprint *blueprint, fluent_t &command);
@@ -63,34 +67,50 @@ table_name = '" + table + "'";
    virtual std::string compile_index(Blueprint *blueprint, fluent_t &command);
 
    //Compile a drop table command.
-   virtual std::string compile_drop(Blueprint *blueprint, fluent_t &command);
+   virtual std::string compile_drop(Blueprint *blueprint, fluent_t &) {
+     return "drop table " + wrap_table(blueprint);
+   };
 
    //Compile a drop table (if exists) command.
    virtual std::string compile_drop_if_exists(
-       Blueprint *blueprint, fluent_t &command);
+       Blueprint *blueprint, fluent_t &) {
+     return "drop table if exists " + wrap_table(blueprint);
+   };
 
    //Compile a drop column command.
    virtual std::string compile_drop_column(
        Blueprint *blueprint, fluent_t &command);
 
    //Compile a drop primary key command.
-   virtual std::string compile_drop_primary(
-       Blueprint *blueprint, fluent_t &command);
+   virtual std::string compile_drop_primary(Blueprint *blueprint, fluent_t &) {
+     std::string index = wrap(blueprint->get_table() + "_pkey");
+     return "alter table " + wrap_table(blueprint) + " drop constraint " + index;
+   };
 
    //Compile a drop unique key command.
    virtual std::string compile_drop_unique(
-       Blueprint *blueprint, fluent_t &command);
+       Blueprint *blueprint, fluent_t &command) {
+     std::string index = wrap(command["index"]);
+     return "alter table " + wrap_table(blueprint) + " drop constraint " + index;
+   };
 
    //Compile a drop index command.
-   virtual std::string compile_drop_index(
-       Blueprint *blueprint, fluent_t &command);
+   virtual std::string compile_drop_index(Blueprint *, fluent_t &command) {
+     return "drop index " + wrap(command["index"]);
+   };
 
    //Compile a drop foreign key command.
    virtual std::string compile_drop_foreign(
-       Blueprint *blueprint, fluent_t &command);
+       Blueprint *blueprint, fluent_t &command) {
+     std::string index = wrap(command["index"]);
+     return "alter table " + wrap_table(blueprint) + " drop constraint " + index;
+   };
 
    //Compile a rename table command.
-   virtual std::string compile_rename(Blueprint *blueprint, fluent_t &command);
+   virtual std::string compile_rename(Blueprint *blueprint, fluent_t &command) {
+     auto from = wrap_table(blueprint);
+     return "alter table " + from + " rename to " + wrap_table(command["to"]);
+   };
 
    //Compile the command to enable foreign key constraints.
    virtual std::string compile_enable_foreign_key_constraints() const {
@@ -105,111 +125,193 @@ table_name = '" + table + "'";
  protected:
 
    //Create the column definition for a char type.
-   std::string type_char(fluent_t &column) const;
+   virtual std::string type_char(fluent_t &column) const {
+     return "char(" + column["length"].data + ")";
+   };
 
    //Create the column definition for a string type.
-   std::string type_string(fluent_t &column) const;
+   virtual std::string type_string(fluent_t &column) const {
+     return "varchar(" + column["length"].data + ")";
+   };
 
    //Create the column definition for a text type.
-   std::string type_text(fluent_t &column) const;
+   virtual std::string type_text(fluent_t &) const {
+     return "text";
+   };
 
    //Create the column definition for a medium text type.
-   std::string type_medium_text(fluent_t &column) const;
+   virtual std::string type_medium_text(fluent_t &) const {
+     return "text";
+   };
 
    //Create the column definition for a long text type.
-   std::string type_long_text(fluent_t &column) const;
+   virtual std::string type_long_text(fluent_t &) const {
+     return "text";
+   };
 
    //Create the column definition for a big integer type.
-   std::string type_big_integer(fluent_t &column) const;
+   virtual std::string type_big_integer(fluent_t &column) const {
+     return column["auto_increment"] == true ? "bigserial" : "bigint";
+   };
 
    //Create the column definition for an integer type.
-   std::string type_integer(fluent_t &column) const;
+   virtual std::string type_integer(fluent_t &column) const {
+     return column["auto_increment"] == true ? "serial" : "integer";
+   };
 
    //Create the column definition for a medium integer type.
-   std::string type_medium_integer(fluent_t &column) const;
+   virtual std::string type_medium_integer(fluent_t &column) const {
+     return column["auto_increment"] == true ? "serial" : "integer";
+   };
 
    //Create the column definition for a tiny integer type.
-   std::string type_tiny_integer(fluent_t &column) const;
+   virtual std::string type_tiny_integer(fluent_t &column) const {
+     return column["auto_increment"] == true ? "smallserial" : "smallint";
+   };
 
    //Create the column definition for a small integer type.
-   std::string type_small_integer(fluent_t &column) const;
+   virtual std::string type_small_integer(fluent_t &column) const {
+     return column["auto_increment"] == true ? "smallserial" : "smallint";
+   };
 
    //Create the column definition for a float type.
-   std::string type_float(fluent_t &column) const;
+   virtual std::string type_float(fluent_t &column) const {
+     return type_double(column); 
+   };
 
    //Create the column definition for a double type.
-   std::string type_double(fluent_t &column) const;
+   virtual std::string type_double(fluent_t &) const {
+     return "double precision";
+   };
+
+   //Create the column definition for a real type.
+   virtual std::string type_real(fluent_t &) const {
+     return "real";
+   }
 
    //Create the column definition for a decimal type.
-   std::string type_decimal(fluent_t &column) const; 
+   virtual std::string type_decimal(fluent_t &column) const {
+     return "decimal(" + 
+            column["total"].data + ", " + column["places"].data + ")";
+   }; 
 
    //Create the column definition for a boolean type.
-   std::string type_boolean(fluent_t &column) const;
+   virtual std::string type_boolean(fluent_t &) const {
+     return "boolean";
+   };
 
    //Create the column definition for an enum type.
-   std::string type_enum(fluent_t &column) const;
+   virtual std::string type_enum(fluent_t &column) const;
 
    //Create the column definition for a json type.
-   std::string type_json(fluent_t &column) const;
+   virtual std::string type_json(fluent_t &) const {
+     return "json";
+   };
 
    //Create the column definition for a jsonb type.
-   std::string type_jsonb(fluent_t &column) const; 
+   virtual std::string type_jsonb(fluent_t &) const {
+     return "jsonb";
+   }; 
 
    //Create the column definition for a date type.
-   std::string type_date(fluent_t &column) const; 
+   virtual std::string type_date(fluent_t &) const {
+     return "date";
+   }; 
 
    //Create the column definition for a date-time type.
-   std::string type_date_time(fluent_t &column) const;
+   virtual std::string type_date_time(fluent_t &) const {
+     return "timestamp(0) without time zone";
+   };
 
    //Create the column definition for a date-time type.
-   std::string type_date_time_tz(fluent_t &column) const;
+   virtual std::string type_date_time_tz(fluent_t &) const {
+     return "timestamp(0) with time zone";
+   };
 
    //Create the column definition for a time type.
-   std::string type_time(fluent_t &column) const;
+   virtual std::string type_time(fluent_t &) const {
+     return "time(0) without time zone";
+   };
 
    //Create the column definition for a time type.
-   std::string type_time_tz(fluent_t &column) const;
+   virtual std::string type_time_tz(fluent_t &) const {
+     return "time(0) with time zone";
+   };
 
    //Create the column definition for a timestamp type.
-   std::string type_timestamp(fluent_t &column) const;
+   virtual std::string type_timestamp(fluent_t &column) const {
+     if (column["use_current"] == true)
+       return "timestamp(0) without time zone default CURRENT_TIMESTAMP(0)";
+     return "timestamp(0) without time zone";
+   };
+
+   //Create the column definition for a timestamp type.
+   virtual std::string type_timestamp_tz(fluent_t &column) const {
+     if (column["use_current"] == true)
+       return "timestamp(0) without time zone default CURRENT_TIMESTAMP(0)";
+     return "timestamp(0) without time zone";
+   };
+
 
    //Create the column definition for a binary type.
-   std::string type_blob(fluent_t &column) const;
+   virtual std::string type_binary(fluent_t &) const {
+     return "bytea";
+   };
 
    //Create the column definition for a uuid type.
-   std::string type_uuid(fluent_t &column) const;
+   virtual std::string type_uuid(fluent_t &) const {
+     return "uuid";
+   };
 
    //Create the column definition for an IP address type.
-   std::string type_ip_address(fluent_t &column) const;
+   virtual std::string type_ip_address(fluent_t &) const {
+     return "inet";
+   };
 
    //Create the column definition for a MAC address type.
-   std::string type_mac_address(fluent_t &column) const;
+   virtual std::string type_mac_address(fluent_t &) const {
+     return "macaddr";
+   };
+
+ protected:
 
    //Get the SQL for a generated virtual column modifier.
-   std::string modify_virtual_as(Blueprint *blueprint, fluent_t &column);
+   virtual std::string modify_virtual_as(Blueprint *, fluent_t &) {
+     return "";
+   };
 
    //Get the SQL for a generated stored column modifier.
-   std::string modify_stored_as(Blueprint *blueprint, fluent_t &column);
+   virtual std::string modify_stored_as(Blueprint *, fluent_t &) {
+     return "";
+   };
 
    //Get the SQL for an unsigned column modifier.
-   std::string modify_unsigned(Blueprint *blueprint, fluent_t &column);
+   virtual std::string modify_unsigned(Blueprint *, fluent_t &) {
+     return "";
+   };
 
    //Get the SQL for a character set column modifier.
-   std::string modify_character(Blueprint *blueprint, fluent_t &column);
+   virtual std::string modify_charset(Blueprint *, fluent_t &) {
+     return "";
+   };
 
    //Get the SQL for a collation column modifier.
-   std::string modify_collation(Blueprint *blueprint, fluent_t &column);
+   virtual std::string modify_collate(Blueprint *, fluent_t &) {
+     return "";
+   };
+
+   //Get the SQL for a nullable column modifier.
+   virtual std::string modify_nullable(Blueprint *, fluent_t &column) {
+     return column["nullable"] == true ? " null" : " not null";
+   };
 
    //Get the SQL for a default column modifier.
-   std::string modify_default(Blueprint *blueprint, fluent_t &column);
+   virtual std::string modify_default(Blueprint *blueprint, fluent_t &column);
 
    //Get the SQL for an auto-increment column modifier.
-   std::string modify_increment(Blueprint *blueprint, fluent_t &column);
+   virtual std::string modify_increment(Blueprint *, fluent_t &column);
 
-   //Wrap a single string in keyword identifiers.
-   virtual std::string wrap_value(const variable_t &value);
-
-}
+};
 
 } //namespace grammars
 

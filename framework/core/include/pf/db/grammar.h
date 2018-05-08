@@ -40,7 +40,20 @@ class PF_API Grammar {
    };
 
    //Wrap an array of values.
-   void wrap_array(variable_array_t &values);
+   std::vector<std::string> wrap_array(const variable_array_t &values) {
+     std::vector<std::string> r;
+     for (auto &value : values)
+       r.emplace_back(wrap(value));
+     return r;
+   };
+
+  //Wrap an array of values.
+   std::vector<std::string> wrap_array(const std::vector<std::string> &values) {
+     std::vector<std::string> r;
+     for (auto &value : values)
+       r.emplace_back(wrap(value));
+     return r;
+   };
 
    //Wrap a table in keyword identifiers.
    virtual std::string wrap_table(const variable_t &table) {

@@ -89,6 +89,11 @@ PF_API std::string str_replaces(const std::vector<std::string> &search ,
                                 const std::string &replace, 
                                 const std::string &subject, 
                                 int32_t count = -1);
+// Quote string with slashes.
+PF_API std::string addslashes(const std::string &str) {
+  return str_replace(
+      "'", "\'", str_replace("\"", "\\\"", str_replace("\\", "\\\\", str)));
+};
 
 } //namespace string
 

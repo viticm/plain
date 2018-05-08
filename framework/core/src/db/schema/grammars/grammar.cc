@@ -187,8 +187,17 @@ std::string Grammar::compile_foreign(Blueprint *blueprint, fluent_t &command) {
 Grammar::variable_array_t Grammar::prefix_array(
     const std::string &prefix, const variable_array_t &values) {
   variable_array_t r;
-  for (const variable_t & value : values)
+  for (const variable_t &value : values)
     r.emplace_back(prefix + " " + value.data);
+  return r;
+}
+
+//Add a prefix to an array of values.
+Grammar::variable_array_t Grammar::prefix_array(
+    const std::string &prefix, const std::vector<std::string> &values) {
+  variable_array_t r;
+  for (auto &value : values)
+    r.emplace_back(prefix + " " + value);
   return r;
 }
 

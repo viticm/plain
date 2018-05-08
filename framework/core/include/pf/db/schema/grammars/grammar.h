@@ -49,6 +49,10 @@ class PF_API Grammar : public pf_db::Grammar {
    variable_array_t prefix_array(
        const std::string &prefix, const variable_array_t &values);
 
+   //Add a prefix to an array of values.
+   variable_array_t prefix_array(
+       const std::string &prefix, const std::vector<std::string> &values);
+
    //Wrap a table in keyword identifiers.
    virtual std::string wrap_table(Blueprint *blueprint);
 
@@ -235,6 +239,11 @@ class PF_API Grammar : public pf_db::Grammar {
    //Create the column definition for a double type.
    virtual std::string type_double(fluent_t &column) const = 0;
 
+  //Create the column definition for a decimal type.
+   virtual std::string type_real(fluent_t &column) const {
+     return "";
+   }; 
+
    //Create the column definition for a decimal type.
    virtual std::string type_decimal(fluent_t &column) const = 0; 
 
@@ -268,8 +277,11 @@ class PF_API Grammar : public pf_db::Grammar {
    //Create the column definition for a timestamp type.
    virtual std::string type_timestamp(fluent_t &column) const = 0;
 
+   //Create the column definition for a timestamp type.
+   virtual std::string type_timestamp_tz(fluent_t &column) const = 0;
+
    //Create the column definition for a binary type.
-   virtual std::string type_blob(fluent_t &column) const = 0;
+   virtual std::string type_binary(fluent_t &column) const = 0;
 
    //Create the column definition for a uuid type.
    virtual std::string type_uuid(fluent_t &column) const = 0;
@@ -292,10 +304,13 @@ class PF_API Grammar : public pf_db::Grammar {
    virtual std::string modify_unsigned(Blueprint *blueprint, fluent_t &column) = 0;
 
    //Get the SQL for a character set column modifier.
-   virtual std::string modify_character(Blueprint *blueprint, fluent_t &column) = 0;
+   virtual std::string modify_charset(Blueprint *blueprint, fluent_t &column) = 0;
 
    //Get the SQL for a collation column modifier.
-   virtual std::string modify_collation(Blueprint *blueprint, fluent_t &column) = 0;
+   virtual std::string modify_collate(Blueprint *blueprint, fluent_t &column) = 0;
+
+   //Get the SQL for a nullable column modifier.
+   virtual std::string modify_nullable(Blueprint *blueprint, fluent_t &column) = 0;
 
    //Get the SQL for a default column modifier.
    virtual std::string modify_default(Blueprint *blueprint, fluent_t &column) = 0;

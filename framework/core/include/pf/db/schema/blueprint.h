@@ -30,7 +30,8 @@ class PF_API Blueprint {
  public:
 
    //The construct.
-   Blueprint(const std::string &table, closure_t callback = nullptr);
+   Blueprint(const std::string &table, closure_t callback = nullptr) : 
+     temporary_{false} {};
 
    //The destruct.
    ~Blueprint();
@@ -334,7 +335,7 @@ class PF_API Blueprint {
    //Create a new enum column on the table.
    fluent_t &_enum(const std::string &column, 
                    const std::vector<int32_t> &allowed) {
-
+     return add_column("enum", column, allowed);
    }
 
    //Create a new json column on the table.
@@ -458,6 +459,18 @@ class PF_API Blueprint {
        column.items[it->first] = it->second;
      column.items["type"] = type;
      column.items["name"] = name;
+     columns_.emplace_back(column);
+     return columns_[columns_.size() - 1];
+   };
+
+   //Add a new column to the blueprint.
+   fluent_t &add_column(const std::string &type, 
+                        const std::string &name, 
+                        const std::vector<int32_t> allowed) {
+     fluent_t column;
+     column.items["type"] = type;
+     column.items["name"] = name;
+     column.allowed = allowed;
      columns_.emplace_back(column);
      return columns_[columns_.size() - 1];
    };

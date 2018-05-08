@@ -133,9 +133,9 @@ namespace grammars {
 class ChangeColumn;
 class RenameColumn;
 class Grammar;
-class MySqlGrammar;
+class MysqlGrammar;
 class PostgresGrammar;
-class SQLiteGrammar;
+class SqliteGrammar;
 class SqlServerGrammar;
 
 }
@@ -173,6 +173,9 @@ struct db_schema_fluent_struct {
 
   //The references.
   std::vector<std::string> references;
+
+  //The allowed.
+  std::vector<int32_t> allowed;
 
   pf_basic::type::variable_t operator [] (const std::string &key) {
     return items[key];
