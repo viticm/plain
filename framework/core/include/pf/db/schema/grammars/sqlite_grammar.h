@@ -23,7 +23,7 @@ class PF_API SqliteGrammar : public Grammar {
 
  public:
 
-   SqliteGrammar() {}
+   SqliteGrammar();
    ~SqliteGrammar() {}
 
  public:
@@ -40,15 +40,12 @@ class PF_API SqliteGrammar : public Grammar {
    };
 
    //Compile the query to determine the list of columns.
-   virtual std::string compile_column_listing(const std::string &table) const {
-     return "pragma table_info(" + 
-       wrap_table(str_replace(".", "__", table)) + ")";
-   }
+   virtual std::string compile_column_listing(const std::string &table);
 
    //Compile a create table command.
    virtual std::string compile_create(Blueprint *blueprint, 
                                       fluent_t &command, 
-                                      Connection *connection);
+                                      ConnectionInterface *connection);
 
    //Compile an add column command.
    virtual std::string compile_add(Blueprint *blueprint, fluent_t &command);
@@ -213,6 +210,17 @@ class PF_API SqliteGrammar : public Grammar {
 
    //Wrap a single string in keyword identifiers.
    virtual std::string wrap_value(const variable_t &value);
+
+ protected:
+
+   //Get the foreign key syntax for a table creation statement.
+   std::string add_foreign_keys(Blueprint *blueprint);
+
+   //Get the SQL for the foreign key.
+   std::string get_foreign_key(fluent_t &foreign);
+
+   //Get the primary key syntax for a table creation statement.
+   std::string add_primary_keys(Blueprint *blueprint);
 
 };
 

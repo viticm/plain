@@ -36,6 +36,9 @@ class Collection {
    //The filter callback function.
    using filter_callback_t = std::function<bool (T &)>;
 
+   //The reduce callback function.
+   using reduce_callback_t = std::function<std::string (std::string &, T &)>;
+
  public:
 
    //Run a map over each of the items.
@@ -43,6 +46,10 @@ class Collection {
 
    //Create a collection of all elements that do not pass a given truth test.
    ArrayAccess reject(filter_callback_t callback);
+
+   //Reduce the collection to a single value(string).
+   std::string reduce(reduce_callback_t callback, 
+                      const std::string &initial = "");
 
 
 };

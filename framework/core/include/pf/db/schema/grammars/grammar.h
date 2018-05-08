@@ -74,7 +74,7 @@ class PF_API Grammar : public pf_db::Grammar {
    virtual std::string compile_table_exists() const = 0;
 
    //Compile the query to determine the list of columns.
-   virtual std::string compile_column_listing(const std::string &table) const = 0;
+   virtual std::string compile_column_listing(const std::string &table) = 0;
 
    //Compile the query to determine the list of columns.
    virtual std::string compile_column_listing() const = 0;

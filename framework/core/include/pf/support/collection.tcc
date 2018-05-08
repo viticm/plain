@@ -23,6 +23,15 @@ inline ArrayAccess Collection<T>::map(map_callback_t callback) {
   return a;
 }
 
+//Reduce the collection to a single value(string).
+template <typename T>
+inline std::string Collection<T>::reduce(reduce_callback_t callback, 
+                                         const std::string &initial) {
+  std::string r{initial};
+  for (T &item : original_)
+    callback(r, item);
+};
+
 } //namespace pf_support
 
 #endif //PF_SUPPORT_COLLECTION_TCC_

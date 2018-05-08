@@ -40,7 +40,7 @@ and table_name = ?";
    };
 
    //Compile the query to determine the list of columns.
-   virtual std::string compile_column_listing(const std::string &table) const {
+   virtual std::string compile_column_listing(const std::string &table) {
      return "select column_name from information_schema.columns where \
 table_name = '" + table + "'";
    }
