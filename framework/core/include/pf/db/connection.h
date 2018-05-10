@@ -124,7 +124,7 @@ class PF_API Connection : public ConnectionInterface {
    }
 
    //Set the name of the connected database.
-   virtual std::string set_database_name(const std::string &database) {
+   virtual void set_database_name(const std::string &database) {
      database_ = database;
    }
 

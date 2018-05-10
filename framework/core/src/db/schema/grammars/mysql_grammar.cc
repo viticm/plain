@@ -97,6 +97,23 @@ std::string MysqlGrammar::compile_create_engine(
   return r;
 }
 
+//Compile an index creation command.
+std::string MysqlGrammar::compile_key(Blueprint *blueprint, 
+                                      fluent_t &command, 
+                                      const std::string &type) {
+  char temp[1024]{0};
+  std::string algorithm = 
+    command["algorithm"] == true ? " using " + command["algorithm"].data : "";
+  snprintf(temp,
+           sizeof(temp) - 1,
+           "alter table %s add %s %s%s(%s)",
+           wrap_table(blueprint).c_str(),
+           wrap(command["index"]).c_str(),
+           algorithm.c_str(),
+           columnize(command.columns).c_str());
+  return temp;
+}
+
 //Compile an add column command.
 std::string MysqlGrammar::compile_add(Blueprint *blueprint, fluent_t &command) {
   auto columns = prefix_array("add", get_columns(blueprint));

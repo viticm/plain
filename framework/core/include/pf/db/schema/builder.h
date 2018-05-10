@@ -21,8 +21,8 @@ namespace schema {
 class PF_API Builder {
 
  public:
-   Builder(ConnectionInterface *connection) : connection_{connection} {};
-   virtual ~Builder() {};
+   Builder(ConnectionInterface *connection) : connection_{connection} {}
+   virtual ~Builder() {}
 
  public:
    using closure_t = 
@@ -38,7 +38,7 @@ class PF_API Builder {
    //Set the default string length for migrations.
    void default_string_length(int32_t length) {
      default_string_length_ = length;
-   };
+   }
 
    //Determine if the given table exists.
    virtual bool has_table(const std::string &table);
@@ -61,7 +61,7 @@ class PF_API Builder {
    void table(const std::string &_table, Blueprint::closure_t callback) {
      std::unique_ptr<Blueprint> blueprint(create_blueprint(_table, callback));
      build(blueprint);
-   };
+   }
 
    //Create a new table on the schema.
    void create(const std::string &table, Blueprint::closure_t callback); 

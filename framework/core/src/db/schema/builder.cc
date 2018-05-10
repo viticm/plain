@@ -7,6 +7,8 @@
 using namespace pf_support;
 using namespace pf_db::schema;
 
+int32_t Builder::default_string_length_{255};
+
 //Determine if the given table exists.
 bool Builder::has_table(const std::string &table) {
   std::string _table = connection_->get_table_prefix() + table;
@@ -59,7 +61,7 @@ std::vector<std::string> Builder::get_column_listing(const std::string &table) {
   auto results = connection_->select(grammar_->compile_column_listing(_table));
   std::vector<std::string> r;
   for (auto &key : results.keys)
-    r.emplace_back(key);
+    r.emplace_back(key.data);
   return r;
 }
 

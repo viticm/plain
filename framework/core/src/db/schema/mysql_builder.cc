@@ -21,6 +21,6 @@ std::vector<std::string> MysqlBuilder::get_column_listing(
   );
   std::vector<std::string> r;
   for (auto &key : results.keys)
-    r.emplace_back(key);
+    r.emplace_back(key.data);
   return r;
 }

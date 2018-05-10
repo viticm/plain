@@ -104,10 +104,13 @@ class PF_API ConnectionInterface {
    virtual std::string get_database_name() const = 0;
 
    //Set the name of the connected database.
-   virtual std::string set_database_name(const std::string &database) = 0;
+   virtual void set_database_name(const std::string &database) = 0;
 
    //Get the config of connection.
-   virtual variable_t get_config(const std::string &name);
+   virtual variable_t get_config(const std::string &name) {
+     UNUSED(name);
+     return "";
+   }
 
 };
 

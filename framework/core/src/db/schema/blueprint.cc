@@ -56,14 +56,14 @@ std::vector<Blueprint::fluent_t> Blueprint::get_changed_columns() {
 void Blueprint::add_implied_commands() {
   if (get_added_columns().size() > 0 && !creating()) {
     std::vector<fluent_t> temp;
-    temp.emplace_back(temp, create_command("add"));
+    temp.emplace_back(create_command("add"));
     for (auto &item : commands_)
       temp.emplace_back(item);
     commands_ = temp;
   }
   if (get_changed_columns().size() > 0 && !creating()) {
     std::vector<fluent_t> temp;
-    temp.emplace_back(temp, create_command("change"));
+    temp.emplace_back(create_command("change"));
     for (auto &item : commands_)
       temp.emplace_back(item);
     commands_ = temp;

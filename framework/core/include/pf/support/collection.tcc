@@ -31,7 +31,7 @@ inline std::string Collection<T>::reduce(reduce_callback_t callback,
   for (T &item : original_)
     callback(r, item);
   return r;
-};
+}
 
 } //namespace pf_support
 

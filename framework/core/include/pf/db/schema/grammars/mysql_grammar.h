@@ -37,7 +37,7 @@ class PF_API MysqlGrammar : public Grammar {
    virtual std::string compile_table_exists() const {
      return "select * from information_schema.tables where table_schema = ? \
 and table_name = ?";
-   };
+   }
 
    //Compile the query to determine the list of columns.
    virtual std::string compile_column_listing() const {
@@ -57,28 +57,28 @@ table_schema = ? and table_name = ?";
    virtual std::string compile_primary(Blueprint *blueprint, fluent_t &command) {
      command["name"] = ""; //???
      return compile_key(blueprint, command, "primary key");
-   };
+   }
 
    //Compile a unique key command.
    virtual std::string compile_unique(Blueprint *blueprint, fluent_t &command) {
      return compile_key(blueprint, command, "unique");
-   };
+   }
 
    //Compile a plain index key command.
    virtual std::string compile_index(Blueprint *blueprint, fluent_t &command) {
      return compile_key(blueprint, command, "index");
-   };
+   }
 
    //Compile a drop table command.
    virtual std::string compile_drop(Blueprint *blueprint, fluent_t &) {
      return "drop table " + wrap_table(blueprint);
-   };
+   }
 
    //Compile a drop table (if exists) command.
    virtual std::string compile_drop_if_exists(
        Blueprint *blueprint, fluent_t &) {
      return "drop table if exists " + wrap_table(blueprint);
-   };
+   }
 
    //Compile a drop column command.
    virtual std::string compile_drop_column(
@@ -88,34 +88,34 @@ table_schema = ? and table_name = ?";
    virtual std::string compile_drop_primary(
        Blueprint *blueprint, fluent_t &) {
      return "alter table " + wrap_table(blueprint) + " drop primary key";
-   };
+   }
 
    //Compile a drop unique key command.
    virtual std::string compile_drop_unique(
        Blueprint *blueprint, fluent_t &command) {
      auto index = wrap(command["index"]);
      return "alter table " + wrap_table(blueprint) + " drop index " + index;
-   };
+   }
 
    //Compile a drop index command.
    virtual std::string compile_drop_index(
        Blueprint *blueprint, fluent_t &command) {
      auto index = wrap(command["index"]);
      return "alter table " + wrap_table(blueprint) + " drop index " + index;
-   };
+   }
 
    //Compile a drop foreign key command.
    virtual std::string compile_drop_foreign(
        Blueprint *blueprint, fluent_t &command) {
      auto index = wrap(command["index"]);
      return "alter table " + wrap_table(blueprint) + " drop foreign key " + index;
-   };
+   }
 
    //Compile a rename table command.
    virtual std::string compile_rename(Blueprint *blueprint, fluent_t &command) {
      auto from = wrap_table(blueprint);
      return "rename table " + from + " to " + wrap_table(command["to"]);
-   };
+   }
 
    //Compile the command to enable foreign key constraints.
    virtual std::string compile_enable_foreign_key_constraints() const {
@@ -153,57 +153,57 @@ table_schema = ? and table_name = ?";
    //Create the column definition for a char type.
    std::string type_char(fluent_t &column) const {
      return "char(" + column["length"].data + ")";
-   };
+   }
 
    //Create the column definition for a string type.
    std::string type_string(fluent_t &column) const {
      return "varchar(" + column["length"].data + ")";
-   };
+   }
 
    //Create the column definition for a text type.
    std::string type_text(fluent_t &) const {
      return "text";
-   };
+   }
 
    //Create the column definition for a medium text type.
    std::string type_medium_text(fluent_t &) const {
      return "mediumtext";
-   };
+   }
 
    //Create the column definition for a long text type.
    std::string type_long_text(fluent_t &) const {
      return "longtext";
-   };
+   }
 
    //Create the column definition for a big integer type.
    std::string type_big_integer(fluent_t &) const {
      return "bigint";
-   };
+   }
 
    //Create the column definition for an integer type.
    std::string type_integer(fluent_t &) const {
      return "int";
-   };
+   }
 
    //Create the column definition for a medium integer type.
    std::string type_medium_integer(fluent_t &) const {
      return "mediumint";
-   };
+   }
 
    //Create the column definition for a tiny integer type.
    std::string type_tiny_integer(fluent_t &) const {
      return "tinyint";
-   };
+   }
 
    //Create the column definition for a small integer type.
    std::string type_small_integer(fluent_t &) const {
      return "smallint";
-   };
+   }
 
    //Create the column definition for a float type.
    std::string type_float(fluent_t &column) const {
      return type_double(column);
-   };
+   }
 
    //Create the column definition for a double type.
    std::string type_double(fluent_t &column) const;
@@ -212,12 +212,12 @@ table_schema = ? and table_name = ?";
    std::string type_decimal(fluent_t &column) const {
      return 
        "decimal(" + column["total"].data + ", " + column["places"].data + ")";
-   }; 
+   } 
 
    //Create the column definition for a boolean type.
    std::string type_boolean(fluent_t &) const {
      return "tinyint(1)";
-   };
+   }
 
    //Create the column definition for an enum type.
    std::string type_enum(fluent_t &column) const;
@@ -225,37 +225,37 @@ table_schema = ? and table_name = ?";
    //Create the column definition for a json type.
    std::string type_json(fluent_t &) const {
      return "json";
-   };
+   }
 
    //Create the column definition for a jsonb type.
    std::string type_jsonb(fluent_t &) const {
      return "json";
-   }; 
+   } 
 
    //Create the column definition for a date type.
    std::string type_date(fluent_t &) const {
      return "date";
-   }; 
+   } 
 
    //Create the column definition for a date-time type.
    std::string type_date_time(fluent_t &) const {
      return "datetime";
-   };
+   }
 
    //Create the column definition for a date-time type.
    std::string type_date_time_tz(fluent_t &) const {
      return "datetime";
-   };
+   }
 
    //Create the column definition for a time type.
    std::string type_time(fluent_t &) const {
      return "time";
-   };
+   }
 
    //Create the column definition for a time type.
    std::string type_time_tz(fluent_t &) const {
      return "time";
-   };
+   }
 
    //Create the column definition for a timestamp type.
    std::string type_timestamp(fluent_t &column) const;
@@ -265,27 +265,27 @@ table_schema = ? and table_name = ?";
      if (column["use_current"] == true)
        return "timestamp default CURRENT_TIMESTAMP";
      return "timestamp";
-   };
+   }
 
    //Create the column definition for a binary type.
    std::string type_binary(fluent_t &) const {
      return "blob";
-   };
+   }
 
    //Create the column definition for a uuid type.
    std::string type_uuid(fluent_t &) const {
      return "char(36)";
-   };
+   }
 
    //Create the column definition for an IP address type.
    std::string type_ip_address(fluent_t &) const {
      return "varchar(45)";
-   };
+   }
 
    //Create the column definition for a MAC address type.
    std::string type_mac_address(fluent_t &) const {
      return "varchar(17)";
-   };
+   }
 
  protected:
 
