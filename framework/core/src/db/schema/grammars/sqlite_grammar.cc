@@ -83,3 +83,64 @@ std::string SqliteGrammar::add_primary_keys(Blueprint *blueprint) {
     return ", primary key (" + columnize(primary.columns) + ")";
   return "";
 }
+
+//Compile an add column command.
+std::string SqliteGrammar::compile_add(Blueprint *blueprint, fluent_t &command) {
+  auto _columns = prefix_array("add column", get_columns(blueprint));
+  std::vector<std::string> columns;
+  for (auto &column : _columns) {
+    columns.emplace_back(
+        "alter table " + wrap_table(blueprint) + " " + column.data);
+  }
+  return implode("; ", columns);
+}
+
+//Compile a unique key command.
+std::string SqliteGrammar::compile_unique(
+    Blueprint *blueprint, fluent_t &command) {
+  char temp[1024]{0};
+  snprintf(temp,
+           sizeof(temp) - 1,
+           "create unique index %s on %s (%s)",
+           wrap(command["index"]).c_str(),
+           wrap_table(blueprint).c_str(),
+           columnize(command.columns).c_str());
+  return temp;
+}
+
+//Compile a unique key command.
+std::string SqliteGrammar::compile_index(
+    Blueprint *blueprint, fluent_t &command) {
+  char temp[1024]{0};
+  snprintf(temp,
+           sizeof(temp) - 1,
+           "create index %s on %s (%s)",
+           wrap(command["index"]).c_str(),
+           wrap_table(blueprint).c_str(),
+           columnize(command.columns).c_str());
+  return temp;
+}
+
+//Compile a drop column command.
+std::string SqliteGrammar::compile_drop_column(
+   Blueprint *, fluent_t &) {
+  return "";
+}
+
+//Get the SQL for a default column modifier.
+std::string SqliteGrammar::modify_default(
+    Blueprint *blueprint, fluent_t &column) {
+  if (!empty(column["default"]))
+    return " default " + get_default_value(column["default"]);
+  return "";
+}
+
+//Get the SQL for an auto-increment column modifier.
+std::string SqliteGrammar::modify_increment(
+    Blueprint *blueprint, fluent_t &column) {
+  if (in_array(column["type"].data, serials_) && 
+      column["auto_increment"] == true) {
+    return " primary key autoincrement";
+  }
+  return "";
+}
