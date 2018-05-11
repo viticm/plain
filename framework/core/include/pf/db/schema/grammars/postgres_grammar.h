@@ -82,10 +82,7 @@ table_name = '" + table + "'";
        Blueprint *blueprint, fluent_t &command);
 
    //Compile a drop primary key command.
-   virtual std::string compile_drop_primary(Blueprint *blueprint, fluent_t &) {
-     std::string index = wrap(blueprint->get_table() + "_pkey");
-     return "alter table " + wrap_table(blueprint) + " drop constraint " + index;
-   }
+   virtual std::string compile_drop_primary(Blueprint *blueprint, fluent_t &);
 
    //Compile a drop unique key command.
    virtual std::string compile_drop_unique(

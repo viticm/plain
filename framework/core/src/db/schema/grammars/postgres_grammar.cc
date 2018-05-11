@@ -101,3 +101,10 @@ std::string PostgresGrammar::modify_increment(Blueprint *, fluent_t &column) {
   }
   return "";
 }
+
+//Compile a drop primary key command.
+std::string PostgresGrammar::compile_drop_primary(
+    Blueprint *blueprint, fluent_t &) {
+  std::string index = wrap(blueprint->get_table() + "_pkey");
+  return "alter table " + wrap_table(blueprint) + " drop constraint " + index;
+}

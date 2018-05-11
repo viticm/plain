@@ -64,7 +64,7 @@ where obj.type = 'U' and obj.name = '" + table + "'";
    virtual std::string compile_index(Blueprint *blueprint, fluent_t &command);
 
    //Compile a drop table command.
-   virtual std::string compile_drop(Blueprint *blueprint, fluent_t &command) {
+   virtual std::string compile_drop(Blueprint *blueprint, fluent_t &) {
      return "drop table " + wrap_table(blueprint);
    }
 

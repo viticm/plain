@@ -10,6 +10,17 @@ using namespace pf_basic::string;
 using namespace pf_support;
 using namespace pf_db::schema;
 
+//Reset values
+void Blueprint::clear() {
+  engine_ = "";
+  charset_ = "";
+  collation_ = "";
+  temporary_ = true;
+  table_ = "";
+  columns_.clear();
+  commands_.clear();
+}
+
 //Create a new char column on the table.
 Blueprint::fluent_t &Blueprint::_char(
     const std::string &column, int32_t length) {

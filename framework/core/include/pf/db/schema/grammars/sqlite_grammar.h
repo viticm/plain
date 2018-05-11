@@ -96,7 +96,7 @@ class PF_API SqliteGrammar : public Grammar {
 
    //Compile a drop index command.
    virtual std::string compile_drop_index(
-       Blueprint *blueprint, fluent_t &command) {
+       Blueprint *, fluent_t &command) {
      auto index = wrap(command["index"]);
      return "drop index " + index;
    }

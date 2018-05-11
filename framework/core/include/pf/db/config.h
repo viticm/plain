@@ -177,7 +177,7 @@ struct db_schema_fluent_struct {
   //The allowed.
   std::vector<int32_t> allowed;
 
-  pf_basic::type::variable_t operator [] (const std::string &key) {
+  pf_basic::type::variable_t &operator [] (const std::string &key) {
     return items[key];
   };
 

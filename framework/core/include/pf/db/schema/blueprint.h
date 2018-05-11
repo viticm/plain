@@ -31,7 +31,10 @@ class PF_API Blueprint {
 
    //The construct.
    Blueprint(const std::string &table, closure_t callback = nullptr) : 
-     temporary_{false} {}
+     temporary_{false}, table_{table} {
+     if (!is_null(callback)) 
+       callback(this);
+   }
 
    //The destruct.
    ~Blueprint() {};
@@ -63,6 +66,9 @@ class PF_API Blueprint {
    void create() {
      add_command("create");
    }
+
+   //Reset blueprint values.
+   void clear();
 
    //Indicate that the table needs to be temporary.
    void temporary() {
@@ -96,23 +102,23 @@ class PF_API Blueprint {
    }
 
    //Indicate that the given primary key should be dropped.
-   void drop_primary(const std::string &index = "") {
-     drop_index_command("drop_primary", "primary", index);
+   void drop_primary(const std::string &_index = "") {
+     drop_index_command("drop_primary", "primary", _index);
    }
 
    //Indicate that the given unique key should be dropped.
-   void drop_unique(const std::string &index) {
-     drop_index_command("drop_primary", "unique", index);
+   void drop_unique(const std::string &_index) {
+     drop_index_command("drop_primary", "unique", _index);
    }
 
    //Indicate that the given index should be dropped.
-   void drop_index(const std::string &index) {
-     drop_index_command("drop_primary", "index", index);
+   void drop_index(const std::string &_index) {
+     drop_index_command("drop_primary", "index", _index);
    }
 
    //Indicate that the given foreign key should be dropped.
-   void drop_foreign(const std::string &index) {
-     drop_index_command("drop_primary", "foreign", index);
+   void drop_foreign(const std::string &_index) {
+     drop_index_command("drop_primary", "foreign", _index);
    }
 
    //Indicate that the timestamp columns should be dropped.
@@ -503,7 +509,7 @@ class PF_API Blueprint {
    }
 
    //Get the commands on the blueprint.
-   std::vector<fluent_t> get_commands() {
+   std::vector<fluent_t> &get_commands() {
      return commands_;
    }
    
@@ -544,28 +550,28 @@ class PF_API Blueprint {
    //Add a new index command to the blueprint.
    fluent_t &index_command(const std::string &type, 
                            const std::vector<std::string> &columns, 
-                           const std::string &index = "", 
+                           const std::string &_index = "", 
                            const std::string &algorithm = "") {
-     std::string _index{index};
-     if (_index == "") _index = create_index_name(type, columns);
-     variable_set_t param = {{"index", _index}, {"algorithm", algorithm}};
+     std::string temp{_index};
+     if (temp == "") temp = create_index_name(type, columns);
+     variable_set_t param = {{"index", temp}, {"algorithm", algorithm}};
      return add_command(type, param, columns);
    }
 
    //Create a new drop index command on the blueprint.
    fluent_t &drop_index_command(const std::string &command, 
                                 const std::string &, 
-                                const std::string &index) {
+                                const std::string &_index) {
      std::vector<std::string> columns;
-     return index_command(command, columns, index);
+     return index_command(command, columns, _index);
    }
 
    //Create a new drop index command on the blueprint.
    fluent_t &drop_index_command(const std::string &command, 
                                 const std::string &type, 
                                 const std::vector<std::string> &columns) {
-     std::string index = create_index_name(type, columns);
-     return index_command(command, columns, index);
+     std::string _index = create_index_name(type, columns);
+     return index_command(command, columns, _index);
    }
 
    //Create a default index name for the table.

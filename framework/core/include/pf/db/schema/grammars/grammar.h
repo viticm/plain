@@ -242,7 +242,7 @@ class PF_API Grammar : public pf_db::Grammar {
    virtual std::string type_double(fluent_t &column) const = 0;
 
   //Create the column definition for a decimal type.
-   virtual std::string type_real(fluent_t &column) const {
+   virtual std::string type_real(fluent_t &) const {
      return "";
    } 
 
