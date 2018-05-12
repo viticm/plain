@@ -69,15 +69,16 @@ void Library::set_filename(const std::string &_filename) {
 }
 
 bool Library::load(bool tryprefix) {
+  std::string temp = path_ + filename_;
 #if OS_WIN
   tryprefix = false;
-  LPTSTR tstr = ts_strdup_ascii_to_unicode(filename_.c_str());
+  LPTSTR tstr = ts_strdup_ascii_to_unicode(temp.c_str());
   handle_ = cast(void *, LoadLibrary(tstr));
   free(tstr);
   if (is_null(handle_)) 
     errorstr_ = GetLastErrorString(GetLastError());
 #else
-  handle_ = dlopen(filename_.c_str(), RTLD_NOW | RTLD_LOCAL);
+  handle_ = dlopen(temp.c_str(), RTLD_NOW | RTLD_LOCAL);
   if (is_null(handle_)) errorstr_ = dlerror();
 #endif
   if (is_null(handle_)) {
@@ -164,10 +165,10 @@ LibraryManager::LibraryManager() {
   add_searchpaths({
       "/lib/", 
       "/lib64/",
-      "/user/lib/", 
-      "/user/lib64/", 
-      "/user/local/lib/",
-      "/user/lobal/lib64"
+      "/usr/lib/", 
+      "/usr/lib64/", 
+      "/usr/local/lib/",
+      "/usr/lobal/lib64/"
   });
 #endif
 }
@@ -219,12 +220,21 @@ bool LibraryManager::load(const std::string &name,
   if (0 == names.size()) names.push_back(name);
   auto library = new Library();
   for (const std::string &_name : names) {
+    bool loaded{false};
     library->set_filename(_name);
-    if (library->load()) break;
-    SLOW_ERRORLOG("library", 
-                  "[library] load(%s) error-> %s", 
-                  _name.c_str(), 
-                  library->errorstr().c_str());
+    for (const std::string &path : searchpaths_) {
+      library->set_path(path);
+      if (library->load()) {
+        loaded = true;
+        break;
+      }
+    }
+    if (!loaded) {
+      SLOW_ERRORLOG("library", 
+                    "[library] load(%s) error-> %s", 
+                    _name.c_str(), 
+                    library->errorstr().c_str());
+    }
   }
   if (!library->isloaded()) {
     safe_delete(library);

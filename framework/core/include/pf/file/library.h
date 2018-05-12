@@ -31,6 +31,9 @@ class PF_API Library {
    std::string errorstr() const { return errorstr_; };
    std::string filename() const { return filename_; }
    void set_filename(const std::string &filename);
+   void set_path(const std::string &path) {
+     path_ = path;
+   };
 
  public:
    bool isloaded() const { return isloaded_; };
@@ -41,6 +44,7 @@ class PF_API Library {
  private:
    std::string errorstr_;
    std::string filename_;
+   std::string path_;
    bool isloaded_;
    void *handle_;
 
