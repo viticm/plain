@@ -35,6 +35,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${gtest_incdir}
                     ${gtest_hack_incdir}
                     ${plainframework_dir}/include/
+                    ${root_dir}/framework/unit_tests/core_test/
                     ${CMAKE_CURRENT_LIST_DIR})
 
 # Common libraries for tests.

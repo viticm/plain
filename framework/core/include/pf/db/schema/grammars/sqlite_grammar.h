@@ -274,7 +274,7 @@ class PF_API SqliteGrammar : public Grammar {
 
    //Get the SQL for an nullable column modifier.
    virtual std::string modify_nullable(Blueprint *, fluent_t &column) {
-     return column["column"] == true ? " null" : " not null";
+     return column["nullable"] == true ? " null" : " not null";
    }
 
    //Get the SQL for a generated virtual column modifier.

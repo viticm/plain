@@ -6,8 +6,9 @@
 #include "pf/db/query/grammars/sqlserver_grammar.h"
 #include "pf/db/query/grammars/sqlite_grammar.h"
 #include "pf/db/connection.h"
-#include "pf/db/query/builder.h"
 #include "pf/support/helpers.h"
+#include "env.h"
+#include "pf/db/query/builder.h"
 
 enum {
   kDBTypeODBC = 1,
@@ -21,6 +22,7 @@ class DBQueryBuilder : public testing::Test {
  public:
    static void SetUpTestCase() {
      
+     /**
      GLOBALS["log.print"] = false; //First forbid the log print.
 
      GLOBALS["default.db.open"] = true;
@@ -32,9 +34,10 @@ class DBQueryBuilder : public testing::Test {
      engine_.add_libraryload("pf_plugin_odbc", {kDBTypeODBC});
 
      engine_.init();
+     **/
 
      //Normal.
-     auto connection = new pf_db::Connection(engine_.get_db());
+     auto connection = new pf_db::Connection(engine->get_db());
      unique_move(pf_db::Connection, connection, connection_);
      auto builder = new Builder(connection_.get(), nullptr);
      unique_move(Builder, builder, builder_);
@@ -83,7 +86,7 @@ class DBQueryBuilder : public testing::Test {
    }
 
  protected:
-   static pf_engine::Kernel engine_;
+   //static pf_engine::Kernel engine_;
    static std::unique_ptr<pf_db::Connection> connection_;
    static std::unique_ptr<grammars::Grammar> mysql_grammar_;
    static std::unique_ptr<grammars::Grammar> postgres_grammar_;
@@ -97,7 +100,7 @@ class DBQueryBuilder : public testing::Test {
 
 };
 
-pf_engine::Kernel DBQueryBuilder::engine_;
+//pf_engine::Kernel DBQueryBuilder::engine_;
 std::unique_ptr<pf_db::Connection> DBQueryBuilder::connection_{nullptr};
 std::unique_ptr<Builder> DBQueryBuilder::builder_{nullptr};
 std::unique_ptr<Builder> DBQueryBuilder::mysql_builder_{nullptr};
@@ -111,7 +114,7 @@ std::unique_ptr<grammars::Grammar> DBQueryBuilder::sqlite_grammar_{nullptr};
 
 TEST_F(DBQueryBuilder, construct) {
   Builder object(nullptr, nullptr);
-  pf_db::Connection connection(engine_.get_db());
+  pf_db::Connection connection(engine->get_db());
   Builder builder_test1(&connection, nullptr);
   grammars::Grammar grammar;
   Builder builder_test2(&connection, &grammar);

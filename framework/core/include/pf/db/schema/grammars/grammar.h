@@ -76,10 +76,7 @@ class PF_API Grammar : public pf_db::Grammar {
    virtual std::string compile_table_exists() const = 0;
 
    //Compile the query to determine the list of columns.
-   virtual std::string compile_column_listing(const std::string &table) = 0;
-
-   //Compile the query to determine the list of columns.
-   virtual std::string compile_column_listing() const = 0;
+   virtual std::string compile_column_listing(const std::string &table = "") = 0;
 
    //Compile the command to enable foreign key constraints.
    virtual std::string compile_enable_foreign_key_constraints() const = 0;
@@ -321,13 +318,19 @@ class PF_API Grammar : public pf_db::Grammar {
    virtual std::string modify_increment(Blueprint *blueprint, fluent_t &column) = 0;
 
    //Get the SQL for a "first" column modifier.
-   virtual std::string modify_first(Blueprint *blueprint, fluent_t &column) = 0;
+   virtual std::string modify_first(Blueprint *, fluent_t &) {
+     return "";
+   };
 
    //Get the SQL for an "after" column modifier.
-   virtual std::string modify_after(Blueprint *blueprint, fluent_t &column) = 0;
+   virtual std::string modify_after(Blueprint *, fluent_t &) {
+     return "";
+   };
 
    //Get the SQL for a "comment" column modifier.
-   virtual std::string modify_comment(Blueprint *blueprint, fluent_t &column) = 0;
+   virtual std::string modify_comment(Blueprint *, fluent_t &) {
+     return "";
+   };
 
 };
 

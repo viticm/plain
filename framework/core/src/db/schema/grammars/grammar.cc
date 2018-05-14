@@ -79,6 +79,7 @@ Grammar::Grammar() {
   };
 
   modify_calls_ = {
+    {"nullable", modify_call(nullable) },
     {"virtual_as", modify_call(virtual_as) },
     {"stored_as", modify_call(stored_as) },
     {"unsigned", modify_call(unsigned) },
