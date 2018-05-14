@@ -75,6 +75,10 @@ class PF_API Blueprint {
      temporary_ = true;
    }
 
+   void set_table(const std::string &table) {
+     table_ = table;
+   }
+
    //Indicate that the table should be dropped.
    void drop() {
      add_command("drop");
