@@ -45,8 +45,9 @@ class DBSchemaMysqlGrammar : public testing::Test {
 
 std::unique_ptr<grammars::Grammar> DBSchemaMysqlGrammar::mysql_grammar_{nullptr};
 std::unique_ptr<pf_db::Connection> DBSchemaMysqlGrammar::connection_{nullptr};
+std::unique_ptr<Blueprint> DBSchemaMysqlGrammar::blueprint_{nullptr};
 
-void assertEquals(
+static void assertEquals(
     const std::vector<std::string> &a, 
     const std::vector<std::string> &b, 
     int32_t line = -1) {
@@ -58,9 +59,16 @@ void assertEquals(
 }
 
 TEST_F(DBSchemaMysqlGrammar, testBasicCreateTable) {
-  blueprint_->set_table("user");
-  blueprint_->create();
+  blueprint_->set_table("users");
+  //blueprint_->create();
   blueprint_->increments("id");
   blueprint_->string("email");
 
+  auto statements = blueprint_->to_sql(connection_.get(), mysql_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table `users` add `id` int unsigned not null \
+auto_increment primary key, add `email` varchar(255) not null", 
+               statements[0].c_str());
 }
