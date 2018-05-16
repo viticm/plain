@@ -95,6 +95,11 @@ class PF_API Grammar {
      return value.data;
    }
 
+   //Clean the grammar values.
+   virtual void clear() {
+     table_prefix_ = "";
+   }
+
  public:
    
    //Get the format for database stored dates.

@@ -15,7 +15,7 @@ void Blueprint::clear() {
   engine_ = "";
   charset_ = "";
   collation_ = "";
-  temporary_ = true;
+  temporary_ = false;
   table_ = "";
   columns_.clear();
   commands_.clear();
@@ -114,8 +114,8 @@ void Blueprint::add_fluent_indexes() {
 //Determine if the blueprint has a create command.
 bool Blueprint::creating() {
   bool result{false};
-  for (auto &column : columns_) {
-    if (column["name"] == "create") {
+  for (auto &command : commands_) {
+    if (command["name"] == "create") {
       result = true;
       break;
     }

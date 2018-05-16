@@ -31,6 +31,7 @@ class DBSchemaMysqlGrammar : public testing::Test {
 
    virtual void SetUp() {
      blueprint_->clear();
+     mysql_grammar_->clear();
    }
 
    virtual void TearDown() {
@@ -71,4 +72,38 @@ TEST_F(DBSchemaMysqlGrammar, testBasicCreateTable) {
   ASSERT_STREQ("alter table `users` add `id` int unsigned not null \
 auto_increment primary key, add `email` varchar(255) not null", 
                statements[0].c_str());
+}
+
+TEST_F(DBSchemaMysqlGrammar, testEngineCreateTable) {
+
+}
+
+TEST_F(DBSchemaMysqlGrammar, testCharsetCollationCreateTable) {
+
+}
+
+TEST_F(DBSchemaMysqlGrammar, testBasicCreateTableWithPrefix) {
+  blueprint_->set_table("users");
+  blueprint_->create();
+  blueprint_->increments("id");
+  blueprint_->string("email");
+  mysql_grammar_->set_table_prefix("prefix_");
+  auto statements = blueprint_->to_sql(connection_.get(), mysql_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("create table `prefix_users` (`id` int unsigned not null \
+auto_increment primary key, `email` varchar(255) not null)", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaMysqlGrammar, testDropTable) {
+  blueprint_->set_table("users");
+  blueprint_->drop();
+
+  auto statements = blueprint_->to_sql(connection_.get(), mysql_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("drop table `users`", statements[0].c_str());
 }

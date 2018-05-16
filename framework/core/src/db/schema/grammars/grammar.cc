@@ -209,7 +209,7 @@ std::string Grammar::wrap_table(Blueprint *blueprint) {
 
 //Wrap a value in keyword identifiers.
 std::string Grammar::wrap(const variable_t &value, bool) {
-  return pf_db::Grammar::wrap_table(value);
+  return pf_db::Grammar::wrap(value);
 }
 
 //Create an empty Doctrine DBAL TableDiff from the Blueprint.
