@@ -49,6 +49,7 @@ Grammar::Grammar() {
     {"drop_unique", compile_call(drop_unique) },
     {"drop_index", compile_call(drop_index) },
     {"drop_foreign", compile_call(drop_foreign) },
+    {"rename", compile_call(rename) },
   };
   type_calls_ = {
     {"char", type_call(char) },
@@ -91,6 +92,11 @@ Grammar::Grammar() {
     {"after", modify_call(after) },
     {"comment", modify_call(comment) },
   };
+}
+
+//Check the command value is empty.
+bool Grammar::empty(const variable_t &value) const {
+  return pf_support::empty(value) || value == "";
 }
 
 //The function call compile.

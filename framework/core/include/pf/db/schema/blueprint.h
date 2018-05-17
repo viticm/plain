@@ -92,9 +92,7 @@ class PF_API Blueprint {
    //Indicate that the given columns should be dropped.
    void drop_column(const std::vector<std::string> &columns) {
      variable_set_t params;
-     for (const std::string &column : columns)
-       params[column] = column;
-     add_command("drop_column", params);
+     add_command("drop_column", params, columns);
    }
 
    //Indicate that the given columns should be renamed.
@@ -112,17 +110,17 @@ class PF_API Blueprint {
 
    //Indicate that the given unique key should be dropped.
    void drop_unique(const std::string &_index) {
-     drop_index_command("drop_primary", "unique", _index);
+     drop_index_command("drop_unique", "unique", _index);
    }
 
    //Indicate that the given index should be dropped.
    void drop_index(const std::string &_index) {
-     drop_index_command("drop_primary", "index", _index);
+     drop_index_command("drop_index", "index", _index);
    }
 
    //Indicate that the given foreign key should be dropped.
    void drop_foreign(const std::string &_index) {
-     drop_index_command("drop_primary", "foreign", _index);
+     drop_index_command("drop_foreign", "foreign", _index);
    }
 
    //Indicate that the timestamp columns should be dropped.
@@ -179,9 +177,9 @@ class PF_API Blueprint {
    }
 
    //Specify a foreign key for the table.
-   void foreign(const std::vector<std::string> &columns, 
-                const std::string &name = "") {
-     index_command("foreign", columns, name);
+   fluent_t &foreign(const std::vector<std::string> &columns, 
+                     const std::string &name = "") {
+     return index_command("foreign", columns, name);
    }
 
    //Create a new auto-incrementing integer (4-byte) column on the table.

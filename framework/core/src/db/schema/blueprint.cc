@@ -133,6 +133,7 @@ std::vector<std::string> Blueprint::to_sql(
   // grammar which is used to build the necessary SQL statements to build
   // the blueprint element, so we'll just call that compilers function.
   for (fluent_t &command : commands_) {
+    //std::cout << "command[\"name\"]: " << command["name"].data << std::endl;
     auto sqls = grammar->call_compile(this, command, connection, command["name"]);
     for (const std::string &sql : sqls) {
       if (sql != "") statements.emplace_back(sql);

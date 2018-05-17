@@ -88,6 +88,8 @@ class PF_API Grammar : public pf_db::Grammar {
    virtual std::string compile_create(Blueprint *blueprint, 
                                       fluent_t &command, 
                                       ConnectionInterface *connection) = 0;
+   //Compile a rename table command.
+   virtual std::string compile_rename(Blueprint *blueprint, fluent_t &command) = 0;
 
    //Compile an add column command.
    virtual std::string compile_add(
@@ -146,6 +148,9 @@ class PF_API Grammar : public pf_db::Grammar {
    //The function call modify.
    std::string call_modify(
        Blueprint *blueprint, fluent_t &column, const std::string &method);
+
+   //Check the command value is empty.
+   bool empty(const variable_t &value) const;
 
  protected:
 

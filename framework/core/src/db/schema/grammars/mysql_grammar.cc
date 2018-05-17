@@ -103,11 +103,12 @@ std::string MysqlGrammar::compile_key(Blueprint *blueprint,
                                       const std::string &type) {
   char temp[1024]{0};
   std::string algorithm = 
-    command["algorithm"] == true ? " using " + command["algorithm"].data : "";
+    !empty(command["algorithm"]) ? " using " + command["algorithm"].data : "";
   snprintf(temp,
            sizeof(temp) - 1,
            "alter table %s add %s %s%s(%s)",
            wrap_table(blueprint).c_str(),
+           type.c_str(),
            wrap(command["index"]).c_str(),
            algorithm.c_str(),
            columnize(command.columns).c_str());
