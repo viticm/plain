@@ -166,7 +166,7 @@ std::string MysqlGrammar::modify_stored_as(Blueprint *, fluent_t &column) {
 
 //Get the SQL for an unsigned column modifier.
 std::string MysqlGrammar::modify_unsigned(Blueprint *, fluent_t &column) {
-  if (!empty(column["unsigned"]))
+  if (column["unsigned"] == true)
     return " unsigned";
   return "";
 }

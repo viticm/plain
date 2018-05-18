@@ -4,6 +4,7 @@
 #include "env.h"
 #include "pf/db/schema/blueprint.h"
 
+using namespace pf_db;
 using namespace pf_db::schema;
 using namespace pf_basic::type;
 
@@ -293,5 +294,268 @@ TEST_F(DBSchemaMysqlGrammar, testAddingIncrementingID) {
 
   ASSERT_STREQ("alter table `users` add `id` int unsigned not null \
 auto_increment primary key", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaMysqlGrammar, testAddingSmallIncrementingID) {
+  blueprint_->set_table("users");
+  blueprint_->small_increments("id");
+
+  auto statements = blueprint_->to_sql(connection_.get(), mysql_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table `users` add `id` smallint unsigned not null \
+auto_increment primary key", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaMysqlGrammar, testAddingBigIncrementingID) {
+  blueprint_->set_table("users");
+  blueprint_->big_increments("id");
+
+  auto statements = blueprint_->to_sql(connection_.get(), mysql_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table `users` add `id` bigint unsigned not null \
+auto_increment primary key", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaMysqlGrammar, testAddingColumnInTableFirst) {
+  blueprint_->set_table("users");
+  auto &column = blueprint_->string("name");
+  column["first"] = true;
+
+  auto statements = blueprint_->to_sql(connection_.get(), mysql_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table `users` add `name` varchar(255) not null first", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaMysqlGrammar, testAddingColumnAfterAnotherColumn) {
+  blueprint_->set_table("users");
+  auto &column = blueprint_->string("name");
+  column["after"] = "foo";
+
+  auto statements = blueprint_->to_sql(connection_.get(), mysql_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table `users` add `name` varchar(255) not null after `foo`", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaMysqlGrammar, testAddingGeneratedColumn) {
+  blueprint_->set_table("products");
+  blueprint_->integer("price");
+  auto &column1 = blueprint_->integer("discounted_virtual");
+  column1["virtual_as"] = "price - 5";
+  auto &column2 = blueprint_->integer("discounted_stored");
+  column2["stored_as"] = "price - 5";
+
+  auto statements = blueprint_->to_sql(connection_.get(), mysql_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table `products` add `price` int not null, \
+add `discounted_virtual` int as (price - 5), add `discounted_stored` int \
+as (price - 5) stored", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaMysqlGrammar, testAddingString) {
+  blueprint_->set_table("users");
+  blueprint_->string("foo");
+
+  auto statements = blueprint_->to_sql(connection_.get(), mysql_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table `users` add `foo` varchar(255) not null", 
+               statements[0].c_str());
+
+  blueprint_->clear();
+  blueprint_->set_table("users");
+  blueprint_->string("foo", 100);
+
+  auto statements1 = blueprint_->to_sql(connection_.get(), mysql_grammar_.get());
+
+  ASSERT_TRUE(1 == statements1.size());
+
+  ASSERT_STREQ("alter table `users` add `foo` varchar(100) not null", 
+               statements1[0].c_str());
+
+  blueprint_->clear();
+  blueprint_->set_table("users");
+  auto &column = blueprint_->string("foo", 100).nullable();
+  column["default"] = "bar";
+
+  auto statements2 = blueprint_->to_sql(connection_.get(), mysql_grammar_.get());
+
+  ASSERT_TRUE(1 == statements2.size());
+
+  ASSERT_STREQ("alter table `users` add `foo` varchar(100) null default 'bar'", 
+               statements2[0].c_str());
+
+  blueprint_->clear();
+  blueprint_->set_table("users");
+  auto &column1 = blueprint_->string("foo", 100).nullable();
+  column1["default"] = raw("CURRENT TIMESTAMP");
+
+  auto statements3 = blueprint_->to_sql(connection_.get(), mysql_grammar_.get());
+
+  ASSERT_TRUE(1 == statements3.size());
+
+  ASSERT_STREQ("alter table `users` add `foo` varchar(100) null default \
+CURRENT TIMESTAMP", 
+               statements3[0].c_str());
+
+}
+
+TEST_F(DBSchemaMysqlGrammar, testAddingText) {
+  blueprint_->set_table("users");
+  blueprint_->text("foo");
+
+  auto statements = blueprint_->to_sql(connection_.get(), mysql_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table `users` add `foo` text not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaMysqlGrammar, testAddingBigInteger) {
+  blueprint_->set_table("users");
+  blueprint_->big_integer("foo");
+
+  auto statements = blueprint_->to_sql(connection_.get(), mysql_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table `users` add `foo` bigint not null", 
+               statements[0].c_str());
+
+  blueprint_->clear();
+  blueprint_->set_table("users");
+  blueprint_->big_integer("foo", true);
+
+  auto statements1 = blueprint_->to_sql(connection_.get(), mysql_grammar_.get());
+
+  ASSERT_TRUE(1 == statements1.size());
+
+  ASSERT_STREQ("alter table `users` add `foo` bigint not null auto_increment \
+primary key", 
+               statements1[0].c_str());
+}
+
+TEST_F(DBSchemaMysqlGrammar, testAddingInteger) {
+  blueprint_->set_table("users");
+  blueprint_->integer("foo");
+
+  auto statements = blueprint_->to_sql(connection_.get(), mysql_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table `users` add `foo` int not null", 
+               statements[0].c_str());
+
+  blueprint_->clear();
+  blueprint_->set_table("users");
+  blueprint_->integer("foo", true);
+
+  auto statements1 = blueprint_->to_sql(connection_.get(), mysql_grammar_.get());
+
+  ASSERT_TRUE(1 == statements1.size());
+
+  ASSERT_STREQ("alter table `users` add `foo` int not null auto_increment \
+primary key", 
+               statements1[0].c_str());
+}
+
+TEST_F(DBSchemaMysqlGrammar, testAddingMediumInteger) {
+  blueprint_->set_table("users");
+  blueprint_->medium_integer("foo");
+
+  auto statements = blueprint_->to_sql(connection_.get(), mysql_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table `users` add `foo` mediumint not null", 
+               statements[0].c_str());
+
+  blueprint_->clear();
+  blueprint_->set_table("users");
+  blueprint_->medium_integer("foo", true);
+
+  auto statements1 = blueprint_->to_sql(connection_.get(), mysql_grammar_.get());
+
+  ASSERT_TRUE(1 == statements1.size());
+
+  ASSERT_STREQ("alter table `users` add `foo` mediumint not null auto_increment \
+primary key", 
+               statements1[0].c_str());
+}
+
+TEST_F(DBSchemaMysqlGrammar, testAddingSmallInteger) {
+  blueprint_->set_table("users");
+  blueprint_->small_integer("foo");
+
+  auto statements = blueprint_->to_sql(connection_.get(), mysql_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table `users` add `foo` smallint not null", 
+               statements[0].c_str());
+
+  blueprint_->clear();
+  blueprint_->set_table("users");
+  blueprint_->small_integer("foo", true);
+
+  auto statements1 = blueprint_->to_sql(connection_.get(), mysql_grammar_.get());
+
+  ASSERT_TRUE(1 == statements1.size());
+
+  ASSERT_STREQ("alter table `users` add `foo` smallint not null auto_increment \
+primary key", 
+               statements1[0].c_str());
+}
+
+TEST_F(DBSchemaMysqlGrammar, testAddingTinyInteger) {
+  blueprint_->set_table("users");
+  blueprint_->tiny_integer("foo");
+
+  auto statements = blueprint_->to_sql(connection_.get(), mysql_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table `users` add `foo` tinyint not null", 
+               statements[0].c_str());
+
+  blueprint_->clear();
+  blueprint_->set_table("users");
+  blueprint_->tiny_integer("foo", true);
+
+  auto statements1 = blueprint_->to_sql(connection_.get(), mysql_grammar_.get());
+
+  ASSERT_TRUE(1 == statements1.size());
+
+  ASSERT_STREQ("alter table `users` add `foo` tinyint not null auto_increment \
+primary key", 
+               statements1[0].c_str());
+}
+
+TEST_F(DBSchemaMysqlGrammar, testAddingFloat) {
+  blueprint_->set_table("users");
+  blueprint_->_float("foo", 5, 2);
+
+  auto statements = blueprint_->to_sql(connection_.get(), mysql_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table `users` add `foo` double(5, 2) not null", 
                statements[0].c_str());
 }
