@@ -342,7 +342,7 @@ class PF_API Blueprint {
 
    //Create a new enum column on the table.
    fluent_t &_enum(const std::string &column, 
-                   const std::vector<int32_t> &allowed) {
+                   const std::vector<std::string> &allowed) {
      return add_column("enum", column, allowed);
    }
 
@@ -474,7 +474,7 @@ class PF_API Blueprint {
    //Add a new column to the blueprint.
    fluent_t &add_column(const std::string &type, 
                         const std::string &name, 
-                        const std::vector<int32_t> allowed) {
+                        const std::vector<std::string> &allowed) {
      fluent_t column;
      column.items["type"] = type;
      column.items["name"] = name;

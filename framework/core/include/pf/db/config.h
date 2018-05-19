@@ -175,7 +175,7 @@ struct db_schema_fluent_struct {
   std::vector<std::string> references;
 
   //The allowed.
-  std::vector<int32_t> allowed;
+  std::vector<std::string> allowed;
 
   pf_basic::type::variable_t &operator [] (const std::string &key) {
     return items[key];

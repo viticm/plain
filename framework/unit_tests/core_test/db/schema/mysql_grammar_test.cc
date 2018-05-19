@@ -559,3 +559,225 @@ TEST_F(DBSchemaMysqlGrammar, testAddingFloat) {
   ASSERT_STREQ("alter table `users` add `foo` double(5, 2) not null", 
                statements[0].c_str());
 }
+
+TEST_F(DBSchemaMysqlGrammar, testAddingDouble) {
+  blueprint_->set_table("users");
+  blueprint_->_double("foo");
+
+  auto statements = blueprint_->to_sql(connection_.get(), mysql_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table `users` add `foo` double not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaMysqlGrammar, testAddingDoubleSpecifyingPrecision) {
+  blueprint_->set_table("users");
+  blueprint_->_double("foo", 15, 8);
+
+  auto statements = blueprint_->to_sql(connection_.get(), mysql_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table `users` add `foo` double(15, 8) not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaMysqlGrammar, testAddingDecimal) {
+  blueprint_->set_table("users");
+  blueprint_->decimal("foo", 5, 2);
+
+  auto statements = blueprint_->to_sql(connection_.get(), mysql_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table `users` add `foo` decimal(5, 2) not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaMysqlGrammar, testAddingBoolean) {
+  blueprint_->set_table("users");
+  blueprint_->boolean("foo");
+
+  auto statements = blueprint_->to_sql(connection_.get(), mysql_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table `users` add `foo` tinyint(1) not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaMysqlGrammar, testAddingEnum) {
+  blueprint_->set_table("users");
+  blueprint_->_enum("foo", {"bar", "baz"});
+
+  auto statements = blueprint_->to_sql(connection_.get(), mysql_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table `users` add `foo` enum('bar', 'baz') not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaMysqlGrammar, testAddingJson) {
+  blueprint_->set_table("users");
+  blueprint_->json("foo");
+
+  auto statements = blueprint_->to_sql(connection_.get(), mysql_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table `users` add `foo` json not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaMysqlGrammar, testAddingJsonb) {
+  blueprint_->set_table("users");
+  blueprint_->jsonb("foo");
+
+  auto statements = blueprint_->to_sql(connection_.get(), mysql_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table `users` add `foo` json not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaMysqlGrammar, testAddingDate) {
+  blueprint_->set_table("users");
+  blueprint_->date("foo");
+
+  auto statements = blueprint_->to_sql(connection_.get(), mysql_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table `users` add `foo` date not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaMysqlGrammar, testAddingDateTime) {
+  blueprint_->set_table("users");
+  blueprint_->date_time("foo");
+
+  auto statements = blueprint_->to_sql(connection_.get(), mysql_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table `users` add `foo` datetime not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaMysqlGrammar, testAddingDateTimeTz) {
+  blueprint_->set_table("users");
+  blueprint_->date_time_tz("foo");
+
+  auto statements = blueprint_->to_sql(connection_.get(), mysql_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table `users` add `foo` datetime not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaMysqlGrammar, testAddingTime) {
+  blueprint_->set_table("users");
+  blueprint_->time("foo");
+
+  auto statements = blueprint_->to_sql(connection_.get(), mysql_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table `users` add `foo` time not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaMysqlGrammar, testAddingTimeTz) {
+  blueprint_->set_table("users");
+  blueprint_->time_tz("foo");
+
+  auto statements = blueprint_->to_sql(connection_.get(), mysql_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table `users` add `foo` time not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaMysqlGrammar, testAddingTimeStamp) {
+  blueprint_->set_table("users");
+  blueprint_->timestamp("foo");
+
+  auto statements = blueprint_->to_sql(connection_.get(), mysql_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table `users` add `foo` timestamp not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaMysqlGrammar, testAddingTimeStampWithDefault) {
+  blueprint_->set_table("users");
+  auto &column = blueprint_->timestamp("foo");
+  column["default"] = "2018-5-19 15:12:07";
+
+  auto statements = blueprint_->to_sql(connection_.get(), mysql_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table `users` add `foo` timestamp not null default \
+'2018-5-19 15:12:07'", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaMysqlGrammar, testAddingTimeStampTz) {
+  blueprint_->set_table("users");
+  blueprint_->timestamp_tz("foo");
+
+  auto statements = blueprint_->to_sql(connection_.get(), mysql_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table `users` add `foo` timestamp not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaMysqlGrammar, testAddingTimeStampTzWithDefault) {
+  blueprint_->set_table("users");
+  auto &column = blueprint_->timestamp_tz("foo");
+  column["default"] = "2018-5-19 15:12:07";
+
+  auto statements = blueprint_->to_sql(connection_.get(), mysql_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table `users` add `foo` timestamp not null default \
+'2018-5-19 15:12:07'", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaMysqlGrammar, testAddingTimeStamps) {
+  blueprint_->set_table("users");
+  blueprint_->timestamps();
+
+  auto statements = blueprint_->to_sql(connection_.get(), mysql_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table `users` add `created_at` timestamp null, \
+add `updated_at` timestamp null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaMysqlGrammar, testAddingTimeStampsTz) {
+  blueprint_->set_table("users");
+  blueprint_->timestamps_tz();
+
+  auto statements = blueprint_->to_sql(connection_.get(), mysql_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table `users` add `created_at` timestamp null, \
+add `updated_at` timestamp null", 
+               statements[0].c_str());
+}

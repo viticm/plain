@@ -130,7 +130,9 @@ std::string MysqlGrammar::compile_drop_column(
 
 //Create the column definition for a double type.
 std::string MysqlGrammar::type_double(fluent_t &column) const {
-  if (!empty(column["total"]) && !empty(column["places"]))
+  auto check = (!empty(column["total"]) && column["total"] != -1) &&
+               (!empty(column["places"]) && column["places"] != -1);
+  if (check)
     return "double(" + column["total"].data + ", " + column["places"].data + ")";
   return "double";
 }
@@ -140,7 +142,7 @@ std::string MysqlGrammar::type_enum(fluent_t &column) const {
   variable_array_t allowed;
   for (auto value : column.allowed)
     allowed.emplace_back(value);
-  return "enum('" + implode(", ", allowed) + "')";
+  return "enum('" + implode("', '", allowed) + "')";
 }
 
 //Create the column definition for a timestamp type.

@@ -81,7 +81,7 @@ std::string PostgresGrammar::compile_drop_column(
 std::string PostgresGrammar::type_enum(fluent_t &column) const {
   std::vector<std::string> allowed;
   for (auto value : column.allowed)
-    allowed.emplace_back("'" + std::to_string(value) + "'");
+    allowed.emplace_back("'" + value + "'");
   return "varchar(255) check (\"" + 
          column["name"].data + "\" in (" + implode(", ", allowed) + "))";
 }
