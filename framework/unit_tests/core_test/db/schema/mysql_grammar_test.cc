@@ -781,3 +781,77 @@ TEST_F(DBSchemaMysqlGrammar, testAddingTimeStampsTz) {
 add `updated_at` timestamp null", 
                statements[0].c_str());
 }
+
+TEST_F(DBSchemaMysqlGrammar, testAddingRememberToken) {
+  blueprint_->set_table("users");
+  blueprint_->remember_token();
+
+  auto statements = blueprint_->to_sql(connection_.get(), mysql_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table `users` add `remember_token` varchar(100) null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaMysqlGrammar, testAddingBinary) {
+  blueprint_->set_table("users");
+  blueprint_->binary("foo");
+
+  auto statements = blueprint_->to_sql(connection_.get(), mysql_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table `users` add `foo` blob not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaMysqlGrammar, testAddingUuid) {
+  blueprint_->set_table("users");
+  blueprint_->uuid("foo");
+
+  auto statements = blueprint_->to_sql(connection_.get(), mysql_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table `users` add `foo` char(36) not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaMysqlGrammar, testAddingIpAddress) {
+  blueprint_->set_table("users");
+  blueprint_->ip_address("foo");
+
+  auto statements = blueprint_->to_sql(connection_.get(), mysql_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table `users` add `foo` varchar(45) not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaMysqlGrammar, testAddingMacAddress) {
+  blueprint_->set_table("users");
+  blueprint_->mac_address("foo");
+
+  auto statements = blueprint_->to_sql(connection_.get(), mysql_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table `users` add `foo` varchar(17) not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaMysqlGrammar, testAddingComment) {
+  blueprint_->set_table("users");
+  auto &column = blueprint_->string("foo");
+  column["comment"] = "Escape ' when using words like it's";
+
+  auto statements = blueprint_->to_sql(connection_.get(), mysql_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table `users` add `foo` varchar(255) not null comment \
+'Escape \\' when using words like it\\'s'", 
+               statements[0].c_str());
+}
