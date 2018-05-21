@@ -58,7 +58,7 @@ std::string PostgresGrammar::compile_index(
     Blueprint *blueprint, fluent_t &command) {
   char temp[1024]{0};
   std::string algorithm = 
-    empty(command["algorithm"]) ? "" : "using " + command["algorithm"].data;
+    empty(command["algorithm"]) ? "" : " using " + command["algorithm"].data;
   snprintf(temp,
            sizeof(temp) - 1,
            "create index %s on %s%s (%s)",
