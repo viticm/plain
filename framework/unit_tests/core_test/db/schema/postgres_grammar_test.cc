@@ -331,3 +331,334 @@ TEST_F(DBSchemaPostgresGrammar, testAddingString) {
 default 'bar'", 
                statements2[0].c_str());
 }
+
+TEST_F(DBSchemaPostgresGrammar, testAddingText) {
+  blueprint_->set_table("users");
+  blueprint_->text("foo");
+
+  auto statements = blueprint_->to_sql(connection_.get(), postgres_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" text not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaPostgresGrammar, testAddingBigInteger) {
+  blueprint_->set_table("users");
+  blueprint_->big_integer("foo");
+
+  auto statements = blueprint_->to_sql(connection_.get(), postgres_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" bigint not null", 
+               statements[0].c_str());
+
+  blueprint_->clear();
+  postgres_grammar_->clear();
+
+  blueprint_->set_table("users");
+  blueprint_->big_integer("foo", true);
+
+  auto statements1 = blueprint_->to_sql(connection_.get(), postgres_grammar_.get());
+
+  ASSERT_TRUE(1 == statements1.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" bigserial primary \
+key not null", 
+               statements1[0].c_str());
+}
+
+TEST_F(DBSchemaPostgresGrammar, testAddingInteger) {
+  blueprint_->set_table("users");
+  blueprint_->integer("foo");
+
+  auto statements = blueprint_->to_sql(connection_.get(), postgres_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" integer not null", 
+               statements[0].c_str());
+
+  blueprint_->clear();
+  postgres_grammar_->clear();
+
+  blueprint_->set_table("users");
+  blueprint_->integer("foo", true);
+
+  auto statements1 = blueprint_->to_sql(connection_.get(), postgres_grammar_.get());
+
+  ASSERT_TRUE(1 == statements1.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" serial primary \
+key not null", 
+               statements1[0].c_str());
+}
+
+TEST_F(DBSchemaPostgresGrammar, testAddingMediumInteger) {
+  blueprint_->set_table("users");
+  blueprint_->medium_integer("foo");
+
+  auto statements = blueprint_->to_sql(connection_.get(), postgres_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" integer not null", 
+               statements[0].c_str());
+
+  blueprint_->clear();
+  postgres_grammar_->clear();
+
+  blueprint_->set_table("users");
+  blueprint_->medium_integer("foo", true);
+
+  auto statements1 = blueprint_->to_sql(connection_.get(), postgres_grammar_.get());
+
+  ASSERT_TRUE(1 == statements1.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" serial primary \
+key not null", 
+               statements1[0].c_str());
+}
+
+TEST_F(DBSchemaPostgresGrammar, testAddingTinyInteger) {
+  blueprint_->set_table("users");
+  blueprint_->tiny_integer("foo");
+
+  auto statements = blueprint_->to_sql(connection_.get(), postgres_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" smallint not null", 
+               statements[0].c_str());
+
+  blueprint_->clear();
+  postgres_grammar_->clear();
+
+  blueprint_->set_table("users");
+  blueprint_->tiny_integer("foo", true);
+
+  auto statements1 = blueprint_->to_sql(connection_.get(), postgres_grammar_.get());
+
+  ASSERT_TRUE(1 == statements1.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" smallserial primary \
+key not null", 
+               statements1[0].c_str());
+}
+
+TEST_F(DBSchemaPostgresGrammar, testAddingSmallInteger) {
+  blueprint_->set_table("users");
+  blueprint_->small_integer("foo");
+
+  auto statements = blueprint_->to_sql(connection_.get(), postgres_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" smallint not null", 
+               statements[0].c_str());
+
+  blueprint_->clear();
+  postgres_grammar_->clear();
+
+  blueprint_->set_table("users");
+  blueprint_->small_integer("foo", true);
+
+  auto statements1 = blueprint_->to_sql(connection_.get(), postgres_grammar_.get());
+
+  ASSERT_TRUE(1 == statements1.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" smallserial primary \
+key not null", 
+               statements1[0].c_str());
+}
+
+TEST_F(DBSchemaPostgresGrammar, testAddingFloat) {
+  blueprint_->set_table("users");
+  blueprint_->_float("foo", 5, 2);
+
+  auto statements = blueprint_->to_sql(connection_.get(), postgres_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" double precision not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaPostgresGrammar, testAddingDouble) {
+  blueprint_->set_table("users");
+  blueprint_->_double("foo", 15, 8);
+
+  auto statements = blueprint_->to_sql(connection_.get(), postgres_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" double precision not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaPostgresGrammar, testAddingDecimal) {
+  blueprint_->set_table("users");
+  blueprint_->decimal("foo", 5, 2);
+
+  auto statements = blueprint_->to_sql(connection_.get(), postgres_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" decimal(5, 2) not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaPostgresGrammar, testAddingBoolean) {
+  blueprint_->set_table("users");
+  blueprint_->boolean("foo");
+
+  auto statements = blueprint_->to_sql(connection_.get(), postgres_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" boolean not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaPostgresGrammar, testAddingEnum) {
+  blueprint_->set_table("users");
+  blueprint_->_enum("foo", {"bar", "baz"});
+
+  auto statements = blueprint_->to_sql(connection_.get(), postgres_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" varchar(255) check \
+(\"foo\" in ('bar', 'baz')) not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaPostgresGrammar, testAddingDate) {
+  blueprint_->set_table("users");
+  blueprint_->date("foo");
+
+  auto statements = blueprint_->to_sql(connection_.get(), postgres_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" date not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaPostgresGrammar, testAddingJson) {
+  blueprint_->set_table("users");
+  blueprint_->json("foo");
+
+  auto statements = blueprint_->to_sql(connection_.get(), postgres_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" json not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaPostgresGrammar, testAddingJsonb) {
+  blueprint_->set_table("users");
+  blueprint_->jsonb("foo");
+
+  auto statements = blueprint_->to_sql(connection_.get(), postgres_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" jsonb not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaPostgresGrammar, testAddingDatetime) {
+  blueprint_->set_table("users");
+  blueprint_->date_time("foo");
+
+  auto statements = blueprint_->to_sql(connection_.get(), postgres_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" timestamp(0) without \
+time zone not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaPostgresGrammar, testAddingDatetimeTz) {
+  blueprint_->set_table("users");
+  blueprint_->date_time_tz("foo");
+
+  auto statements = blueprint_->to_sql(connection_.get(), postgres_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" timestamp(0) with \
+time zone not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaPostgresGrammar, testAddingTime) {
+  blueprint_->set_table("users");
+  blueprint_->time("foo");
+
+  auto statements = blueprint_->to_sql(connection_.get(), postgres_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" time(0) without time \
+zone not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaPostgresGrammar, testAddingTimeTz) {
+  blueprint_->set_table("users");
+  blueprint_->time_tz("foo");
+
+  auto statements = blueprint_->to_sql(connection_.get(), postgres_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" time(0) with time \
+zone not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaPostgresGrammar, testAddingTimeStamp) {
+  blueprint_->set_table("users");
+  blueprint_->timestamp("foo");
+
+  auto statements = blueprint_->to_sql(connection_.get(), postgres_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" timestamp(0) without \
+time zone not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaPostgresGrammar, testAddingTimeStampTz) {
+  blueprint_->set_table("users");
+  blueprint_->timestamp_tz("foo");
+
+  auto statements = blueprint_->to_sql(connection_.get(), postgres_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" timestamp(0) with \
+time zone not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaPostgresGrammar, testAddingTimeStamps) {
+  blueprint_->set_table("users");
+  blueprint_->timestamps();
+
+  auto statements = blueprint_->to_sql(connection_.get(), postgres_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"created_at\" timestamp(0) \
+without time zone null, add column \"updated_at\" timestamp(0) without time \
+zone null", 
+               statements[0].c_str());
+}
