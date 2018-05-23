@@ -245,8 +245,8 @@ table_name = '" + table + "'";
    //Create the column definition for a timestamp type.
    virtual std::string type_timestamp_tz(fluent_t &column) const {
      if (column["use_current"] == true)
-       return "timestamp(0) without time zone default CURRENT_TIMESTAMP(0)";
-     return "timestamp(0) without time zone";
+       return "timestamp(0) with time zone default CURRENT_TIMESTAMP(0)";
+     return "timestamp(0) with time zone";
    }
 
 

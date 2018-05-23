@@ -662,3 +662,65 @@ without time zone null, add column \"updated_at\" timestamp(0) without time \
 zone null", 
                statements[0].c_str());
 }
+
+TEST_F(DBSchemaPostgresGrammar, testAddingTimeStampsTz) {
+  blueprint_->set_table("users");
+  blueprint_->timestamps_tz();
+
+  auto statements = blueprint_->to_sql(connection_.get(), postgres_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"created_at\" timestamp(0) \
+with time zone null, add column \"updated_at\" timestamp(0) with time \
+zone null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaPostgresGrammar, testAddingBinary) {
+  blueprint_->set_table("users");
+  blueprint_->binary("foo");
+
+  auto statements = blueprint_->to_sql(connection_.get(), postgres_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" bytea not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaPostgresGrammar, testAddingUuid) {
+  blueprint_->set_table("users");
+  blueprint_->uuid("foo");
+
+  auto statements = blueprint_->to_sql(connection_.get(), postgres_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" uuid not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaPostgresGrammar, testAddingIpAddress) {
+  blueprint_->set_table("users");
+  blueprint_->ip_address("foo");
+
+  auto statements = blueprint_->to_sql(connection_.get(), postgres_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" inet not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaPostgresGrammar, testAddingMacAddress) {
+  blueprint_->set_table("users");
+  blueprint_->mac_address("foo");
+
+  auto statements = blueprint_->to_sql(connection_.get(), postgres_grammar_.get());
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" macaddr not null", 
+               statements[0].c_str());
+}
