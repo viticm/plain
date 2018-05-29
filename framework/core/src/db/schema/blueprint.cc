@@ -79,6 +79,7 @@ void Blueprint::add_implied_commands() {
       temp.emplace_back(item);
     commands_ = temp;
   }
+  add_fluent_indexes();
 }
 
 //Add the index commands fluently specified on columns.

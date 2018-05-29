@@ -72,7 +72,7 @@ std::string SqliteGrammar::get_foreign_key(fluent_t &foreign) {
            ", foreign key(%s) references %s(%s)",
            columnize(foreign.columns).c_str(),
            wrap_table(foreign["on"]).c_str(),
-           columnize(foreign.columns).c_str());
+           columnize(foreign.references).c_str());
   return temp;
 }
 
