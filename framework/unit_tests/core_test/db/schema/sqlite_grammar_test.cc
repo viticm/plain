@@ -288,3 +288,367 @@ TEST_F(DBSchemaSqliteGrammar, testAddingString) {
 default 'bar'", 
                statements2[0].c_str());
 }
+
+TEST_F(DBSchemaSqliteGrammar, testAddingText) {
+  blueprint_->set_table("users");
+  blueprint_->text("foo");
+  auto statements = blueprint_->to_sql(connection_.get(), sqlite_grammar_.get()); 
+  
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" text not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaSqliteGrammar, testAddingBigInteger) {
+  blueprint_->set_table("users");
+  blueprint_->big_integer("foo");
+  auto statements = blueprint_->to_sql(connection_.get(), sqlite_grammar_.get()); 
+  
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" integer not null", 
+               statements[0].c_str());
+
+  blueprint_->clear();
+  sqlite_grammar_->clear();
+
+  blueprint_->set_table("users");
+  blueprint_->big_integer("foo", true);
+  auto statements1 = blueprint_->to_sql(connection_.get(), sqlite_grammar_.get()); 
+  
+  ASSERT_TRUE(1 == statements1.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" integer not null \
+primary key autoincrement", 
+               statements1[0].c_str());
+}
+
+TEST_F(DBSchemaSqliteGrammar, testAddingInteger) {
+  blueprint_->set_table("users");
+  blueprint_->integer("foo");
+  auto statements = blueprint_->to_sql(connection_.get(), sqlite_grammar_.get()); 
+  
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" integer not null", 
+               statements[0].c_str());
+
+  blueprint_->clear();
+  sqlite_grammar_->clear();
+
+  blueprint_->set_table("users");
+  blueprint_->integer("foo", true);
+  auto statements1 = blueprint_->to_sql(connection_.get(), sqlite_grammar_.get()); 
+  
+  ASSERT_TRUE(1 == statements1.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" integer not null \
+primary key autoincrement", 
+               statements1[0].c_str());
+}
+
+TEST_F(DBSchemaSqliteGrammar, testAddingMediumInteger) {
+  blueprint_->set_table("users");
+  blueprint_->medium_integer("foo");
+  auto statements = blueprint_->to_sql(connection_.get(), sqlite_grammar_.get()); 
+  
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" integer not null", 
+               statements[0].c_str());
+
+  blueprint_->clear();
+  sqlite_grammar_->clear();
+
+  blueprint_->set_table("users");
+  blueprint_->medium_integer("foo", true);
+  auto statements1 = blueprint_->to_sql(connection_.get(), sqlite_grammar_.get()); 
+  
+  ASSERT_TRUE(1 == statements1.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" integer not null \
+primary key autoincrement", 
+               statements1[0].c_str());
+}
+
+TEST_F(DBSchemaSqliteGrammar, testAddingTinyInteger) {
+  blueprint_->set_table("users");
+  blueprint_->tiny_integer("foo");
+  auto statements = blueprint_->to_sql(connection_.get(), sqlite_grammar_.get()); 
+  
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" integer not null", 
+               statements[0].c_str());
+
+  blueprint_->clear();
+  sqlite_grammar_->clear();
+
+  blueprint_->set_table("users");
+  blueprint_->tiny_integer("foo", true);
+  auto statements1 = blueprint_->to_sql(connection_.get(), sqlite_grammar_.get()); 
+  
+  ASSERT_TRUE(1 == statements1.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" integer not null \
+primary key autoincrement", 
+               statements1[0].c_str());
+}
+
+TEST_F(DBSchemaSqliteGrammar, testAddingSmallInteger) {
+  blueprint_->set_table("users");
+  blueprint_->small_integer("foo");
+  auto statements = blueprint_->to_sql(connection_.get(), sqlite_grammar_.get()); 
+  
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" integer not null", 
+               statements[0].c_str());
+
+  blueprint_->clear();
+  sqlite_grammar_->clear();
+
+  blueprint_->set_table("users");
+  blueprint_->small_integer("foo", true);
+  auto statements1 = blueprint_->to_sql(connection_.get(), sqlite_grammar_.get()); 
+  
+  ASSERT_TRUE(1 == statements1.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" integer not null \
+primary key autoincrement", 
+               statements1[0].c_str());
+}
+
+TEST_F(DBSchemaSqliteGrammar, testAddingFloat) {
+  blueprint_->set_table("users");
+  blueprint_->_float("foo", 5, 2);
+  auto statements = blueprint_->to_sql(connection_.get(), sqlite_grammar_.get()); 
+  
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" float not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaSqliteGrammar, testAddingDouble) {
+  blueprint_->set_table("users");
+  blueprint_->_double("foo", 15, 8);
+  auto statements = blueprint_->to_sql(connection_.get(), sqlite_grammar_.get()); 
+  
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" float not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaSqliteGrammar, testAddingDecimal) {
+  blueprint_->set_table("users");
+  blueprint_->decimal("foo", 5, 2);
+  auto statements = blueprint_->to_sql(connection_.get(), sqlite_grammar_.get()); 
+  
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" numeric not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaSqliteGrammar, testAddingBoolean) {
+  blueprint_->set_table("users");
+  blueprint_->boolean("foo");
+  auto statements = blueprint_->to_sql(connection_.get(), sqlite_grammar_.get()); 
+  
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" tinyint(1) not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaSqliteGrammar, testAddingEnum) {
+  blueprint_->set_table("users");
+  blueprint_->_enum("foo", {"bar", "baz"});
+  auto statements = blueprint_->to_sql(connection_.get(), sqlite_grammar_.get()); 
+  
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" varchar not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaSqliteGrammar, testAddingJson) {
+  blueprint_->set_table("users");
+  blueprint_->json("foo");
+  auto statements = blueprint_->to_sql(connection_.get(), sqlite_grammar_.get()); 
+  
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" text not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaSqliteGrammar, testAddingJsonb) {
+  blueprint_->set_table("users");
+  blueprint_->jsonb("foo");
+  auto statements = blueprint_->to_sql(connection_.get(), sqlite_grammar_.get()); 
+  
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" text not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaSqliteGrammar, testAddingDate) {
+  blueprint_->set_table("users");
+  blueprint_->date("foo");
+  auto statements = blueprint_->to_sql(connection_.get(), sqlite_grammar_.get()); 
+  
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" date not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaSqliteGrammar, testAddingDateTime) {
+  blueprint_->set_table("users");
+  blueprint_->date_time("foo");
+  auto statements = blueprint_->to_sql(connection_.get(), sqlite_grammar_.get()); 
+  
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" datetime not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaSqliteGrammar, testAddingDateTimeTz) {
+  blueprint_->set_table("users");
+  blueprint_->date_time_tz("foo");
+  auto statements = blueprint_->to_sql(connection_.get(), sqlite_grammar_.get()); 
+  
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" datetime not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaSqliteGrammar, testAddingTime) {
+  blueprint_->set_table("users");
+  blueprint_->time("foo");
+  auto statements = blueprint_->to_sql(connection_.get(), sqlite_grammar_.get()); 
+  
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" time not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaSqliteGrammar, testAddingTimeTz) {
+  blueprint_->set_table("users");
+  blueprint_->time_tz("foo");
+  auto statements = blueprint_->to_sql(connection_.get(), sqlite_grammar_.get()); 
+  
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" time not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaSqliteGrammar, testAddingTimeStamp) {
+  blueprint_->set_table("users");
+  blueprint_->timestamp("foo");
+  auto statements = blueprint_->to_sql(connection_.get(), sqlite_grammar_.get()); 
+  
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" datetime not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaSqliteGrammar, testAddingTimeStampTz) {
+  blueprint_->set_table("users");
+  blueprint_->timestamp_tz("foo");
+  auto statements = blueprint_->to_sql(connection_.get(), sqlite_grammar_.get()); 
+  
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" datetime not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaSqliteGrammar, testAddingTimeStamps) {
+  blueprint_->set_table("users");
+  blueprint_->timestamps();
+  auto statements = blueprint_->to_sql(connection_.get(), sqlite_grammar_.get()); 
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"created_at\" datetime null; \
+alter table \"users\" add column \"updated_at\" datetime null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaSqliteGrammar, testAddingTimeStampsTz) {
+  blueprint_->set_table("users");
+  blueprint_->timestamps_tz();
+  auto statements = blueprint_->to_sql(connection_.get(), sqlite_grammar_.get()); 
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"created_at\" datetime null; \
+alter table \"users\" add column \"updated_at\" datetime null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaSqliteGrammar, testAddingRememberToken) {
+  blueprint_->set_table("users");
+  blueprint_->remember_token();
+  auto statements = blueprint_->to_sql(connection_.get(), sqlite_grammar_.get()); 
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"remember_token\" varchar null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaSqliteGrammar, testAddingBinary) {
+  blueprint_->set_table("users");
+  blueprint_->binary("foo");
+  auto statements = blueprint_->to_sql(connection_.get(), sqlite_grammar_.get()); 
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" blob not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaSqliteGrammar, testAddingUuid) {
+  blueprint_->set_table("users");
+  blueprint_->uuid("foo");
+  auto statements = blueprint_->to_sql(connection_.get(), sqlite_grammar_.get()); 
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" varchar not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaSqliteGrammar, testAddingIpAddress) {
+  blueprint_->set_table("users");
+  blueprint_->ip_address("foo");
+  auto statements = blueprint_->to_sql(connection_.get(), sqlite_grammar_.get()); 
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" varchar not null", 
+               statements[0].c_str());
+}
+
+TEST_F(DBSchemaSqliteGrammar, testAddingMacAddress) {
+  blueprint_->set_table("users");
+  blueprint_->mac_address("foo");
+  auto statements = blueprint_->to_sql(connection_.get(), sqlite_grammar_.get()); 
+
+  ASSERT_TRUE(1 == statements.size());
+
+  ASSERT_STREQ("alter table \"users\" add column \"foo\" varchar not null", 
+               statements[0].c_str());
+}
