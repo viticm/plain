@@ -20,10 +20,6 @@ class AllEnvironment : public testing::Environment {
 
 };
 
-enum {
-  kDBTypeODBC = 1,
-};
-
 int32_t main(int32_t argc, char **argv) {
   /**
   pf_engine::Kernel engine;
@@ -34,14 +30,12 @@ int32_t main(int32_t argc, char **argv) {
 
   GLOBALS["log.print"] = false;
   GLOBALS["default.db.open"] = true;
-  GLOBALS["default.db.type"] = kDBTypeODBC;
+  GLOBALS["default.db.type"] = kDBTypeNull;
   GLOBALS["default.db.name"] = "pf_test";
   GLOBALS["default.db.user"] = "root";
   GLOBALS["default.db.password"] = "mysql";
   auto _engine = new pf_engine::Kernel;
   unique_move(pf_engine::Kernel, _engine, engine);
-
-  engine->add_libraryload("pf_plugin_odbc", {kDBTypeODBC});
 
   engine->init();
 

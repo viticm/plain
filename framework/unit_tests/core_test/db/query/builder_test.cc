@@ -10,10 +10,6 @@
 #include "env.h"
 #include "pf/db/query/builder.h"
 
-enum {
-  kDBTypeODBC = 1,
-};
-
 using namespace pf_db::query;
 using namespace pf_basic::type;
 

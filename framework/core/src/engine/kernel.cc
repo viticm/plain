@@ -4,6 +4,7 @@
 #include "pf/net/connection/manager/listener.h"
 #include "pf/net/connection/manager/connector.h"
 #include "pf/db/interface.h"
+#include "pf/db/null.h"
 #include "pf/db/factory.h"
 #include "pf/script/factory.h"
 #include "pf/script/interface.h"
@@ -18,6 +19,10 @@
 using namespace pf_engine;
 
 template <> Kernel *pf_basic::Singleton< Kernel >::singleton_ = nullptr;
+
+pf_db::Interface *db_null_env_creator() { 
+  return new pf_db::Null();
+}
 
 Kernel *Kernel::getsingleton_pointer() {
   return singleton_;
@@ -165,6 +170,7 @@ bool Kernel::init_net() {
 
 bool Kernel::init_db() {
   using namespace pf_db;
+  register_env_creator_db(kDBTypeNull, db_null_env_creator);
   if (GLOBALS["default.db.open"] == false) return true;
   SLOW_DEBUGLOG(ENGINE_MODULENAME, 
                 "[%s] Kernel::init_db start...", 

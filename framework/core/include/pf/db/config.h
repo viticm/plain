@@ -77,7 +77,12 @@ typedef enum {
 
 //The db server type.
 typedef enum {
-  kDBTypeMysql = 0,
+  kDBTypeNull = 0,
+  kDBTypeODBC = 1,
+  kDBTypeMysql = 2,
+  kDBTypePostgres = 3,
+  kDBTypeSqlite = 4,
+  kDBTypeSqlserver = 5,
 } dbtype_t;
 
 namespace pf_db {
@@ -136,7 +141,7 @@ class Grammar;
 class MysqlGrammar;
 class PostgresGrammar;
 class SqliteGrammar;
-class SqlServerGrammar;
+class SqlserverGrammar;
 
 }
 
