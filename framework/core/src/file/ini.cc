@@ -37,6 +37,7 @@ bool Ini::open(const char *filename) {
     char msg[128] = {0};
     snprintf(msg, 128, "[file] open file failed! file: %s", filename);
     AssertEx(false, msg);
+    return false;
   }
   char buffer[512] = {0};
   while (fstream_.getline(buffer, 512)) {
@@ -65,7 +66,6 @@ bool Ini::open(const char *filename) {
     }
   }
   return true;
-  return false;
 }
 
 void Ini::close() {
@@ -83,7 +83,7 @@ void Ini::close() {
 }
 
 Ini::sectionset_t *Ini::getdata() {
-return &sectiondata_;
+  return &sectiondata_;
 }
 
 int32_t Ini::getint32(const char *section, const char *key, int32_t _default) {

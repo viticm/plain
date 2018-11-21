@@ -13,6 +13,7 @@
  * GLOBALS["app.cmdmodel"] = number;              //default 0.
  * GLOBALS["app.forceexit"] = bool;               //default false.
  * GLOBALS["app.console"] = bool;				          //default true.
+ * GLOBALS["app.pidfile"] = string;               //default "".
  * GLOBALS["log.active"] = bool;                  //default true.
  * GLOBALS["log.directory"] = number;             //default the exe file path with "/log".
  * GLOBALS["log.singlefile"] = bool;              //default false.
@@ -75,6 +76,7 @@ void set_default_globals(type::variable_set_t &g) {
   g["app.cmdmodel"] = 0;
   g["app.forceexit"] = false;
   g["app.console"] = true;
+  g["app.pidfile"] = "";
 
   g["log.active"] = true;
   g["log.directory"] = g["app.basepath"];

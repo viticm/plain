@@ -78,4 +78,7 @@ file(GLOB_RECURSE PLAINFRAMEWORK_HEADERS ${CMAKE_CURRENT_LIST_DIR}/framework/cor
 if(plainframework_build_tests)
   add_subdirectory(${root_dir}/framework/unit_tests/cmake 
                    ${root_dir}/framework/unit_tests/cmake/build)
+  add_subdirectory(${root_dir}/plain/app/cmake 
+                   ${root_dir}/plain/app/cmake/build)
+
 endif()

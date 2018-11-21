@@ -26,6 +26,7 @@
 /usr/local/include/pf/db/define.h
 /usr/local/include/pf/db/grammar.h
 /usr/local/include/pf/db/connection_resolver.h
+/usr/local/include/pf/db/null.h
 /usr/local/include/pf/db/query/grammars/grammar.h
 /usr/local/include/pf/db/query/grammars/sqlite_grammar.h
 /usr/local/include/pf/db/query/grammars/config.h

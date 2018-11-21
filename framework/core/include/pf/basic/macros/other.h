@@ -54,4 +54,15 @@ enum {
   kAppStatusStop,
 };
 
+#define PF_VERSION_MAJOR	"1"
+#define PF_VERSION_MINOR	"0"
+#define PF_VERSION_NUM		0
+#define PF_VERSION_RELEASE	"1"
+
+#define PF_VERSION	"Plain Framework " PF_VERSION_MAJOR "." PF_VERSION_MINOR
+#define PF_RELEASE	PF_VERSION "." PF_VERSION_RELEASE
+#define PF_COPYRIGHT	PF_RELEASE "  Copyright (C) 2018 by viticm "
+#define PF_AUTHORS	"viticm<viticm.ti@gmail.com>"
+
+
 #endif //PF_BASIC_MACROS_OTHER_H_

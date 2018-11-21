@@ -21,7 +21,7 @@ typedef void (__stdcall *function_commandhandler)();
 class PF_API Application : public pf_basic::Singleton<Application> {
 
  public:
-   Application(Kernel *engine);
+   Application(Kernel *engine, int32_t argc, char *argv[]);
    ~Application();
 
  public:
@@ -30,8 +30,8 @@ class PF_API Application : public pf_basic::Singleton<Application> {
 
  public:
    void run();
-   void run(int32_t argc, char *argv[]);
    void stop();
+   bool without_command_run();
 
  public:
    static bool env(); /* Basic environment. */
@@ -42,13 +42,21 @@ class PF_API Application : public pf_basic::Singleton<Application> {
                                 function_commandhandler commandhandler);
    void parse_command(const char *command);
    void view_commands();
+   const std::string get_arg(const std::string &name) {
+     return args_[name];
+   };
 
  private:
    bool init();
+   void start();
+   bool set_env_globals();
+   void set_pidfile();
 
  private:
    std::map< std::string, function_commandhandler > command_functions_;
    std::map< std::string, std::string > command_descriptions_;
+   std::map< std::string, std::string > args_;
+   int32_t args_flag_;
    Kernel *engine_;
 
 };
