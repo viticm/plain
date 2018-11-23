@@ -638,7 +638,7 @@ bool decrypt_number(const std::string &in, char _char, int32_t &number) {
 
 //This encrypt not change any word in old string, just insert the number as rand
 //string in rand position.
-//The final string is: first_char + pos + len + newstring.
+//The final string is: first_char + len + pos_len + pos_str + newstring.
 bool encrypt(const std::string &in, int32_t number, std::string &out) {
   const char *chars{"abcdefghijklmABCDEFGHIJKLM"}; 
   std::default_random_engine rand_engine(static_cast<uint32_t>(time(nullptr)));
@@ -651,13 +651,13 @@ bool encrypt(const std::string &in, int32_t number, std::string &out) {
   std::uniform_int_distribution<int32_t> dis1(0, in.size());
   auto rand_pos = std::bind(dis1, rand_engine); rand_pos();
   auto pos = rand_pos();
-  std::string pos_len_str{""};
-  encrypt_number(pos, first_char, pos_len_str);
+  std::string pos_str{""};
+  encrypt_number(pos, first_char, pos_str);
   char pos_char = first_char + pos;
   char len_char = first_char + number_len; //The length is 0 - 9.
-  char pos_len_char = first_char + pos_len_str.size(); 
+  char pos_len_char = first_char + pos_str.size(); 
   out = "";
-  out = out + first_char + len_char + pos_len_char + pos_len_str;
+  out = out + first_char + len_char + pos_len_char + pos_str;
   if (0 == pos) {
     out = out + number_str + in;
   } else if (pos == in.size()) {
@@ -673,9 +673,9 @@ bool decrypt(const std::string &in, int32_t &number, std::string &out) {
   char first_char = in[0];
   int32_t length = in[1] - first_char;
   int32_t pos_len = in[2] - first_char;
-  auto pos_len_str = in.substr(3, pos_len);
+  auto pos_str = in.substr(3, pos_len);
   int32_t pos{0};
-  decrypt_number(pos_len_str, first_char, pos);
+  decrypt_number(pos_str, first_char, pos);
   int32_t header_size = 4 + pos_len;
   size_t rsize = in.size() - header_size;
   if (rsize < 0) return false;
