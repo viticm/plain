@@ -2,6 +2,7 @@
 #include "pf/basic/time_manager.h"
 #include "pf/basic/logger.h"
 #include "pf/net/connection/manager/listener.h"
+#include "pf/net/connection/manager/listener_factory.h"
 #include "pf/net/connection/manager/connector.h"
 #include "pf/db/interface.h"
 #include "pf/db/null.h"
@@ -165,12 +166,29 @@ bool Kernel::init_net() {
     unique_move(connection::manager::Basic, net, net_)
     if (!net->init(conn_max)) return false;
   }
+  //Extra net listeners.
+  if (GLOBALS["server.count"] > 0) {
+    using namespace pf_net::connection::manager;
+    auto factory = new ListenerFactory();
+    if (is_null(factory)) return false;
+    unique_move(ListenerFactory, factory, net_listener_factory_);
+    auto count = GLOBALS["server.count"].get<int8_t>();
+    for (int8_t i = 0; i < count; ++i) {
+      auto name = GLOBALS["server.name" + std::to_string(i)].data;
+      auto conn_max = 
+        GLOBALS["server.conn_max" + std::to_string(i)].get<uint16_t>();
+      auto ip = GLOBALS["server.ip" + std::to_string(i)].data;
+      auto port = GLOBALS["server.port" + std::to_string(i)].get<uint16_t>();
+      auto encrypt_str = GLOBALS["server.encrypt_str" + std::to_string(i)].data;
+    }
+  }
+  //Extra net connectors.
   return true;
 }
 
 bool Kernel::init_db() {
   using namespace pf_db;
-  register_env_creator_db(kDBTypeNull, db_null_env_creator);
+  register_env_creator_db(kDBEnvNull, db_null_env_creator);
   if (GLOBALS["default.db.open"] == false) return true;
   SLOW_DEBUGLOG(ENGINE_MODULENAME, 
                 "[%s] Kernel::init_db start...", 

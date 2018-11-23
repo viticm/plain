@@ -48,6 +48,17 @@ class PF_API Kernel : public pf_basic::Singleton< Kernel > {
    pf_script::Factory *get_script_factory() { return script_factory_.get(); }
 
  public:
+
+   //Use these interface will send handshake packt after connected.
+   pf_net::connection::Basic *default_connect(
+       const std::string &ip, uint16_t port);
+   pf_net::connection::Basic *connect(const std::string &name);
+
+   //Get the extra listener or connector.
+   pf_net::connection::Basic *get_connector(const std::string &name);
+   pf_net::connection::manager::Listener *get_listener(const std::string &name);
+
+ public:
    //Enqueue an envet function in main loop.
    template<class F, class... Args>
    auto enqueue(F&& f, Args&&... args) 
@@ -73,11 +84,17 @@ class PF_API Kernel : public pf_basic::Singleton< Kernel > {
  protected:
    std::unique_ptr<pf_net::connection::manager::Basic> net_;
    std::unique_ptr<pf_db::Factory> db_factory_;
+   std::unique_ptr<
+     pf_net::connection::manager::ListenerFactory> net_listener_factory_;
+   std::unique_ptr<pf_net::connection::manager::Connector> net_connector_;
    pf_db::eid_t db_eid_;
    std::unique_ptr<pf_cache::Manager> cache_;
    std::unique_ptr<pf_script::Factory> script_factory_;
    pf_script::eid_t script_eid_;
    std::vector< std::thread > thread_workers_;
+   std::map<std::string, uint8_t> listen_list_; //Listen net name to factory id.
+   std::map<std::string, uint8_t> connect_list_; //connect net name to id.
+   std::map<std::string, uint8_t> connect_env_; //connect net name to env id.
    bool isinit_;
 
  private:

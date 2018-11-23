@@ -33,7 +33,7 @@ DBStore::DBStore() :
   get_db_connection_func_{nullptr},
   workers_{nullptr},
   cache_last_check_time_{0},
-  dbtype_{kDBTypeMysql} {
+  dbenv_{kDBEnvMysql} {
   keys_.key_map = ID_INVALID;
   keys_.recycle_map = ID_INVALID;
   keys_.query_map = ID_INVALID;
@@ -829,7 +829,7 @@ bool DBStore::generate_sql(const std::string &key, std::string &sql) {
         }
       }
       if (values.size() > names.size()) {
-        _query.update(names, values, dbtype_);
+        _query.update(names, values, dbenv_);
       } else {
           _query.update(names, values);
           std::string save_cond;

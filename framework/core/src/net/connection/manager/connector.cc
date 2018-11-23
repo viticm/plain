@@ -13,7 +13,6 @@ pf_net::connection::Basic *Connector::connect(const char *ip, uint16_t port) {
   pf_net::connection::Basic *connection = pool_->create();
   if (is_null(connection)) return nullptr;
   if (!connection->init(protocol())) {
-    
     return nullptr;
   }
   pf_net::socket::Basic *socket = connection->socket();

@@ -25,7 +25,9 @@ Basic::Basic() :
   send_bytes_{0},
   packet_index_{0},
   execute_count_pretick_{NET_CONNECTION_EXECUTE_COUNT_PRE_TICK_DEFAULT},
-  status_{0} {
+  status_{0},
+  safe_encrypt_{false},
+  safe_encrypt_time_{0} {
   //do nothing
 }
 
@@ -145,6 +147,11 @@ bool Basic::send(packet::Interface* packet) {
 }
 
 bool Basic::heartbeat(uint32_t, uint32_t) {
+  if (safe_encrypt_time_ != 0) {
+    auto now = TIME_MANAGER_POINTER->get_ctime();
+    if (safe_encrypt_time_ + NET_ENCRYPT_CONNECTION_TIMEOUT < now)
+      return false;
+  }
   return true;
 }
 
@@ -169,6 +176,8 @@ void Basic::clear() {
   execute_count_pretick_ = NET_CONNECTION_EXECUTE_COUNT_PRE_TICK_DEFAULT;
   set_disconnect(true);
   set_empty(true);
+  set_safe_encrypt(false);
+  safe_encrypt_time_ = 0;
 }
 
 uint32_t Basic::get_receive_bytes() {

@@ -29,6 +29,7 @@ eid_t Factory::newenv(Interface *env) {
 }
 
 eid_t Factory::neweid() {
+  std::unique_lock<std::mutex> autolock(mutex_);
   eid_t eid = SCRIPT_EID_INVALID;
   eid = SCRIPT_EID_INVALID == last_del_eid_ ?
         static_cast<eid_t>(envs_.size() + 1) : last_del_eid_;

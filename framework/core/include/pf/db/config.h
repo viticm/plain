@@ -75,15 +75,15 @@ typedef enum {
 } dbconnector_type_t;
 **/
 
-//The db server type.
+//The db environment type.
 typedef enum {
-  kDBTypeNull = 0,
-  kDBTypeODBC = 1,
-  kDBTypeMysql = 2,
-  kDBTypePostgres = 3,
-  kDBTypeSqlite = 4,
-  kDBTypeSqlserver = 5,
-} dbtype_t;
+  kDBEnvNull = 0,
+  kDBEnvODBC = 1,
+  kDBEnvMysql = 2,
+  kDBEnvPostgres = 3,
+  kDBEnvSqlite = 4,
+  kDBEnvSqlserver = 5,
+} dbenv_t;
 
 namespace pf_db {
 

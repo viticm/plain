@@ -88,6 +88,10 @@ class PF_API Basic {
    };
    void set_status(uint8_t status) { status_ = status; };
    uint8_t get_status() const { return status_; };
+   void set_safe_encrypt(bool flag) { safe_encrypt_ = flag; };
+   bool is_safe_encrypt() const { return safe_encrypt_; };
+   void set_safe_encrypt_time(uint32_t time) { safe_encrypt_time_ = time; };
+   bool is_safe_encrypt_timeout() const;
 
  public:
    void compress_set_mode(compress_mode_t mode);
@@ -136,6 +140,8 @@ class PF_API Basic {
    int8_t packet_index_;
    uint8_t execute_count_pretick_;
    uint8_t status_;
+   bool safe_encrypt_; //This flag say the connection if encrypt in encrypt mode.
+   uint32_t safe_encrypt_time_; //If not 0 then will check the safe encrypt. 
 
 };
 

@@ -39,12 +39,24 @@ class PF_API Listener : public Basic {
      return listener_socket_ ? listener_socket_->host() : "";
    }
    virtual connection::Basic *accept(); //新连接接受处理
+
+ public:
+
+   virtual void on_connect(connection::Basic * connection);
+
+ public:
+
    int32_t listener_socket_id() const {
      return listener_socket_ ? listener_socket_->get_id() : SOCKET_INVALID;
+   }
+   //If set safe encrypt string then all connection will check it. 
+   void set_safe_encrypt_str(const std::string &str) {
+     safe_encrypt_str_ = str;
    }
 
  private:
    std::unique_ptr<socket::Listener> listener_socket_;
+   std::string safe_encrypt_str_;
    bool ready_;
 
 };

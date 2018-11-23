@@ -37,7 +37,6 @@ class PF_API Interface {
    bool pool_init(uint16_t connectionmax = NET_CONNECTION_MAX);
    void pool_set(connection::Pool *pool);
    bool add(connection::Basic *connection);
-   connection::Basic *get(int16_t id);
 
  public:
    virtual bool heartbeat(uint32_t time = 0);
@@ -49,6 +48,7 @@ class PF_API Interface {
    virtual bool remove(connection::Basic *connection);
    //清除管理器中所有连接
    virtual bool destroy();
+   connection::Basic *get(int16_t id);
    virtual bool socket_add(int32_t socketid, int16_t connectionid) = 0;
    virtual bool socket_remove(int32_t socketid) = 0;
    virtual bool is_service() const { return false; }
@@ -75,6 +75,8 @@ class PF_API Interface {
    virtual bool recv(packet::Interface *&packet,
                      uint16_t &connectionid,
                      uint32_t &flag);
+   virtual void on_disconnect(connection::Basic *) {}
+   virtual void on_connect(connection::Basic *) {}
    bool cache_resize();
 
  public:

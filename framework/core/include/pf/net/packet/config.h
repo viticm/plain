@@ -44,6 +44,8 @@ typedef enum {
   kPacketExecuteStatusNotRemoveError,
 } packet_executestatus_t;
 
+#define NET_PACKET_HANDSHAKE 0xfff0 //The safe encrypt packet id.
+
 typedef enum {
   kPacketFlagNone = 0,
   kPacketFlagRemove,

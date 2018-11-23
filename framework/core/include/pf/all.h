@@ -63,6 +63,7 @@
 #include "pf/net/connection/manager/basic.h"
 #include "pf/net/connection/manager/connector.h"
 #include "pf/net/connection/manager/listener.h"
+#include "pf/net/connection/manager/listener_factory.h"
 #include "pf/net/packet/interface.h"
 #include "pf/net/packet/dynamic.h"
 #include "pf/net/packet/factory.h"

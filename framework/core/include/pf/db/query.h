@@ -43,7 +43,7 @@ class PF_API Query {
                const pf_basic::type::variable_array_t &values);
    bool update(const pf_basic::type::variable_array_t &keys, 
                const pf_basic::type::variable_array_t &values,
-               dbtype_t dbtype);
+               dbenv_t dbenv);
 
    bool from();
    bool where(const pf_basic::type::variable_t &key, 

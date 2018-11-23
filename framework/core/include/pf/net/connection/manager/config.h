@@ -22,6 +22,7 @@ namespace manager {
 
 class Basic;
 class Listener;
+class ListenerFactory;
 class Connector;
 class Epool;
 class Iocp;
@@ -43,6 +44,15 @@ struct cache_struct {
     safe_delete_array(queue);
   };
 };
+
+struct listener_config_struct {
+  std::string ip;
+  uint16_t port;
+  uint16_t conn_max;
+};
+using eid_t = int16_t; //Environment.
+
+using listener_config_t = listener_config_struct;
 
 } //namespace manager
 

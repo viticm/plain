@@ -8,7 +8,9 @@
 using namespace pf_net::connection::manager;
 
 Listener::Listener() :
-  listener_socket_{nullptr} {
+  listener_socket_{nullptr},
+  ready_{false}, 
+  safe_encrypt_str_{""} {
   //do nothing
 }
 
@@ -114,4 +116,9 @@ EXCEPTION:
   newconnection->clear();
   pool_->remove(newconnection->get_id());
   return nullptr;
+}
+
+void Listener::on_connect(connection::Basic *connection) {
+  if (safe_encrypt_str_ != "")
+    connection->set_safe_encrypt_time(TIME_MANAGER_POINTER->get_ctime());
 }

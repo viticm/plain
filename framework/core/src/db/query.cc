@@ -123,7 +123,7 @@ bool Query::update(const pf_basic::type::variable_array_t &keys,
 
 bool Query::update(const pf_basic::type::variable_array_t &keys, 
                    const pf_basic::type::variable_array_t &values,
-                   dbtype_t dbtype) {
+                   dbenv_t dbenv) {
   using namespace pf_basic;
   if (!isready_) return false;
   if (0 == strlen(tablename_)) return false;
@@ -132,8 +132,8 @@ bool Query::update(const pf_basic::type::variable_array_t &keys,
   auto valuecount = values.size();
   if (0 == keycount || valuecount % keycount != 0) return false;
   sql_.clear();
-  switch (dbtype) {
-    case kDBTypeMysql: {
+  switch (dbenv) {
+    case kDBEnvMysql: {
       size_t i{0};
       sql_ += "replace into "; sql_ += tablename_; sql_ += " (";
       for (i = 0; i < keycount; ++i) { 

@@ -18,5 +18,7 @@
 #define NET_MANAGER_CACHE_SIZE 1024   //网络管理器默认缓存大小
 #define NET_PACKET_FACTORYMANAGER_ALLOCMAX (1024 * 100)
 #define NET_MODULENAME "net" 
+#define NET_ENCRYPT_CONNECTION_TIMEOUT 30 //加密的连接未成功加密断开的时间
+#define NET_EID_INVALID (-1)
 
 #endif //PF_NET_CONFIG_H_

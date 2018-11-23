@@ -82,6 +82,7 @@
 /usr/local/include/pf/net/connection/manager/listener.h
 /usr/local/include/pf/net/connection/manager/interface.h
 /usr/local/include/pf/net/connection/manager/epoll.h
+/usr/local/include/pf/net/connection/manager/listener_factory.h
 /usr/local/include/pf/net/connection/manager/iocp.h
 /usr/local/include/pf/net/connection/pool.h
 /usr/local/include/pf/net/config.h

@@ -44,6 +44,10 @@ PF_API void decrypt(const char *in, char *out, int32_t out_length);
 PF_API bool encrypt(const std::string &in, std::string &out);
 PF_API bool decrypt(const std::string &in, std::string &out);
 
+//A simple de/encrypt string with a number.
+PF_API bool encrypt(const std::string &in, int32_t number, std::string &out);
+PF_API bool decrypt(const std::string &in, int32_t &number, std::string &out);
+
 PF_API char *safecopy(char *dest, const char *src, size_t size);
 
 PF_API int32_t charset_convert(const char *from, 

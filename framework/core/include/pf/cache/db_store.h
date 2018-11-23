@@ -212,8 +212,8 @@ class PF_API DBStore : public StoreInterface {
    };
 
    //Set db type.
-   void set_dbtype(dbtype_t dbtype) {
-     dbtype_ = dbtype;
+   void set_dbtype(dbenv_t dbenv) {
+     dbenv_ = dbenv;
    }
 
  public: //For sharememory.
@@ -361,7 +361,7 @@ class PF_API DBStore : public StoreInterface {
    std::vector<std::string> forgetlist_;
 
    //The db type for cache.
-   dbtype_t dbtype_;
+   dbenv_t dbenv_;
 
 };
 

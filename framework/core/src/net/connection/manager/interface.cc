@@ -95,6 +95,7 @@ bool Interface::add(connection::Basic *connection) {
   }
   connection->set_disconnect(false); //connect is success
   connection->set_empty(false);      //Pool use flag.
+  on_connect(connection);
   if (!is_null(callback_connect_)) callback_connect_(connection);
   return true;
 }
@@ -140,6 +141,7 @@ bool Interface::erase(connection::Basic *connection) {
 }
 
 bool Interface::remove(connection::Basic *connection) {
+  on_disconnect(connection);
   if (!is_null(callback_disconnect_)) callback_disconnect_(connection);
   if (!erase(connection)) return false; 
   pool_->remove(connection->get_id());

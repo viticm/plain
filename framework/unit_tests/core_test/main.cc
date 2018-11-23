@@ -30,7 +30,7 @@ int32_t main(int32_t argc, char **argv) {
 
   GLOBALS["log.print"] = false;
   GLOBALS["default.db.open"] = true;
-  GLOBALS["default.db.type"] = kDBTypeNull;
+  GLOBALS["default.db.type"] = kDBEnvNull;
   GLOBALS["default.db.name"] = "pf_test";
   GLOBALS["default.db.user"] = "root";
   GLOBALS["default.db.password"] = "mysql";

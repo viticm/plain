@@ -515,7 +515,7 @@ static bool pg_decrypt_password(char *password, const char *encrypted) {
   int32_t length = strlen(encrypted), pk_length{0}, i{0};
   char buffer[PG_RESULTLENSTD + 1]{0};
   if (length != PG_RESULTLENSTD)
-    return 0;
+    return false;
 
   for (i = 0; i < PG_RESULTLENSTD; i++)
     buffer[i] = encrypted[i];
@@ -611,6 +611,78 @@ bool decrypt(const std::string &in, std::string &out) {
   char temp[PG_RESULTLENSTD + 1]{0};
   if (!pg_decrypt_password(temp, in.c_str())) return false;
   out = temp;
+  return true;
+}
+
+bool encrypt_number(int32_t number, char _char, std::string &out) {
+  std::string number_str = std::to_string(number);
+  auto number_len = number_str.size();
+  out = "";
+  for (int32_t i = 0; i < number_len; ++i) {
+    auto n = number / static_cast<int32_t>((pow(10, number_len - i - 1))) % 10;
+    char c = n + _char;
+    out = out + c;
+  }
+  return true;
+}
+
+bool decrypt_number(const std::string &in, char _char, int32_t &number) {
+  auto number_len = in.size();
+  number = 0;
+  for (int32_t i = 0; i < number_len; ++i) {
+    number += (in[i] - _char) 
+              * static_cast<int32_t>(pow(10, number_len - i -1));
+  }
+  return true;
+}
+
+//This encrypt not change any word in old string, just insert the number as rand
+//string in rand position.
+//The final string is: first_char + pos + len + newstring.
+bool encrypt(const std::string &in, int32_t number, std::string &out) {
+  const char *chars{"abcdefghijklmABCDEFGHIJKLM"}; 
+  std::default_random_engine rand_engine(static_cast<uint32_t>(time(nullptr)));
+  std::uniform_int_distribution<int32_t> dis(0, 25);
+  auto rand_gen = std::bind(dis, rand_engine); rand_gen();
+  auto first_char = chars[rand_gen()];
+  std::string number_str{""};
+  encrypt_number(number, first_char, number_str);
+  auto number_len = number_str.size();
+  std::uniform_int_distribution<int32_t> dis1(0, in.size());
+  auto rand_pos = std::bind(dis1, rand_engine); rand_pos();
+  auto pos = rand_pos();
+  std::string pos_len_str{""};
+  encrypt_number(pos, first_char, pos_len_str);
+  char pos_char = first_char + pos;
+  char len_char = first_char + number_len; //The length is 0 - 9.
+  char pos_len_char = first_char + pos_len_str.size(); 
+  out = "";
+  out = out + first_char + len_char + pos_len_char + pos_len_str;
+  if (0 == pos) {
+    out = out + number_str + in;
+  } else if (pos == in.size()) {
+    out = out + in + number_str;
+  } else {
+    out = out + in.substr(0, pos) + number_str + in.substr(pos);
+  }
+  return true;
+}
+
+bool decrypt(const std::string &in, int32_t &number, std::string &out) {
+  if (in.size() <= 4) return false;
+  char first_char = in[0];
+  int32_t length = in[1] - first_char;
+  int32_t pos_len = in[2] - first_char;
+  auto pos_len_str = in.substr(3, pos_len);
+  int32_t pos{0};
+  decrypt_number(pos_len_str, first_char, pos);
+  int32_t header_size = 4 + pos_len;
+  size_t rsize = in.size() - header_size;
+  if (rsize < 0) return false;
+  std::string number_str = in.substr(header_size + pos - 1, length);
+  decrypt_number(number_str, first_char, number);
+  out = in.substr(header_size - 1, pos) + 
+        in.substr(header_size + pos + length - 1);
   return true;
 }
 
