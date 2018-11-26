@@ -45,6 +45,7 @@ typedef enum {
 } packet_executestatus_t;
 
 #define NET_PACKET_HANDSHAKE 0xfff0 //The safe encrypt packet id.
+#define NET_PACKET_HANDSHAKE_KEY_SIZE (128) //The safe encrypt key size;
 
 typedef enum {
   kPacketFlagNone = 0,

@@ -19,6 +19,7 @@
 #include "pf/net/packet/interface.h"
 #include "pf/net/socket/basic.h"
 #include "pf/net/protocol/interface.h"
+#include "pf/net/connection/manager/config.h"
 #include "pf/net/stream/input.h"
 #include "pf/net/stream/output.h"
 
@@ -109,6 +110,12 @@ class PF_API Basic {
    void set_protocol(protocol::Interface *protocol) {
      protocol_ = protocol;
    }
+   void set_listener(manager::Listener *listener) {
+     listener_ = listener;
+   }
+   manager::Listener *get_listener() {
+     return listener_;
+   }
 
  private:
    void process_input_compress();
@@ -121,6 +128,7 @@ class PF_API Basic {
    std::unique_ptr<stream::Input> istream_compress_;
    std::unique_ptr<stream::Output> ostream_;
    protocol::Interface *protocol_; //用个引用来做是否好些？
+   manager::Listener *listener_;
 
  private:
    bool empty_;

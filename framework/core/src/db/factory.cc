@@ -9,6 +9,10 @@ eid_t Factory::newenv(const config_t &config) {
   if (DB_EID_INVALID == eid) return eid;
   auto func_envcreator = get_env_creator_db(config.type);
   if (is_null(func_envcreator)) {
+    SLOW_ERRORLOG(DB_MODULENAME,
+                  "[%s] Can't find environment creator from type: %d",
+                  DB_MODULENAME,
+                  config.type);
     last_del_eid_ = eid;
     return DB_EID_INVALID;
   }

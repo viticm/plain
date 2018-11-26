@@ -15,6 +15,7 @@ Basic::Basic() :
   istream_compress_{nullptr},
   ostream_{nullptr},
   protocol_{nullptr},
+  listener_{nullptr},
   empty_{true},
   disconnect_{false},
   ready_{false},

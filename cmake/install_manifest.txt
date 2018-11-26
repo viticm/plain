@@ -97,6 +97,7 @@
 /usr/local/include/pf/net/socket/basic.h
 /usr/local/include/pf/net/socket/listener.h
 /usr/local/include/pf/net/socket/api.h
+/usr/local/include/pf/net/packet/handshake.h
 /usr/local/include/pf/net/packet/factorymanager.h
 /usr/local/include/pf/net/packet/config.h
 /usr/local/include/pf/net/packet/factory.h

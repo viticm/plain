@@ -121,4 +121,5 @@ EXCEPTION:
 void Listener::on_connect(connection::Basic *connection) {
   if (safe_encrypt_str_ != "")
     connection->set_safe_encrypt_time(TIME_MANAGER_POINTER->get_ctime());
+  connection->set_listener(this);
 }

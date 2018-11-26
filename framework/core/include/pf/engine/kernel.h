@@ -57,6 +57,7 @@ class PF_API Kernel : public pf_basic::Singleton< Kernel > {
    //Get the extra listener or connector.
    pf_net::connection::Basic *get_connector(const std::string &name);
    pf_net::connection::manager::Listener *get_listener(const std::string &name);
+   pf_db::Interface *get_db(const std::string &name);
 
  public:
    //Enqueue an envet function in main loop.
@@ -92,9 +93,10 @@ class PF_API Kernel : public pf_basic::Singleton< Kernel > {
    std::unique_ptr<pf_script::Factory> script_factory_;
    pf_script::eid_t script_eid_;
    std::vector< std::thread > thread_workers_;
-   std::map<std::string, uint8_t> listen_list_; //Listen net name to factory id.
-   std::map<std::string, uint8_t> connect_list_; //connect net name to id.
-   std::map<std::string, uint8_t> connect_env_; //connect net name to env id.
+   std::map<std::string, int8_t> db_list_;  //Database name to factory id.
+   std::map<std::string, int8_t> listen_list_; //Listen net name to factory id.
+   std::map<std::string, int8_t> connect_list_; //connect net name to id.
+   std::map<std::string, int8_t> connect_env_; //connect net name to config id.
    bool isinit_;
 
  private:

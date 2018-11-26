@@ -48,6 +48,7 @@
  * GLOBALS["default.db.name"] = string;           //default "".
  * GLOBALS["default.db.user"] = string;           //default "".
  * GLOBALS["default.db.password"] = string;       //default "".
+ * GLOBALS["default.db.encrypt"] = bool;          //default false.
  **/
 namespace pf_basic {
 
@@ -114,6 +115,7 @@ void set_default_globals(type::variable_set_t &g) {
   g["default.db.user"] = "";
   g["default.db.password"] = "";
   g["default.db.type"] = -1;
+  g["default.db.encrypt"] = false;
 
   //The set flag.
   g["globals"] = true;

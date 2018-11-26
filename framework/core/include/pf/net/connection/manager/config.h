@@ -49,6 +49,7 @@ struct listener_config_struct {
   std::string ip;
   uint16_t port;
   uint16_t conn_max;
+  std::string encrypt_str;
 };
 using eid_t = int16_t; //Environment.
 

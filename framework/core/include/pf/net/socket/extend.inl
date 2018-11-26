@@ -44,6 +44,8 @@ inline int32_t poll_create(polldata_t& polldata, int32_t maxcount) {
     polldata.events = new epoll_event[maxcount];
     Assert(polldata.events);
     signal(SIGPIPE, SIG_IGN);
+  } else {
+    perror("epoll_create error");
   }
   return fd;
 }
