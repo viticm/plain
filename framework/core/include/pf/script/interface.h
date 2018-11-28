@@ -21,7 +21,7 @@ class PF_API Interface {
 
  public:
    Interface() {};
-   virtual ~Interface() { std::cout << "pf_script::~Interface" << std::endl; };
+   virtual ~Interface() {};
 
  public:
    virtual bool init() = 0;

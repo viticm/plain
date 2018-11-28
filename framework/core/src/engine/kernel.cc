@@ -224,8 +224,8 @@ bool Kernel::init_base() {
   }
 
   if (LIBRARY_MANAGER_POINTER) {
-    auto it = library_load_.begin();
-    for (; it != library_load_.end(); ++it) {
+    auto it = library_load_.rbegin();
+    for (; it != library_load_.rend(); ++it) {
       if (!LIBRARY_MANAGER_POINTER->load(it->first, it->second))
         return false;
     }
@@ -457,11 +457,27 @@ bool Kernel::init_script() {
   conf.workpath = GLOBALS["default.script.workpath"].c_str();
   conf.type = GLOBALS["default.script.type"].get<int8_t>();
   script_eid_ = script_factory_->newenv(conf);
-  if (SCRIPT_EID_INVALID == script_eid_) return false;
-  auto env = script_factory_->getenv(script_eid_);
-  if (!env->init()) return false;
-  if (!env->bootstrap(GLOBALS["default.script.bootstrap"].c_str())) 
+  if (SCRIPT_EID_INVALID == script_eid_) {
+    SLOW_ERRORLOG(ENGINE_MODULENAME,
+                  "[%s] Kernel::init_script env(%d) create error",
+                  ENGINE_MODULENAME,
+                  GLOBALS["default.script.type"].get<int8_t>());
     return false;
+  }
+  auto env = script_factory_->getenv(script_eid_);
+  if (!env->init()) {
+    SLOW_ERRORLOG(ENGINE_MODULENAME,
+                  "[%s] Kernel::init_script env->init() error",
+                  ENGINE_MODULENAME);
+    return false;
+  }
+  if (!env->bootstrap(GLOBALS["default.script.bootstrap"].c_str())) {
+    SLOW_ERRORLOG(ENGINE_MODULENAME,
+                  "[%s] Kernel::init_script env->bootstrap(%s) error",
+                  ENGINE_MODULENAME,
+                  GLOBALS["default.script.bootstrap"].c_str());
+    return false;
+  }
   return true;
 }
 
