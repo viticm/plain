@@ -173,9 +173,9 @@ pf_net::connection::Basic *Kernel::connect(const std::string &name) {
   char key[NET_PACKET_HANDSHAKE_KEY_SIZE]{0};
   std::string str{""};
   pf_basic::string::encrypt(encrypt_str, now, str);
-  std::cout << "str: " << str << std::endl;
+  //std::cout << "str: " << str << std::endl;
   pf_basic::base64encode(key, str.c_str());
-  std::cout << "key: " << key << std::endl;
+  //std::cout << "key: " << key << std::endl;
   pf_net::packet::Handshake handshake;
   handshake.set_key(key);
   connection->send(&handshake);

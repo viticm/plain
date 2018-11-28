@@ -38,18 +38,20 @@ uint32_t Handshake::execute(pf_net::connection::Basic *connection) {
     return kPacketExecuteStatusError;
   }
   std::string key = get_key();
-  std::cout << "execute key: " << key << std::endl;
+  //std::cout << "execute key: " << key << std::endl;
   char decode_key[NET_PACKET_HANDSHAKE]{0};
   pf_basic::base64decode(decode_key, key.c_str());  
   auto now = TIME_MANAGER_POINTER->get_ctime();
   std::string decode_key_1{""};
   int32_t time{0};
   string::decrypt(decode_key, time, decode_key_1);
+  /**
   std::cout << "encrypt_str: " << encrypt_str 
     << " decode_key: " << decode_key << 
      " decode_key_1: " << decode_key_1 <<
      " time: " << time <<
     std::endl;
+  **/
   if (now - time > 10 || now - time < 0) {
     io_cwarn("[%s] The handshake timeout!",
              NET_MODULENAME);    
