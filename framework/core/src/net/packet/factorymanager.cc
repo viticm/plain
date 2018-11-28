@@ -1,6 +1,7 @@
 #include "pf/basic/logger.h"
 #include "pf/net/packet/interface.h"
 #include "pf/net/packet/dynamic.h"
+#include "pf/net/packet/handshake.h"
 #include "pf/net/packet/factorymanager.h"
 
 std::unique_ptr< pf_net::packet::FactoryManager > 
@@ -31,7 +32,7 @@ FactoryManager::FactoryManager() :
   function_register_factories_{nullptr},
   function_is_valid_packet_id_{nullptr},
   function_is_valid_dynamic_packet_id_{nullptr},
-  function_is_encrypt_packet_id_{nullptr},
+  //function_is_encrypt_packet_id_{nullptr},
   function_packet_execute_{nullptr} {
   alloc_packets_.init(NET_PACKET_FACTORYMANAGER_ALLOCMAX);
 }
@@ -77,6 +78,8 @@ bool FactoryManager::init() {
   }
   if (!is_null(function_register_factories_) && 
       !(*function_register_factories_)()) return false;
+  //Handshake.
+  add_factory(new HandshakeFactory);
   ready_ = true;
   return true;
 }
@@ -179,10 +182,7 @@ bool FactoryManager::is_valid_packet_id(uint16_t id) {
 }
 
 bool FactoryManager::is_encrypt_packet_id(uint16_t id) {
-  bool result = false;
-  if (!function_is_encrypt_packet_id_) return false;
-  result = (*function_is_encrypt_packet_id_)(id);
-  return result;
+  return id >= NET_PACKET_HANDSHAKE && id < 0xffff;
 }
 
 bool FactoryManager::is_valid_dynamic_packet_id(uint16_t id) {

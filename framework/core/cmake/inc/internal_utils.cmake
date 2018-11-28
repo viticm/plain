@@ -145,9 +145,9 @@ macro(config_compiler_and_linker)
   set(cxx_strict "${cxx_default} ${cxx_strict_flags}")
 endmacro()
 
-# Defines the gtest & gtest_main libraries.  User tests should link
+# Defines the all libraries.  User tests should link
 # with one of them.
-function(cxx_library_with_type name type cxx_flags)
+function(cxx_library_with_type name type cxx_flags libs)
   # type can be either STATIC or SHARED to denote a static or shared library.
   # ARGN refers to additional arguments after 'cxx_flags'.
   add_library(${name} ${type} ${ARGN})
@@ -162,14 +162,17 @@ function(cxx_library_with_type name type cxx_flags)
   if (DEFINED PF_HAS_PTHREAD)
     target_link_libraries(${name} ${CMAKE_THREAD_LIBS_INIT})
   endif()
+  foreach (lib "${libs}")
+    target_link_libraries(${name} ${lib})
+  endforeach()
 endfunction()
 
 ########################################################################
 #
 # Helper functions for creating build targets.
 
-function(cxx_shared_library name cxx_flags)
-  cxx_library_with_type(${name} SHARED "${cxx_flags}" ${ARGN})
+function(cxx_shared_library name cxx_flags libs)
+  cxx_library_with_type(${name} SHARED "${cxx_flags}" "${libs}" ${ARGN})
 endfunction()
 
 function(cxx_library name cxx_flags)

@@ -45,7 +45,9 @@ bool Basic::command(connection::Basic *connection, uint16_t count) {
       if (!NET_PACKET_FACTORYMANAGER_POINTER->
           is_valid_packet_id(packetid) &&
           !NET_PACKET_FACTORYMANAGER_POINTER->
-          is_valid_dynamic_packet_id(packetid)) {
+          is_valid_dynamic_packet_id(packetid) &&
+          !NET_PACKET_FACTORYMANAGER_POINTER->
+          is_encrypt_packet_id(packetid)) {
         pf_basic::io_cerr("packet id error: %d", packetid);
         return false;
       }

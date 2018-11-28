@@ -160,7 +160,11 @@ void *Library::resolve(const std::string &symbol, bool again) {
 }
 
 LibraryManager::LibraryManager() {
-  add_searchpaths({"./"});
+  add_searchpaths({
+      "./",
+      GLOBALS["app.basepath"].data,
+      GLOBALS["app.basepath"].data + "plugins/",
+  });
 #if OS_UNIX
   add_searchpaths({
       "/lib/", 

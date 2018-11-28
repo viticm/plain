@@ -1,5 +1,6 @@
 #include "pf/basic/io.tcc"
 #include "pf/basic/time_manager.h"
+#include "pf/basic/base64.h"
 #include "pf/basic/string.h"
 #include "pf/basic/logger.h"
 #include "pf/net/connection/manager/listener.h"
@@ -146,13 +147,15 @@ pf_net::connection::Basic *Kernel::default_connect(
   Connector *connector = dynamic_cast<Connector *>(net_.get());
   auto connection = connector->connect(ip.c_str(), port);
   if (is_null(connection)) return nullptr;
-  auto encrypt_str = GLOBALS["default.net.encrypt_str"].data;
+  auto encrypt_str = GLOBALS["default.net.encrypt"].data;
   if ("" == encrypt_str) return connection;
   auto now = TIME_MANAGER_POINTER->get_ctime();
-  std::string key{""};
-  pf_basic::string::encrypt(encrypt_str, now, key);
+  std::string str{""};
+  char key[NET_PACKET_HANDSHAKE_KEY_SIZE]{0};
+  pf_basic::string::encrypt(encrypt_str, now, str);
+  pf_basic::base64encode(key, str.c_str());
   pf_net::packet::Handshake handshake;
-  handshake.set_key(key);
+  handshake.set_key(str);
   connection->send(&handshake);
   return connection;
 }
@@ -164,14 +167,19 @@ pf_net::connection::Basic *Kernel::connect(const std::string &name) {
   auto port = GLOBALS["client.port" + std::to_string(id)].get<uint16_t>();
   auto connection = net_connector_->connect(ip.c_str(), port);
   if (is_null(connection)) return nullptr;
-  auto encrypt_str = GLOBALS["client.encrypt_str" + std::to_string(id)].data;
+  auto encrypt_str = GLOBALS["client.encrypt" + std::to_string(id)].data;
   if ("" == encrypt_str) return connection;
   auto now = TIME_MANAGER_POINTER->get_ctime();
-  std::string key{""};
-  pf_basic::string::encrypt(encrypt_str, now, key);
+  char key[NET_PACKET_HANDSHAKE_KEY_SIZE]{0};
+  std::string str{""};
+  pf_basic::string::encrypt(encrypt_str, now, str);
+  std::cout << "str: " << str << std::endl;
+  pf_basic::base64encode(key, str.c_str());
+  std::cout << "key: " << key << std::endl;
   pf_net::packet::Handshake handshake;
   handshake.set_key(key);
   connection->send(&handshake);
+  connect_list_[name] = connection->get_id();
   return connection;
 }
 
@@ -196,6 +204,23 @@ bool Kernel::init_base() {
   if (is_null(LIBRARY_MANAGER_POINTER)) {
     auto librarymanager = new pf_file::LibraryManager;
     unique_move(pf_file::LibraryManager, librarymanager, g_librarymanager); 
+  }
+
+  //Load the plugins.
+  if (GLOBALS["plugins.count"] > 0) {
+    auto count = GLOBALS["plugins.count"].get<uint8_t>();
+    uint8_t i;
+    for (i = 0; i < count; ++i) {
+      std::string str = GLOBALS["plugins." + std::to_string(i)].data;
+      if ("" == str) return false;
+      std::vector<std::string> array;
+      string::explode(str.c_str(), array, ":", true, true);
+      type::variable_array_t params;
+      uint8_t j{1};
+      for (; j < array.size(); ++j)
+        params.emplace_back(array[j]);
+      add_libraryload(array[0], params);
+    }
   }
 
   if (LIBRARY_MANAGER_POINTER) {
@@ -224,7 +249,7 @@ bool Kernel::init_net() {
       auto service_ip = GLOBALS["default.net.service_ip"].c_str();
       auto service_port = GLOBALS["default.net.service_port"].get<uint16_t>();
       auto service = dynamic_cast< connection::manager::Listener *>(net);
-      auto encrypt_str = GLOBALS["default.net.encrypt_str"].data;
+      auto encrypt_str = GLOBALS["default.net.encrypt"].data;
       if (!service->init(conn_max, service_port, service_ip)) return false;
       std::string host{service->host()};
       if (encrypt_str != "") service->set_safe_encrypt_str(encrypt_str);
@@ -265,7 +290,7 @@ bool Kernel::init_net() {
         GLOBALS["server.connmax" + std::to_string(i)].get<uint16_t>();
       auto ip = GLOBALS["server.ip" + std::to_string(i)].data;
       auto port = GLOBALS["server.port" + std::to_string(i)].get<uint16_t>();
-      auto encrypt_str = GLOBALS["server.encrypt_str" + std::to_string(i)].data;
+      auto encrypt_str = GLOBALS["server.encrypt" + std::to_string(i)].data;
       if (0 == port || conn_max <= 0) {
         SLOW_ERRORLOG(ENGINE_MODULENAME,
                       "[%s] Kernel::init_net extra service the port or "
@@ -305,9 +330,10 @@ bool Kernel::init_net() {
     if (is_null(connector)) return false;
     if (!connector->init(count + 1)) return false;
     auto reset_connect = [this](pf_net::connection::Basic *connection) {
-      std::string name{""};
+      std::cout << "reset_connect" << std::endl;
       for (auto it = connect_list_.begin(); it != connect_list_.end(); ++it) {
         if (it->second == connection->get_id()) {
+          std::cout << "reset: " << it->first << std::endl;
           it->second = -1; //Reset the hash to invalid.
           break;
         }
@@ -317,7 +343,7 @@ bool Kernel::init_net() {
     unique_move(Connector, connector, net_connector_);
     for (int8_t i = 0; i < count; ++i) {
       auto name = GLOBALS["client.name" + std::to_string(i)].data;
-      auto startup = GLOBALS["startup" + std::to_string(i)].get<bool>();
+      auto startup = GLOBALS["client.startup" + std::to_string(i)].get<bool>();
       if ("" == name) {
         SLOW_ERRORLOG(ENGINE_MODULENAME,
                     "[%s] Kernel::init_net extra client can't get name: %d",

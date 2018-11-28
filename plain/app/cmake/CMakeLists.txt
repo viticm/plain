@@ -40,7 +40,7 @@ include_directories(${gtest_incdir}
 if(NOT MSVC)
   find_package(Threads)
 endif()
-set(COMMON_LIBS "dl;pf_core;${CMAKE_THREAD_LIBS_INIT}")
+set(COMMON_LIBS "pf_core;${CMAKE_THREAD_LIBS_INIT}")
 
  # Plain Framework core flags.
 set(cxx_base_flags "${cxx_base_flags} -std=c++11 -DPF_CORE -DPF_OPEN_EPOLL")

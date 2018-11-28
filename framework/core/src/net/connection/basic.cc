@@ -1,4 +1,5 @@
 #include "pf/basic/logger.h"
+#include "pf/basic/io.tcc"
 #include "pf/basic/time_manager.h"
 #include "pf/net/packet/factorymanager.h"
 #include "pf/net/connection/basic.h"
@@ -148,10 +149,14 @@ bool Basic::send(packet::Interface* packet) {
 }
 
 bool Basic::heartbeat(uint32_t, uint32_t) {
-  if (safe_encrypt_time_ != 0) {
+  using namespace pf_basic;
+  if (safe_encrypt_time_ != 0 && !is_safe_encrypt()) {
     auto now = TIME_MANAGER_POINTER->get_ctime();
-    if (safe_encrypt_time_ + NET_ENCRYPT_CONNECTION_TIMEOUT < now)
+    if (safe_encrypt_time_ + NET_ENCRYPT_CONNECTION_TIMEOUT < now) {
+      io_cwarn("[%s] Connection with safe encrypt timeout!",
+               NET_MODULENAME);
       return false;
+    }
   }
   return true;
 }

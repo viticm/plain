@@ -27,7 +27,7 @@ namespace packet {
 typedef bool (__stdcall *function_register_factories)();
 typedef bool (__stdcall *function_is_valid_packet_id)(uint16_t id);
 typedef bool (__stdcall *function_is_valid_dynamic_packet_id)(uint16_t id);
-typedef bool (__stdcall *function_is_encrypt_packet_id)(uint16_t id);
+//typedef bool (__stdcall *function_is_encrypt_packet_id)(uint16_t id);
 typedef uint32_t (__stdcall *function_packet_execute)(connection::Basic *, Interface *);
 
 class PF_API FactoryManager : public pf_basic::Singleton<FactoryManager> {
@@ -66,10 +66,12 @@ class PF_API FactoryManager : public pf_basic::Singleton<FactoryManager> {
    void set_function_is_valid_packet_id(function_is_valid_packet_id function) {
      function_is_valid_packet_id_ = function;
    }
+   /**
    void set_function_is_encrypt_packet_id(
        function_is_valid_packet_id function) {
      function_is_valid_packet_id_ = function;
    }
+   **/
    void set_function_is_valid_dynamic_packet_id(
        function_is_valid_dynamic_packet_id function) {
      function_is_valid_dynamic_packet_id_ = function;
@@ -92,7 +94,7 @@ class PF_API FactoryManager : public pf_basic::Singleton<FactoryManager> {
    function_register_factories function_register_factories_;
    function_is_valid_packet_id function_is_valid_packet_id_;
    function_is_valid_dynamic_packet_id function_is_valid_dynamic_packet_id_;
-   function_is_encrypt_packet_id function_is_encrypt_packet_id_;
+   //function_is_encrypt_packet_id function_is_encrypt_packet_id_;
    function_packet_execute function_packet_execute_;
 
 };

@@ -673,16 +673,17 @@ bool decrypt(const std::string &in, int32_t &number, std::string &out) {
   char first_char = in[0];
   int32_t length = in[1] - first_char;
   int32_t pos_len = in[2] - first_char;
-  auto pos_str = in.substr(3, pos_len);
+  int32_t header_size = 3 + pos_len;
+  if (in.size() < header_size) return false;
   int32_t pos{0};
+  auto pos_str = in.substr(3, pos_len);
   decrypt_number(pos_str, first_char, pos);
-  int32_t header_size = 4 + pos_len;
   size_t rsize = in.size() - header_size;
-  if (rsize < 0) return false;
-  std::string number_str = in.substr(header_size + pos - 1, length);
+  if (rsize < pos + length) return false;
+  std::string number_str = in.substr(header_size + pos, length);
   decrypt_number(number_str, first_char, number);
-  out = in.substr(header_size - 1, pos) + 
-        in.substr(header_size + pos + length - 1);
+  out = in.substr(header_size, pos) + 
+        in.substr(header_size + pos + length);
   return true;
 }
 

@@ -33,7 +33,7 @@ class Handshake : public pf_net::packet::Interface {
    uint16_t get_id() const { return NET_PACKET_HANDSHAKE; };
    virtual uint32_t size() const;
    void set_key(const std::string &str) {
-     pf_basic::string::safecopy(key_, str.c_str(), sizeof(key_ - 1));
+     pf_basic::string::safecopy(key_, str.c_str(), sizeof(key_) - 1);
    }
    const char *get_key() {
      return key_;
