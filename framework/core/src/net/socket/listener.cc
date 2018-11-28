@@ -6,7 +6,7 @@ namespace pf_net {
 
 namespace socket {
 
-Listener::Listener(uint16_t _port, const std::string &ip, uint32_t backlog) {
+bool Listener::init(uint16_t _port, const std::string &ip, uint32_t backlog) {
   using namespace pf_basic;
   bool result = false;
   std::unique_ptr< Basic > __socket(new pf_net::socket::Basic());
@@ -16,21 +16,21 @@ Listener::Listener(uint16_t _port, const std::string &ip, uint32_t backlog) {
             " new pap_common_net::socket::Base() failed,"
             " errorcode: %d",
             socket_->get_last_error_code());
-    throw 1;
+    return false;
   }
   result = socket_->create();
   if (false == result) {
     io_cerr("[net.socket] (Listener::Listener)"
             " socket_->create() failed, errorcode: %d",
             socket_->get_last_error_code()); 
-    throw 1;
+    return false;
   }
   result = socket_->set_reuseaddr();
   if (false == result) {
     io_cerr("[net.socket] (Listener::Listener)"
             " socket_->set_reuseaddr() failed, errorcode: %d",
             socket_->get_last_error_code());
-    throw 1;
+    return false;
   }
   result = socket_->bind(_port, ip.c_str());
   if (false == result) {
@@ -39,7 +39,7 @@ Listener::Listener(uint16_t _port, const std::string &ip, uint32_t backlog) {
             _port,
             ip.c_str(),
             socket_->get_last_error_code());
-    throw 1;
+    return false;
   }
   result = socket_->listen(backlog);
   if (false == result) {
@@ -47,8 +47,9 @@ Listener::Listener(uint16_t _port, const std::string &ip, uint32_t backlog) {
             " socket_->listen(%d) failed, errorcode: %d",
             backlog,
             socket_->get_last_error_code());
-    throw 1;
+    return false;
   }
+  return true;
 }
 
 Listener::~Listener() {

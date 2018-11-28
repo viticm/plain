@@ -20,10 +20,11 @@ namespace socket {
 class PF_API Listener {
 
  public:
-   Listener(uint16_t port, const std::string &ip = "", uint32_t backlog = 5);
+   Listener() {};
    ~Listener();
 
  public:
+   bool init(uint16_t port, const std::string &ip = "", uint32_t backlog = 5);
    void close();
    bool accept(pf_net::socket::Basic *socket);
    uint32_t get_linger() const;

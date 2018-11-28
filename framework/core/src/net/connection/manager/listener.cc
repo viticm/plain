@@ -19,15 +19,16 @@ Listener::~Listener() {
 }
 
 bool Listener::init(uint16_t _max_size, uint16_t _port, const std::string &ip) {
+  if (is_ready()) return true;
   std::unique_ptr<socket::Listener> 
-    pointer{new socket::Listener(_port, ip)};
+    pointer{new socket::Listener()};
   if (is_null(pointer)) return false;
   listener_socket_ = std::move(pointer);
+  if (!listener_socket_->init(_port, ip)) return false;
   listener_socket_->set_nonblocking();
   Assert(listener_socket_->get_id() != SOCKET_INVALID);
   return Basic::init(_max_size);
 }
-
 
 pf_net::connection::Basic *Listener::accept() {
   uint32_t step = 0;
