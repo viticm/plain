@@ -32,6 +32,7 @@
  * GLOBALS["default.script.rootpath"] = string;   //default SCRIPT_ROOT_PATH.
  * GLOBALS["default.script.workpath"] = string;   //default SCRIPT_WORK_PATH.
  * GLOBALS["default.script.bootstrap"] = string;  //default "bootstrap.lua".
+ * GLOBALS["default.script.reload"] = string;     //default "preload.lua".
  * GLOBALS["default.script.type"] = number;       //default -1.
  * GLOBALS["default.script.heartbeat"] = string;  //default "".
  * GLOBALS["default.script.enter"] = string;      //default "main".
@@ -101,6 +102,7 @@ void set_default_globals(type::variable_set_t &g) {
   g["default.script.rootpath"] = SCRIPT_ROOT_PATH;
   g["default.script.workpath"] = SCRIPT_WORK_PATH;
   g["default.script.bootstrap"] = "bootstrap.lua";
+  g["default.script.reload"] = "preload.lua";
   g["default.script.type"] = -1;
   g["default.cache.open"] = false;
   g["default.cache.service"] = false;

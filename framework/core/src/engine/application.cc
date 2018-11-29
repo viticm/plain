@@ -5,6 +5,7 @@
 #include "pf/basic/io.tcc"
 #include "pf/sys/util.h"
 #include "pf/file/ini.h"
+#include "pf/script/interface.h"
 #include "pf/engine/kernel.h"
 #include "pf/engine/application.h"
 
@@ -31,6 +32,12 @@ void daemon() {
   if (pidfile_isexists(true)) return;
   pf_sys::process::daemon();
   Application::getsingleton().without_command_run();
+}
+
+void reload() {
+  auto script = ENGINE_POINTER->get_script();
+  if (!is_null(script))
+    script->reload(GLOBALS["default.script.reload"].c_str());
 }
 
 void _stop() {
@@ -126,9 +133,10 @@ Application::Application(Kernel *engine, int32_t argc, char *argv[]) {
 #if OS_UNIX
   register_commandhandler("daemon", "run application with daemon(-d)", daemon);
   register_commandhandler("stop", "stop the application", _stop);
+#endif
   register_commandhandler("help", "view help text(-h)", helps);
   register_commandhandler("version", "view plain framework version(-v)", version);
-#endif
+  register_commandhandler("reload", "reload script files", reload);
   engine_ = engine;
   args_flag_ = 0;
 
