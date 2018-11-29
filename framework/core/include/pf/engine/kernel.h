@@ -69,12 +69,6 @@ class PF_API Kernel : public pf_basic::Singleton< Kernel > {
    template<class F, class... Args>
    std::thread::id newthread(F&& f, Args&&... args);
 
- public:
-   void add_libraryload(const std::string &name, 
-                        const pf_basic::type::variable_array_t &params = {}) {
-     library_load_[name] = params;
-   };
-
  protected:
    virtual bool init_base();
    virtual bool init_net();
@@ -103,7 +97,6 @@ class PF_API Kernel : public pf_basic::Singleton< Kernel > {
    void loop();
 
  private:
-   std::map<std::string, pf_basic::type::variable_array_t> library_load_;
    std::queue< std::function<void()> > tasks_;
    std::vector< std::function<void()> > thread_tasks_;
    std::mutex queue_mutex_;

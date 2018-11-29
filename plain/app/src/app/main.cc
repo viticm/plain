@@ -8,5 +8,6 @@ int32_t main(int32_t argc, char **argv) {
   pf_engine::Application app(&engine, argc, argv);
 
   app.run();
+
   return 0;
 }

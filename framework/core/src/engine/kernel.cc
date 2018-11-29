@@ -219,18 +219,11 @@ bool Kernel::init_base() {
       uint8_t j{1};
       for (; j < array.size(); ++j)
         params.emplace_back(array[j]);
-      add_libraryload(array[0], params);
-    }
-  }
-
-  if (LIBRARY_MANAGER_POINTER) {
-    auto it = library_load_.rbegin();
-    for (; it != library_load_.rend(); ++it) {
-      if (!LIBRARY_MANAGER_POINTER->load(it->first, it->second))
+      if (!LIBRARY_MANAGER_POINTER->load(array[0], params))
         return false;
     }
   }
-  
+
   return true;
 }
 

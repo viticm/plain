@@ -176,7 +176,8 @@ void FactoryManager::add_factory(Factory *factory) {
 
 bool FactoryManager::is_valid_packet_id(uint16_t id) {
   bool result = false;
-  if (!function_is_valid_packet_id_) return false;
+  if (!function_is_valid_packet_id_)
+    return NET_PACKET_ID_NORMAL_BEGIN <= id && id <= NET_PACKET_ID_NORMAL_END;
   result = (*function_is_valid_packet_id_)(id);
   return result;
 }
@@ -187,14 +188,17 @@ bool FactoryManager::is_encrypt_packet_id(uint16_t id) {
 
 bool FactoryManager::is_valid_dynamic_packet_id(uint16_t id) {
   bool result = false;
-  if (!function_is_valid_dynamic_packet_id_) return false;
+  if (!function_is_valid_dynamic_packet_id_) 
+    return NET_PACKET_ID_DYNAMIC_BEGIN <= id && id <= NET_PACKET_ID_DYNAMIC_END;
   result = (*function_is_valid_dynamic_packet_id_)(id);
   return result;
 }
 
 uint32_t FactoryManager::packet_execute(
   connection::Basic *connection, Interface *packet) {
+  std::cout << "packet_execute 0" << std::endl;
   if (!function_packet_execute_) return kPacketExecuteStatusError;
+  std::cout << "packet_execute 1" << std::endl;
   uint32_t result = (*function_packet_execute_)(connection, packet);
   return result;
 }

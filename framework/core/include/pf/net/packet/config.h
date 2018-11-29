@@ -44,8 +44,12 @@ typedef enum {
   kPacketExecuteStatusNotRemoveError,
 } packet_executestatus_t;
 
-#define NET_PACKET_HANDSHAKE 0xfff0 //The safe encrypt packet id.
+#define NET_PACKET_HANDSHAKE 0xfff0 //The safe encrypt packet id(65520).
 #define NET_PACKET_HANDSHAKE_KEY_SIZE (128) //The safe encrypt key size;
+#define NET_PACKET_ID_NORMAL_BEGIN (0x0001) //The default normal packet id begin.
+#define NET_PACKET_ID_NORMAL_END (0x4e20) //The default normal packt id end(20000).
+#define NET_PACKET_ID_DYNAMIC_BEGIN (0x04e21) // The default dynamic packet id begin(20001).
+#define NET_PACKET_ID_DYNAMIC_END (0xffef) // The default dynamic packet id end(65519).
 
 typedef enum {
   kPacketFlagNone = 0,

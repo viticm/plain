@@ -47,6 +47,9 @@ class PF_API FactoryManager : public pf_basic::Singleton<FactoryManager> {
    bool init();
    //根据消息类型从内存里分配消息实体数据（允许多线程同时调用，必须用removepacket释放）
    Interface *packet_create(uint16_t packetid);
+   Interface *packet_get(int64_t objectid) {
+     return alloc_packets_.get(objectid);
+   };
    //根据消息类型取得对应消息的最大尺寸（允许多线程同时调用）
    uint32_t packet_max_size(uint16_t packetid);
    //删除消息实体（允许多线程同时调用，必须和createpacket成对出现）

@@ -51,6 +51,9 @@ bool Basic::command(connection::Basic *connection, uint16_t count) {
         pf_basic::io_cerr("packet id error: %d", packetid);
         return false;
       }
+      if (!NET_PACKET_FACTORYMANAGER_POINTER->is_encrypt_packet_id(packetid) &&
+          !connection->check_safe_encrypt())
+        return false;
       try {
         //check packet length
         if (istream->size() < 

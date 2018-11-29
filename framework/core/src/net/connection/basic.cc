@@ -29,7 +29,8 @@ Basic::Basic() :
   execute_count_pretick_{NET_CONNECTION_EXECUTE_COUNT_PRE_TICK_DEFAULT},
   status_{0},
   safe_encrypt_{false},
-  safe_encrypt_time_{0} {
+  safe_encrypt_time_{0},
+  param_{""} {
   //do nothing
 }
 

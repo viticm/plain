@@ -91,8 +91,17 @@ class PF_API Basic {
    uint8_t get_status() const { return status_; };
    void set_safe_encrypt(bool flag) { safe_encrypt_ = flag; };
    bool is_safe_encrypt() const { return safe_encrypt_; };
+   bool check_safe_encrypt() const {
+     return safe_encrypt_ || 0 == safe_encrypt_time_;
+   }
    void set_safe_encrypt_time(uint32_t time) { safe_encrypt_time_ = time; };
    bool is_safe_encrypt_timeout() const;
+   void set_param(const std::string &param) {
+     param_ = param;
+   }
+   std::string get_param() const {
+     return param_;
+   }
 
  public:
    void compress_set_mode(compress_mode_t mode);
@@ -150,6 +159,7 @@ class PF_API Basic {
    uint8_t status_;
    bool safe_encrypt_; //This flag say the connection if encrypt in encrypt mode.
    uint32_t safe_encrypt_time_; //If not 0 then will check the safe encrypt. 
+   std::string param_; //The extend param string(one param is enough? Last change to variable set?).
 
 };
 
