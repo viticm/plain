@@ -221,4 +221,4 @@ function dofile_ex(filename)
   func()
 end
 
---dump = require("functions.dumptable")
+dump = require("functions.dumptable")

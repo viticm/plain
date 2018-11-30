@@ -373,6 +373,14 @@ bool Interface::cache_resize() {
   return true;
 }
 
+void Interface::broadcast(packet::Interface *packet) {
+  for (int32_t i = 0; i < size_; ++i) {
+    if (ID_INVALID == connection_idset_[i]) continue;
+    auto connection = get(connection_idset_[i]);
+    if (connection) connection->send(packet);
+  }
+}
+
 bool Interface::checkpool(bool log) {
   if (is_null(pool_) && log) {
     SLOW_ERRORLOG(NET_MODULENAME,

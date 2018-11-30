@@ -78,6 +78,7 @@ class PF_API Interface {
    virtual void on_disconnect(connection::Basic *) {}
    virtual void on_connect(connection::Basic *) {}
    bool cache_resize();
+   void broadcast(packet::Interface *packet);
 
  public:
    void callback_disconnect(
