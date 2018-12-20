@@ -226,11 +226,13 @@ bool Ini::_getstring(const char *section,
 }
 
 void Ini::_trimstring(char *buffer) {
-  if ('\r' == buffer[strlen(buffer) - 1] || 
-      '\n' == buffer[strlen(buffer) - 1]) {
+  auto size = strlen(buffer);
+  if (0 == size) return;
+  if ('\r' == buffer[size - 1] || 
+      '\n' == buffer[size - 1]) {
     buffer[strlen(buffer)-1] = 0;
   }
-  size_t i;
+  int32_t i;
   for (i = 0; i < strlen(buffer); ++i ){
     if(buffer[i] == FILE_INI_NOTE) {
       buffer[i] = '\0';
@@ -238,6 +240,7 @@ void Ini::_trimstring(char *buffer) {
     }
   }
   for (i = strlen(buffer) - 1; i > 0; --i) {
+    std::cout << "buffer[i]: " << buffer[i] << std::endl;
     if (' '== buffer[i] || '\t' == buffer[i]) {
       buffer[i] = 0;
     } else {

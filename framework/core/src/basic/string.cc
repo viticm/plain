@@ -157,7 +157,9 @@ void encrypt(const char *in, char *out, int32_t out_length) {
     }
     src[i] = in[j++];
   }
-  base64encode(temp, src, length);
+  char _src[512]{0}; //Base64 encode mybe lost the memory.
+  safecopy(_src, src, sizeof(_src) - 1);
+  base64encode(temp, _src, length);
   strncpy(out, temp, out_length);
   out[out_length - 1] = '\0';
   safe_delete_array(src);
