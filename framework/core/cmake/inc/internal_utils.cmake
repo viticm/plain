@@ -129,7 +129,7 @@ macro(config_compiler_and_linker)
   endif()
   
   # Plain Framework core flags.
-  set(cxx_base_flags "${cxx_base_flags} -std=c++11 -DPF_CORE -DPF_OPEN_EPOLL")
+  set(cxx_base_flags "${cxx_base_flags} -DPF_CORE -DPF_OPEN_EPOLL")
   
   set(cxx_base_flags "${cxx_base_flags} ${PF_HAS_PTHREAD_MACRO}")
 
@@ -170,6 +170,8 @@ endfunction()
 ########################################################################
 #
 # Helper functions for creating build targets.
+
+set(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_LIBDIR})
 
 function(cxx_shared_library name cxx_flags libs)
   cxx_library_with_type(${name} SHARED "${cxx_flags}" "${libs}" ${ARGN})

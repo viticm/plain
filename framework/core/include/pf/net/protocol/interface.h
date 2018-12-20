@@ -29,6 +29,9 @@ class PF_API Interface {
    virtual bool command(connection::Basic *, uint16_t) = 0;
    virtual bool compress(connection::Basic *, char *, char *) = 0;
    virtual bool send(connection::Basic *, packet::Interface *) = 0;
+   virtual packet::Interface *read_packet(connection::Basic *) { 
+     return nullptr; 
+   }
    virtual size_t header_size() const = 0;
 
 };

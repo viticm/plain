@@ -46,9 +46,15 @@ typedef enum {
 
 #define NET_PACKET_HANDSHAKE 0xfff0 //The safe encrypt packet id(65520).
 #define NET_PACKET_HANDSHAKE_KEY_SIZE (128) //The safe encrypt key size;
+#define NET_PACKET_ROUTING_REQUEST 0xfff1 //The routing request packet.
+#define NET_PACKET_ROUTING_RESPONSE 0xfff2 //The routing response packet.
+#define NET_PACKET_REGISTER_CONNECTION_NAME 0xfff3 //The register connection name packet.
+#define NET_PACKET_ROUTING 0xfff4 //The routing packet.
+#define NET_PACKET_FORWARD 0xfff5 //The forward packet.
+#define NET_PACKET_ROUTING_LOST 0xfff6 //The routing packet lost.
 #define NET_PACKET_ID_NORMAL_BEGIN (0x0001) //The default normal packet id begin.
 #define NET_PACKET_ID_NORMAL_END (0x4e20) //The default normal packt id end(20000).
-#define NET_PACKET_ID_DYNAMIC_BEGIN (0x04e21) // The default dynamic packet id begin(20001).
+#define NET_PACKET_ID_DYNAMIC_BEGIN (0x4e21) // The default dynamic packet id begin(20001).
 #define NET_PACKET_ID_DYNAMIC_END (0xffef) // The default dynamic packet id end(65519).
 
 typedef enum {

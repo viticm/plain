@@ -60,7 +60,8 @@ class PF_API FactoryManager : public pf_basic::Singleton<FactoryManager> {
    uint16_t size() const { return size_; };
    void add_factory(Factory *factory);
    bool is_encrypt_packet_id(uint16_t id); //packetid is encrypt id
-   uint32_t packet_execute(connection::Basic *connection, Interface *packet);
+   uint32_t packet_execute(
+       connection::Basic *, Interface *, const std::string &original = "");
 
  public: //exports
    void set_function_register_factories(function_register_factories function) {

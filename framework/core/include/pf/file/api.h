@@ -44,6 +44,12 @@ PF_API int32_t dupex(int32_t fd);
 PF_API int64_t lseekex(int32_t fd, uint64_t offset, int32_t whence);
 PF_API int64_t tellex(int32_t fd);
 PF_API bool truncate(const char *filename);
+PF_API inline bool exists(const std::string &filename) {
+  auto fp = fopen(filename.c_str(), "r");
+  if (is_null(fp)) return false;
+  fclose(fp); fp = nullptr;
+  return true;
+}
 
 } //namespace api
 

@@ -1,7 +1,17 @@
+#include "pf/basic/type/variable.h"
 #include "pf/basic/logger.h"
+#include "pf/engine/kernel.h"
+#include "pf/script/interface.h"
+#include "pf/net/connection/manager/listener.h"
 #include "pf/net/packet/interface.h"
 #include "pf/net/packet/dynamic.h"
 #include "pf/net/packet/handshake.h"
+#include "pf/net/packet/forward.h"
+#include "pf/net/packet/register_connection_name.h"
+#include "pf/net/packet/routing.h"
+#include "pf/net/packet/routing_lost.h"
+#include "pf/net/packet/routing_request.h"
+#include "pf/net/packet/routing_response.h"
 #include "pf/net/packet/factorymanager.h"
 
 std::unique_ptr< pf_net::packet::FactoryManager > 
@@ -26,7 +36,7 @@ FactoryManager &FactoryManager::getsingleton() {
 
 FactoryManager::FactoryManager() :
   factories_{nullptr},
-  size_{1},
+  size_{0xfffe},
   factory_size_{0},
   ready_{false},
   function_register_factories_{nullptr},
@@ -56,30 +66,29 @@ FactoryManager::~FactoryManager() {
 bool FactoryManager::init() {
   if (ready()) return true;
   Assert(size_ > 0);
-  /**
-  if (!function_is_valid_packet_id_ || !function_register_factories_) {
-    SLOW_ERRORLOG(
-        NET_MODULENAME, 
-        "[net.packet] (FactoryManager::init) error,"
-        " the register factories and is valid packet id"
-        " function pointer is nullptr");
-    return false;
-  }
-  **/
   factories_ = new Factory * [size_];
   Assert(factories_);
   packet_alloc_size_ = new uint32_t[size_];
   Assert(packet_alloc_size_);
   id_indexs_.init(size_); //ID索引数组初始化
   uint16_t i;
+  //memset(factories_, 0, sizeof(Factory) * size_);
+  //memset(packet_alloc_size_, 0, sizeof(uint32_t) * size_);
   for (i = 0; i < size_; ++i) {
     factories_[i] = nullptr;
     packet_alloc_size_[i] = 0;
   }
+
   if (!is_null(function_register_factories_) && 
       !(*function_register_factories_)()) return false;
-  //Handshake.
+  //Framework owner.
   add_factory(new HandshakeFactory);
+  add_factory(new RegisterConnectionNameFactory);
+  add_factory(new RoutingFactory);
+  add_factory(new RoutingLostFactory);
+  add_factory(new RoutingRequestFactory);
+  add_factory(new RoutingResponseFactory);
+  add_factory(new ForwardFactory);
   ready_ = true;
   return true;
 }
@@ -195,9 +204,26 @@ bool FactoryManager::is_valid_dynamic_packet_id(uint16_t id) {
 }
 
 uint32_t FactoryManager::packet_execute(
-  connection::Basic *connection, Interface *packet) {
+  connection::Basic *connection, 
+  Interface *packet, 
+  const std::string &original) {
   std::cout << "packet_execute 0" << std::endl;
-  if (!function_packet_execute_) return kPacketExecuteStatusError;
+  if (!function_packet_execute_) {
+    auto script = ENGINE_POINTER->get_script();
+    if (is_null(script) || !is_valid_dynamic_packet_id(packet->get_id())) {
+      return kPacketExecuteStatusError;
+    } else {
+      std::string funcname = ENGINE_POINTER->get_script_function(connection);
+      if (funcname != "") {
+        pf_basic::type::variable_array_t params;
+        pf_basic::type::variable_array_t r;
+        params.emplace_back(POINTER_TOINT64(packet));
+        if (original != "") params.emplace_back(original);
+        script->call(funcname, params, r);
+      }
+      return kPacketExecuteStatusContinue;
+    }
+  }
   std::cout << "packet_execute 1" << std::endl;
   uint32_t result = (*function_packet_execute_)(connection, packet);
   return result;

@@ -5,6 +5,7 @@
 #include "pf/basic/io.tcc"
 #include "pf/sys/util.h"
 #include "pf/file/ini.h"
+#include "pf/file/api.h"
 #include "pf/script/interface.h"
 #include "pf/engine/kernel.h"
 #include "pf/engine/application.h"
@@ -19,8 +20,7 @@ using namespace pf_engine;
 
 static bool pidfile_isexists(bool perr) {
   using namespace pf_basic;
-  std::unique_ptr<FILE> fp(fopen(GLOBALS["app.pidfile"].c_str(), "r"));
-  if (fp != nullptr) {
+  if (pf_file::api::exists(GLOBALS["app.pidfile"].data)) {
     if (perr) io_cerr("The application process id file has exists");
     return true;
   }

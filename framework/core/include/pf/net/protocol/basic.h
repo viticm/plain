@@ -33,6 +33,7 @@ class PF_API Basic : public Interface {
                          char *compress_buffer);
    virtual bool send(connection::Basic *connection, packet::Interface *packet);
    virtual size_t header_size() const { return NET_PACKET_HEADERSIZE; };
+   virtual packet::Interface *read_packet(connection::Basic *); 
 
 };
 

@@ -93,11 +93,16 @@ bool Basic::command(connection::Basic *connection, uint16_t count) {
         }
         bool needremove = true;
         bool exception = false;
-        uint32_t executestatus = 0;
+        uint32_t executestatus{kPacketExecuteStatusContinue};
         try {
           //connection->resetkick();
           try {
-            executestatus = packet->execute(connection);
+            if (connection->get_param("routing") != "") {
+              if (!connection->forward(packet))
+                executestatus = kPacketExecuteStatusError;
+            } else {
+              executestatus = packet->execute(connection);
+            }
           } catch(...) {
             SaveErrorLog();
             executestatus = kPacketExecuteStatusError;
@@ -290,6 +295,77 @@ bool Basic::send(connection::Basic * connection, packet::Interface *packet) {
     }
   }
   return result;
+}
+
+packet::Interface *Basic::read_packet(connection::Basic * connection) {
+  char packetheader[NET_PACKET_HEADERSIZE + 1] = {0};
+  uint16_t packetid = 0;
+  stream::Input *istream = &connection->istream();
+  uint32_t packetcheck, packetsize, packetindex;
+  packet::Interface *packet = nullptr;
+  //if (isdisconnect()) return true; leave this to connection.
+  memset(packetheader, 0, sizeof(packetheader));
+  if (!istream) return nullptr;
+  if (!istream->peek(&packetheader[0], NET_PACKET_HEADERSIZE)) {
+    //数据不能填充消息头
+    return nullptr;
+  }
+  memcpy(&packetid, &packetheader[0], sizeof(packetid));
+  memcpy(&packetcheck, 
+         &packetheader[sizeof(packetid)], 
+         sizeof(packetcheck));
+  packetsize = NET_PACKET_GETLENGTH(packetcheck);
+  packetindex = NET_PACKET_GETINDEX(packetcheck);
+  if (!NET_PACKET_FACTORYMANAGER_POINTER->
+      is_valid_packet_id(packetid) &&
+      !NET_PACKET_FACTORYMANAGER_POINTER->
+      is_valid_dynamic_packet_id(packetid) &&
+      !NET_PACKET_FACTORYMANAGER_POINTER->
+      is_encrypt_packet_id(packetid)) {
+    pf_basic::io_cerr("packet id error: %d", packetid);
+    return nullptr;
+  }
+  if (!NET_PACKET_FACTORYMANAGER_POINTER->is_encrypt_packet_id(packetid) &&
+      !connection->check_safe_encrypt())
+    return nullptr;
+  //check packet length
+  if (istream->size() < 
+      NET_PACKET_HEADERSIZE + packetsize) {
+    //message not receive full
+    return nullptr;
+  }
+  //check packet size
+  if (!NET_PACKET_FACTORYMANAGER_POINTER->
+      is_valid_dynamic_packet_id(packetid)) {
+    if (packetsize > 
+      NET_PACKET_FACTORYMANAGER_POINTER->packet_max_size(packetid)) {
+      char temp[FILENAME_MAX] = {0};
+      snprintf(temp, 
+               sizeof(temp) - 1, 
+               "packet size error, packetid = %d", 
+               packetid);
+      AssertEx(false, temp);
+      return nullptr;
+    }
+  }
+  //create packet
+  packet = NET_PACKET_FACTORYMANAGER_POINTER->packet_create(packetid);
+  if (nullptr == packet) return nullptr;
+
+  //packet info
+  packet->set_index(static_cast<int8_t>(packetindex));
+  packet->set_id(packetid);
+  packet->set_size(packetsize);
+  
+  //read packet
+  bool result{false};
+  result = istream->skip(NET_PACKET_HEADERSIZE);
+  result = result ? packet->read(*istream) : result;
+  if (false == result) {
+    NET_PACKET_FACTORYMANAGER_POINTER->packet_remove(packet);
+    return nullptr;
+  }
+  return packet;
 }
 
 } //namespace protocol

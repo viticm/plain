@@ -16,6 +16,7 @@
 #define PF_NET_CONNECTION_BASE_H_
 
 #include "pf/net/connection/config.h"
+#include "pf/basic/type/variable.h"
 #include "pf/net/packet/interface.h"
 #include "pf/net/socket/basic.h"
 #include "pf/net/protocol/interface.h"
@@ -65,6 +66,10 @@ class PF_API Basic {
    virtual bool process_command();
    virtual bool heartbeat(uint32_t time = 0, uint32_t flag = 0);
    virtual bool send(packet::Interface *packet);
+   virtual bool routing(const std::string &name, 
+                        packet::Interface *packet, 
+                        const std::string &service = "");
+   virtual bool forward(packet::Interface *packet);
 
  public:
    int16_t get_id() const { return id_; };
@@ -96,11 +101,12 @@ class PF_API Basic {
    }
    void set_safe_encrypt_time(uint32_t time) { safe_encrypt_time_ = time; };
    bool is_safe_encrypt_timeout() const;
-   void set_param(const std::string &param) {
-     param_ = param;
+   void set_param(const std::string &_name, 
+                  const pf_basic::type::variable_t &value) {
+     params_[_name] = value;
    }
-   std::string get_param() const {
-     return param_;
+   pf_basic::type::variable_t get_param(const std::string &_name) {
+     return params_[_name];
    }
 
  public:
@@ -116,14 +122,26 @@ class PF_API Basic {
    stream::Output &ostream() { return *ostream_.get(); };
    stream::Input &istream_compress() { return *istream_compress_.get(); }
    int8_t packet_index() { return packet_index_++; };
-   void set_protocol(protocol::Interface *protocol) {
-     protocol_ = protocol;
+   void set_protocol(protocol::Interface *_protocol) {
+     protocol_ = _protocol;
+   }
+   protocol::Interface *protocol() {
+     return protocol_;
    }
    void set_listener(manager::Listener *listener) {
      listener_ = listener;
    }
    manager::Listener *get_listener() {
      return listener_;
+   }
+   const std::string name() const {
+     return name_;
+   }
+   void set_name(const std::string &_name) {
+     name_ = _name;
+   }
+   void set_routing(const std::string &_name, bool flag) {
+     routing_list_[_name] = flag == true ? 1 : -1;
    }
 
  private:
@@ -159,7 +177,9 @@ class PF_API Basic {
    uint8_t status_;
    bool safe_encrypt_; //This flag say the connection if encrypt in encrypt mode.
    uint32_t safe_encrypt_time_; //If not 0 then will check the safe encrypt. 
-   std::string param_; //The extend param string(one param is enough? Last change to variable set?).
+   std::string name_; //The connection name.
+   pf_basic::type::variable_set_t params_; //The extend param set.
+   std::map<std::string, int8_t> routing_list_; //The connection routing list.
 
 };
 

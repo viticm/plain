@@ -1,5 +1,6 @@
 #include <algorithm>
 #include "pf/basic/logger.h"
+#include "pf/file/api.h"
 #include "pf/file/library.h"
 
 typedef void (__stdcall *function_open)(void *);
@@ -68,28 +69,33 @@ void Library::set_filename(const std::string &_filename) {
   }
 }
 
-bool Library::load(bool tryprefix) {
+bool Library::load(bool tryprefix, bool seeglb) {
   std::string temp = path_ + filename_;
+  auto fileexists = api::exists(temp);
+  if (fileexists) {
 #if OS_WIN
-  tryprefix = false;
-  LPTSTR tstr = ts_strdup_ascii_to_unicode(temp.c_str());
-  handle_ = cast(void *, LoadLibrary(tstr));
-  free(tstr);
-  if (is_null(handle_)) 
-    errorstr_ = GetLastErrorString(GetLastError());
+    tryprefix = false;
+    LPTSTR tstr = ts_strdup_ascii_to_unicode(temp.c_str());
+    handle_ = cast(void *, LoadLibrary(tstr));
+    free(tstr);
+    if (is_null(handle_)) 
+      errorstr_ = GetLastErrorString(GetLastError());
 #else
-  handle_ = dlopen(temp.c_str(), RTLD_NOW | RTLD_LOCAL);
-  if (is_null(handle_)) errorstr_ = dlerror();
+    handle_ = dlopen(temp.c_str(), RTLD_NOW | (seeglb ? RTLD_GLOBAL : RTLD_LOCAL));
+    if (is_null(handle_)) errorstr_ = dlerror();
 #endif
+  }
   if (is_null(handle_)) {
     if (!tryprefix || 
         0 == strlen(LIBRARY_PREFIX) || 
         filename_.substr(0, strlen(LIBRARY_PREFIX)) == LIBRARY_PREFIX) {
 #if _DEBUG
-      SLOW_ERRORLOG("library", 
+      if (fileexists) {
+        SLOW_ERRORLOG("library", 
                     "[library] load (%s) error: %s", 
                     filename_.c_str(), 
                     errorstr_.c_str());
+      }
 #endif
       return false;
     }
@@ -172,7 +178,7 @@ LibraryManager::LibraryManager() {
       "/usr/lib/", 
       "/usr/lib64/", 
       "/usr/local/lib/",
-      "/usr/lobal/lib64/"
+      "/usr/local/lib64/"
   });
 #endif
 }
@@ -215,6 +221,7 @@ void LibraryManager::remove_librarynames(const std::string &onlyname,
 }
    
 bool LibraryManager::load(const std::string &name, 
+                          bool seeglb,
                           const pf_basic::type::variable_array_t &params) {
   if (librarymap_[name]) {
     SLOW_DEBUGLOG("library", "[library] load(%s) has loaded", name.c_str());
@@ -228,16 +235,19 @@ bool LibraryManager::load(const std::string &name,
     library->set_filename(_name);
     for (const std::string &path : searchpaths_) {
       library->set_path(path);
-      if (library->load()) {
+      if (library->load(true, seeglb)) {
         loaded = true;
         break;
       }
     }
     if (!loaded) {
+      std::string err{"The file mybe not found!"};
+      if (library->errorstr() != "")
+        err = library->errorstr();
       SLOW_ERRORLOG("library", 
                     "[library] load(%s) error-> %s", 
-                    _name.c_str(), 
-                    library->errorstr().c_str());
+                    _name.c_str(),
+                    err.c_str());
     }
   }
   if (!library->isloaded()) {

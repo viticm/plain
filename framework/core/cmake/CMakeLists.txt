@@ -122,6 +122,8 @@ if (DEFINED CMAKE_VERSION AND NOT "${CMAKE_VERSION}" VERSION_LESS "2.8.12")
   target_include_directories(pf_core      SYSTEM INTERFACE "${pf_SOURCE_DIR}/include")
 endif()
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11") 
+
 ########################################################################
 #
 # Install rules

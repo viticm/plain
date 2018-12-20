@@ -37,7 +37,7 @@ class PF_API Library {
 
  public:
    bool isloaded() const { return isloaded_; };
-   bool load(bool tryprefix = true);
+   bool load(bool tryprefix = true, bool seeglb = false);
    bool unload();
    void *resolve(const std::string &symbol, bool again = true);
 
@@ -98,6 +98,7 @@ class PF_API LibraryManager : public pf_basic::Singleton< LibraryManager > {
 
    /* Load the library by name. */
    bool load(const std::string &name, 
+             bool seeglb = false,
              const pf_basic::type::variable_array_t &params = {});
 
    /* Unload the library by name. */

@@ -1,4 +1,4 @@
-require("functions/overload") -- 重写的方法
+require("plain") -- 框架的一些方法重写
 
 -- 开始打印脚本日志，基本环境已经准备完毕
 log.fast_debug("begin load script files...")
@@ -57,10 +57,6 @@ end
 
 -- 模块加载
 require_ex("config")
-require_ex("functions/timer")
---require_ex("logic/system")
---require_ex("logic/define")
---require_ex("logic/main")
+require_ex("timer")
 require_ex("main")
---require_ex("tests.dcache")
 require_ex("test")

@@ -46,6 +46,7 @@ struct cache_struct {
 };
 
 struct listener_config_struct {
+  std::string name;
   std::string ip;
   uint16_t port;
   uint16_t conn_max;

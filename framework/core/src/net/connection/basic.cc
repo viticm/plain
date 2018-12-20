@@ -2,6 +2,11 @@
 #include "pf/basic/io.tcc"
 #include "pf/basic/time_manager.h"
 #include "pf/net/packet/factorymanager.h"
+#include "pf/net/packet/forward.h"
+#include "pf/net/packet/routing.h"
+#include "pf/net/packet/routing_lost.h"
+#include "pf/engine/kernel.h"
+#include "pf/net/connection/manager/listener.h"
 #include "pf/net/connection/basic.h"
 
 namespace pf_net {
@@ -30,7 +35,7 @@ Basic::Basic() :
   status_{0},
   safe_encrypt_{false},
   safe_encrypt_time_{0},
-  param_{""} {
+  name_{""} {
   //do nothing
 }
 
@@ -143,7 +148,7 @@ bool Basic::process_command() {
   return protocol_->command(this, execute_count_pretick_);
 }
 
-bool Basic::send(packet::Interface* packet) {
+bool Basic::send(packet::Interface *packet) {
   if (is_disconnect()) return true;
   if (is_null(protocol_)) return false;
   return protocol_->send(this, packet);
@@ -159,10 +164,31 @@ bool Basic::heartbeat(uint32_t, uint32_t) {
       return false;
     }
   }
+  std::string aim_name = params_["routing"].data;
+  if (aim_name != "") {
+    std::string service = params_["routing_service"].data;
+    manager::Listener *listener = ENGINE_POINTER->get_service(service);
+    if (is_null(listener)) return false;
+    auto connection = listener->get(aim_name);
+    if (is_null(connection)) return false;
+  }
   return true;
 }
 
 void Basic::disconnect() {
+  //Notice routing original.
+  std::string aim_name = params_["routing"].data;
+  if (aim_name != "") {
+    std::string service = params_["routing_service"].data;
+    manager::Listener *listener = ENGINE_POINTER->get_service(service);
+    if (is_null(listener)) return;
+    auto connection = listener->get(aim_name);
+    if (!is_null(connection) && name_ != "") {
+      packet::RoutingLost packet;
+      packet.set_aim_name(name_);
+      connection->send(&packet);
+    }
+  }
   clear();
 }
 
@@ -185,6 +211,8 @@ void Basic::clear() {
   set_empty(true);
   set_safe_encrypt(false);
   safe_encrypt_time_ = 0;
+  params_.clear();
+  routing_list_.clear();
 }
 
 uint32_t Basic::get_receive_bytes() {
@@ -240,6 +268,33 @@ void Basic::encrypt_enable(bool enable) {
 void Basic::encrypt_set_key(const char *key) {
   istream_->encrypt_setkey(key);
   ostream_->encrypt_setkey(key);
+}
+
+bool Basic::routing(const std::string &name, 
+                    packet::Interface *packet,
+                    const std::string &service) {
+  if (routing_list_[name] != 1 || is_null(packet)) return false;
+  packet::Routing routing_packet;
+  routing_packet.set_destination(service);
+  routing_packet.set_aim_name(name);
+  routing_packet.set_packet_size(packet->size());
+  return send(&routing_packet) && send(packet);
+}
+
+bool Basic::forward(packet::Interface *packet) {
+  if (is_null(packet)) return false;
+  std::string aim_name = params_["routing"].data;
+  if (aim_name == "") return false;
+  std::string service = params_["routing_service"].data;
+  if (service == "") service = "default";
+  auto listener = ENGINE_POINTER->get_listener(service);
+  if (is_null(listener)) return false;
+  auto connection = listener->get(aim_name);
+  if (is_null(connection)) return false;
+  packet::Forward forward_packet;
+  forward_packet.set_original(name());
+  forward_packet.set_packet_size(packet->size());
+  return send(&forward_packet) && send(packet);
 }
 
 } //namespace connection

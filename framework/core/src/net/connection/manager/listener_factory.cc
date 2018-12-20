@@ -13,6 +13,7 @@ eid_t ListenerFactory::newenv(const listener_config_t &config) {
     last_del_eid_ = eid;
     return NET_EID_INVALID;
   }
+  pointer->set_name(config.name); 
   if (config.encrypt_str != "") 
     pointer->set_safe_encrypt_str(config.encrypt_str);
   envs_[eid] = std::move(pointer);

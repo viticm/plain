@@ -1,3 +1,10 @@
+SETTING_PATH = ROOTPATH.."/../setting"
+
+-- 获得配置文件
+function get_settingfile(filename)
+  return SETTING_PATH.."/"..filename
+end
+
 -- 重写日志记录方法
 local old_log = {}
 log = {}
@@ -196,13 +203,12 @@ end
 
 -- 模块加载
 function require_ex(module_name)
-  local _module_name = get_scriptfile(module_name) -- To the true name.
-  if package.loaded[_module_name] then
+  if package.loaded[module_name] then
     log.fast_debug("require_ex module[%s] reload", module_name)
   else
     log.fast("require_ex(%s)", module_name)
   end
-  package.loaded[_module_name] = nil
+  package.loaded[module_name] = nil
   require(module_name)
 end
 
@@ -220,5 +226,3 @@ function dofile_ex(filename)
   setfenv(func, getfenv(2))
   func()
 end
-
-dump = require("functions.dumptable")

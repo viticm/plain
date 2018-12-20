@@ -59,6 +59,11 @@ class PF_API Interface {
    uint16_t max_size() const { return max_size_; }
    bool hash();
    connection::Basic *get(uint16_t id);
+   connection::Basic *get(std::string &name) {
+     if (connection_names_.find(name) == connection_names_.end())
+       return nullptr;
+     return get(connection_names_[name]);
+   };
    connection::Pool *get_pool();
    int32_t get_onestep_accept() const;
    void set_onestep_accept(int32_t count);
@@ -88,6 +93,10 @@ class PF_API Interface {
 
    void callback_connect(std::function<void (connection::Basic *)> callback) {
      callback_connect_ = callback;
+   }
+
+   void set_connection_name(uint16_t id, std::string &name) {
+     connection_names_[name] = id;
    }
 
  public:
@@ -134,6 +143,7 @@ class PF_API Interface {
    /* 断开连接的回调，同上 */
    std::function<void (connection::Basic *)> callback_connect_;
    cache_t cache_;
+   std::map<std::string, uint16_t> connection_names_; //The connection name to id.
    std::mutex mutex_;
 
  private:

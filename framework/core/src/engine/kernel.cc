@@ -7,6 +7,7 @@
 #include "pf/net/connection/manager/listener_factory.h"
 #include "pf/net/connection/manager/connector.h"
 #include "pf/net/packet/handshake.h"
+#include "pf/net/packet/register_connection_name.h"
 #include "pf/db/interface.h"
 #include "pf/db/null.h"
 #include "pf/db/factory.h"
@@ -81,6 +82,20 @@ pf_net::connection::Basic *Kernel::get_connector(const std::string &name) {
     return nullptr;
   }
   return net_listener_factory_->getenv(listen_list_[name]);
+}
+
+
+pf_net::connection::manager::Listener *Kernel::get_service(
+    const std::string &name) {
+  using namespace pf_net::connection::manager;
+  Listener *r{nullptr};
+  if ("" == name || "default" == name) {
+    auto net = get_net();
+    if (net && net->is_service()) r = reinterpret_cast<Listener *>(net);
+  } else {
+    r = get_listener(name);
+  }
+  return r;
 }
 
 pf_db::Interface *Kernel::get_db(const std::string &name) {
@@ -179,6 +194,10 @@ pf_net::connection::Basic *Kernel::connect(const std::string &name) {
   pf_net::packet::Handshake handshake;
   handshake.set_key(key);
   connection->send(&handshake);
+  connection->set_name(name);
+  pf_net::packet::RegisterConnectionName regname;
+  regname.set_name(name);
+  connection->send(&regname);
   connect_list_[name] = connection->get_id();
   return connection;
 }
@@ -216,10 +235,13 @@ bool Kernel::init_base() {
       std::vector<std::string> array;
       string::explode(str.c_str(), array, ":", true, true);
       type::variable_array_t params;
-      uint8_t j{1};
-      for (; j < array.size(); ++j)
+      bool seeglb{false};
+      auto size = array.size();
+      if (size > 1 && "global" == array[1]) seeglb = true;
+      uint8_t j{2};
+      for (; j < size; ++j)
         params.emplace_back(array[j]);
-      if (!LIBRARY_MANAGER_POINTER->load(array[0], params))
+      if (!LIBRARY_MANAGER_POINTER->load(array[0], seeglb, params))
         return false;
     }
   }
@@ -296,6 +318,7 @@ bool Kernel::init_net() {
       }
       //Environment create.
       listener_config_t config;
+      config.name = name;
       config.ip = ip;
       config.port = port;
       config.conn_max = conn_max;
@@ -303,6 +326,7 @@ bool Kernel::init_net() {
       auto envid = net_listener_factory_->newenv(config);
       if (NET_EID_INVALID == envid) return false;
       listen_list_[name] = envid;
+      listen_env_[name] = i;
       SLOW_DEBUGLOG(ENGINE_MODULENAME,
                     "[%s] service extra listen at: host[%s] port[%d] max[%d].",
                     ENGINE_MODULENAME,
@@ -472,6 +496,28 @@ bool Kernel::init_script() {
     return false;
   }
   return true;
+}
+
+//Get the net handle script function name.
+const std::string Kernel::get_script_function(
+    pf_net::connection::Basic *connection) {
+  std::string key{""};
+  auto listener = connection->get_listener();
+  if (!is_null(listener) && listener->name() != "") {
+    auto name = listener->name();
+    auto configid = get_listen_configid(name);
+    if (configid != -1)
+      key = "server." + name + ".scriptfunc" + std::to_string(configid);
+  } else if (connection->name() != "") {
+    auto name = connection->name();
+    auto configid = get_connect_configid(name);
+    if (configid != -1)
+      key = "client." + name + ".scriptfunc" + std::to_string(configid);
+  }
+  if (key == "" || GLOBALS[key] == "")
+    key = "default.script.nethandle";
+  std::string funcname = GLOBALS[key];
+  return funcname;
 }
 
 void Kernel::loop() {

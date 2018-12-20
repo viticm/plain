@@ -56,10 +56,17 @@ class PF_API Listener : public Basic {
    const std::string get_safe_encrypt_str() {
      return safe_encrypt_str_;
    }
+   void set_name(const std::string &_name) {
+     name_ = _name;
+   }
+   const std::string name() const {
+     return name_;
+   }
 
  private:
    std::unique_ptr<socket::Listener> listener_socket_;
    std::string safe_encrypt_str_;
+   std::string name_;
    bool ready_;
 
 };

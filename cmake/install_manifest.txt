@@ -98,11 +98,17 @@
 /usr/local/include/pf/net/socket/listener.h
 /usr/local/include/pf/net/socket/api.h
 /usr/local/include/pf/net/packet/handshake.h
+/usr/local/include/pf/net/packet/forward.h
+/usr/local/include/pf/net/packet/routing_lost.h
+/usr/local/include/pf/net/packet/routing_request.h
 /usr/local/include/pf/net/packet/factorymanager.h
 /usr/local/include/pf/net/packet/config.h
+/usr/local/include/pf/net/packet/routing.h
 /usr/local/include/pf/net/packet/factory.h
+/usr/local/include/pf/net/packet/routing_response.h
 /usr/local/include/pf/net/packet/interface.h
 /usr/local/include/pf/net/packet/dynamic.h
+/usr/local/include/pf/net/packet/register_connection_name.h
 /usr/local/include/pf/engine/kernel.h
 /usr/local/include/pf/engine/thread.h
 /usr/local/include/pf/engine/config.h

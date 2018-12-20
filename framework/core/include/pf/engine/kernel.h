@@ -59,6 +59,21 @@ class PF_API Kernel : public pf_basic::Singleton< Kernel > {
    pf_net::connection::manager::Listener *get_listener(const std::string &name);
    pf_db::Interface *get_db(const std::string &name);
 
+   //Get the service from name(default or listen list).
+   pf_net::connection::manager::Listener *get_service(const std::string &name);
+
+   //Get config id.
+   int8_t get_listen_configid(const std::string &name) {
+     if (listen_env_.find(name) == listen_env_.end()) return -1;
+     return listen_env_[name];
+   }
+   int8_t get_connect_configid(const std::string &name) {
+     if (connect_env_.find(name) == connect_env_.end()) return -1;
+     return connect_env_[name];
+   }
+   //Get the net handle script function name.
+   const std::string get_script_function(pf_net::connection::Basic *);
+
  public:
    //Enqueue an envet function in main loop.
    template<class F, class... Args>
@@ -89,8 +104,9 @@ class PF_API Kernel : public pf_basic::Singleton< Kernel > {
    std::vector< std::thread > thread_workers_;
    std::map<std::string, int8_t> db_list_;  //Database name to factory id.
    std::map<std::string, int8_t> listen_list_; //Listen net name to factory id.
-   std::map<std::string, int8_t> connect_list_; //connect net name to id.
-   std::map<std::string, int8_t> connect_env_; //connect net name to config id.
+   std::map<std::string, int8_t> connect_list_; //Connect net name to id.
+   std::map<std::string, int8_t> connect_env_; //Connect net name to config id.
+   std::map<std::string, int8_t> listen_env_; //Listen net name to config id.
    bool isinit_;
 
  private:
