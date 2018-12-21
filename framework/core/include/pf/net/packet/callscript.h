@@ -23,7 +23,7 @@ namespace packet {
 class CallScript : public pf_net::packet::Interface {
 
  public:
-   CallScript() : func_{0}, params_{""}, data_size_{0}, eid_{-1} {}
+   CallScript() : func_{0}, params_{""}, eid_{-1} {}
    virtual ~CallScript() {}
 
  public:
@@ -44,7 +44,6 @@ class CallScript : public pf_net::packet::Interface {
  private:
    char func_[128];
    std::string params_;
-   size_t data_size_;
    int8_t eid_;
 
 };
