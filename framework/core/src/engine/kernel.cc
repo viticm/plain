@@ -68,8 +68,10 @@ pf_script::Interface *Kernel::get_script() {
 }
 
 pf_net::connection::Basic *Kernel::get_connector(const std::string &name) {
-  if (is_null(net_connector_) || 
-      connect_list_.find(name) == connect_list_.end() ||
+  if (is_null(net_connector_)) return nullptr;
+  auto connection = net_connector_->get(name);
+  if (!is_null(connection)) return connection;
+  if (connect_list_.find(name) == connect_list_.end() ||
       -1 == connect_list_[name]) return nullptr;
   int16_t id = connect_list_[name];
   return net_connector_->get(id);
@@ -156,23 +158,11 @@ void Kernel::stop() {
 }
 
 pf_net::connection::Basic *Kernel::default_connect(
-    const std::string &ip, uint16_t port) {
+    const std::string &name, const std::string &ip, uint16_t port) {
   using namespace pf_net::connection::manager;
   if (is_null(net_) || net_->is_service()) return nullptr;
-  Connector *connector = dynamic_cast<Connector *>(net_.get());
-  auto connection = connector->connect(ip.c_str(), port);
-  if (is_null(connection)) return nullptr;
   auto encrypt_str = GLOBALS["default.net.encrypt"].data;
-  if ("" == encrypt_str) return connection;
-  auto now = TIME_MANAGER_POINTER->get_ctime();
-  std::string str{""};
-  char key[NET_PACKET_HANDSHAKE_KEY_SIZE]{0};
-  pf_basic::string::encrypt(encrypt_str, now, str);
-  pf_basic::base64encode(key, str.c_str());
-  pf_net::packet::Handshake handshake;
-  handshake.set_key(str);
-  connection->send(&handshake);
-  return connection;
+  return connect(net_.get(), name, ip, port, encrypt_str);
 }
 
 pf_net::connection::Basic *Kernel::connect(const std::string &name) {
@@ -180,25 +170,51 @@ pf_net::connection::Basic *Kernel::connect(const std::string &name) {
   auto id = connect_env_[name];
   auto ip = GLOBALS["client.ip" + std::to_string(id)].data;
   auto port = GLOBALS["client.port" + std::to_string(id)].get<uint16_t>();
-  auto connection = net_connector_->connect(ip.c_str(), port);
-  if (is_null(connection)) return nullptr;
   auto encrypt_str = GLOBALS["client.encrypt" + std::to_string(id)].data;
-  if ("" == encrypt_str) return connection;
-  auto now = TIME_MANAGER_POINTER->get_ctime();
-  char key[NET_PACKET_HANDSHAKE_KEY_SIZE]{0};
-  std::string str{""};
-  pf_basic::string::encrypt(encrypt_str, now, str);
-  //std::cout << "str: " << str << std::endl;
-  pf_basic::base64encode(key, str.c_str());
-  //std::cout << "key: " << key << std::endl;
-  pf_net::packet::Handshake handshake;
-  handshake.set_key(key);
-  connection->send(&handshake);
+  auto connection = connect(name, ip, port, encrypt_str);
+  if (!is_null(connection))
+    connect_list_[name] = connection->get_id();
+  return connection;
+}
+
+pf_net::connection::Basic *Kernel::connect(const std::string &name, 
+                                           const std::string &ip, 
+                                           uint16_t port, 
+                                           const std::string &encrypt_str) {
+  return connect(net_connector_.get(), name, ip, port, encrypt_str);
+}
+
+pf_net::connection::Basic *Kernel::connect(
+    pf_net::connection::manager::Basic *client,
+    const std::string &name, 
+    const std::string &ip, 
+    uint16_t port, 
+    const std::string &encrypt_str) {
+  using namespace pf_net::connection::manager;
+  Connector *connector = dynamic_cast<Connector *>(client);
+  if ("" == name) return nullptr;
+  auto connection = connector->connect(ip.c_str(), port);
+  if (is_null(connection)) return nullptr;
+  //Register name.
   connection->set_name(name);
   pf_net::packet::RegisterConnectionName regname;
   regname.set_name(name);
   connection->send(&regname);
-  connect_list_[name] = connection->get_id();
+  net_connector_->set_connection_name(connection->get_id(), name);
+
+  //Handshake.
+  if (encrypt_str != "") {
+    auto now = TIME_MANAGER_POINTER->get_ctime();
+    char key[NET_PACKET_HANDSHAKE_KEY_SIZE]{0};
+    std::string str{""};
+    pf_basic::string::encrypt(encrypt_str, now, str);
+    //std::cout << "str: " << str << std::endl;
+    pf_basic::base64encode(key, str.c_str());
+    //std::cout << "key: " << key << std::endl;
+    pf_net::packet::Handshake handshake;
+    handshake.set_key(key);
+    connection->send(&handshake);
+  }
   return connection;
 }
 
@@ -336,7 +352,7 @@ bool Kernel::init_net() {
     }
   }
   //Extra net connectors.
-  if (GLOBALS["client.count"] > 0) {
+  if (GLOBALS["client.count"] > 0 || GLOBALS["client.usercount"] > 0) {
     using namespace pf_net::connection::manager;
     auto count = GLOBALS["client.count"].get<int8_t>();
     SLOW_DEBUGLOG(ENGINE_MODULENAME, 
@@ -345,7 +361,8 @@ bool Kernel::init_net() {
                     count);
     auto connector = new Connector;
     if (is_null(connector)) return false;
-    if (!connector->init(count + 1)) return false;
+    auto usercount = GLOBALS["client.usercount"].get<int8_t>();
+    if (!connector->init(count + usercount + 1)) return false;
     auto reset_connect = [this](pf_net::connection::Basic *connection) {
       std::cout << "reset_connect" << std::endl;
       for (auto it = connect_list_.begin(); it != connect_list_.end(); ++it) {
@@ -356,7 +373,7 @@ bool Kernel::init_net() {
         }
       }
     };
-    connector->callback_disconnect(reset_connect);
+    if (count > 0) connector->callback_disconnect(reset_connect);
     unique_move(Connector, connector, net_connector_);
     for (int8_t i = 0; i < count; ++i) {
       auto name = GLOBALS["client.name" + std::to_string(i)].data;

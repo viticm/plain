@@ -109,6 +109,7 @@
 /usr/local/include/pf/net/packet/interface.h
 /usr/local/include/pf/net/packet/dynamic.h
 /usr/local/include/pf/net/packet/register_connection_name.h
+/usr/local/include/pf/net/packet/callscript.h
 /usr/local/include/pf/engine/kernel.h
 /usr/local/include/pf/engine/thread.h
 /usr/local/include/pf/engine/config.h

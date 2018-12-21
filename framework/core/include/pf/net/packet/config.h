@@ -52,6 +52,7 @@ typedef enum {
 #define NET_PACKET_ROUTING 0xfff4 //The routing packet.
 #define NET_PACKET_FORWARD 0xfff5 //The forward packet.
 #define NET_PACKET_ROUTING_LOST 0xfff6 //The routing packet lost.
+#define NET_PACKET_CALLSCRIPT 0xfff7 //The call script packet.
 #define NET_PACKET_ID_NORMAL_BEGIN (0x0001) //The default normal packet id begin.
 #define NET_PACKET_ID_NORMAL_END (0x4e20) //The default normal packt id end(20000).
 #define NET_PACKET_ID_DYNAMIC_BEGIN (0x4e21) // The default dynamic packet id begin(20001).

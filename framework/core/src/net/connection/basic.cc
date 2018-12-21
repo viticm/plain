@@ -211,6 +211,7 @@ void Basic::clear() {
   set_empty(true);
   set_safe_encrypt(false);
   safe_encrypt_time_ = 0;
+  name_ = "";
   params_.clear();
   routing_list_.clear();
 }

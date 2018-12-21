@@ -59,7 +59,7 @@ class PF_API Interface {
    uint16_t max_size() const { return max_size_; }
    bool hash();
    connection::Basic *get(uint16_t id);
-   connection::Basic *get(std::string &name) {
+   connection::Basic *get(const std::string &name) {
      if (connection_names_.find(name) == connection_names_.end())
        return nullptr;
      return get(connection_names_[name]);
@@ -95,7 +95,7 @@ class PF_API Interface {
      callback_connect_ = callback;
    }
 
-   void set_connection_name(uint16_t id, std::string &name) {
+   void set_connection_name(uint16_t id, const std::string &name) {
      connection_names_[name] = id;
    }
 

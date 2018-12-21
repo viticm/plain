@@ -210,7 +210,8 @@ uint32_t FactoryManager::packet_execute(
   std::cout << "packet_execute 0" << std::endl;
   if (!function_packet_execute_) {
     auto script = ENGINE_POINTER->get_script();
-    if (is_null(script) || !is_valid_dynamic_packet_id(packet->get_id())) {
+    if (is_null(script)) return kPacketExecuteStatusContinue;
+    if (!is_valid_dynamic_packet_id(packet->get_id())) {
       return kPacketExecuteStatusError;
     } else {
       std::string funcname = ENGINE_POINTER->get_script_function(connection);
@@ -218,6 +219,7 @@ uint32_t FactoryManager::packet_execute(
         pf_basic::type::variable_array_t params;
         pf_basic::type::variable_array_t r;
         params.emplace_back(POINTER_TOINT64(packet));
+        //Next will push the connection name ?
         if (original != "") params.emplace_back(original);
         script->call(funcname, params, r);
       }
