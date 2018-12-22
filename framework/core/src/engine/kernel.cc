@@ -195,6 +195,7 @@ pf_net::connection::Basic *Kernel::connect(
     uint16_t port, 
     const std::string &encrypt_str) {
   using namespace pf_net::connection::manager;
+  using namespace pf_basic;
   Connector *connector = dynamic_cast<Connector *>(client);
   if ("" == name) return nullptr;
   auto connection = connector->connect(ip.c_str(), port);
@@ -212,8 +213,10 @@ pf_net::connection::Basic *Kernel::connect(
     char key[NET_PACKET_HANDSHAKE_KEY_SIZE]{0};
     std::string str{""};
     pf_basic::string::encrypt(encrypt_str, now, str);
+    char temp[512]{0,};
+    string::safecopy(temp, str.c_str(), sizeof(temp) - 1);
     //std::cout << "str: " << str << std::endl;
-    pf_basic::base64encode(key, str.c_str());
+    pf_basic::base64encode(key, temp);
     //std::cout << "key: " << key << std::endl;
     pf_net::packet::Handshake handshake;
     handshake.set_key(key);
