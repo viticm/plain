@@ -240,7 +240,6 @@ void Ini::_trimstring(char *buffer) {
     }
   }
   for (i = strlen(buffer) - 1; i > 0; --i) {
-    std::cout << "buffer[i]: " << buffer[i] << std::endl;
     if (' '== buffer[i] || '\t' == buffer[i]) {
       buffer[i] = 0;
     } else {

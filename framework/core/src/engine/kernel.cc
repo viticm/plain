@@ -158,10 +158,14 @@ void Kernel::stop() {
 }
 
 pf_net::connection::Basic *Kernel::default_connect(
-    const std::string &name, const std::string &ip, uint16_t port) {
+    const std::string &name, 
+    const std::string &ip, 
+    uint16_t port, 
+    const std::string &_encrypt_str) {
   using namespace pf_net::connection::manager;
   if (is_null(net_) || net_->is_service()) return nullptr;
-  auto encrypt_str = GLOBALS["default.net.encrypt"].data;
+  auto encrypt_str = 
+    "" == _encrypt_str ?  GLOBALS["default.net.encrypt"].data : _encrypt_str;
   return connect(net_.get(), name, ip, port, encrypt_str);
 }
 

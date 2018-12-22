@@ -1,4 +1,5 @@
 #include "pf/basic/logger.h"
+#include "pf/basic/type/variable.h"
 #include "pf/basic/io.tcc"
 #include "pf/basic/time_manager.h"
 #include "pf/net/packet/factorymanager.h"
@@ -6,6 +7,7 @@
 #include "pf/net/packet/routing.h"
 #include "pf/net/packet/routing_lost.h"
 #include "pf/engine/kernel.h"
+#include "pf/script/interface.h"
 #include "pf/net/connection/manager/listener.h"
 #include "pf/net/connection/basic.h"
 
@@ -176,6 +178,7 @@ bool Basic::heartbeat(uint32_t, uint32_t) {
 }
 
 void Basic::disconnect() {
+  using namespace pf_basic::type;
   //Notice routing original.
   std::string aim_name = params_["routing"].data;
   if (aim_name != "") {
@@ -188,6 +191,15 @@ void Basic::disconnect() {
       packet.set_aim_name(name_);
       connection->send(&packet);
     }
+  }
+  auto script = ENGINE_POINTER->get_script();
+  if (!is_null(script) && GLOBALS["default.script.netlost"] != "") {
+    auto func = GLOBALS["default.script.netlost"].data;
+    variable_array_t params;
+    params.emplace_back(this->name());
+    params.emplace_back(this->get_id());
+    variable_array_t results;
+    script->call(func, params, results);
   }
   clear();
 }

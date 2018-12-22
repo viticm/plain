@@ -36,6 +36,7 @@
  * GLOBALS["default.script.type"] = number;       //default -1.
  * GLOBALS["default.script.heartbeat"] = string;  //default "".
  * GLOBALS["default.script.enter"] = string;      //default "main".
+ * GLOBALS["default.script.netlost"] = string;    //default "plain_net_lost".
  * GLOBALS["default.cache.open"] = bool;          //default fasle.
  * GLOBALS["default.cache.service"] = bool;       //default fasle.
  * GLOBALS["default.cache.conf"] = string;        //default "".
@@ -104,6 +105,7 @@ void set_default_globals(type::variable_set_t &g) {
   g["default.script.bootstrap"] = "bootstrap.lua";
   g["default.script.reload"] = "preload.lua";
   g["default.script.type"] = -1;
+  g["default.script.netlost"] = "plain_net_lost";
   g["default.cache.open"] = false;
   g["default.cache.service"] = false;
   g["default.cache.conf"] = "";

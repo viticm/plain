@@ -50,8 +50,10 @@ class PF_API Kernel : public pf_basic::Singleton< Kernel > {
  public:
 
    //Use these interface will send handshake packt after connected.
-   pf_net::connection::Basic *default_connect(
-       const std::string &name, const std::string &ip, uint16_t port);
+   pf_net::connection::Basic *default_connect(const std::string &name, 
+                                              const std::string &ip, 
+                                              uint16_t port, 
+                                              const std::string &encrypt_str = "");
    pf_net::connection::Basic *connect(const std::string &name);
    pf_net::connection::Basic *connect(const std::string &name, 
                                       const std::string &ip, 
