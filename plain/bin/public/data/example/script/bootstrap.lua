@@ -13,7 +13,7 @@ g_debug = true
 
 -- Libarays.
 if OS_WIN then
-  package.cpath = BASEPATH .."/public/luaclib/?.lua" -- Framework build with cxx.
+  package.cpath = BASEPATH .."/public/luaclib/?.dll" -- Framework build with cxx.
 else
   package.cpath = BASEPATH .."/public/luaclib/?.so" -- Framework build with cxx.
 end
