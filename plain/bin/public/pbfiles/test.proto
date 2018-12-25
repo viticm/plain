@@ -1,0 +1,8 @@
+package test;
+
+//The protobuf test message.
+message pb_test {
+  required int32 a = 1;
+  optional string b = 2;
+  repeated int32 c = 3;
+}

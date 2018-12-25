@@ -35,6 +35,7 @@ class PF_API Application : public pf_basic::Singleton<Application> {
 
  public:
    static bool env(); /* Basic environment. */
+   bool set_env_globals();
 
  public:
    void register_commandhandler(const char *command, 
@@ -49,7 +50,6 @@ class PF_API Application : public pf_basic::Singleton<Application> {
  private:
    bool init();
    void start();
-   bool set_env_globals();
    void set_pidfile();
 
  private:

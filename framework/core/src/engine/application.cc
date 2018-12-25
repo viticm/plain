@@ -29,6 +29,7 @@ static bool pidfile_isexists(bool perr) {
 
 /* all default functions { */
 void daemon() {
+  if (!Application::getsingleton().set_env_globals()) return;
   if (pidfile_isexists(true)) return;
   pf_sys::process::daemon();
   Application::getsingleton().without_command_run();
@@ -239,7 +240,6 @@ bool Application::set_env_globals() {
 }
 
 bool Application::init() {
-  if (!set_env_globals()) return false;
   return true;
 }
 
@@ -253,14 +253,23 @@ void Application::set_pidfile() {
   using namespace pf_basic;
   if (args_["pidfile"] != "") {
     GLOBALS["app.pidfile"] = args_["pidfile"];
-  } else {
+  } else if (GLOBALS["app.pidfile"] == "") {
     char process_idpath[FILENAME_MAX] = {0};
-    pf_sys::process::get_filename(process_idpath, sizeof(process_idpath));
+   if (GLOBALS["app.name"] != "") {
+    snprintf(process_idpath, 
+             sizeof(process_idpath) - 1, 
+             "%s%s.pid", 
+             GLOBALS["app.basepath"].c_str(), 
+             GLOBALS["app.name"].c_str());
+    } else {
+      pf_sys::process::get_filename(process_idpath, sizeof(process_idpath));
+    }
     GLOBALS["app.pidfile"] = process_idpath;
   }
 }
 
 void Application::run() {
+  if (!set_env_globals()) return;
   set_pidfile();
   if (args_flag_ & has_error) {
     pf_basic::io_cerr("The application args error!");

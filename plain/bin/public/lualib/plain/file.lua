@@ -9,6 +9,7 @@
  - @uses The plainframework file module.
 --]]
 SETTING_PATH = ROOTPATH.."/../setting"
+PUBLIC_PATH = BASEPATH.."/public"
 
 -- 获得配置文件
 function get_settingfile(filename)

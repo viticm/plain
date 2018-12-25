@@ -12,17 +12,18 @@
 
 -- 入口方法，服务器启动完成时执行一次
 function main()
-  loadconfig()
+  print("client main..................")
   g_system_timer = timer_t.new()
   -- Disable global value for new.
   disable_globalvalue()
-  return 2
+  net.pb_load(PUBLIC_PATH.."/pbfiles")
+
+  local connid = net.connect("client1")
 end
 
 -- 脚本心跳
 function heartbeat()
-  testall()
-  return 1
+  return true
 end
 
 -- 一秒定时器

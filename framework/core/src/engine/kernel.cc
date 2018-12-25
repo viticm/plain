@@ -254,7 +254,10 @@ bool Kernel::init_base() {
     uint8_t i;
     for (i = 0; i < count; ++i) {
       std::string str = GLOBALS["plugins." + std::to_string(i)].data;
-      if ("" == str) return false;
+      if ("" == str) {
+        io_cerr("Can't load plugin %d", i);
+        return false;
+      }
       std::vector<std::string> array;
       string::explode(str.c_str(), array, ":", true, true);
       type::variable_array_t params;
@@ -539,7 +542,7 @@ const std::string Kernel::get_script_function(
       key = "client." + name + ".scriptfunc" + std::to_string(configid);
   }
   if (key == "" || GLOBALS[key] == "")
-    key = "default.script.nethandle";
+    key = "default.script.nethandler";
   std::string funcname = GLOBALS[key];
   return funcname;
 }

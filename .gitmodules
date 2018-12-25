@@ -7,3 +7,9 @@
 [submodule "dependencies/googletest"]
 	path = dependencies/googletest
 	url = http://github.com/google/googletest.git
+[submodule "plain/app/misc/lualib-src/luafilesystem"]
+	path = plain/app/misc/lualib-src/luafilesystem
+	url = https://github.com/keplerproject/luafilesystem
+[submodule "plain/app/misc/lualib-src/lua-protobuf"]
+	path = plain/app/misc/lualib-src/lua-protobuf
+	url = https://github.com/starwing/lua-protobuf

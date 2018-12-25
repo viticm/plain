@@ -33,3 +33,17 @@ function dofile_ex(filename)
   setfenv(func, getfenv(2))
   func()
 end
+
+-- 禁止使用新的全局变量
+function disable_globalvalue()
+  local metatable = {
+    __newindex = function(_table, key, value)
+      if (key == "it" or key == "him" or key == "me") then
+        rawset(_G, key, value);
+      else
+        error("Attempt create global value :"..tostring(key), 2);
+      end
+    end
+  }
+  setmetatable(_G, metatable);
+end
