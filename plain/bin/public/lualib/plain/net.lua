@@ -50,6 +50,7 @@ function plain_nethandler(npacket, original)
       return
     end
     local bytes = net.read_string(npacket)
+    print("plain_nethandler bytes", pb.tohex(bytes))
     local data = assert(pb.decode(proto, bytes)) 
     pb_packethandlers[id](data, original)
   else
@@ -96,6 +97,7 @@ function net.pb_send(name, oper, data)
   if not npacket then
     return
   end
+  print("pb_send bytes", pb.tohex(bytes))
   net.write_string(npacket, bytes)
   net.send(nil, npacket, name)
 end

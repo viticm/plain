@@ -10,6 +10,9 @@
  -       之后不能再创建新的全局变量
 --]]
 
+local op = require "pb_define"
+local serpent = require "serpent"
+
 -- 入口方法，服务器启动完成时执行一次
 function main()
   loadconfig()
@@ -45,3 +48,9 @@ function on_fiveminute_timer()
     g_system_timer:on_onesecond_timer()
   end
 end
+
+-- The test handler.
+net.reg_pbhandler(op.test, function(data, original)
+  print("The test handler.....................................")
+  print(serpent.block(data))
+end)

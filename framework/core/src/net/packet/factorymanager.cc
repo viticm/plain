@@ -214,11 +214,13 @@ uint32_t FactoryManager::packet_execute(
     if (!is_valid_dynamic_packet_id(packet->get_id())) {
       return kPacketExecuteStatusError;
     } else {
+      dynamic_cast<Dynamic *>(packet)->set_readable(true); //Set enable read.
       std::string funcname = ENGINE_POINTER->get_script_function(connection);
       if (funcname != "") {
         pf_basic::type::variable_array_t params;
         pf_basic::type::variable_array_t r;
         params.emplace_back(POINTER_TOINT64(packet));
+        std::cout << "packet_execute: " << packet->size() << std::endl;
         //Next will push the connection name ?
         if (original != "") params.emplace_back(original);
         script->call(funcname, params, r);
