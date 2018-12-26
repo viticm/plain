@@ -38,7 +38,7 @@ typedef struct {
 
 inline int32_t poll_create(polldata_t& polldata, int32_t maxcount) {
   int32_t fd = epoll_create(maxcount);
-  if (fd > 0) {
+  if (fd != -1) {
     polldata.fd = fd;
     polldata.maxcount = maxcount;
     polldata.events = new epoll_event[maxcount];

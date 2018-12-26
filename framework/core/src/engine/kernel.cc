@@ -575,4 +575,5 @@ void Kernel::loop() {
     }
     if (pf_sys::ThreadCollect::count() <= 0) break;
   }
+  SLOW_LOG(ENGINE_MODULENAME, "[%s] exited normally", GLOBALS["app.name"].c_str());
 }

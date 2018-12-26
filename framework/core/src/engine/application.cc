@@ -29,7 +29,6 @@ static bool pidfile_isexists(bool perr) {
 
 /* all default functions { */
 void daemon() {
-  if (!Application::getsingleton().set_env_globals()) return;
   if (pidfile_isexists(true)) return;
   pf_sys::process::daemon();
   Application::getsingleton().without_command_run();
@@ -209,12 +208,12 @@ Application::~Application() {
 }   
 
 //Set the framework global values by env file.
-bool Application::set_env_globals() {
+bool Application::set_env_globals(bool perr) {
   using namespace pf_basic;
   pf_file::Ini env;
   auto env_file = get_arg("env");
   if (env_file == "" || !env.open(env_file.c_str())) {
-    io_cerr("Can't load the env file!");
+    if (perr) io_cerr("Can't load the env file!");
     return false;
   }
 
@@ -269,19 +268,21 @@ void Application::set_pidfile() {
 }
 
 void Application::run() {
-  if (!set_env_globals()) return;
-  set_pidfile();
   if (args_flag_ & has_error) {
     pf_basic::io_cerr("The application args error!");
   } else if ("1" == args_["stop"]) {
+    set_env_globals(); set_pidfile(); //Use pid file.
     parse_command("stop");
   } else if (args_flag_ & has_v) {
     parse_command("version");
   } else if (args_flag_ & has_h) {
     parse_command("help");
   } else if (args_flag_ & has_d) {
+    set_env_globals(); set_pidfile(); //Use pid file.
     parse_command("daemon");
   } else {
+    if (!set_env_globals(true)) return; 
+    set_pidfile();
     if (pidfile_isexists(true)) return;
     without_command_run();
   }
@@ -301,7 +302,7 @@ void Application::start() {
 
   //Environment.
 #if OS_UNIX
-  if (GLOBALS["app.debug"] == 1) {
+  if (GLOBALS["app.debug"] == 1 && !(args_flag_ & has_d)) {
     char filename[FILENAME_MAX] = {0};
     get_module_filename(filename, sizeof(filename) - 1);
     io_cerr("----------------------------------------"

@@ -29,6 +29,7 @@ Interface::~Interface() {
 }
 
 bool Interface::init(uint16_t maxcount) {
+  SLOW_DEBUGLOG("net", "maxcount: %d", maxcount);
   if (is_ready()) return true; //有内存分配的请参考此方式避免再次分配内存
   size_ = 0;
   max_size_ = maxcount;
@@ -48,8 +49,11 @@ bool Interface::init(uint16_t maxcount) {
     std::unique_ptr<FactoryManager> tmp(new FactoryManager());
     g_packetfactory_manager = std::move(tmp);
   }
+  SLOW_DEBUGLOG("net", "maxcount1: %d", maxcount);
   if (is_null(NET_PACKET_FACTORYMANAGER_POINTER)) return false;
+  SLOW_DEBUGLOG("net", "maxcount2: %d", maxcount);
   if (!NET_PACKET_FACTORYMANAGER_POINTER->init()) return false;
+  SLOW_DEBUGLOG("net", "maxcount3: %d", maxcount);
   if (!pool_init(maxcount)) return false;
   ready_ = true;
   return true;
