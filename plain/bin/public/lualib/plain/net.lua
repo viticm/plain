@@ -40,7 +40,7 @@ local pb_define = pb_define or {}
 -- @param number npacket The packet memory address.
 -- @param mixed original The packet from.
 function plain_nethandler(npacket, original)
-  print("plain_nethandler", npacket, original)
+  --print("plain_nethandler", npacket, original)
   local id = net.read_id(npacket)
   if not id then return end
   if pb_packethandlers[id] then
@@ -50,7 +50,7 @@ function plain_nethandler(npacket, original)
       return
     end
     local bytes = net.read_string(npacket)
-    print("plain_nethandler bytes", pb.tohex(bytes))
+    --print("plain_nethandler bytes", pb.tohex(bytes))
     local data = assert(pb.decode(proto, bytes)) 
     pb_packethandlers[id](data, original)
   else
@@ -97,7 +97,7 @@ function net.pb_send(name, oper, data)
   if not npacket then
     return
   end
-  print("pb_send bytes", pb.tohex(bytes))
+  --print("pb_send bytes", pb.tohex(bytes))
   net.write_string(npacket, bytes)
   net.send(nil, npacket, name)
 end
