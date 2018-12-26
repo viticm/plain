@@ -207,7 +207,7 @@ uint32_t FactoryManager::packet_execute(
   connection::Basic *connection, 
   Interface *packet, 
   const std::string &original) {
-  std::cout << "packet_execute 0" << std::endl;
+  //std::cout << "packet_execute 0" << std::endl;
   if (!function_packet_execute_) {
     auto script = ENGINE_POINTER->get_script();
     if (is_null(script)) return kPacketExecuteStatusContinue;
@@ -220,7 +220,7 @@ uint32_t FactoryManager::packet_execute(
         pf_basic::type::variable_array_t params;
         pf_basic::type::variable_array_t r;
         params.emplace_back(POINTER_TOINT64(packet));
-        std::cout << "packet_execute: " << packet->size() << std::endl;
+        //std::cout << "packet_execute: " << packet->size() << std::endl;
         //Next will push the connection name ?
         if (original != "") params.emplace_back(original);
         script->call(funcname, params, r);
@@ -228,7 +228,7 @@ uint32_t FactoryManager::packet_execute(
       return kPacketExecuteStatusContinue;
     }
   }
-  std::cout << "packet_execute 1" << std::endl;
+  //std::cout << "packet_execute 1" << std::endl;
   uint32_t result = (*function_packet_execute_)(connection, packet);
   return result;
 }
