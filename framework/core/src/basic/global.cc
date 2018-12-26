@@ -109,7 +109,7 @@ void set_default_globals(type::variable_set_t &g) {
   g["default.script.reload"] = "preload.lua";
   g["default.script.type"] = -1;
   g["default.script.netlost"] = "plain_netlost";
-  g["default.script.nethandle"] = "plain_nethandler";
+  g["default.script.nethandler"] = "plain_nethandler";
   g["default.script.enter"] = "main";
   g["default.cache.open"] = false;
   g["default.cache.service"] = false;

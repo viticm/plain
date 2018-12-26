@@ -40,6 +40,7 @@ local pb_define = pb_define or {}
 -- @param number npacket The packet memory address.
 -- @param mixed original The packet from.
 function plain_nethandler(npacket, original)
+  print("plain_nethandler", npacket, original)
   local id = net.read_id(npacket)
   if not id then return end
   if pb_packethandlers[id] then
