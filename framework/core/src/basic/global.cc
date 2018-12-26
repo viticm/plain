@@ -28,6 +28,7 @@
  * GLOBALS["default.net.service_ip"] = string;    //default "".
  * GLOBALS["default.net.service_port"] = number;  //default 0.
  * GLOBALS["default.net.conn_max"] = number;      //default NET_CONNECTION_MAX.
+ * GLOBALS["default.net.reconnect_time"] = number;//default 3.
  * GLOBALS["default.script.open"] = bool;         //default false.
  * GLOBALS["default.script.rootpath"] = string;   //default SCRIPT_ROOT_PATH.
  * GLOBALS["default.script.workpath"] = string;   //default SCRIPT_WORK_PATH.
@@ -100,13 +101,14 @@ void set_default_globals(type::variable_set_t &g) {
   g["default.net.service_ip"] = "";
   g["default.net.service_port"] = 0;
   g["default.net.conn_max"] = NET_CONNECTION_MAX;
+  g["default.net.reconnect_time"] = 3;
   g["default.script.open"] = false;
   g["default.script.rootpath"] = SCRIPT_ROOT_PATH;
   g["default.script.workpath"] = SCRIPT_WORK_PATH;
   g["default.script.bootstrap"] = "bootstrap.lua";
   g["default.script.reload"] = "preload.lua";
   g["default.script.type"] = -1;
-  g["default.script.netlost"] = "plain_net_lost";
+  g["default.script.netlost"] = "plain_netlost";
   g["default.script.nethandle"] = "plain_nethandler";
   g["default.script.enter"] = "main";
   g["default.cache.open"] = false;

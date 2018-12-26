@@ -45,7 +45,7 @@ function plain_nethandler(npacket, original)
   if pb_packethandlers[id] then
     local proto = pb_define[id]
     if not proto then
-      error("plain_nethandler can't find protoc config from: "..id)
+      error("plain_nethandler can't find protobuf config from: "..id)
       return
     end
     local bytes = net.read_string(npacket)
@@ -65,26 +65,62 @@ function net.reg_handler(id, func)
 end
 
 -- Register the net protobuf handler.
--- @param number id The packet id.
+-- @param mixed oper The operator table or packet id.
 -- @param function func [(data, original)]
-function net.reg_pbhandler(id, func)
+function net.reg_pbhandler(oper, func)
+  local id = oper
+  if "table" == type(oper) then
+    id = oper.id
+  end
   pb_packethandlers[id] = func
 end
 
 -- Send a protobuf packet.
 -- @param string name The connection name.
--- @param table oper The operator info {id = packet id, proto = protobuf name}
+-- @param mixed oper The operator table or packet id.
 -- @param table data The protobuf data.
 function net.pb_send(name, oper, data)
-  local id = oper.id
-  local proto = oper.proto
+  local id = oper
+  local proto = nil
+  if "table" == type(oper) then
+    id = oper.id
+  end
+  local proto = pb_define[id]
+  if not proto then
+    error("plain net.pb_send can't find protobuf config from: "..id)
+    return
+  end
   local bytes = assert(pb.encode(proto, data))
-  local npacket = net.alloc(id)
+  local npacket = net.packet_alloc(id)
   if not npacket then
     return
   end
   net.write_string(npacket, bytes)
-  net.send(name, npacket)
+  net.send(nil, npacket, name)
+end
+
+-- Set the protobuf define.
+-- @param number id The packet id.
+-- @param string proto The proto name.
+function net.set_pb_define(id, proto)
+  pb_define[id] = proto
+end
+
+-- Load the protobuf define from table(the value will be {id = 1, proto = "name"}).
+-- @param mixed name The lua name or define table.
+function net.pb_define_load(name)
+  local tb = name
+  if "string" == type(name) then
+    tb = require(name)
+  end
+  if not tb or type(tb) ~= "table" then
+    error("plain net pb_define_load error")
+    return
+  end
+  for k, v in pairs(tb) do
+    local id, proto = v.id, v.proto
+    pb_define[id] = proto
+  end
 end
 
 -- Load protobuf files from a directory.

@@ -548,7 +548,9 @@ const std::string Kernel::get_script_function(
 }
 
 void Kernel::loop() {
+  uint32_t last_reconnect{0};
   for (;;) {
+    auto curtime = TIME_MANAGER_POINTER->get_ctime();
     if (GLOBALS["app.status"] == kAppStatusStop) break;
     auto starttime = TIME_MANAGER_POINTER->get_tickcount();
     std::function<void()> task;
@@ -559,9 +561,13 @@ void Kernel::loop() {
       }
     }
     if (task) task();
-    //Reconnect the connected.
-    for (auto it = connect_list_.begin(); it != connect_list_.end(); ++it) {
-      if (-1 == it->second) connect(it->first);
+    auto reconnect_time = GLOBALS["default.net.reconnect_time"].get<uint32_t>();
+    if (reconnect_time > 0 && curtime - last_reconnect > reconnect_time) {
+      last_reconnect = curtime;
+      //Reconnect the connected.
+      for (auto it = connect_list_.begin(); it != connect_list_.end(); ++it) {
+        if (-1 == it->second) connect(it->first);
+      }
     }
     worksleep(starttime);
   }

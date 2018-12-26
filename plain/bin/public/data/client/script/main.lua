@@ -10,15 +10,25 @@
  -       之后不能再创建新的全局变量
 --]]
 
+local op = require("pb_define")
+
 -- 入口方法，服务器启动完成时执行一次
 function main()
   print("client main..................")
+
+  loadconfig()
+
   g_system_timer = timer_t.new()
   -- Disable global value for new.
   disable_globalvalue()
-  net.pb_load(PUBLIC_PATH.."/pbfiles")
 
   local connid = net.connect("client1")
+  local msg = {
+    a = 111,
+    b = "test",
+    c = {1, 3, 5},
+  }
+  net.pb_send("client1", op.test, msg)
 end
 
 -- 脚本心跳
