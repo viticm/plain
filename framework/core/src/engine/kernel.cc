@@ -197,15 +197,16 @@ pf_net::connection::Basic *Kernel::connect(
   using namespace pf_net::connection::manager;
   using namespace pf_basic;
   Connector *connector = dynamic_cast<Connector *>(client);
-  if ("" == name) return nullptr;
   auto connection = connector->connect(ip.c_str(), port);
   if (is_null(connection)) return nullptr;
-  //Register name.
-  connection->set_name(name);
-  pf_net::packet::RegisterConnectionName regname;
-  regname.set_name(name);
-  connection->send(&regname);
-  net_connector_->set_connection_name(connection->get_id(), name);
+  if (name != "") {
+    //Register name.
+    connection->set_name(name);
+    pf_net::packet::RegisterConnectionName regname;
+    regname.set_name(name);
+    connection->send(&regname);
+    net_connector_->set_connection_name(connection->get_id(), name);
+  }
 
   //Handshake.
   if (encrypt_str != "") {

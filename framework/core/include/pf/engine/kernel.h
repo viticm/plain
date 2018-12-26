@@ -68,6 +68,9 @@ class PF_API Kernel : public pf_basic::Singleton< Kernel > {
    //Get the extra listener or connector.
    pf_net::connection::Basic *get_connector(const std::string &name);
    pf_net::connection::manager::Listener *get_listener(const std::string &name);
+   pf_net::connection::manager::Connector *get_connector_manager() {
+     return net_connector_.get();
+   };
    pf_db::Interface *get_db(const std::string &name);
 
    //Get the service from name(default or listen list).

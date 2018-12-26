@@ -61,14 +61,14 @@ end
 
 -- Register the net handler.
 -- @param number id The packet id.
--- @param function func [(npacket, original)]
+-- @param function func [(data, connection(name or id), original)]
 function net.reg_handler(id, func)
   packethandlers[id] = func
 end
 
 -- Register the net protobuf handler.
 -- @param mixed oper The operator table or packet id.
--- @param function func [(data, original)]
+-- @param function func [(data, connection(name or id), original)]
 function net.reg_pbhandler(oper, func)
   local id = oper
   if "table" == type(oper) then

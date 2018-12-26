@@ -220,6 +220,12 @@ uint32_t FactoryManager::packet_execute(
         pf_basic::type::variable_array_t params;
         pf_basic::type::variable_array_t r;
         params.emplace_back(POINTER_TOINT64(packet));
+        auto name = connection->name();
+        if (name != "") {
+          params.emplace_back(name);
+        } else {
+          params.emplace_back(connection->get_id());
+        }
         //std::cout << "packet_execute: " << packet->size() << std::endl;
         //Next will push the connection name ?
         if (original != "") params.emplace_back(original);

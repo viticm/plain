@@ -50,7 +50,7 @@ function on_fiveminute_timer()
 end
 
 -- The test handler.
-net.reg_pbhandler(op.test, function(data, original)
+net.reg_pbhandler(op.test, function(data, conn, original)
   print("The test handler.....................................")
   print(serpent.block(data))
 end)
