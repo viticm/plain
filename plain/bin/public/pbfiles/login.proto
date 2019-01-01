@@ -1,0 +1,52 @@
+package login;
+
+//请求登录（客户端到网关）
+message c2w_login {
+  required string username = 1;       //用户名
+  optional string code = 2;           //登录码（用来校验登录是否成功）
+}
+
+//进入世界（客户端到网关）
+message c2w_enter {
+  required string username = 1;       //用户名
+  required string server = 2;         //目标服务器
+}
+
+//进入世界（网关到逻辑服）
+message w2l_enter {
+  required string username = 1;       //用户名
+  required int32 connid = 2;          //连接ID
+  optional string servicename = 3;    //连接的服务
+}
+
+//进入游戏世界返回（逻辑服到网关）
+message l2w_enter {
+  required int32 result = 1;          // 0 成功 1 失败
+  required int32 connid = 2;          //连接ID
+  optional string servicename = 3;    //连接的服务
+}
+
+//进入游戏世界的返回（逻辑服到客户端，当进入成功才有此返回）
+message l2c_enter {
+  repeated string rolelist = 1;       //角色列表
+}
+
+//测试1
+message c2l_test {
+  required int32 a = 1;
+  required bool b = 2;
+  required string c = 3;
+}
+
+//测试2
+message c2l_test1 {
+  repeated int32 a = 1;
+  optional string b = 2;
+}
+
+//测试3
+message l2c_test2 {
+  required int32 a = 1;
+  required float b = 2;
+  optional string c = 3;
+}

@@ -1,0 +1,3 @@
+STRING	INT	STRING
+Name	Value	Desc
+IVER_nZiXiaShenGongSeriersAbate	300	高级披风技能效果

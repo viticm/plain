@@ -1,0 +1,7 @@
+STRING	FLOAT	STRING
+Name	Value	Desc
+IVER_nShengXiaTuiGuanYuan	1	盛夏推广员开关
+IVER_szTianLao	天牢狱卒：瞎跑啥呢？你还有%s小时%s分钟%s秒才能出狱呢！乖乖回去蹲好！如果想提前出狱，请联系客服人员 028-85437733	
+IVER_szTianLaoForever	天牢狱卒：瞎跑啥呢？你已经被永久禁闭啦！想出去的话，联系客服人员 028-85437733。	
+IVER_nTuiGuanYuan	1	活动推广员开关
+IVER_CangBaoTuNpcStrong	1	藏宝图boss和怪强度倍数
