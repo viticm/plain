@@ -69,7 +69,7 @@ function plain_nethandler(npacket, conn, original)
       return
     end
     local bytes = net.read_bytes(npacket)
-    print("plain_nethandler bytes", pb.tohex(bytes))
+    --print("plain_nethandler bytes", pb.tohex(bytes))
     local data = assert(pb.decode(proto, bytes)) 
     pb_packethandlers[id](data, conn, original)
   else
@@ -120,7 +120,7 @@ function net.pb_send(manager_name, name_or_id, oper, data, listener_name, routin
     assert(false, "net.pb_send packet_alloc failed")
     return
   end
-  print("pb_send bytes", pb.tohex(bytes), string.len(bytes))
+  --print("pb_send bytes", pb.tohex(bytes), string.len(bytes))
   net.write_bytes(npacket, bytes)
   if not routing_info then
     return net.send(manager_name, name_or_id, npacket, listener_name)
