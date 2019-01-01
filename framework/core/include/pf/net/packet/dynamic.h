@@ -33,7 +33,7 @@ class PF_API Dynamic : public packet::Interface {
 
  public:
    void write(const char *buffer, uint32_t length);
-   void read(char *buffer, uint32_t length);
+   uint32_t read(char *buffer, uint32_t length);
    void set_readable(bool flag) { readable_ = flag; };
    void set_writeable(bool flag) { writeable_ = flag; };
    void clear();
@@ -61,6 +61,7 @@ class PF_API Dynamic : public packet::Interface {
    void write_string(const char *value);
    void write_float(float value);
    void write_double(double value);
+   void write_bytes(const unsigned char *value, size_t size);
 
  public:
    int8_t read_int8();
@@ -74,6 +75,7 @@ class PF_API Dynamic : public packet::Interface {
    void read_string(char *buffer, size_t size);
    float read_float();
    double read_double();
+   uint32_t read_bytes(unsigned char *value, size_t size);
 
  public:
    //some useful.

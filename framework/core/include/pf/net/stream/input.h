@@ -47,6 +47,7 @@ class PF_API Input : public Basic {
    void read_string(char *buffer, size_t size);
    float read_float();
    double read_double();
+   uint32_t read_bytes(unsigned char *buffer, size_t size);
 
  public:
    //some useful.

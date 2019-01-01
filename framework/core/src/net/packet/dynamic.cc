@@ -49,12 +49,13 @@ void Dynamic::write(const char *buffer, uint32_t length) {
   size_ += length;
 }
 
-void Dynamic::read(char *buffer, uint32_t length) {
-  if (!readable_) return;
-  if (0 == size_ || offset_ >= size_ - 1) return;
+uint32_t Dynamic::read(char *buffer, uint32_t length) {
+  if (!readable_) return 0;
+  if (0 == size_ || offset_ + length > size_) return 0;
   char *_buffer = reinterpret_cast<char *>(allocator_.get()) + offset_;
   memcpy(buffer, _buffer, length);
   offset_ += length;
+  return length;
 }
 
 void Dynamic::write_int8(int8_t value) {
@@ -101,6 +102,11 @@ void Dynamic::write_float(float value) {
    
 void Dynamic::write_double(double value) {
   write((char *)&value, sizeof(value));
+}
+
+void Dynamic::write_bytes(const unsigned char *value, size_t size) {
+  write_uint32(size);
+  write((const char *)value, size);
 }
 
 int8_t Dynamic::read_int8() {
@@ -167,6 +173,11 @@ double Dynamic::read_double() {
   double result = .0;
   read((char *)&result, sizeof(result));
   return result;
+}
+
+uint32_t Dynamic::read_bytes(unsigned char *value, size_t size) {
+  auto length = read_uint32();
+  return read((char *)value, size > length ? length : size);
 }
 
 void Dynamic::check_memory(uint32_t length) {

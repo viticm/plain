@@ -3,9 +3,9 @@
 #include "pf/basic/io.tcc"
 #include "pf/net/connection/basic.h"
 #include "pf/net/connection/manager/listener.h"
+#include "pf/engine/kernel.h"
 #include "pf/net/packet/routing_request.h"
 #include "pf/net/packet/routing_response.h"
-#include "pf/engine/kernel.h"
 
 using namespace pf_net::packet;
 
@@ -40,8 +40,12 @@ uint32_t RoutingRequest::execute(pf_net::connection::Basic *connection) {
   std::string destination{destination_};
   std::string aim_name{aim_name_};
   if (!listener) return kPacketExecuteStatusContinue;
+  /**
+  std::cout << "RoutingRequest-> " << listener->name() << "destination: " 
+            << destination << " aim_name: " << aim_name << std::endl;
+  **/
   if (connection->name() == "") return kPacketExecuteStatusContinue;
-  auto destination_service = ENGINE_POINTER->get_listener(destination);
+  auto destination_service = ENGINE_POINTER->get_service(destination);
   if (is_null(destination_service)) {
     io_cwarn("[%s] Routing request can't get service from(%s)!",
              NET_MODULENAME,
@@ -68,6 +72,7 @@ uint32_t RoutingRequest::execute(pf_net::connection::Basic *connection) {
     destination_connection->set_param("routing_service", listener->name());
   destination_connection->set_param("routing", connection->name());
   RoutingResponse r;
+  r.set_destination(destination);
   r.set_aim_name(aim_name);
   connection->send(&r);
   return kPacketExecuteStatusContinue;

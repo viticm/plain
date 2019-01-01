@@ -29,6 +29,7 @@ Interface::~Interface() {
 }
 
 bool Interface::init(uint16_t maxcount) {
+  if (maxcount == -1) return false;
   if (is_ready()) return true; //有内存分配的请参考此方式避免再次分配内存
   size_ = 0;
   max_size_ = maxcount;
@@ -141,8 +142,11 @@ bool Interface::erase(connection::Basic *connection) {
 }
 
 bool Interface::remove(connection::Basic *connection) {
+  std::cout << "connection->name(): " << connection->name() << std::endl;
   on_disconnect(connection);
   if (!is_null(callback_disconnect_)) callback_disconnect_(connection);
+  if (connection->name() != "") 
+    connection_names_[connection->name()] = -1;
   if (!erase(connection)) return false; 
   pool_->remove(connection->get_id());
   connection->disconnect();
@@ -162,7 +166,7 @@ bool Interface::destroy() {
     connection::Basic *connection = get(connection_idset_[i]);
     if (nullptr == connection) {
       SLOW_ERRORLOG(NET_MODULENAME,
-                    "[net.connection.manager]( Interface::destroy) error!"
+                    "[net.connection.manager](Interface::destroy) error!"
                     " connection is nullptr, id: %d",
                     connection_idset_[i]);
       continue;
@@ -220,7 +224,7 @@ connection::Pool *Interface::get_pool() {
 
 connection::Basic *Interface::get(uint16_t id) {
   connection::Basic *connection = nullptr;
-  if ((id > 0 && id < pool_->size()) || 0 == id) {
+  if (id >= 0 && id < max_size_) {
     connection = pool_->get(id);
     Assert(connection);
   }

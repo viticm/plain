@@ -95,7 +95,9 @@ class PF_API Interface {
      callback_connect_ = callback;
    }
 
+   //Multi thread safe.
    void set_connection_name(uint16_t id, const std::string &name) {
+     std::unique_lock<std::mutex> autolock(mutex_);
      connection_names_[name] = id;
    }
 

@@ -151,13 +151,16 @@ bool Basic::process_command() {
 }
 
 bool Basic::send(packet::Interface *packet) {
-  if (is_disconnect()) return true;
+  std::unique_lock<std::mutex> autolock(mutex_);
+  if (is_disconnect()) return false;
   if (is_null(protocol_)) return false;
   return protocol_->send(this, packet);
 }
 
 bool Basic::heartbeat(uint32_t, uint32_t) {
   using namespace pf_basic;
+  auto now = TIME_MANAGER_POINTER->get_ctime();
+  if (is_disconnect()) return false;
   if (safe_encrypt_time_ != 0 && !is_safe_encrypt()) {
     auto now = TIME_MANAGER_POINTER->get_ctime();
     if (safe_encrypt_time_ + NET_ENCRYPT_CONNECTION_TIMEOUT < now) {
@@ -168,11 +171,21 @@ bool Basic::heartbeat(uint32_t, uint32_t) {
   }
   std::string aim_name = params_["routing"].data;
   if (aim_name != "") {
-    std::string service = params_["routing_service"].data;
-    manager::Listener *listener = ENGINE_POINTER->get_service(service);
-    if (is_null(listener)) return false;
-    auto connection = listener->get(aim_name);
-    if (is_null(connection)) return false;
+    auto last_check = params_["routing_check"].get<uint32_t>();
+    if (now - last_check >= 3) {
+      std::string service = params_["routing_service"].data;
+      manager::Listener *listener = ENGINE_POINTER->get_service(service);
+      if (is_null(listener)) return false;
+      auto connection = listener->get(aim_name);
+      if (is_null(connection) || connection->is_disconnect()) {
+        io_cwarn("[%s] routing(%s|%s) lost!", 
+                 NET_MODULENAME, 
+                 service.c_str(), 
+                 aim_name.c_str());
+        return false;
+      }
+      params_["routing_check"] = now;
+    }
   }
   return true;
 }
@@ -303,11 +316,11 @@ bool Basic::forward(packet::Interface *packet) {
   auto listener = ENGINE_POINTER->get_listener(service);
   if (is_null(listener)) return false;
   auto connection = listener->get(aim_name);
-  if (is_null(connection)) return false;
+  if (is_null(connection) || connection->is_disconnect()) return false;
   packet::Forward forward_packet;
   forward_packet.set_original(name());
   forward_packet.set_packet_size(packet->size());
-  return send(&forward_packet) && send(packet);
+  return connection->send(&forward_packet) && connection->send(packet);
 }
 
 } //namespace connection

@@ -37,6 +37,10 @@ uint32_t Routing::execute(pf_net::connection::Basic *connection) {
   using namespace pf_net::connection;
   using namespace pf_basic;
   std::string aim_name{aim_name_};
+  /**
+  std::cout << "Routing-> destination: " << destination_ << " aim_name: " 
+            << aim_name << std::endl;
+  **/
   auto listener = ENGINE_POINTER->get_service(destination_);
   if (is_null(listener)) {
     io_cwarn("[%s] Routing request can't get service from(%s)!",

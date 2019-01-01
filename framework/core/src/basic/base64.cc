@@ -1,156 +1,125 @@
+/* 
+   base64.cpp and base64.h
+
+   base64 encoding and decoding with C++.
+
+   Version: 1.01.00
+
+   Copyright (C) 2004-2017 René Nyffenegger
+
+   This source code is provided 'as-is', without any express or implied
+   warranty. In no event will the author be held liable for any damages
+   arising from the use of this software.
+
+   Permission is granted to anyone to use this software for any purpose,
+   including commercial applications, and to alter it and redistribute it
+   freely, subject to the following restrictions:
+
+   1. The origin of this source code must not be misrepresented; you must not
+      claim that you wrote the original source code. If you use this source code
+      in a product, an acknowledgment in the product documentation would be
+      appreciated but is not required.
+
+   2. Altered source versions must be plainly marked as such, and must not be
+      misrepresented as being the original source code.
+
+   3. This notice may not be removed or altered from any source distribution.
+
+   René Nyffenegger rene.nyffenegger@adp-gmbh.ch
+
+*/
+
 #include "pf/basic/base64.h"
 
 namespace pf_basic {
 
-char getb64char(int index) {
-  const char kBase64Table[] = 
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-  if ((index >= 0) && (index < 64)) {
-      return kBase64Table[index];
-  }
-  return '=';
+static const std::string base64_chars = 
+             "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+             "abcdefghijklmnopqrstuvwxyz"
+             "0123456789+/";
+
+
+static inline bool is_base64(unsigned char c) {
+  return (isalnum(c) || (c == '+') || (c == '/'));
 }
 
-//从双字中取单字节
-#define B0(a) (a & 0xFF)
-#define B1(a) (a >> 8 & 0xFF)
-#define B2(a) (a >> 16 & 0xFF)
-#define B3(a) (a >> 24 & 0xFF)
-
-//编码后的长度一般比原文多占1/3的存储空间，请保证base64code有足够的空间
-int base64encode(char *base64code, const char *src, int src_len) {
-  unsigned char *psrc = (unsigned char*)src;
-  char *p64 = base64code;
-  int len = 0;
+std::string base64_encode(unsigned char const* bytes_to_encode, unsigned int in_len) {
+  std::string ret;
   int i = 0;
-  int b0 = 0;
-  int b1 = 0;
-  int b2 = 0;
-  int b3 = 0;
-  
-  if (src_len == 0) {
-      src_len = static_cast<int>(strlen(src));
-  }
-  
-  for (i = 0; i < src_len - 3; i += 3){
-    unsigned long ulTmp = *(unsigned long*)psrc;
-    b0 = getb64char((B0(ulTmp) >> 2) & 0x3F); 
-    b1 = getb64char((B0(ulTmp) << 6 >> 2 | B1(ulTmp) >> 4) & 0x3F); 
-    b2 = getb64char((B1(ulTmp) << 4 >> 2 | B2(ulTmp) >> 6) & 0x3F); 
-    b3 = getb64char((B2(ulTmp) << 2 >> 2) & 0x3F); 
-    *((unsigned long*)p64) = b0 | b1 << 8 | b2 << 16 | b3 << 24;
-    len += 4;
-    p64 += 4; 
-    psrc += 3;
-  }
-  
-  //处理最后余下的不足3字节的饿数据
-  if (i < src_len) {
-    int rest = src_len - i;
-    unsigned long ulTmp = 0;
-    for (int j = 0; j < rest; ++j) {
-      *(((unsigned char*)&ulTmp) + j) = *psrc++;
+  int j = 0;
+  unsigned char char_array_3[3];
+  unsigned char char_array_4[4];
+
+  while (in_len--) {
+    char_array_3[i++] = *(bytes_to_encode++);
+    if (i == 3) {
+      char_array_4[0] = (char_array_3[0] & 0xfc) >> 2;
+      char_array_4[1] = ((char_array_3[0] & 0x03) << 4) + ((char_array_3[1] & 0xf0) >> 4);
+      char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) + ((char_array_3[2] & 0xc0) >> 6);
+      char_array_4[3] = char_array_3[2] & 0x3f;
+
+      for(i = 0; (i <4) ; i++)
+        ret += base64_chars[char_array_4[i]];
+      i = 0;
     }
-    
-    p64[0] = getb64char((B0(ulTmp) >> 2) & 0x3F); 
-    p64[1] = getb64char((B0(ulTmp) << 6 >> 2 | B1(ulTmp) >> 4) & 0x3F); 
-    p64[2] = rest > 1 ? 
-      getb64char((B1(ulTmp) << 4 >> 2 | B2(ulTmp) >> 6) & 0x3F) : '='; 
-    p64[3] = rest > 2 ? getb64char((B2(ulTmp) << 2 >> 2) & 0x3F) : '='; 
-    p64 += 4; 
-    len += 4;
   }
-  
-  *p64 = '\0'; 
-  
-  return len;
+
+  if (i)
+  {
+    for(j = i; j < 3; j++)
+      char_array_3[j] = '\0';
+
+    char_array_4[0] = ( char_array_3[0] & 0xfc) >> 2;
+    char_array_4[1] = ((char_array_3[0] & 0x03) << 4) + ((char_array_3[1] & 0xf0) >> 4);
+    char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) + ((char_array_3[2] & 0xc0) >> 6);
+
+    for (j = 0; (j < i + 1); j++)
+      ret += base64_chars[char_array_4[j]];
+
+    while((i++ < 3))
+      ret += '=';
+
+  }
+
+  return ret;
+
 }
 
-int getb64index(char ch) {
-  int index = -1;
-  
-  if (ch >= 'A' && ch <= 'Z') {
-    index = ch - 'A';
-  }
-  else if (ch >= 'a' && ch <= 'z') {
-    index = ch - 'a' + 26;
-  }
-  else if (ch >= '0' && ch <= '9') {
-    index = ch - '0' + 52;
-  }
-  else if (ch == '+') {
-    index = 62;
-  }
-  else if (ch == '/') {
-    index = 63;
+std::string base64_decode(std::string const& encoded_string) {
+  int in_len = encoded_string.size();
+  int i = 0;
+  int j = 0;
+  int in_ = 0;
+  unsigned char char_array_4[4], char_array_3[3];
+  std::string ret;
+
+  while (in_len-- && ( encoded_string[in_] != '=') && is_base64(encoded_string[in_])) {
+    char_array_4[i++] = encoded_string[in_]; in_++;
+    if (i ==4) {
+      for (i = 0; i <4; i++)
+        char_array_4[i] = base64_chars.find(char_array_4[i]);
+
+      char_array_3[0] = ( char_array_4[0] << 2       ) + ((char_array_4[1] & 0x30) >> 4);
+      char_array_3[1] = ((char_array_4[1] & 0xf) << 4) + ((char_array_4[2] & 0x3c) >> 2);
+      char_array_3[2] = ((char_array_4[2] & 0x3) << 6) +   char_array_4[3];
+
+      for (i = 0; (i < 3); i++)
+        ret += char_array_3[i];
+      i = 0;
+    }
   }
 
-  return index;
+  if (i) {
+    for (j = 0; j < i; j++)
+      char_array_4[j] = base64_chars.find(char_array_4[j]);
+
+    char_array_3[0] = (char_array_4[0] << 2) + ((char_array_4[1] & 0x30) >> 4);
+    char_array_3[1] = ((char_array_4[1] & 0xf) << 4) + ((char_array_4[2] & 0x3c) >> 2);
+
+    for (j = 0; (j < i - 1); j++) ret += char_array_3[j];
+  }
+
+  return ret;
 }
-
-//解码后的长度一般比原文少用占1/4的存储空间，请保证buf有足够的空间
-int base64decode(char * buf, const char * base64code, int src_len) { 
-  int ii = 0;
-  int jj = 0;
-  int len = 0;
-  char * pbuf = buf;
-  int b0 = 0;
-  int b1 = 0;
-  int b2 = 0;
-  //int b3 = 0;
-  int rest = 0;
-  unsigned long ulTmp = 0;
-  unsigned char* psrc = (unsigned char*)base64code;
-  
-  if (src_len == 0)
-    src_len = static_cast<int>(strlen(base64code));
-
-  for (ii = 0; ii < src_len - 4; ii += 4) {
-    ulTmp = *(unsigned long*)psrc;
-    
-     b0 = (getb64index((char)B0(ulTmp)) << 2 | 
-         getb64index((char)B1(ulTmp)) << 2 >> 6) & 0xFF;
-     b1 = (getb64index((char)B1(ulTmp)) << 4 | 
-         getb64index((char)B2(ulTmp)) << 2 >> 4) & 0xFF;
-     b2 = (getb64index((char)B2(ulTmp)) << 6 | 
-         getb64index((char)B3(ulTmp)) << 2 >> 2) & 0xFF;
-    
-    *((unsigned long*)pbuf) = b0 | b1 << 8 | b2 << 16;
-    psrc  += 4; 
-    pbuf += 3;
-    len += 3;
-  }
-
-  //处理最后余下的不足4字节的饿数据
-  if (ii < src_len) {
-    rest = src_len - ii;
-    ulTmp = 0;
-    for (jj = 0; jj < rest; ++jj) {
-      *(((unsigned char*)&ulTmp) + jj) = *psrc++;
-    }
-    
-    b0 = (getb64index((char)B0(ulTmp)) << 2 | 
-        getb64index((char)B1(ulTmp)) << 2 >> 6) & 0xFF;
-    *pbuf++ = static_cast<char>(b0);
-    len++;
-
-    if ('=' != B1(ulTmp) && '=' != B2(ulTmp)) {
-       b1 = (getb64index((char)B1(ulTmp)) << 4 | 
-           getb64index((char)B2(ulTmp)) << 2 >> 4) & 0xFF;
-      *pbuf++ = static_cast<char>(b1);
-      len  ++;
-    }
-    
-    if ('=' != B2(ulTmp) && '=' != B3(ulTmp)) {
-       b2 = (getb64index((char)B2(ulTmp)) << 6 | 
-           getb64index((char)B3(ulTmp)) << 2 >> 2) & 0xFF;
-      *pbuf++ = static_cast<char>(b2);
-      len++;
-    }
-  }
-    
-  *pbuf = '\0';
-  return len;
-} 
 
 } //namespace pf_basic

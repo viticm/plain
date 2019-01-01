@@ -93,7 +93,6 @@ int32_t openmode_ex(const char * filename, int32_t flag, int32_t mode) {
   return fd;
 }
 
-
 uint32_t readex(int32_t fd, void *buffer, uint32_t length) {
 #if OS_UNIX
   int32_t result = read(fd, buffer, length);
@@ -268,8 +267,6 @@ void ioctlex(int32_t fd, int32_t request, void *argp) {
 #endif
 }
 
-
-
 void setnonblocking_ex(int32_t fd, bool on) {
 #if OS_UNIX
   uint64_t arg = (true == on ? 1 : 0 );
@@ -286,13 +283,13 @@ uint32_t availableex(int32_t fd) {
 #if OS_UNIX
   uint32_t arg = 0;
   ioctlex(fd, FIONREAD, &arg);
+  std::cout << "availableex: " << arg << std::endl;
   return arg;
 #elif OS_WIN
   UNUSED(fd);
   return 0;
 #endif
 }
-
 
 int32_t dupex(int32_t fd) {
 #if OS_UNIX
@@ -316,7 +313,6 @@ int32_t dupex(int32_t fd) {
   }
   return newfd;
 }
-
 
 int64_t lseekex(int32_t fd, uint64_t offset, int32_t whence) {
 #if OS_UNIX

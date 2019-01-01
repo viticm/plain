@@ -32,12 +32,17 @@ class RoutingResponse : public pf_net::packet::Interface {
    virtual uint32_t execute(pf_net::connection::Basic *connection);
    virtual uint32_t size() const;
    uint16_t get_id() const { return NET_PACKET_ROUTING_RESPONSE; };
+   void set_destination(const std::string &destination) {
+      pf_basic::string::safecopy(
+         destination_, destination.c_str(), sizeof(destination_) - 1);
+   };
    void set_aim_name(const std::string &aim_name) {
      pf_basic::string::safecopy(
          aim_name_, aim_name.c_str(), sizeof(aim_name_) - 1);
    };
 
  private:
+   char destination_[128]; //The destination service.
    char aim_name_[128]; //The connection name.
 };
 

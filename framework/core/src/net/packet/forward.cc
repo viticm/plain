@@ -30,6 +30,7 @@ uint32_t Forward::size() const {
 uint32_t Forward::execute(pf_net::connection::Basic *connection) {
   using namespace pf_net::connection;
   using namespace pf_basic;
+  //std::cout << "Forward::execute" << std::endl;
   std::string original{original_};
   auto protocol = connection->protocol();
   auto packet = protocol->read_packet(connection);
@@ -42,6 +43,7 @@ uint32_t Forward::execute(pf_net::connection::Basic *connection) {
     NET_PACKET_FACTORYMANAGER_POINTER->packet_remove(packet);
     return kPacketExecuteStatusError;
   }
+  //std::cout << "Forward: " << packet->get_id() << " original: " << original << std::endl;
   NET_PACKET_FACTORYMANAGER_POINTER->packet_execute(connection, packet, original);
   NET_PACKET_FACTORYMANAGER_POINTER->packet_remove(packet);
   return kPacketExecuteStatusContinue;

@@ -196,6 +196,7 @@ pf_net::connection::Basic *Kernel::connect(
     const std::string &encrypt_str) {
   using namespace pf_net::connection::manager;
   using namespace pf_basic;
+  if (is_null(client)) return nullptr;
   Connector *connector = dynamic_cast<Connector *>(client);
   auto connection = connector->connect(ip.c_str(), port);
   if (is_null(connection)) return nullptr;
@@ -205,19 +206,18 @@ pf_net::connection::Basic *Kernel::connect(
     pf_net::packet::RegisterConnectionName regname;
     regname.set_name(name);
     connection->send(&regname);
-    net_connector_->set_connection_name(connection->get_id(), name);
+    connector->set_connection_name(connection->get_id(), name);
   }
 
   //Handshake.
   if (encrypt_str != "") {
     auto now = TIME_MANAGER_POINTER->get_ctime();
-    char key[NET_PACKET_HANDSHAKE_KEY_SIZE]{0};
     std::string str{""};
     pf_basic::string::encrypt(encrypt_str, now, str);
     char temp[512]{0,};
     string::safecopy(temp, str.c_str(), sizeof(temp) - 1);
     //std::cout << "str: " << str << std::endl;
-    pf_basic::base64encode(key, temp);
+    auto key = base64_encode(reinterpret_cast<unsigned char *>(temp), strlen(temp));
     //std::cout << "key: " << key << std::endl;
     pf_net::packet::Handshake handshake;
     handshake.set_key(key);
@@ -284,12 +284,12 @@ bool Kernel::init_net() {
                 ENGINE_MODULENAME);
   if (GLOBALS["default.net.open"] == true) {
     connection::manager::Basic *net{nullptr};
-    auto conn_max = GLOBALS["default.net.conn_max"].get<uint16_t>();
+    auto conn_max = GLOBALS["default.net.connmax"].get<uint16_t>();
     if (GLOBALS["default.net.service"] == true) {
       net = new connection::manager::Listener();
       unique_move(connection::manager::Basic, net, net_)
-      auto service_ip = GLOBALS["default.net.service_ip"].c_str();
-      auto service_port = GLOBALS["default.net.service_port"].get<uint16_t>();
+      auto service_ip = GLOBALS["default.net.ip"].c_str();
+      auto service_port = GLOBALS["default.net.port"].get<uint16_t>();
       auto service = dynamic_cast< connection::manager::Listener *>(net);
       auto encrypt_str = GLOBALS["default.net.encrypt"].data;
       if (!service->init(conn_max, service_port, service_ip)) return false;

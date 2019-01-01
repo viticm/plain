@@ -180,6 +180,7 @@ class PF_API Basic {
    std::string name_; //The connection name.
    pf_basic::type::variable_set_t params_; //The extend param set.
    std::map<std::string, int8_t> routing_list_; //The connection routing list.
+   std::mutex mutex_;
 
 };
 

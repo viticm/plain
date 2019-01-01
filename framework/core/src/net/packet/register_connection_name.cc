@@ -28,11 +28,16 @@ uint32_t RegisterConnectionName::execute(pf_net::connection::Basic *connection) 
   using namespace pf_net::connection;
   using namespace pf_basic;
   auto listener = connection->get_listener();
+  /**
+  std::cout << "RegisterConnectionName" << "connname: " << connection->name() 
+            << " name: " << name_ << " listener: " << listener << " id: " 
+            << connection->get_id() << std::endl;
+  **/
   std::string name{name_};
-  if (!listener) return kPacketExecuteStatusContinue;
+  if (is_null(listener)) return kPacketExecuteStatusContinue;
   if (connection->name() != "" || name == "") 
     return kPacketExecuteStatusContinue;
-  if (!is_null(listener->get(name))) return kPacketExecuteStatusContinue;
+  if (!is_null(listener->get(name))) return kPacketExecuteStatusError;
   connection->set_name(name);
   listener->set_connection_name(connection->get_id(), name);
   return kPacketExecuteStatusContinue;

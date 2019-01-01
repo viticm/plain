@@ -48,6 +48,7 @@ class PF_API Output : public Basic {
    bool write_string(const char *value);
    bool write_float(float value);
    bool write_dobule(double value);
+   bool write_bytes(const unsigned char *value, size_t size);
 
  public:
    Output &operator << (bool var) {

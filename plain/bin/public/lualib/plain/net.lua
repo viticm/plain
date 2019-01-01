@@ -24,6 +24,24 @@ function plain_netlost(name, connid)
   if func then func(name) end
 end
 
+-- The routing reached event functions.
+local routingfuncs = routingfuncs or {}
+
+-- The net routing reached global function.
+-- @param string name The connection name.
+-- @param string aim_name The routing aim name.
+function plain_netrouting(name, aim_name, service)
+  local func = routingfuncs[name]
+  if func then func(aim_name, service) end
+end
+
+-- Register the net routing reached callback.
+-- @param string name The connection name.
+-- @param function func [(aim_name, service)]
+function net.reg_routing(name, func)
+  routingfuncs[name] = func
+end
+
 -- Register the net lost callback.
 -- @param string name The lost connection name.
 -- @param function func [(name)]
@@ -38,8 +56,9 @@ local pb_define = pb_define or {}
 
 -- The net packet handle global function.
 -- @param number npacket The packet memory address.
+-- @param mixed conn The connection id or name.
 -- @param mixed original The packet from.
-function plain_nethandler(npacket, original)
+function plain_nethandler(npacket, conn, original)
   --print("plain_nethandler", npacket, original)
   local id = net.read_id(npacket)
   if not id then return end
@@ -49,13 +68,13 @@ function plain_nethandler(npacket, original)
       error("plain_nethandler can't find protobuf config from: "..id)
       return
     end
-    local bytes = net.read_string(npacket)
-    --print("plain_nethandler bytes", pb.tohex(bytes))
+    local bytes = net.read_bytes(npacket)
+    print("plain_nethandler bytes", pb.tohex(bytes))
     local data = assert(pb.decode(proto, bytes)) 
-    pb_packethandlers[id](data, original)
+    pb_packethandlers[id](data, conn, original)
   else
     local func = packethandlers[id]
-    if func then func(npacket, original) end
+    if func then func(npacket, conn, original) end
   end
 end
 
@@ -78,10 +97,13 @@ function net.reg_pbhandler(oper, func)
 end
 
 -- Send a protobuf packet.
--- @param string name The connection name.
+-- @param string manager_name The connection manager name.
+-- @param string name_or_id The connection name/id.
 -- @param mixed oper The operator table or packet id.
 -- @param table data The protobuf data.
-function net.pb_send(name, oper, data)
+-- @param mixed listener_name If the manager name is listener this can't nil.
+-- @param mixed routing_info It this is table then use routing send.
+function net.pb_send(manager_name, name_or_id, oper, data, listener_name, routing_info)
   local id = oper
   local proto = nil
   if "table" == type(oper) then
@@ -95,11 +117,18 @@ function net.pb_send(name, oper, data)
   local bytes = assert(pb.encode(proto, data))
   local npacket = net.packet_alloc(id)
   if not npacket then
+    assert(false, "net.pb_send packet_alloc failed")
     return
   end
-  --print("pb_send bytes", pb.tohex(bytes))
-  net.write_string(npacket, bytes)
-  net.send(nil, npacket, name)
+  print("pb_send bytes", pb.tohex(bytes), string.len(bytes))
+  net.write_bytes(npacket, bytes)
+  if not routing_info then
+    return net.send(manager_name, name_or_id, npacket, listener_name)
+  else
+    local aim_name = routing_info.aim_name
+    local service = routing_info.service
+    return net.routing(manager_name, name_or_id, listener_name, aim_name, npacket, service)
+  end
 end
 
 -- Set the protobuf define.

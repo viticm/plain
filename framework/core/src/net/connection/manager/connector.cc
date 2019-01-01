@@ -1,10 +1,14 @@
 #include "pf/basic/logger.h"
 #include "pf/sys/assert.h"
+#include "pf/net/socket/basic.h"
 #include "pf/net/connection/manager/connector.h"
 
 using namespace pf_net::connection::manager;
 
 bool Connector::init(uint16_t _max_size) {
+  /* Some bug with no service in deamon, interim resolvent ??? */
+  socket::Basic socket; socket.create();
+  /* Interim resolvent ??? */
   return Basic::init(_max_size);
 }
 
@@ -15,6 +19,7 @@ pf_net::connection::Basic *Connector::connect(const char *ip, uint16_t port) {
   if (!connection->init(protocol())) {
     return nullptr;
   }
+  connection->clear();
   pf_net::socket::Basic *socket = connection->socket();
   bool result = false;
   uint8_t step = 0;

@@ -141,7 +141,7 @@ void encrypt(const char *in, char *out, int32_t out_length) {
   int32_t middle = 0 == insize % 2 ? insize / 2 : (insize + 1) / 2;
   int32_t length = insize + 2 + 3 + 1;
   auto src = new char[length];
-  auto temp = new char[length + length / 3 + 10]; //enough output size
+  auto temp = new unsigned char[length + length / 3 + 10]; //enough output size
   memset(src, 0, length);
   memset(temp, 0, length);
   int32_t i, j, index;
@@ -157,10 +157,8 @@ void encrypt(const char *in, char *out, int32_t out_length) {
     }
     src[i] = in[j++];
   }
-  char _src[512]{0}; //Base64 encode mybe lost the memory.
-  safecopy(_src, src, sizeof(_src) - 1);
-  base64encode(temp, _src, length);
-  strncpy(out, temp, out_length);
+  std::string encode_str = base64_encode(temp, length);
+  strncpy(out, encode_str.c_str(), out_length);
   out[out_length - 1] = '\0';
   safe_delete_array(src);
   safe_delete_array(temp);
@@ -170,7 +168,7 @@ void decrypt(const char *in, char *out, int32_t out_length) {
   int32_t insize = static_cast<int>(strlen(in));
   if (insize <= 0) return;
   char *temp = new char[insize - insize / 3 + 10]; //enough buffer size.
-  base64decode(temp, in, insize);
+  std::string str = base64_decode(in);
   int32_t length = static_cast<int32_t>(strlen(temp));
   int32_t right_length = length - 2 - 3 - 1;
   char *_temp = new char[right_length + 1];

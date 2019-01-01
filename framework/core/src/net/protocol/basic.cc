@@ -23,16 +23,18 @@ bool Basic::command(connection::Basic *connection, uint16_t count) {
   bool result = false;
   char packetheader[NET_PACKET_HEADERSIZE + 1] = {0};
   uint16_t packetid = 0;
+  if (is_null(connection)) return false;
   stream::Input *istream = &connection->istream();
   uint32_t packetcheck, packetsize, packetindex;
   packet::Interface *packet = nullptr;
-  //if (isdisconnect()) return true; leave this to connection.
+  if (connection->is_disconnect()) return false; //leave this to connection.
   try {
     uint32_t i;
     for (i = 0; i < count; ++i) {
       memset(packetheader, 0, sizeof(packetheader));
-      if (!istream) return true;
+      if (!istream || 0 == istream->size()) return true;
       if (!istream->peek(&packetheader[0], NET_PACKET_HEADERSIZE)) {
+        std::cout << "command can't peek" << std::endl;
         //数据不能填充消息头
         break;
       }
@@ -56,12 +58,6 @@ bool Basic::command(connection::Basic *connection, uint16_t count) {
         return false;
       try {
         //check packet length
-        if (istream->size() < 
-            NET_PACKET_HEADERSIZE + packetsize) {
-          //message not receive full
-          break;
-        }
-        //check packet size
         if (!NET_PACKET_FACTORYMANAGER_POINTER->
             is_valid_dynamic_packet_id(packetid)) {
           if (packetsize > 
@@ -75,6 +71,13 @@ bool Basic::command(connection::Basic *connection, uint16_t count) {
             return false;
           }
         }
+        //check packet size
+        if (istream->size() < 
+            NET_PACKET_HEADERSIZE + packetsize) {
+          //message not receive full
+          break;
+        }
+
         //create packet
         packet = NET_PACKET_FACTORYMANAGER_POINTER->packet_create(packetid);
         if (nullptr == packet) return false;
@@ -83,7 +86,7 @@ bool Basic::command(connection::Basic *connection, uint16_t count) {
         packet->set_index(static_cast<int8_t>(packetindex));
         packet->set_id(packetid);
         packet->set_size(packetsize);
-        
+
         //read packet
         result = istream->skip(NET_PACKET_HEADERSIZE);
         result = result ? packet->read(*istream) : result;

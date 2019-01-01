@@ -207,7 +207,6 @@ uint32_t FactoryManager::packet_execute(
   connection::Basic *connection, 
   Interface *packet, 
   const std::string &original) {
-  //std::cout << "packet_execute 0" << std::endl;
   if (!function_packet_execute_) {
     auto script = ENGINE_POINTER->get_script();
     if (is_null(script)) return kPacketExecuteStatusContinue;
@@ -226,8 +225,6 @@ uint32_t FactoryManager::packet_execute(
         } else {
           params.emplace_back(connection->get_id());
         }
-        //std::cout << "packet_execute: " << packet->size() << std::endl;
-        //Next will push the connection name ?
         if (original != "") params.emplace_back(original);
         script->call(funcname, params, r);
       }

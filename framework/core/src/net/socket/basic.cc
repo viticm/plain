@@ -1,4 +1,5 @@
 #include "pf/basic/string.h"
+#include "pf/basic/logger.h"
 #include "pf/basic/io.tcc"
 #include "pf/net/socket/basic.h"
 

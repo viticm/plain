@@ -39,8 +39,7 @@ uint32_t Handshake::execute(pf_net::connection::Basic *connection) {
   }
   std::string key = get_key();
   //std::cout << "execute key: " << key << std::endl;
-  char decode_key[NET_PACKET_HANDSHAKE]{0};
-  pf_basic::base64decode(decode_key, key.c_str());  
+  auto decode_key = pf_basic::base64_decode(key.c_str());  
   auto now = TIME_MANAGER_POINTER->get_ctime();
   std::string decode_key_1{""};
   int32_t time{0};
