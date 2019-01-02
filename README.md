@@ -45,18 +45,18 @@ can get it like: `GLOBALS["app.name"]`
 
 ### The sections ###
 
-** app ** 
+**app** 
 
 1. `name` - Set the appliction name.
 2. `pidfile` - Set the pid file name.
 
-** log **
+**log**
 
 1. `active` - If Enable the log module.
 2. `directory` - The log directory.
 3. `clear` - If remove all log on start.
 
-** default **
+**default**
 
 1. `engine.frame` - The engine main thread frame(*by default `100`*).
 2. `net.open` - The default net module is enable(*by default `0`*).
@@ -80,4 +80,4 @@ can get it like: `GLOBALS["app.name"]`
 20. `db.password` - The default database password(*by default `""`*).
 21. `db.encrypt` - The default database password if encrypted(*by default `0`*)
 
-** plugins **
+**plugins**
