@@ -47,14 +47,14 @@ can get it like: `GLOBALS["app.name"]`
 
 **app** 
 
-1. `name` - Set the appliction name.
-2. `pidfile` - Set the pid file name.
+1. `name` - Set the appliction name(*by default `""`*).
+2. `pidfile` - Set the pid file name(*by default `""`*).
 
 **log**
 
-1. `active` - If Enable the log module.
-2. `directory` - The log directory.
-3. `clear` - If remove all log on start.
+1. `active` - If Enable the log module(*by default `1`*).
+2. `directory` - The log directory(*by default `Execute file path with "/log".`*).
+3. `clear` - If remove all log on start(*by default `0`*).
 
 **default**
 
