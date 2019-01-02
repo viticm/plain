@@ -39,7 +39,45 @@ On windows, will come soon.
 
 ## Customize your application by environment file. ##
 
-```ini
-;The env config will set in framework globals, just like: section.key=value 
-;cn: 环境变量的配置会设置到框架的全局变量中，格式为：段名.字段名=值
-```
+The environment example file is: ``plain/bin/config/.env.example``
+The env config will set in framework globals, just like: `section.key=value`, you
+can get it like: `GLOBALS["app.name"]`
+
+### The sections ###
+
+** app ** 
+
+1. `name` - Set the appliction name.
+2. `pidfile` - Set the pid file name.
+
+** log **
+
+1. `active` - If Enable the log module.
+2. `directory` - The log directory.
+3. `clear` - If remove all log on start.
+
+** default **
+
+1. `engine.frame` - The engine main thread frame(*by default `100`*).
+2. `net.open` - The default net module is enable(*by default `0`*).
+3. `net.service` - The default net module if is with server service(*by default `0`*).
+4. `net.service_ip` - The default service ip(*by default `""`, bind any*).
+5. `net.service_port` - The default service port(*by default `0`, rand port*).
+6. `net.connmax` - The default net connection max count(*by default `NET_CONNECTION_MAX`*).
+7. `net.reconnect_time` - The default net client reconnect second(*by default `3`*).
+8. `script.open` - The default script if enable(*by default `0`*).
+9. `script.rootpath` - The default script root path(*by default `SCRIPT_ROOT_PATH`*).
+10. `script.workpath` - The default script workpath(*by default `SCRIPT_WORK_PATH`*).
+11. `script.bootstrap` - The default script bootstrap file(*by default `bootstrap.lua`*).
+12. `script.reload` - The default script reload file(*by default `reload.lua`*).
+13. `script.type` - The default script type(*by default `-1`*).
+14. `script.heartbeat` - The default script heartbeat function(*by default `""`*).
+15. `script.enter` - The default script enter function(*by default `"main"`*).
+16. `db.open` - The default database if enable(*by default `0`*).
+17. `db.type` - The default database type(*by default `-1`*).
+18. `db.name` - The default database name(*by default `""`*).
+19. `db.user` - The default database user(*by default `""`*).
+20. `db.password` - The default database password(*by default `""`*).
+21. `db.encrypt` - The default database password if encrypted(*by default `0`*)
+
+** plugins **
