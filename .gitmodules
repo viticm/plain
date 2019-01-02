@@ -13,3 +13,6 @@
 [submodule "plain/app/misc/lualib-src/lua-protobuf"]
 	path = plain/app/misc/lualib-src/lua-protobuf
 	url = https://github.com/starwing/lua-protobuf
+[submodule "plain/app/misc/lualib-src/luasql"]
+	path = plain/app/misc/lualib-src/luasql
+	url = https://github.com/keplerproject/luasql
