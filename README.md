@@ -61,8 +61,8 @@ can get it like: `GLOBALS["app.name"]`
 1. `engine.frame` - The engine main thread frame(*by default `100`*).
 2. `net.open` - The default net module is enable(*by default `0`*).
 3. `net.service` - The default net module if is with server service(*by default `0`*).
-4. `net.service_ip` - The default service ip(*by default `""`, bind any*).
-5. `net.service_port` - The default service port(*by default `0`, rand port*).
+4. `net.ip` - The default service ip(*by default `""`, bind any*).
+5. `net.port` - The default service port(*by default `0`, rand port*).
 6. `net.connmax` - The default net connection max count(*by default `NET_CONNECTION_MAX`*).
 7. `net.reconnect_time` - The default net client reconnect second(*by default `3`*).
 8. `script.open` - The default script if enable(*by default `0`*).
