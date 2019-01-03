@@ -128,6 +128,7 @@ You can extend or rewrite plain framework modules like these:
 
 - engine: Extend the pf_engine::Kernel class.
 - net: Extend submodule for net stream.
+
 | Submodule               | Description                                   |
 | ----------------------- | -----------------------------------           |
 | `connection`            | You can define your diffrent connections      |
@@ -143,9 +144,10 @@ to implement it.
 You can use it set the environment file like `0=pf_plugin_lua:global:0`.
 
 **`pf_plugin_lua:global:0` Description:**
+
 - `pf_plugin_lua`: The plugin name.
 - `global`: Load global symbols, other is `local`.
 - `0`: The plugin parameter, this mean register the script type is 0, of course can have more parameters.
 
 You can learn write a plugin of plain framework from this project:
-[http://www.cnblogs.com/lianyue/](http://www.cnblogs.com/lianyue/)
+[https://github.com/viticm/pf_plugins](https://github.com/viticm/pf_plugins)
