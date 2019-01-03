@@ -2,6 +2,10 @@
 
 ## The plain framework, a framework based on c++ for net applictions. ##
 
+- **Author:** Viticm
+- **Website:** [http://www.cnblogs.com/lianyue/](http://www.cnblogs.com/lianyue/)
+- **Version:** 1.0d
+
 The core is `SFE`, that is the safe and fast and easy.
 
 **What's i can do:**
@@ -117,3 +121,31 @@ can get it like: `GLOBALS["app.name"]`
 8. `scriptfunc(0-n)` - The client(0-n) packet execute script function name.
 
 ## More things. ##
+
+### Extend the framework ###
+
+You can extend or rewrite plain framework modules like these:
+
+- engine: Extend the pf_engine::Kernel class.
+- net: Extend submodule for net stream.
+| Submodule               | Description                                   |
+| ----------------------- | -----------------------------------           |
+| `connection`            | You can define your diffrent connections      |
+| `packet`                | You can define your packet rules or handlers  |
+| `protocol`              | You can change this for your net protocol     |
+| `stream`                | If you want some diffrent stream types        |
+
+### Write your plugins ###
+
+The plain plugin make more flexibility for appliction develop, you don't care how 
+to implement it.
+
+You can use it set the environment file like `0=pf_plugin_lua:global:0`.
+
+**`pf_plugin_lua:global:0` Description:**
+- `pf_plugin_lua`: The plugin name.
+- `global`: Load global symbols, other is `local`.
+- `0`: The plugin parameter, this mean register the script type is 0, of course can have more parameters.
+
+You can learn write a plugin of plain framework from this project:
+[http://www.cnblogs.com/lianyue/](http://www.cnblogs.com/lianyue/)
