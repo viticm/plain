@@ -151,4 +151,5 @@ You can use it set the environment file like `0=pf_plugin_lua:global:0`.
 - `0`: The plugin parameter, this mean register the script type is 0, of course can have more parameters.
 
 You can learn write a plugin of plain framework from this project:
+
 [https://github.com/viticm/pf_plugins](https://github.com/viticm/pf_plugins)
