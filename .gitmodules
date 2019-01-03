@@ -1,18 +1,6 @@
-[submodule "plain/plugins"]
-	path = plain/plugins
-	url = https://github.com/viticm/pf_plugins
 [submodule "dependencies/fplutil"]
 	path = dependencies/fplutil
 	url = http://github.com/google/fplutil.git
 [submodule "dependencies/googletest"]
 	path = dependencies/googletest
 	url = http://github.com/google/googletest.git
-[submodule "plain/app/misc/lualib-src/luafilesystem"]
-	path = plain/app/misc/lualib-src/luafilesystem
-	url = https://github.com/keplerproject/luafilesystem
-[submodule "plain/app/misc/lualib-src/lua-protobuf"]
-	path = plain/app/misc/lualib-src/lua-protobuf
-	url = https://github.com/starwing/lua-protobuf
-[submodule "plain/app/misc/lualib-src/luasql"]
-	path = plain/app/misc/lualib-src/luasql
-	url = https://github.com/keplerproject/luasql

@@ -1,3 +1,0 @@
-STRING	STRING	STRING
-base	class	description
-localehelp	localehelp	本地化处理函数帮助

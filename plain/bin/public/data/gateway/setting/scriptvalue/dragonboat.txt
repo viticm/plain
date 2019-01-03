@@ -1,6 +1,0 @@
-STRING	INT	STRING
-Name	Value	Desc
-IVER_nRaceBegin	20090526	龙舟赛比赛开始时间
-IVER_nRacetEnd	20090626	龙舟赛比赛结束时间
-IVER_nRewardBegin	20090627	龙舟赛领奖开始时间
-IVER_nRewardEnd	20090707	龙舟赛领奖结束时间

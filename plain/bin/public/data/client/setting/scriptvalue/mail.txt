@@ -1,7 +1,0 @@
-STRING	STRING	STRING
-Name	Value	Desc
-IVER_szMainUrl	剑侠世界唯一官方网站：http://jxsj.xoyo.com/\n	
-IVER_szRegUrl	    剑侠世界唯一官方注册账号网址：http://pass.kingsoft.com/ksgweb/\n    剑侠世界唯一官方网站充值网址：http://pay.kingsoft.com/index.php?s=jxsj\n\n<color>祝大家游戏愉快！\n	
-IVER_szReport	    您在游戏内，如发现行骗行为，请举报给剑侠世界客户服务，经调查如属实，将严厉惩罚决不手软。剑侠世界客服电话：028-85437733-1-4\n    祝大家游戏愉快！\n	
-IVER_szPhone	如果您在游戏中遇到问题请打开界面左上角的<color=red>GM留言板<color>向我们反馈。\n    祝您游戏愉快！\n\n              西山居工作室	
-IVER_szWebSite	http://pay.kingsoft.com/index.php?s=jxsj	
