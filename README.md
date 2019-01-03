@@ -157,7 +157,7 @@ You can learn write a plugin of plain framework from this project:
 
 ## Simple project. ##
 
-Many developers will confused use this framework, this project will tech you quick use it.
+Many developers will confused use this framework, this project will tech you quick start.
 
 The project:
 
