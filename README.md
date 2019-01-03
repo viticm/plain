@@ -81,3 +81,39 @@ can get it like: `GLOBALS["app.name"]`
 21. `db.encrypt` - The default database password if encrypted(*by default `0`*)
 
 **plugins**
+
+1. `count` - The need load plugins count.
+2. `(0-n)` - The load plugin information(*Like `pf_plugin_odbc:local:...`*).
+
+**database**
+
+1. `count` - The service count.
+2. `type(0-n)` - The service(0-n) type(*dbenv_t*)
+3. `name(0-n)` - The service(0-n) name.
+4. `dbname(0-n)` - The service(0-n) database name.
+5. `dbuser(0-n)` - The service(0-n) database user.
+6. `dbpassword(0-n)` - The service(0-n) database password.
+7. `encrypt(0-n)` - The service(0-n) database password if encrypt.
+
+**server**
+
+1. `count` - The extra net service count.
+2. `name(0-n)` - The service(0-n) name.
+3. `ip(0-n)` - The service(0-n) listen ip.
+4. `port(0-n)` - The service(0-n) listen port.
+5. `connmax(0-n)` - The service(0-n) connection count max.
+6. `encrypt(0-n)`- The service(0-n) encrypt string, not empty then connect this server need handshake.
+7. `scriptfunc(0-n)` - Then service(0-n) packet execute script function name.
+
+**client**
+
+1. `count` - The extra net client connection count.
+2. `usercount` - The extra net client by user self operator connection count.
+3. `name(0-n)` - The client(0-n) name.
+4. `ip(0-n)` - The client(0-n) connect ip.
+5. `port(0-n)` - The client(0-n) connect port.
+6. `encrypt(0-n)` - The client encrypt string, not empty then connect will auto handshake.
+7. `startup(0-n)` - The client connect if auto connect on server start.
+8. `scriptfunc(0-n)` - The client(0-n) packet execute script function name.
+
+## More things. ##
