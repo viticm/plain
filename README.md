@@ -117,7 +117,7 @@ can get it like: `GLOBALS["app.name"]`
 4. `ip(0-n)` - The client(0-n) connect ip.
 5. `port(0-n)` - The client(0-n) connect port.
 6. `encrypt(0-n)` - The client encrypt string, not empty then connect will auto handshake.
-7. `startup(0-n)` - The client connect if auto connect on server start.
+7. `startup(0-n)` - The client connect if auto connect on start.
 8. `scriptfunc(0-n)` - The client(0-n) packet execute script function name.
 
 ## More things. ##
