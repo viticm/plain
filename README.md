@@ -161,6 +161,6 @@ You can learn write a plugin of plain framework from this project:
 
 Many developers will confused use this framework, this project will tech you quick start.
 
-The project:
+The project url:
 
 [https://github.com/viticm/plain-simple](https://github.com/viticm/plain-simple)
