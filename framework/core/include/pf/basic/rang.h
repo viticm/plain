@@ -1,3 +1,13 @@
+/**
+ * PLAIN FRAMEWORK ( https://github.com/viticm/plain )
+ * $Id rang.h
+ * @link https://github.com/viticm/plain for the canonical source repository
+ * @copyright Copyright (c) 2014- viticm( viticm.ti@gmail.com )
+ * @license
+ * @user viticm<viticm.ti@gmail.com>
+ * @date 2019/01/10 20:15
+ * @uses The output rang module.
+*/
 #ifndef PF_BASIC_RANG_H_
 #define PF_BASIC_RANG_H_
 
