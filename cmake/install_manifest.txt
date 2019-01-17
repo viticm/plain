@@ -119,6 +119,7 @@
 /usr/local/include/pf/script/factory.h
 /usr/local/include/pf/script/interface.h
 /usr/local/include/pf/basic/util.h
+/usr/local/include/pf/basic/rang.h
 /usr/local/include/pf/basic/string.h
 /usr/local/include/pf/basic/md5.h
 /usr/local/include/pf/basic/global.h

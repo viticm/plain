@@ -1,3 +1,4 @@
+#include "pf/basic/rang.h"
 #include "pf/basic/io.tcc"
 #include "pf/basic/time_manager.h"
 #include "pf/basic/base64.h"
@@ -549,6 +550,7 @@ const std::string Kernel::get_script_function(
 }
 
 void Kernel::loop() {
+  using namespace pf_basic::rang;
   uint32_t last_reconnect{0};
   for (;;) {
     auto curtime = TIME_MANAGER_POINTER->get_ctime();
@@ -571,6 +573,23 @@ void Kernel::loop() {
       }
     }
     worksleep(starttime);
+    if (GLOBALS["default.engine.fps"] == true) {
+      auto curr_t = TIME_MANAGER_POINTER->get_tickcount();
+      auto interval = curr_t - starttime;
+      int32_t fps{-1};
+      if (interval != 0) fps = 1000 / interval;
+      char fps_str[16]{0};
+      snprintf(fps_str, sizeof(fps_str) - 1, "%3d", fps);
+      std::cout << "\r FPS: ";
+      if (fps >= 60) {
+        std::cout << fgB::green; 
+      } else if (fps >= 30 && fps < 60) {
+        std::cout << fgB::yellow; 
+      } else if (fps >= 0 && fps < 30) {
+        std::cout << fgB::red; 
+      }
+      std::cout << fps_str << fg::reset;
+    }
   }
   auto check_starttime = TIME_MANAGER_POINTER->get_tickcount();
   for (;;) {

@@ -23,6 +23,7 @@
  * GLOBALS["cache.gsinit"] = bool;                //default false.
  * GLOBALS["thread.collects"] = number;           //default 0.
  * GLOBALS["default.engine.frame"] = number;      //default 100.
+ * GLOBALS["default.engine.fps"] = bool;          //default false.
  * GLOBALS["default.net.open"] = bool;            //default false.
  * GLOBALS["default.net.service"] = bool;         //default false.
  * GLOBALS["default.net.ip"] = string;            //default "".
@@ -98,6 +99,7 @@ void set_default_globals(type::variable_set_t &g) {
   g["thread.collects"] = 0;
 
   g["default.engine.frame"] = 100;
+  g["default.engine.fps"] = false;
   g["default.net.open"] = false;
   g["default.net.service"] = false;
   g["default.net.ip"] = "";

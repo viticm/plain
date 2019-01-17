@@ -12,19 +12,19 @@
 #define PF_BASIC_RANG_H_
 
 #if defined(__unix__) || defined(__unix) || defined(__linux__)
-#define OS_LINUX
+#define RANG_OS_LINUX
 #elif defined(WIN32) || defined(_WIN32) || defined(_WIN64)
-#define OS_WIN
+#define RANG_OS_WIN
 #elif defined(__APPLE__) || defined(__MACH__)
-#define OS_MAC
+#define RANG_OS_MAC
 #else
 #error Unknown Platform
 #endif
 
-#if defined(OS_LINUX) || defined(OS_MAC)
+#if defined(RANG_OS_LINUX) || defined(RANG_OS_MAC)
 #include <unistd.h>
 
-#elif defined(OS_WIN)
+#elif defined(RANG_OS_WIN)
 
 #if defined(_WIN32_WINNT) && (_WIN32_WINNT < 0x0600)
 #error                                                                         \
@@ -150,7 +150,7 @@ namespace rang_implementation {
 
     inline bool supportsColor() noexcept
     {
-#if defined(OS_LINUX) || defined(OS_MAC)
+#if defined(RANG_OS_LINUX) || defined(RANG_OS_MAC)
 
         static const bool result = [] {
             const char *Terms[]
@@ -168,14 +168,14 @@ namespace rang_implementation {
                                });
         }();
 
-#elif defined(OS_WIN)
+#elif defined(RANG_OS_WIN)
         // All windows versions support colors through native console methods
         static constexpr bool result = true;
 #endif
         return result;
     }
 
-#ifdef OS_WIN
+#ifdef RANG_OS_WIN
 
 
     inline bool isMsysPty(int fd) noexcept
@@ -235,7 +235,7 @@ namespace rang_implementation {
         using std::cerr;
         using std::clog;
         using std::cout;
-#if defined(OS_LINUX) || defined(OS_MAC)
+#if defined(RANG_OS_LINUX) || defined(RANG_OS_MAC)
         if (osbuf == cout.rdbuf()) {
             static const bool cout_term = isatty(fileno(stdout)) != 0;
             return cout_term;
@@ -243,7 +243,7 @@ namespace rang_implementation {
             static const bool cerr_term = isatty(fileno(stderr)) != 0;
             return cerr_term;
         }
-#elif defined(OS_WIN)
+#elif defined(RANG_OS_WIN)
         if (osbuf == cout.rdbuf()) {
             static const bool cout_term
               = (_isatty(_fileno(stdout)) || isMsysPty(_fileno(stdout)));
@@ -265,7 +265,7 @@ namespace rang_implementation {
       std::ostream &>::type;
 
 
-#ifdef OS_WIN
+#ifdef RANG_OS_WIN
 
     struct SGR {  // Select Graphic Rendition parameters for Windows console
         BYTE fgColor;  // foreground color (0-15) lower 3 rgb bits + intense bit
@@ -509,8 +509,8 @@ inline void setControlMode(const control value) noexcept
 
 } //namespace pf_basic
 
-#undef OS_LINUX
-#undef OS_WIN
-#undef OS_MAC
+#undef RANG_OS_LINUX
+#undef RANG_OS_WIN
+#undef RANG_OS_MAC
 
 #endif /* ifndef PF_BASIC_RANG_H_ */
