@@ -1,4 +1,5 @@
 #include "pf/basic/rang.h"
+#include "pf/basic/rlutil.h"
 #include "pf/basic/io.tcc"
 #include "pf/basic/time_manager.h"
 #include "pf/basic/base64.h"
@@ -551,6 +552,7 @@ const std::string Kernel::get_script_function(
 
 void Kernel::loop() {
   using namespace pf_basic::rang;
+  using namespace pf_basic::rlutil;
   uint32_t last_reconnect{0};
   for (;;) {
     auto curtime = TIME_MANAGER_POINTER->get_ctime();
@@ -574,6 +576,7 @@ void Kernel::loop() {
     }
     worksleep(starttime);
     if (GLOBALS["default.engine.fps"] == true) {
+      const CursorHider hider;
       auto curr_t = TIME_MANAGER_POINTER->get_tickcount();
       auto interval = curr_t - starttime;
       int32_t fps{-1};

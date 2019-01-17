@@ -121,6 +121,7 @@
 /usr/local/include/pf/basic/util.h
 /usr/local/include/pf/basic/rang.h
 /usr/local/include/pf/basic/string.h
+/usr/local/include/pf/basic/rlutil.h
 /usr/local/include/pf/basic/md5.h
 /usr/local/include/pf/basic/global.h
 /usr/local/include/pf/basic/io.tcc
