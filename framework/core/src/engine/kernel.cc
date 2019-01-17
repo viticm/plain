@@ -554,6 +554,7 @@ void Kernel::loop() {
   using namespace pf_basic::rang;
   using namespace pf_basic::rlutil;
   uint32_t last_reconnect{0};
+  uint32_t last_fps{0};
   for (;;) {
     auto curtime = TIME_MANAGER_POINTER->get_ctime();
     if (GLOBALS["app.status"] == kAppStatusStop) break;
@@ -575,15 +576,14 @@ void Kernel::loop() {
       }
     }
     worksleep(starttime);
-    if (GLOBALS["default.engine.fps"] == true) {
+    if (GLOBALS["default.engine.fps"] == true && curtime - last_fps >= 1) {
       const CursorHider hider;
       auto curr_t = TIME_MANAGER_POINTER->get_tickcount();
       auto interval = curr_t - starttime;
       int32_t fps{-1};
       if (interval != 0) fps = 1000 / interval;
       char fps_str[16]{0};
-      snprintf(fps_str, sizeof(fps_str) - 1, "%3d", fps);
-      std::cout << "\r FPS: ";
+      snprintf(fps_str, sizeof(fps_str) - 1, "FPS: %3d", fps);
       if (fps >= 60) {
         std::cout << fgB::green; 
       } else if (fps >= 30 && fps < 60) {
@@ -591,7 +591,10 @@ void Kernel::loop() {
       } else if (fps >= 0 && fps < 30) {
         std::cout << fgB::red; 
       }
-      std::cout << fps_str << fg::reset;
+      setString(fps_str);
+      std::cout.flush();
+      std::cout << fg::reset;
+      last_fps = curtime;
     }
   }
   auto check_starttime = TIME_MANAGER_POINTER->get_tickcount();
