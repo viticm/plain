@@ -155,8 +155,8 @@ void Kernel::stop() {
   for (std::thread &worker : thread_workers_) {
     pf_sys::thread::stop(worker);
   }
-  GLOBALS["app.status"] = kAppStatusStop;
   stop_ = true;
+  GLOBALS["app.status"] = kAppStatusStop;
 }
 
 pf_net::connection::Basic *Kernel::default_connect(
