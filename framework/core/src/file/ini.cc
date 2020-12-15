@@ -89,9 +89,9 @@ Ini::sectionset_t *Ini::getdata() {
 int32_t Ini::getint32(const char *section, const char *key, int32_t _default) {
   int32_t result;
   if (_getint32(section, key, result)) return result;
-  char msg[128] = {0};
+  char msg[5120] = {0};
   snprintf(msg, 
-           128, 
+           sizeof(msg) - 1, 
            "[ini] invalid key! file: %s, section: %s, key: %s", 
            filename_,section,key);
   AssertEx(false, msg);
@@ -107,9 +107,9 @@ bool Ini::getint32_ifexist(const char *section,
 float Ini::getfloat(const char *section, const char *key, float _default) {
   float result;
   if (_getfloat(section, key, result)) return result;  
-  char msg[128] = {0};
+  char msg[5120] = {0};
   snprintf(msg, 
-           128, 
+           sizeof(msg) - 1, 
            "[ini] invalid key! file: %s, section: %s, key: %s", 
            filename_,
            section,
@@ -135,7 +135,7 @@ bool Ini::getstring(const char *section,
                   size - 1 : 
                   static_cast<int32_t>(strlen(_default));
   str[_size] = 0;
-  char msg[128] = {0};
+  char msg[5120] = {0};
   snprintf(msg, 
            sizeof(msg) - 1, 
            "[ini] invalid key! file: %s, section: %s, key: %s", 
@@ -232,7 +232,7 @@ void Ini::_trimstring(char *buffer) {
       '\n' == buffer[size - 1]) {
     buffer[strlen(buffer)-1] = 0;
   }
-  int32_t i;
+  size_t i;
   for (i = 0; i < strlen(buffer); ++i ){
     if(buffer[i] == FILE_INI_NOTE) {
       buffer[i] = '\0';

@@ -46,9 +46,9 @@ Basic::~Basic() {
   safe_delete(uncompress_buffer_);
 }
 
-bool Basic::init(protocol::Interface *protocol) {
+bool Basic::init(protocol::Interface *_protocol) {
   if (ready()) return true; 
-  if (is_null(protocol)) return false;
+  if (is_null(_protocol)) return false;
   std::unique_ptr<socket::Basic> _socket(new socket::Basic());
   socket_ = std::move(_socket);
   Assert(socket_.get());
@@ -162,7 +162,7 @@ bool Basic::heartbeat(uint32_t, uint32_t) {
   auto now = TIME_MANAGER_POINTER->get_ctime();
   if (is_disconnect()) return false;
   if (safe_encrypt_time_ != 0 && !is_safe_encrypt()) {
-    auto now = TIME_MANAGER_POINTER->get_ctime();
+    now = TIME_MANAGER_POINTER->get_ctime();
     if (safe_encrypt_time_ + NET_ENCRYPT_CONNECTION_TIMEOUT < now) {
       io_cwarn("[%s] Connection with safe encrypt timeout!",
                NET_MODULENAME);
@@ -296,13 +296,13 @@ void Basic::encrypt_set_key(const char *key) {
   ostream_->encrypt_setkey(key);
 }
 
-bool Basic::routing(const std::string &name, 
+bool Basic::routing(const std::string &_name, 
                     packet::Interface *packet,
                     const std::string &service) {
-  if (routing_list_[name] != 1 || is_null(packet)) return false;
+  if (routing_list_[_name] != 1 || is_null(packet)) return false;
   packet::Routing routing_packet;
   routing_packet.set_destination(service);
-  routing_packet.set_aim_name(name);
+  routing_packet.set_aim_name(_name);
   routing_packet.set_packet_size(packet->size());
   return send(&routing_packet) && send(packet);
 }

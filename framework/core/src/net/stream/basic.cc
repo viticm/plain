@@ -89,6 +89,6 @@ void Basic::clear() {
   compressor_.settail(NET_STREAM_COMPRESSOR_HEADER_SIZE);
 }
 
-}; //namespace stream
+} //namespace stream
 
-}; //namespace pf_net
+} //namespace pf_net

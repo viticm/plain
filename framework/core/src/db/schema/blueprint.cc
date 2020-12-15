@@ -27,7 +27,7 @@ Blueprint::fluent_t &Blueprint::_char(
   int32_t rlength = -1 == length ? Builder::default_string_length_ : length;
   variable_set_t params = {{"length", rlength}, };
   return add_column("char", column, params);     
-};
+}
 
 //Create a new string column on the table.
 Blueprint::fluent_t &Blueprint::string(
@@ -35,16 +35,16 @@ Blueprint::fluent_t &Blueprint::string(
   int32_t rlength = -1 == length ? Builder::default_string_length_ : length;
   variable_set_t params = {{"length", rlength}, };
   return add_column("string", column, params);
-};
+}
 
 //Create a default index name for the table.
 std::string Blueprint::create_index_name(
     const std::string &type, 
     const std::vector<std::string> &columns) {
-  std::string index = table_ + "_" + implode("_", columns) + "_" + type;
+  std::string _index = table_ + "_" + implode("_", columns) + "_" + type;
   std::transform(
-      index.begin(), index.end(), index.begin(), (int (*)(int))std::tolower);
-  return str_replaces({"-", "."}, "_", index);
+      _index.begin(), _index.end(), _index.begin(), (int (*)(int))std::tolower);
+  return str_replaces({"-", "."}, "_", _index);
 }
 
 //Get the columns on the blueprint that should be added.
@@ -86,7 +86,7 @@ void Blueprint::add_implied_commands() {
 void Blueprint::add_fluent_indexes() {
   auto call = [this](const std::string &name, 
                  const std::string &column, 
-                 const std::string &index = "") {
+                 const std::string &index) {
     if ("primary" == name) {
       this->primary({column}, index);
     } else if ("unique" == name) {
@@ -96,16 +96,16 @@ void Blueprint::add_fluent_indexes() {
     }
   };
   for (auto &column : columns_) {
-    for (const std::string &index : {"primary", "unique", "index"}) {
+    for (const std::string &_index : {"primary", "unique", "index"}) {
       // If the index has been specified on the given column, but is simply equal
       // to "true" (boolean), no name has been specified for this index so the
       // index method can be called without a name and it will generate one.
-      if (column.items.find(index) != column.items.end() && 
-          column[index].get<bool>()) {
-        call(index, column["name"]);
+      if (column.items.find(_index) != column.items.end() && 
+          column[_index].get<bool>()) {
+        call(_index, column["name"], "");
         break;
-      } else if (column.items.find(index) != column.items.end()) {
-        call(index, column["name"], column[index].c_str());
+      } else if (column.items.find(_index) != column.items.end()) {
+        call(_index, column["name"], column[_index].c_str());
         break;
       }
     }

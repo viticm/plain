@@ -24,10 +24,13 @@ class PF_API Null : public Interface {
  public:
    virtual bool init() { return true; };
    virtual void select_db(const std::string &) {}
-   virtual bool query(const std::string &sql_str) { return false; };
+   virtual bool query(const std::string &) { return false; };
    virtual bool fetch(int32_t, int32_t) { return false; };
    virtual int32_t get_affectcount() const { return 0; };
-   virtual bool check_db_connect(bool directly = false) { return true; };
+   virtual bool check_db_connect(bool directly = false) { 
+    UNUSED(directly); 
+    return true; 
+   };
    bool isready() const { return isready_; };
    virtual bool getresult() const { return false; };
    virtual int32_t get_columncount() const { return 0; };
@@ -56,11 +59,11 @@ class PF_API Null : public Interface {
                               int32_t, 
                               int32_t &) { return 0; };
    virtual int32_t get_binary_withdecompress(int32_t, 
-                                             char *buffer, 
-                                             int32_t buffer_length, 
+                                             char *, 
+                                             int32_t, 
                                              int32_t &) { return 0; };
    virtual const char *get_data(
-       int32_t, const char *_default) const { return 0; };
+       int32_t, const char *) const { return 0; };
    virtual db_columntype_t gettype(int32_t) { return kDBColumnTypeString; };
 
 };

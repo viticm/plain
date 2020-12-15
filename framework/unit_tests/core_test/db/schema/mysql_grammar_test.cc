@@ -49,6 +49,7 @@ std::unique_ptr<grammars::Grammar> DBSchemaMysqlGrammar::mysql_grammar_{nullptr}
 std::unique_ptr<pf_db::Connection> DBSchemaMysqlGrammar::connection_{nullptr};
 std::unique_ptr<Blueprint> DBSchemaMysqlGrammar::blueprint_{nullptr};
 
+/**
 static void assertEquals(
     const std::vector<std::string> &a, 
     const std::vector<std::string> &b, 
@@ -64,6 +65,7 @@ static void print_r(const std::vector<std::string> &array) {
   for (auto &str : array)
     std::cout << "str: " << str << std::endl;
 }
+**/
 
 TEST_F(DBSchemaMysqlGrammar, testBasicCreateTable) {
   blueprint_->set_table("users");

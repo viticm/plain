@@ -23,6 +23,7 @@ SqlserverGrammar::SqlserverGrammar() {
 std::string SqlserverGrammar::compile_create(Blueprint *blueprint, 
                                              fluent_t &command, 
                                              ConnectionInterface *connection) {
+  UNUSED(command); UNUSED(connection);
   auto columns = implode(", ", get_columns(blueprint));
   return "create table " + wrap_table(blueprint) + " (" + columns + ")";
 }
@@ -80,6 +81,7 @@ std::string SqlserverGrammar::compile_index(
 //Compile a drop table (if exists) command.
 std::string SqlserverGrammar::compile_drop_if_exists(
     Blueprint *blueprint, fluent_t &command) {
+  UNUSED(command);
   char temp[1024]{0};
   std::string table = "'" + str_replace("'", "''", 
       get_table_prefix() + blueprint->get_table()) + "'";
@@ -125,6 +127,7 @@ std::string SqlserverGrammar::modify_collate(
 //Get the SQL for a default column modifier.
 std::string SqlserverGrammar::modify_default(
     Blueprint *blueprint, fluent_t &column) {
+  UNUSED(blueprint);
   if (!empty(column["default"]))
     return " default " + get_default_value(column["default"]);
   return "";

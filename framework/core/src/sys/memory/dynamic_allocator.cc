@@ -86,6 +86,6 @@ void *DynamicAllocator::get() {
   return pointer_;
 }
 
-}; //namespace memory
+} //namespace memory
 
-}; //namespace pf_sys
+} //namespace pf_sys

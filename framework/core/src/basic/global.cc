@@ -141,4 +141,4 @@ type::variable_set_t &get_globals() {
   return vars;
 }
 
-}; //namespace pf_basic
+} //namespace pf_basic

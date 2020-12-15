@@ -60,10 +60,12 @@ static void assertEquals(
     ASSERT_STREQ(a[i].c_str(), b[i].c_str());
 }
 
+/**
 static void print_r(const std::vector<std::string> &array) {
   for (auto &str : array)
     std::cout << "str: " << str << std::endl;
 }
+**/
 
 TEST_F(DBSchemaSqliteGrammar, testBasicCreateTable) {
   blueprint_->set_table("users");

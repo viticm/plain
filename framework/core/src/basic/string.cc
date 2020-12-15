@@ -45,19 +45,19 @@ static bool fast_toint(const char *str,
   if ('0' == tmp_str[0]) {
     // 如果是0开头，则只能有一位数字
     if (('\0' == tmp_str[1]) || (1 == converted_length)) {
-    result = 0;
-    return true;
-    } else {
-    if (!ignored_zero) return false;
-    for (;;) {
-      ++tmp_str;
-      if (tmp_str - str > max_length-1) return false;
-      if (*tmp_str != '0') break;
-    }
-    if ('\0' == *tmp_str) {
       result = 0;
       return true;
-    }
+    } else {
+      if (!ignored_zero) return false;
+      for (;;) {
+        ++tmp_str;
+        if (tmp_str - str > max_length-1) return false;
+        if (*tmp_str != '0') break;
+      }
+      if ('\0' == *tmp_str) {
+        result = 0;
+        return true;
+      }
     }
   }
 
@@ -130,7 +130,7 @@ char get_base64char(int index) {
   const char str[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghi"
            "jklmnopqrstuvwxyz0123456789+/";
   if ((index >= 0) && (index < 64)) {
-  return str[index];
+    return str[index];
   }
   return '=';
 }
@@ -618,7 +618,7 @@ bool encrypt_number(int32_t number, char _char, std::string &out) {
   std::string number_str = std::to_string(number);
   auto number_len = number_str.size();
   out = "";
-  for (int32_t i = 0; i < number_len; ++i) {
+  for (decltype(number_len) i = 0; i < number_len; ++i) {
     auto n = number / static_cast<int32_t>((pow(10, number_len - i - 1))) % 10;
     char c = n + _char;
     out = out + c;
@@ -629,7 +629,7 @@ bool encrypt_number(int32_t number, char _char, std::string &out) {
 bool decrypt_number(const std::string &in, char _char, int32_t &number) {
   auto number_len = in.size();
   number = 0;
-  for (int32_t i = 0; i < number_len; ++i) {
+  for (decltype(number_len) i = 0; i < number_len; ++i) {
     number += (in[i] - _char) 
               * static_cast<int32_t>(pow(10, number_len - i -1));
   }
@@ -648,12 +648,12 @@ bool encrypt(const std::string &in, int32_t number, std::string &out) {
   std::string number_str{""};
   encrypt_number(number, first_char, number_str);
   auto number_len = number_str.size();
-  std::uniform_int_distribution<int32_t> dis1(0, in.size());
+  std::uniform_int_distribution<size_t> dis1(0, in.size());
   auto rand_pos = std::bind(dis1, rand_engine); rand_pos();
   auto pos = rand_pos();
   std::string pos_str{""};
   encrypt_number(pos, first_char, pos_str);
-  char pos_char = first_char + pos;
+  // char pos_char = first_char + pos;
   char len_char = first_char + number_len; //The length is 0 - 9.
   char pos_len_char = first_char + pos_str.size(); 
   out = "";
@@ -674,12 +674,12 @@ bool decrypt(const std::string &in, int32_t &number, std::string &out) {
   int32_t length = in[1] - first_char;
   int32_t pos_len = in[2] - first_char;
   int32_t header_size = 3 + pos_len;
-  if (in.size() < header_size) return false;
+  if (in.size() < (size_t)header_size) return false;
   int32_t pos{0};
   auto pos_str = in.substr(3, pos_len);
   decrypt_number(pos_str, first_char, pos);
   size_t rsize = in.size() - header_size;
-  if (rsize < pos + length) return false;
+  if (rsize < (size_t)(pos + length)) return false;
   std::string number_str = in.substr(header_size + pos, length);
   decrypt_number(number_str, first_char, number);
   out = in.substr(header_size, pos) + 
@@ -746,7 +746,7 @@ std::string str_replaces(const std::vector<std::string> &search ,
   for (const std::string &item : search)
     r = str_replace(item, replace, subject, count);
   return r;
-};
+}
 
 } //namespace string
 

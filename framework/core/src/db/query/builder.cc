@@ -97,6 +97,7 @@ Builder &Builder::clear() {
   union_orders_.clear();
 
   if (grammar_) grammar_->set_table_prefix("");
+  return *this;
 }
 
 //Set the columns to be selected.
@@ -1123,8 +1124,8 @@ variable_array_t Builder::get_bindings() {
   if (bindings_.empty()) return {};
   variable_array_t r;
   for (const std::string &name : DB_BINDING_KEYS) {
-    for (const variable_t &value : bindings_[name])
-      r.push_back(value);
+    for (const variable_t &_value : bindings_[name])
+      r.push_back(_value);
   }
   return r;
 }

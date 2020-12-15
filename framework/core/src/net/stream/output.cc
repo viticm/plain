@@ -200,9 +200,9 @@ bool Output::write_dobule(double value) {
   return result;
 }
 
-bool Output::write_bytes(const unsigned char *value, size_t size) {
-  write_uint32(size);
-  return write((const char *)value, size) == size;
+bool Output::write_bytes(const unsigned char *value, size_t _size) {
+  write_uint32(_size);
+  return write((const char *)value, _size) == _size;
 }
 
 int32_t Output::compressflush() {

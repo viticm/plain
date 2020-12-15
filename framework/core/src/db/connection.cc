@@ -47,6 +47,7 @@ db_fetch_array_t Connection::select(const std::string &query,
   db_fetch_array_t r;
   return run(query, bindings, [this, &r](
         const std::string &_query, const variable_array_t &_bindings){
+    UNUSED(_bindings);
     if (pretending()) return r;
 
     // The query sql string and fetch all result.
@@ -86,6 +87,7 @@ db_fetch_array_t Connection::select(const std::string &query,
 //Begin a fluent query against a database table.
 query::Builder *Connection::table(const std::string &name) {
   //query::Builder r(this, get_query_grammar());
+  UNUSED(name);
   return nullptr;
 }
 
@@ -116,6 +118,7 @@ bool Connection::insert(
 //Run an update statement against the database.
 int32_t Connection::update(
     const std::string &str, const variable_array_t &bindings) {
+  UNUSED(bindings);
   if (!env_->query(str)) return 0;
   return env_->get_affectcount();
 }
@@ -123,6 +126,7 @@ int32_t Connection::update(
 //Run a delete statement against the database.
 int32_t Connection::deleted(
     const std::string &str, const variable_array_t &bindings) {
+  UNUSED(bindings);
   if (!env_->query(str)) return 0;
   return env_->get_affectcount();
 }
@@ -130,12 +134,14 @@ int32_t Connection::deleted(
 //Execute an SQL statement and return the boolean result.
 bool Connection::statement(
     const std::string &str, const variable_array_t &bindings) {
+  UNUSED(bindings);
   return env_->query(str);
 }
 
 //Run an SQL statement and get the number of rows affected.
 int32_t Connection::affecting_statement(
     const std::string &str, const variable_array_t &bindings) {
+  UNUSED(bindings);
   if (!env_->query(str)) return 0;
   return env_->get_affectcount();
 }
@@ -145,17 +151,19 @@ bool Connection::unprepared(const std::string &str) {
   return run(str, {}, [this](
         const std::string &query, const variable_array_t &bindings){
     if (pretending()) return true;
+  UNUSED(bindings);
     return env_->query(query);
   });
 }
 
 //Prepare the query bindings for execution.
 void Connection::prepare_bindings(db_query_bindings_t &bindings) {
-
+  UNUSED(bindings);
 }
 
 //Execute a Closure within a transaction.
 void Connection::transaction(closure_t callback, int8_t attempts) {
+  UNUSED(callback); UNUSED(attempts);
   //do nothing
 }
 
@@ -180,7 +188,7 @@ int32_t Connection::transaction_level() const {
 
 //Execute the given callback in "dry run" mode.
 void Connection::pretend(closure_t callback) {
-
+  UNUSED(callback);
 }
 
 //Set the table prefix in use by the connection.

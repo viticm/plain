@@ -11,7 +11,13 @@
 cmake_minimum_required(VERSION 2.8.12)
 
 set(PROJECT_NAME PlainFramework)
-project(PlainFramework)
+
+if (CMAKE_VERSION VERSION_LESS 3.0)
+  project(PlainFramework CXX C)
+else()
+  cmake_policy(SET CMP0048 NEW)
+  project(PlainFramework VERSION 1.9.0 LANGUAGES CXX C)
+endif()
 
 # Call fplutil to get locations of dependencies and set common build settings.
 include("inc/find_fplutil.cmake")
@@ -76,9 +82,9 @@ endmacro(plainframework_set_ios_attributes)
 file(GLOB_RECURSE PLAINFRAMEWORK_HEADERS ${CMAKE_CURRENT_LIST_DIR}/framework/core/include *.h)
 
 if(plainframework_build_tests)
-  add_subdirectory(${root_dir}/framework/unit_tests/cmake 
+  add_subdirectory(${root_dir}/framework/unit_tests/cmake
                    ${root_dir}/framework/unit_tests/cmake/build)
-  add_subdirectory(${root_dir}/plain/app/cmake 
+  add_subdirectory(${root_dir}/plain/app/cmake
                    ${root_dir}/plain/app/cmake/build)
 
 endif()

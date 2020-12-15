@@ -1022,6 +1022,7 @@ bool closeex(int32_t socketid) {
 bool ioctlex(int32_t socketid, int64_t cmd, uint64_t *argp) {
   bool result = true;
 #if OS_UNIX
+  UNUSED(socketid); UNUSED(cmd); UNUSED(argp);
   //do nothing
 #elif OS_WIN
   if (SOCKET_ERROR == ioctlsocket(socketid,(long)cmd,(u_long*)argp)) {

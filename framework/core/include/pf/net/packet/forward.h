@@ -36,8 +36,8 @@ class Forward : public pf_net::packet::Interface {
       pf_basic::string::safecopy(
          original_, original.c_str(), sizeof(original_) - 1);
    };
-   void set_packet_size(uint32_t size) {
-     packet_size_ = size;
+   void set_packet_size(uint32_t _size) {
+     packet_size_ = _size;
    };
 
  private:

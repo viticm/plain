@@ -73,6 +73,6 @@ void StaticAllocator::free(void *) {
   //Assert(data >= buffer_ && data < buffer_ + size_);
 }
 
-}; //namespace memory
+} //namespace memory
 
-}; //namespace pf_sys
+} //namespace pf_sys

@@ -267,35 +267,33 @@ bool Basic::compress(connection::Basic * connection,
 bool Basic::send(connection::Basic * connection, packet::Interface *packet) {
   bool result = false;
   stream::Output &ostream = connection->ostream();
-  if (&ostream) {
-    if (!ostream.use(NET_PACKET_HEADERSIZE + packet->size())) {
-      return false;
-    }
-    packet->set_index(connection->packet_index());
-    uint32_t before_writesize = ostream.size();
-    uint16_t packetid = packet->get_id();
+  if (!ostream.use(NET_PACKET_HEADERSIZE + packet->size())) {
+    return false;
+  }
+  packet->set_index(connection->packet_index());
+  uint32_t before_writesize = ostream.size();
+  uint16_t packetid = packet->get_id();
 
-    uint32_t packetcheck{0}; //index and size(if diffrent then have error) 
-    ostream.write(reinterpret_cast<const char *>(&packetid), sizeof(packetid));
-    uint32_t packetsize = packet->size();
-    uint32_t packetindex = packet->get_index();
-    NET_PACKET_SETINDEX(packetcheck, packetindex);
-    NET_PACKET_SETLENGTH(packetcheck, packetsize);
-    ostream.write(reinterpret_cast<const char *>(&packetcheck), 
-                  sizeof(packetcheck));
-    result = packet->write(ostream);
-    Assert(result);
-    uint32_t after_writesize = ostream.size();
-    if (packet->size() != 
-        after_writesize - before_writesize - NET_PACKET_HEADERSIZE) {
-      FAST_ERRORLOG(NET_MODULENAME,
-                    "[net.protocol] (Basic::send) size error,"
-                    " id = %d(write: %d, should: %d)",
-                    packet->get_id(),
-                    after_writesize - before_writesize - 6,
-                    packet->size());
-      result = false;
-    }
+  uint32_t packetcheck{0}; //index and size(if diffrent then have error) 
+  ostream.write(reinterpret_cast<const char *>(&packetid), sizeof(packetid));
+  uint32_t packetsize = packet->size();
+  uint32_t packetindex = packet->get_index();
+  NET_PACKET_SETINDEX(packetcheck, packetindex);
+  NET_PACKET_SETLENGTH(packetcheck, packetsize);
+  ostream.write(reinterpret_cast<const char *>(&packetcheck), 
+                sizeof(packetcheck));
+  result = packet->write(ostream);
+  Assert(result);
+  uint32_t after_writesize = ostream.size();
+  if (packet->size() != 
+      after_writesize - before_writesize - NET_PACKET_HEADERSIZE) {
+    FAST_ERRORLOG(NET_MODULENAME,
+                  "[net.protocol] (Basic::send) size error,"
+                  " id = %d(write: %d, should: %d)",
+                  packet->get_id(),
+                  after_writesize - before_writesize - 6,
+                  packet->size());
+    result = false;
   }
   return result;
 }

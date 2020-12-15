@@ -40,8 +40,8 @@ uint32_t RoutingResponse::execute(pf_net::connection::Basic *connection) {
   if (func != "" && !is_null(script)) {
     type::variable_array_t params;
     params.emplace_back(connection->name());
-    std::string aim_name{aim_name_};
-    params.emplace_back(aim_name);
+    std::string _aim_name{aim_name_};
+    params.emplace_back(_aim_name);
     std::string destination{destination_};
     params.emplace_back(destination);
     type::variable_array_t results;

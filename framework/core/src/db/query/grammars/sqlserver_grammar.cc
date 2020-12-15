@@ -155,6 +155,7 @@ std::string SqlserverGrammar::compile_from(
 //Compile a "where date" clause.
 std::string SqlserverGrammar::where_date(
     Builder &query, db_query_array_t &where) {
+  UNUSED(query);
   auto value = parameter(where["value"]);
   return "cast(" + wrap(where["column"]) +" as date) " + 
          where["operator"].data + " " + value;

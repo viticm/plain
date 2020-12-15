@@ -9,7 +9,6 @@ using namespace pf_net::connection::manager;
 
 Listener::Listener() :
   listener_socket_{nullptr},
-  ready_{false}, 
   safe_encrypt_str_{""} {
   //do nothing
 }

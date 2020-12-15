@@ -377,15 +377,15 @@ bool Tab::open_from_memory_binary(const char *memory,
   //create string blok
   string_buffer_ = new char[string_buffer_size_];
   if (!string_buffer_) return false;
-  std::vector<uint32_t> field_type;
-  field_type.resize(field_number_);
-  memcpy(&(field_type[0]), _memory, sizeof(uint32_t) * field_number_);
+  std::vector<uint32_t> field_types;
+  field_types.resize(field_number_);
+  memcpy(&(field_types[0]), _memory, sizeof(uint32_t) * field_number_);
 
   //check it
   type_.resize(field_number_);
   int32_t i;
   for (i = 0; i < field_number_; ++i) {
-    switch(field_type[i]) {
+    switch(field_types[i]) {
       case kTypeInt: {
         //do nothing
       }
@@ -393,7 +393,7 @@ bool Tab::open_from_memory_binary(const char *memory,
         //do nothing
       }
       case kTypeString: {
-        type_[i] = static_cast<field_type_enum>(field_type[i]);
+        type_[i] = static_cast<field_type_enum>(field_types[i]);
         break;
       }
       default: {
@@ -417,7 +417,7 @@ bool Tab::open_from_memory_binary(const char *memory,
 
   //runtime address
   for (i = 0; i < field_number_; ++i) {
-    if (field_type[i] != kTypeString) continue;
+    if (field_types[i] != kTypeString) continue;
     std::string str;
     int32_t j;
     for (j = 0; j < record_number_; ++j) {

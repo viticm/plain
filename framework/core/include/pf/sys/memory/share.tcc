@@ -160,7 +160,7 @@ void UnitPool<T>::delete_obj(T *obj) {
 
 template <typename T>
 inline T *UnitPool<T>::get_obj(int32_t index) {
-  return index >= 0 && index < size_ ? objs_[index] : nullptr;
+  return index >= 0 && index < (int32_t)size_ ? objs_[index] : nullptr;
 }
 
 template <typename T>

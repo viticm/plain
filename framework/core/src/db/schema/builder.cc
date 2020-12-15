@@ -10,15 +10,15 @@ using namespace pf_db::schema;
 int32_t Builder::default_string_length_{255};
 
 //Determine if the given table exists.
-bool Builder::has_table(const std::string &table) {
-  std::string _table = connection_->get_table_prefix() + table;
+bool Builder::has_table(const std::string &a_table) {
+  std::string _table = connection_->get_table_prefix() + a_table;
   return connection_->select(grammar_->compile_table_exists(), 
          {_table}).size() > 0;
 }
 
 //Determine if the given table has a given column.
-bool Builder::has_column(const std::string &table, const std::string &column) {
-  auto columns = get_column_listing(table);
+bool Builder::has_column(const std::string &a_table, const std::string &column) {
+  auto columns = get_column_listing(a_table);
   bool result = false;
   for (const std::string &item : columns) {
     std::string temp{item};
@@ -33,9 +33,9 @@ bool Builder::has_column(const std::string &table, const std::string &column) {
 }
 
 //Determine if the given table has given columns.
-bool Builder::has_columns(const std::string &table, 
+bool Builder::has_columns(const std::string &a_table, 
                           const std::vector<std::string> &columns) {
-  auto _columns = get_column_listing(table);
+  auto _columns = get_column_listing(a_table);
   bool result = true;
   for (const std::string &item : _columns) {
     std::string temp{item};
@@ -51,13 +51,15 @@ bool Builder::has_columns(const std::string &table,
 
 //Get the data type for the given column name.
 std::string Builder::get_column_type(
-    const std::string &table, const std::string &column) {
-  
+    const std::string &a_table, const std::string &column) {
+  UNUSED(a_table); UNUSED(column);
+  return "";
 }
 
 //Get the column listing for a given table.
-std::vector<std::string> Builder::get_column_listing(const std::string &table) {
-  std::string _table = connection_->get_table_prefix() + table;
+std::vector<std::string> 
+Builder::get_column_listing(const std::string &a_table) {
+  std::string _table = connection_->get_table_prefix() + a_table;
   auto results = connection_->select(grammar_->compile_column_listing(_table));
   std::vector<std::string> r;
   for (auto &key : results.keys)
@@ -66,8 +68,9 @@ std::vector<std::string> Builder::get_column_listing(const std::string &table) {
 }
 
 //Create a new table on the schema.
-void Builder::create(const std::string &table, Blueprint::closure_t callback) {
-  std::unique_ptr<Blueprint> blueprint(create_blueprint(table));
+void Builder::create(
+    const std::string &a_table, Blueprint::closure_t callback) {
+  std::unique_ptr<Blueprint> blueprint(create_blueprint(a_table));
   blueprint->tap([&callback](Blueprint *o){
     o->create();
     callback(o);
@@ -76,8 +79,8 @@ void Builder::create(const std::string &table, Blueprint::closure_t callback) {
 }
 
 //Drop a table from the schema.
-void Builder::drop(const std::string &table) {
-  std::unique_ptr<Blueprint> blueprint(create_blueprint(table));
+void Builder::drop(const std::string &a_table) {
+  std::unique_ptr<Blueprint> blueprint(create_blueprint(a_table));
   blueprint->tap([](Blueprint *o){
     o->drop();
   });
@@ -85,8 +88,8 @@ void Builder::drop(const std::string &table) {
 }
 
 //Drop a table from the schema if it exists.
-void Builder::drop_if_exists(const std::string &table) {
-  std::unique_ptr<Blueprint> blueprint(create_blueprint(table));
+void Builder::drop_if_exists(const std::string &a_table) {
+  std::unique_ptr<Blueprint> blueprint(create_blueprint(a_table));
   blueprint->tap([](Blueprint *o){
     o->drop_if_exists();
   });
@@ -123,8 +126,8 @@ void Builder::build(std::unique_ptr<Blueprint> &blueprint) {
 
 //Create a new command set with a Closure.
 Blueprint *Builder::create_blueprint(
-    const std::string &table, Blueprint::closure_t callback) {
+    const std::string &a_table, Blueprint::closure_t callback) {
   if (!is_null(resolver_))
-    return resolver_(table, callback);
-  return new Blueprint(table, callback);
+    return resolver_(a_table, callback);
+  return new Blueprint(a_table, callback);
 }

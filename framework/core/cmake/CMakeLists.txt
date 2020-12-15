@@ -93,7 +93,7 @@ include_directories(
 if (MSVC AND MSVC_VERSION EQUAL 1700)
   add_definitions(/D _VARIADIC_MAX=10)
 endif()
- 
+
 ########################################################################
 #
 # Defines the pf_core libraries.  User tests should link
@@ -122,7 +122,17 @@ if (DEFINED CMAKE_VERSION AND NOT "${CMAKE_VERSION}" VERSION_LESS "2.8.12")
   target_include_directories(pf_core      SYSTEM INTERFACE "${pf_SOURCE_DIR}/include")
 endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11") 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+
+#For install paths.
+if (CMAKE_VERSION VERSION_LESS 2.8.5)
+  set(CMAKE_INSTALL_BINDIR "bin" CACHE STRING "User executables (bin)")
+  set(CMAKE_INSTALL_LIBDIR "lib${LIB_SUFFIX}" CACHE STRING "Object code libraries (lib)")
+  set(CMAKE_INSTALL_INCLUDEDIR "include" CACHE STRING "C header files (include)")
+  mark_as_advanced(CMAKE_INSTALL_BINDIR CMAKE_INSTALL_LIBDIR CMAKE_INSTALL_INCLUDEDIR)
+else()
+  include(GNUInstallDirs)
+endif()
 
 ########################################################################
 #
@@ -190,7 +200,7 @@ if (pf_build_tests)
     # Visual Studio 2010, 2012, and 2013 define symbols in std::tr1 that
     # conflict with our own definitions. Therefore using our own tuple does not
     # work on those compilers.
-    
+
   endif()
 
   ############################################################
@@ -203,7 +213,7 @@ if (pf_build_tests)
 
   # MSVC 7.1 does not support STL with exceptions disabled.
   if (NOT MSVC OR MSVC_VERSION GREATER 1310)
-   
+
   endif()
 
 endif()

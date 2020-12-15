@@ -30,16 +30,16 @@ void Basic::tick() {
   //normal.
   try {
     result = select();
-    //Assert(result);
+    Assert(result);
 
     result = process_exception();
-    //Assert(result);
+    Assert(result);
 
     result = process_input();
-    //Assert(result);
+    Assert(result);
 
     result = process_output();
-    //Assert(result); 
+    Assert(result); 
   } catch(...) {
     
   }
@@ -47,14 +47,14 @@ void Basic::tick() {
   //command.
   try {
     result = process_command();
-    //Assert(result);
+    Assert(result);
   } catch(...) {
   
   }
   //cache command. 
   try {
     result = process_command_cache();
-    //Assert(result);
+    Assert(result);
   } catch(...) {
 
   }
@@ -62,7 +62,7 @@ void Basic::tick() {
   //heartbeat.
   try {
     result = heartbeat();
-    //Assert(result);
+    Assert(result);
   } catch(...) {
 
   }

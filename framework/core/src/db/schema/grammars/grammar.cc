@@ -223,6 +223,7 @@ std::string Grammar::wrap(const variable_t &value, bool) {
 
 //Create an empty Doctrine DBAL TableDiff from the Blueprint.
 bool Grammar::get_doctrine_table_diff(Blueprint *blueprint, void *schema) {
+  UNUSED(blueprint); UNUSED(schema);
   return false;
 }
 

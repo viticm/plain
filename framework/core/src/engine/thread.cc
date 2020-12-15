@@ -15,8 +15,14 @@ namespace thread {
 //Or by pf_sys::thread::start(t, &O::func, this, ...).
 
 bool for_net(pf_net::connection::manager::Basic *net) {
+  auto stime = TIME_MANAGER_POINTER->get_tickcount();
   if (is_null(net)) return false;
   net->tick();
+  auto etime = TIME_MANAGER_POINTER->get_tickcount();
+  auto dtime = etime - stime;
+  if (dtime > 20) {
+    SLOW_ERRORLOG("engine", "Thread for_net delay time: %ld", dtime);
+  }
   return true;
 }
 
@@ -37,6 +43,7 @@ bool for_cache(pf_cache::Manager *cache) {
 }
 
 bool for_script(pf_script::Interface *env) {
+  auto stime = TIME_MANAGER_POINTER->get_tickcount();
   using namespace pf_script;
   if (is_null(env)) return false;
   env->task_queue()->work_one();
@@ -45,6 +52,11 @@ bool for_script(pf_script::Interface *env) {
   auto time = 
     static_cast<int32_t>(1000 / GLOBALS["default.engine.frame"].get<int32_t>());
   env->gccheck(time);
+  auto etime = TIME_MANAGER_POINTER->get_tickcount();
+  auto dtime = etime - stime;
+  if (dtime > 20) {
+    SLOW_ERRORLOG("engine", "Thread for_script delay time: %ld", dtime);
+  }
   return true;
 }
 

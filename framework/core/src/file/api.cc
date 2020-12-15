@@ -13,7 +13,7 @@
 #endif /* } */
 
 #if OS_UNIX
-extern int32_t errno;
+// extern int32_t errno;
 #endif
 
 namespace pf_file {
@@ -338,6 +338,7 @@ int64_t lseekex(int32_t fd, uint64_t offset, int32_t whence) {
 int64_t tellex(int32_t fd) {
   int64_t result = 0;
 #if OS_UNIX
+  UNUSED(fd);
   //do nothing
 #elif OS_WIN
   result = _tell(fd);

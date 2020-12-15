@@ -29,7 +29,7 @@ Interface::~Interface() {
 }
 
 bool Interface::init(uint16_t maxcount) {
-  if (maxcount == -1) return false;
+  if ((int16_t)maxcount == -1) return false;
   if (is_ready()) return true; //有内存分配的请参考此方式避免再次分配内存
   size_ = 0;
   max_size_ = maxcount;
@@ -224,7 +224,7 @@ connection::Pool *Interface::get_pool() {
 
 connection::Basic *Interface::get(uint16_t id) {
   connection::Basic *connection = nullptr;
-  if (id >= 0 && id < max_size_) {
+  if ((int16_t)id >= 0 && id < max_size_) {
     connection = pool_->get(id);
     Assert(connection);
   }
@@ -353,18 +353,18 @@ bool Interface::cache_resize() {
     new packet::queue_t[cache_.size + NET_MANAGER_CACHE_SIZE];
   if (is_null(queuenew)) return false;
   if (cache_.head < cache_.tail) {
-    memcpy(queuenew, 
-           &(cache_.queue[cache_.head]), 
+    memcpy((char *)queuenew, 
+           (char *)&(cache_.queue[cache_.head]), 
            sizeof(packet::queue_t) * (cache_.tail - cache_.head));
   } else {
-    memcpy(queuenew, 
-           &(cache_.queue[cache_.head]), 
+    memcpy((char *)queuenew, 
+           (char *)&(cache_.queue[cache_.head]), 
            sizeof(packet::queue_t) * (cache_.size - cache_.head));
-    memcpy(&queuenew[cache_.size - cache_.head], 
-           cache_.queue, 
+    memcpy((char *)&queuenew[cache_.size - cache_.head], 
+           (char *)cache_.queue, 
            sizeof(packet::queue_t) * cache_.tail);
   }
-  memset(cache_.queue, 0, sizeof(packet::queue_t) * cache_.size);
+  memset((char *)cache_.queue, 0, sizeof(packet::queue_t) * cache_.size);
   safe_delete_array(cache_.queue);
   cache_.queue = queuenew;
   cache_.head = 0;

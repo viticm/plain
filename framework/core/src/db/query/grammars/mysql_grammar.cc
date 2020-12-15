@@ -113,6 +113,7 @@ std::string MysqlGrammar::compile_union(db_query_array_t &_union) {
 //Compile the lock into SQL.
 std::string MysqlGrammar::compile_lock(
     Builder &query, const variable_t &value) {
+  UNUSED(query);
   if (kVariableTypeBool == value.type)
     return value == true ? "for update" : "lock in share mode";
   return value.data;

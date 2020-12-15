@@ -95,6 +95,7 @@ std::string SqliteGrammar::compile_union(db_query_array_t &_union) {
 //Compile a date based where clause.
 std::string SqliteGrammar::date_based_where(
     const std::string &type, Builder &query, db_query_array_t &where) {
+  UNUSED(query);
   std::string value = where["value"].data;
   if (value.size() < 2) {
     for (size_t i = 0; i < 2 - value.size(); ++i)

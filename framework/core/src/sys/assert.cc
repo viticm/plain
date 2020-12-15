@@ -24,6 +24,9 @@ void __show__(const char *temp) {
 }
 
 void __messagebox__(const char *msg) {
+#if OS_UNIX
+UNUSED(msg);
+#endif
 #if OS_WIN
   ::MessageBoxA(NULL, msg, "信息", MB_OK);
 #endif

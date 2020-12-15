@@ -176,7 +176,7 @@ class UnitPool {
    uint32_t key() const { return key_; };
    bool dump(const char *filename);
    bool merge(const char *filename);
-   bool full() const { return size_ - 1 == get_position(); };
+   bool full() const { return size_ - 1 == (size_t)get_position(); };
    uint32_t get_version() const;
    void set_version(uint32_t version);
    void set_data_extend_size(size_t _size) { data_extend_size_ = _size; };

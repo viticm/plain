@@ -51,7 +51,7 @@ uint32_t Handshake::execute(pf_net::connection::Basic *connection) {
      " time: " << time <<
     std::endl;
   **/
-  if (now - time > 10 || now - time < 0) {
+  if (now - time > 10 || (int32_t)now - time < 0) {
     io_cwarn("[%s] The handshake timeout!",
              NET_MODULENAME);    
     return kPacketExecuteStatusError;

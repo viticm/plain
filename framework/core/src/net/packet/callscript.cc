@@ -39,21 +39,21 @@ uint32_t CallScript::size() const {
 }
 
 void CallScript::set_params(const std::vector<std::string> &params) {
-  int8_t size = params.size();
-  if (0 == size) return;
+  int8_t _size = params.size();
+  if (0 == _size) return;
   char temp[102400]{0,};
   stringstream sstream(temp, sizeof(temp) - 1);
-  sstream << size;
+  sstream << _size;
   for (const std::string &item : params)
     sstream << item;
 }
 
 void CallScript::get_params(std::vector<std::string> &params) {
-  auto size = params_.size();
-  if (0 == size) return;
+  auto _size = params_.size();
+  if (0 == _size) return;
   char temp[102400]{0,};
   string::safecopy(temp, params_.c_str(), sizeof(temp) - 1);
-  stringstream sstream(temp, size);
+  stringstream sstream(temp, _size);
   int8_t count{0}; 
   sstream >> count;
   if (count <= 0) return;
@@ -65,8 +65,8 @@ void CallScript::get_params(std::vector<std::string> &params) {
   }
 }
 
-
 uint32_t CallScript::execute(pf_net::connection::Basic *connection) {
+  UNUSED(connection);
   if (0 == strlen(func_)) return kPacketExecuteStatusError;
   auto script = ENGINE_POINTER->get_script();
   if (eid_ != -1) {

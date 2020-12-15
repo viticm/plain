@@ -104,9 +104,9 @@ void Dynamic::write_double(double value) {
   write((char *)&value, sizeof(value));
 }
 
-void Dynamic::write_bytes(const unsigned char *value, size_t size) {
-  write_uint32(size);
-  write((const char *)value, size);
+void Dynamic::write_bytes(const unsigned char *value, size_t _size) {
+  write_uint32(_size);
+  write((const char *)value, _size);
 }
 
 int8_t Dynamic::read_int8() {
@@ -175,9 +175,9 @@ double Dynamic::read_double() {
   return result;
 }
 
-uint32_t Dynamic::read_bytes(unsigned char *value, size_t size) {
+uint32_t Dynamic::read_bytes(unsigned char *value, size_t _size) {
   auto length = read_uint32();
-  return read((char *)value, size > length ? length : size);
+  return read((char *)value, _size > length ? length : _size);
 }
 
 void Dynamic::check_memory(uint32_t length) {

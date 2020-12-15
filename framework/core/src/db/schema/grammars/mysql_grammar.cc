@@ -40,7 +40,7 @@ std::string MysqlGrammar::compile_create(Blueprint *blueprint,
 std::string MysqlGrammar::compile_create_table(Blueprint *blueprint, 
                                                fluent_t &command, 
                                                ConnectionInterface *connection) {
-
+  UNUSED(command); UNUSED(connection);
   char temp[1024]{0};
   snprintf(temp,
            sizeof(temp) - 1,
@@ -117,9 +117,10 @@ std::string MysqlGrammar::compile_key(Blueprint *blueprint,
 
 //Compile an add column command.
 std::string MysqlGrammar::compile_add(Blueprint *blueprint, fluent_t &command) {
+  UNUSED(command);
   auto columns = prefix_array("add", get_columns(blueprint));
   return "alter table " + wrap_table(blueprint) + " " + implode(", ", columns);
-};
+}
 
 //Compile a drop column command.
 std::string MysqlGrammar::compile_drop_column(

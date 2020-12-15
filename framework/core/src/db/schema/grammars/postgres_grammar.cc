@@ -75,7 +75,7 @@ std::string PostgresGrammar::compile_drop_column(
   auto columns = prefix_array("drop column", wrap_array(command.columns));
   return "alter table " + 
           wrap_table(blueprint) + " " + implode(", ", columns);
-};
+}
 
 //Create the column definition for an enum type.
 std::string PostgresGrammar::type_enum(fluent_t &column) const {

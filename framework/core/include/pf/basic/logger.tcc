@@ -30,7 +30,7 @@ void Logger::fast_savelog(const char *logname, const char *format, ...) {
   auto mutex = loglock_.get(logid);
   if (is_null(mutex)) return;
   uint32_t position = log_position_.get(logid);
-  char buffer[4096]{0};
+  char buffer[5120]{0};
   char temp[4096]{0};
   va_list argptr;
   try {
@@ -68,7 +68,7 @@ void Logger::fast_savelog(const char *logname, const char *format, ...) {
       break;
     }
   }
-  strncat(buffer, LF, sizeof(LF)); //add wrap
+  strncat(buffer, LF, 4); //add wrap
   if (GLOBALS["log.active"] == false) return; //save log condition
   int32_t length = static_cast<int32_t>(strlen(buffer));
   if (length <= 0 || length + position > kDefaultLogCacheSize) return;
@@ -94,7 +94,7 @@ template <uint8_t type>
 void Logger::slow_savelog(const char *filename_prefix, 
     const char *format, ...) {
   std::unique_lock<std::mutex> autolock(g_log_mutex);
-  char buffer[4096]{0};
+  char buffer[5120]{0};
   char temp[4096]{0};
   va_list argptr;
   try {
@@ -122,7 +122,7 @@ void Logger::slow_savelog(const char *filename_prefix,
         printf("%s" LF "", buffer);
       }
     }
-    strncat(buffer, LF, sizeof(LF)); //add wrap
+    strncat(buffer, LF, 4); //add wrap
     if (GLOBALS["log.active"] == 0) return;
     char log_filename[FILENAME_MAX]{0};
     get_log_filename(filename_prefix, log_filename, type);

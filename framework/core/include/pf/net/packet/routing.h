@@ -40,8 +40,8 @@ class Routing : public pf_net::packet::Interface {
      pf_basic::string::safecopy(
          aim_name_, aim_name.c_str(), sizeof(aim_name_) - 1);
    };
-   void set_packet_size(uint32_t size) {
-     packet_size_ = size;
+   void set_packet_size(uint32_t _size) {
+     packet_size_ = _size;
    };
 
  private:

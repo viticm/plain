@@ -95,6 +95,7 @@ variable_set_t PostgresGrammar::compile_truncate(Builder &query) {
 //Compile a "where date" clause.
 std::string PostgresGrammar::where_date(
     Builder &query, db_query_array_t &where) {
+  UNUSED(query);
   auto value = parameter(where["value"]);
   return wrap(where["column"]) + "::date " + where["operator"].data + " " + value;
 }
@@ -102,6 +103,7 @@ std::string PostgresGrammar::where_date(
 //Compile a date based where clause.
 std::string PostgresGrammar::date_based_where(
     const std::string &type, Builder &query, db_query_array_t &where) {
+  UNUSED(query);
   auto value = parameter(where["value"]);
   return "extract(" + type + " from " + wrap(where["column"]) + 
          ") " + where["operator"].data + " " + value;
@@ -110,6 +112,7 @@ std::string PostgresGrammar::date_based_where(
 //Compile the lock into SQL.
 std::string PostgresGrammar::compile_lock(
     Builder &query, const variable_t  &value) {
+  UNUSED(query);
   if (kVariableTypeBool == value.type)
     return value.get<bool>() ? "for update" : "for share";
   return value.data;

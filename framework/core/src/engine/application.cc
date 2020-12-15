@@ -130,6 +130,7 @@ Application &Application::getsingleton() {
 }
 
 Application::Application(Kernel *engine, int32_t argc, char *argv[]) {
+  UNUSED(argc);
   using namespace pf_basic::util;
   using namespace pf_basic::string;
 #if OS_UNIX
@@ -212,14 +213,14 @@ Application::~Application() {
 //Set the framework global values by env file.
 bool Application::set_env_globals(bool perr) {
   using namespace pf_basic;
-  pf_file::Ini env;
+  pf_file::Ini _env;
   auto env_file = get_arg("env");
-  if (env_file == "" || !env.open(env_file.c_str())) {
+  if (env_file == "" || !_env.open(env_file.c_str())) {
     if (perr) io_cerr("Can't load the env file!");
     return false;
   }
 
-  auto sectiondata = env.getdata();
+  auto sectiondata = _env.getdata();
   for (auto find_it = sectiondata->begin(); 
        find_it != sectiondata->end(); 
        ++find_it) {
@@ -229,7 +230,7 @@ bool Application::set_env_globals(bool perr) {
       auto key = it->first;
       std::string name = section + "." + key;
       pf_basic::type::variable_t value;
-      env.get(section.c_str(), key.c_str(), value);
+      _env.get(section.c_str(), key.c_str(), value);
       /**
       printf("section: %s key: %s, value: %s\n", 
               section.c_str(), key.c_str(), value.c_str());

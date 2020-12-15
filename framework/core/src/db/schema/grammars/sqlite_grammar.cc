@@ -27,6 +27,7 @@ std::string SqliteGrammar::compile_column_listing(const std::string &table) {
 std::string SqliteGrammar::compile_create(Blueprint *blueprint, 
                                           fluent_t &command, 
                                           ConnectionInterface *connection) {
+  UNUSED(command); UNUSED(connection);
   char temp[1024]{0};
   snprintf(temp,
            sizeof(temp) - 1,
@@ -86,6 +87,7 @@ std::string SqliteGrammar::add_primary_keys(Blueprint *blueprint) {
 
 //Compile an add column command.
 std::string SqliteGrammar::compile_add(Blueprint *blueprint, fluent_t &command) {
+  UNUSED(command);
   auto _columns = prefix_array("add column", get_columns(blueprint));
   std::vector<std::string> columns;
   for (auto &column : _columns) {
@@ -130,6 +132,7 @@ std::string SqliteGrammar::compile_drop_column(
 //Get the SQL for a default column modifier.
 std::string SqliteGrammar::modify_default(
     Blueprint *blueprint, fluent_t &column) {
+  UNUSED(blueprint);
   if (!empty(column["default"]))
     return " default " + get_default_value(column["default"]);
   return "";
@@ -138,6 +141,7 @@ std::string SqliteGrammar::modify_default(
 //Get the SQL for an auto-increment column modifier.
 std::string SqliteGrammar::modify_increment(
     Blueprint *blueprint, fluent_t &column) {
+  UNUSED(blueprint);
   if (in_array(column["type"].data, serials_) && 
       column["auto_increment"] == true) {
     return " primary key autoincrement";

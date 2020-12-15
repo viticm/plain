@@ -262,7 +262,10 @@ bool LibraryManager::load(const std::string &name,
   mainfunc = "pfopen_" + mainfunc;
   auto openhanlde = library->resolve(mainfunc);
   if (!is_null(openhanlde)) {
-    auto openfunc = (function_open)openhanlde;
+#ifdef __GNUC__
+__extension__
+#endif
+    function_open openfunc = reinterpret_cast<function_open>(openhanlde);
     openfunc(cast(void *, &params));
   }
 
