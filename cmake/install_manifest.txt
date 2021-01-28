@@ -22,7 +22,14 @@
 /usr/local/include/pf/sys/memory/share.tcc
 /usr/local/include/pf/sys/thread.tcc
 /usr/local/include/pf/sys/assert.h
+/usr/local/include/pf/console/parser.h
+/usr/local/include/pf/console/generator_command.h
+/usr/local/include/pf/console/input_option.h
 /usr/local/include/pf/console/config.h
+/usr/local/include/pf/console/input_definition.h
+/usr/local/include/pf/console/input_argument.h
+/usr/local/include/pf/console/command.h
+/usr/local/include/pf/console/application.h
 /usr/local/include/pf/db/define.h
 /usr/local/include/pf/db/grammar.h
 /usr/local/include/pf/db/connection_resolver.h
@@ -110,6 +117,11 @@
 /usr/local/include/pf/net/packet/dynamic.h
 /usr/local/include/pf/net/packet/register_connection_name.h
 /usr/local/include/pf/net/packet/callscript.h
+/usr/local/include/pf/interfaces/console/kernel.h
+/usr/local/include/pf/interfaces/console/config.h
+/usr/local/include/pf/interfaces/console/input_parameter.h
+/usr/local/include/pf/interfaces/console/application.h
+/usr/local/include/pf/interfaces/config.h
 /usr/local/include/pf/engine/kernel.h
 /usr/local/include/pf/engine/thread.h
 /usr/local/include/pf/engine/config.h

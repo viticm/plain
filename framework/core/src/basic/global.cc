@@ -59,6 +59,8 @@
  **/
 namespace pf_basic {
 
+static bool g_initialized{false};
+
 void set_base_path(type::variable_set_t &g) {
   using namespace pf_basic::util;
   char app_basepath[FILENAME_MAX]{0};
@@ -75,7 +77,7 @@ void set_base_path(type::variable_set_t &g) {
 
 void set_default_globals(type::variable_set_t &g) {
   
-  if (g["globals"] == true) return;
+  if (true == g_initialized) return;
 
   set_base_path(g);
 
@@ -132,7 +134,7 @@ void set_default_globals(type::variable_set_t &g) {
   g["default.db.encrypt"] = false;
 
   //The set flag.
-  g["globals"] = true;
+  g_initialized = true;
 }
 
 type::variable_set_t &get_globals() {

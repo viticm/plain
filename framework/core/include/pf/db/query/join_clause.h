@@ -27,7 +27,7 @@ class PF_API JoinClause : public Builder {
       : Builder(parent_query->get_connection(), parent_query->get_grammar()),
         type_{type},
         table_{table},
-        parent_query_{parent_query} { class_name_ = "JoinClause"; }
+        parent_query_{parent_query} {}
 
     virtual ~JoinClause() {};
 
@@ -40,6 +40,11 @@ class PF_API JoinClause : public Builder {
     std::string table_;
 
  public:
+
+    //Returns the class name.
+    virtual const std::string class_name() const {
+      return "JoinClause";
+    }
 
     //Add an "on" clause to the join.
     virtual Builder &on(const std::string &_first, 

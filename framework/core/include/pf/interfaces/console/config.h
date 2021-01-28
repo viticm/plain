@@ -5,12 +5,12 @@
  * @copyright Copyright (c) 2020 viticm( viticm.ti@gmail.com )
  * @license
  * @user viticm( viticm.ti@gmail.com )
- * @date 2020/12/25 11:08
- * @uses The console config.
+ * @date 2020/12/17 15:43
+ * @uses The console interface config file.
  */
-#ifndef PF_CONSOLE_CONFIG_H_
-#define PF_CONSOLE_CONFIG_H_
+#ifndef PF_INTERFACES_CONSOLE_CONFIG_H_
+#define PF_INTERFACES_CONSOLE_CONFIG_H_
 
-#include "pf/basic/config.h"
+#include "pf/interfaces/config.h"
 
-#endif //PF_CONSOLE_CONFIG_H_
+#endif //PF_INTERFACES_CONSOLE_CONFIG_H_
