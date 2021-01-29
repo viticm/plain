@@ -59,10 +59,6 @@ class InputOption : public pf_interfaces::console::InputParameter {
 
    virtual ~InputOption() {}
 
-   virtual const std::string class_name() const {
-     return "InputOption";
-   }
-
  public:
 
    // Returns the option shortcut.

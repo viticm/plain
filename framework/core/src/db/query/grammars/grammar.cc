@@ -313,7 +313,7 @@ std::string Grammar::call_where(
 //Format the where clause statements into one string.
 std::string Grammar::concatenate_where_clauses(
     Builder &query, variable_array_t &sql) {
-  std::string conjunction = "JoinClause" == query.class_name() ? "on" : "where";
+  std::string conjunction = instanceof(&query, JoinClause) ? "on" : "where";
   return conjunction + " " + remove_leading_boolean(implode(" ", sql));
 }
 
@@ -401,7 +401,7 @@ std::string Grammar::where_nested(Builder &query, db_query_array_t &where) {
   // Here we will calculate what portion of the string we need to remove. If this
   // is a join clause query, we need to remove the "on" portion of the SQL and
   // if it is a normal query we need to take the leading "where" of queries.
-  int32_t offset = "JoinClause" == query.class_name() ? 3 : 6;
+  int32_t offset = instanceof(&query, JoinClause) ? 3 : 6;
 
   return "(" + compile_wheres(where_query(where)).substr(offset) + ")";
 }

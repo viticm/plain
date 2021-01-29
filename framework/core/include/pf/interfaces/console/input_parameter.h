@@ -70,13 +70,6 @@ class InputParameter {
    virtual ~InputParameter() {}
 
  public:
-
-   //Returns the class name.
-   virtual const std::string class_name() const {
-     return "InputParameter";
-   }
-
- public:
     
    //Is the parameter accept value.
    bool accept_value() const {

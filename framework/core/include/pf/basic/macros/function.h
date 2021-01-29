@@ -108,4 +108,9 @@
   }
 #endif
 
+/* C++ instanceof */
+#ifndef instanceof
+#define instanceof(p,c) (dynamic_cast<c *>(p) != nullptr)
+#endif
+
 #endif //PF_BASIC_MACROS_FUNCTION_H_

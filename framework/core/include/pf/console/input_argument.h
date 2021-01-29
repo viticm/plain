@@ -33,11 +33,6 @@ class InputArgument : public pf_interfaces::console::InputParameter {
 
    virtual ~InputArgument() {}
 
-   virtual const std::string class_name() const {
-     return "InputArgument";
-   }
-
-
 };
 
 } // namespace pf_console

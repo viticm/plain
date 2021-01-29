@@ -41,11 +41,6 @@ class PF_API JoinClause : public Builder {
 
  public:
 
-    //Returns the class name.
-    virtual const std::string class_name() const {
-      return "JoinClause";
-    }
-
     //Add an "on" clause to the join.
     virtual Builder &on(const std::string &_first, 
                         const std::string &oper, 

@@ -928,11 +928,6 @@ class PF_API Builder : public concerns::BuildsQueries {
      return *this;
    }
 
-   //Returns the class name.
-   virtual const std::string class_name() const {
-     return "Builder";
-   }
-
  protected:
 
    //Prepare the val and operator for a where clause.
