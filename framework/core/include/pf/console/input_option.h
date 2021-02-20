@@ -20,6 +20,8 @@ namespace pf_console {
 class InputOption : public pf_interfaces::console::InputParameter {
  
  public:
+
+   InputOption() {}
    
    InputOption(const std::string &_name, 
                const std::string &shortcut = "",

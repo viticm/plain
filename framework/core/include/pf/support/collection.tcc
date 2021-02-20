@@ -19,7 +19,7 @@ template <typename T>
 inline ArrayAccess Collection<T>::map(map_callback_t callback) {
   ArrayAccess a;
   for (T &item : original_) 
-    a.items_.push_back(callback(item));
+    a.items_.emplace_back(callback(item));
   return a;
 }
 

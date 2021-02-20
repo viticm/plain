@@ -519,7 +519,7 @@ bool Tab::save_totext(const char *filename) {
 }
 
 const Tab::field_data *Tab::get_fielddata(int32_t line, 
-                                                    const char *name) {
+                                          const char *name) {
   const field_data *_field_data = nullptr;
   int32_t column = get_fieldindex(name);
   _field_data = search_position(line, column);

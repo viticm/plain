@@ -19,6 +19,8 @@ namespace pf_console {
 class InputArgument : public pf_interfaces::console::InputParameter {
 
  public:
+
+   InputArgument() {}
    
    InputArgument(const std::string &name, 
                  mode_t mode = kModeNone, 

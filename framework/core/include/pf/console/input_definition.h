@@ -25,7 +25,10 @@ class InputDefinition {
    using InputParameter = pf_interfaces::console::InputParameter;
 
  public:
-   InputDefinition(const std::vector<InputParameter> &defines = {}) {
+   InputDefinition(const std::vector<InputParameter *> &defines = {}) {
+     required_count_ = 0;
+     has_optional_ = false;
+     has_an_array_argument_ = false;
      set_definition(defines);
    }
    virtual ~InputDefinition() {}
@@ -33,7 +36,7 @@ class InputDefinition {
  public:
 
    // Sets the definition of the input. 
-   void set_definition(const std::vector<InputParameter> &defines);
+   void set_definition(const std::vector<InputParameter *> &defines);
 
    // Sets the InputArgument objects.
    void set_arguments(const std::vector<InputArgument> &arguments);
@@ -57,7 +60,7 @@ class InputDefinition {
    bool has_argument(int32_t pos);
 
    // Gets the array of InputArgument objects.
-   std::vector<InputArgument> get_arguments();
+   std::map<std::string, InputArgument> get_arguments();
 
    // Returns the number of InputArguments.
    size_t get_argument_count() const;
@@ -84,7 +87,7 @@ class InputDefinition {
    bool has_option(const std::string &name) const;
 
    // Gets the array of InputOption objects. 
-   std::vector<InputOption> get_options();
+   std::map<std::string, InputOption> get_options();
 
    // Returns true if an InputOption object exists by shortcut.
    bool has_shortcut(const std::string &name);
@@ -100,6 +103,15 @@ class InputDefinition {
 
    // Gets the synopsis.
    std::string get_synopsis(bool _short = false);
+
+ private:
+
+   std::map<std::string, InputArgument> arguments_;
+   uint32_t required_count_;
+   bool has_an_array_argument_;
+   bool has_optional_;
+   std::map<std::string, InputOption> options_;
+   std::map<std::string, std::string> shortcuts_;
 
 };
 
