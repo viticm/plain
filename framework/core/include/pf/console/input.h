@@ -68,7 +68,7 @@ class Input {
    bool has_option() const;
 
    // Escapes a token through escapeshellarg if it contains unsafe chars.
-   std::string escape_token(const std::string &token);
+   std::string escape_token(const std::string &token) const;
 
 
  protected:
@@ -79,6 +79,11 @@ class Input {
  protected:
 
    bool interactive_;
+   std::unique_ptr<InputDefinition> definition_;
+   // If an argument value is array, then it split with '#'.
+   std::map<std::string, std::string> arguments_;
+   // If an option value is array, then it split wtih '#'.
+   mutable std::map<std::string, std::string> options_;
 
 };
 

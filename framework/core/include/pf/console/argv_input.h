@@ -12,6 +12,7 @@
 #define PF_CONSOLE_ARGV_INPUT_H_
 
 #include "pf/console/config.h"
+#include "pf/basic/type/variable.h"
 #include "pf/console/input.h"
 
 namespace pf_console {
@@ -25,6 +26,10 @@ class ArgvInput : public Input {
 
  public:
 
+   using variable_t = pf_basic::type::variable_t;
+
+ public:
+
    // Get the first argument.
    std::string get_first_argument() const;
 
@@ -32,9 +37,9 @@ class ArgvInput : public Input {
    bool has_parameter_option(const std::vector<std::string> &values, 
                              bool only_params = false) const;
    // Get parameter option.
-   bool get_parameter_option(const std::vector<std::string> &values, 
-                             bool def = false,
-                             bool only_params = false) const;
+   variable_t get_parameter_option(const std::vector<std::string> &values, 
+                                   variable_t def = false,
+                                   bool only_params = false) const;
 
    // Returns a stringified representation of the args passed to the command.
    std::string tostring() const;
@@ -42,7 +47,9 @@ class ArgvInput : public Input {
  protected:
 
    // Set the tokens.
-   void set_tokens(const std::vector<std::string> &tokens);
+   void set_tokens(const std::vector<std::string> &tokens) {
+     tokens_ = tokens;
+   };
 
    // Parse all commands.
    void parse();
@@ -59,16 +66,21 @@ class ArgvInput : public Input {
    void parse_long_option(const std::string &token);
 
    // Parses an argument.
-   // @throws std::string When too many arguments are given
+   // @throws std::runtime_error When too many arguments are given
    void parse_argument(const std::string &token);
 
    // Adds a short option value.
-   // @throws std::string When option given doesn't exist
+   // @throw std::runtime_error When option given doesn't exist
    void add_short_option(const std::string &shortcut, const std::string &value);
 
    // Adds a long option value.
-   // @throws std::string When option given doesn't exist
+   // @throws std::runtime_error When option given doesn't exist
    void add_long_option(const std::string &name, const std::string &value);
+
+ private:
+
+   std::vector<std::string> tokens_;
+   std::list<std::string> parsed_;
 
 };
 

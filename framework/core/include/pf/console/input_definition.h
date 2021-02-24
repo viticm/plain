@@ -51,13 +51,13 @@ class InputDefinition {
    InputArgument get_argument(const std::string &name);
 
    // Get an argument by position.
-   InputArgument get_argument(int32_t pos);
+   InputArgument get_argument(uint32_t pos);
 
    // Returns true if an InputArgument object exists by name.
    bool has_argument(const std::string &name);
 
    // Returns true if an InputArgument object exists by position.
-   bool has_argument(int32_t pos);
+   bool has_argument(uint32_t pos);
 
    // Gets the array of InputArgument objects.
    std::map<std::string, InputArgument> get_arguments();

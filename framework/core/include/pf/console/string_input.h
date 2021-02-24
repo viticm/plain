@@ -30,8 +30,9 @@ class StringInput : public ArgvInput {
  private:
 
    // Tokenizes a string.
+   // @throws std::invalid_argument When unable to parse input
+   // (should never happen)
    std::vector<std::string> tokenize(const std::string &input) const;
-
 
 };
 

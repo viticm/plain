@@ -1,4 +1,5 @@
 #include <regex>
+#include <stdexcept>
 #include "pf/basic/string.h"
 #include "pf/console/string_input.h"
 
@@ -41,7 +42,7 @@ StringInput::tokenize(const std::string &input) const {
       std::string e;
       e = "Unable to parse input near \"... " 
         + input.substr(cursor, 10) + " ... \"";
-      throw e;
+      throw std::invalid_argument(e);
     }
     if (token != "") {
       tokens.emplace_back(token);

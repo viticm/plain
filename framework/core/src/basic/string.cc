@@ -361,18 +361,16 @@ int32_t explode(const char *source,
     if (right == str.length()) break;
     left = right + (one_key ? 1 : strlen(key));
     if (one_key) {
-
-    std::string temp = str.substr(left);
-    right = temp.find_first_of(key);
-    if (right != std::string::npos) right += left;
+      std::string temp = str.substr(left);
+      right = temp.find_first_of(key);
+      if (right != std::string::npos) right += left;
     } else {
-    right = str.find(key, left);
+      right = str.find(key, left);
     }
     if (std::string::npos == right) right = str.length();
   }
   int32_t _result = static_cast<int32_t>(result.size());
   return _result;
-  return 0;
 }
 
 bool checkstr(const char *in, uint32_t size) {

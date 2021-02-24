@@ -108,6 +108,24 @@ inline pf_basic::type::variable_array_t array_values(
   return r;
 }
 
+//Get the array values of one map.
+template <typename T_k, typename T_v>
+std::vector<T_v> array_values(const std::map<T_k, T_v> &array) {
+  std::vector<T_v> r;
+  for (auto it = array.begin(); it != array.end(); ++it)
+    r.push_back(it->second);
+  return r;
+}
+
+//Get the array key of one map.
+template <typename T_k, typename T_v>
+std::vector<T_k> array_keys(const std::map<T_k, T_v> &array) {
+  std::vector<T_k> r;
+  for (auto it = array.begin(); it != array.end(); ++it)
+    r.push_back(it->first);
+  return r;
+}
+
 // Checks if a value exists in an array
 template <typename T>
 bool in_array(const T &needle, 

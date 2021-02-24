@@ -80,8 +80,12 @@ InputArgument InputDefinition::get_argument(const std::string &name) {
 }
 
 // Get an argument by position.
-InputArgument InputDefinition::get_argument(int32_t pos) {
+InputArgument InputDefinition::get_argument(uint32_t pos) {
+  using namespace pf_support;
   InputArgument r;
+  auto values = array_values(arguments_);
+  if (pos < values.size())
+    r = values[pos];
   return r;
 }
 
@@ -91,9 +95,10 @@ bool InputDefinition::has_argument(const std::string &name) {
 }
 
 // Returns true if an InputArgument object exists by position.
-bool InputDefinition::has_argument(int32_t pos) {
-  bool r{false};
-  return r;
+bool InputDefinition::has_argument(uint32_t pos) {
+  using namespace pf_support;
+  auto values = array_values(arguments_);
+  return pos < values.size();
 }
 
 // Gets the array of InputArgument objects.
