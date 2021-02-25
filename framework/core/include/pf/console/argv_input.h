@@ -42,7 +42,7 @@ class ArgvInput : public Input {
                                    bool only_params = false) const;
 
    // Returns a stringified representation of the args passed to the command.
-   std::string tostring() const;
+   std::string to_string() const;
 
  protected:
 

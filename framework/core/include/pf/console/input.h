@@ -22,13 +22,13 @@ namespace pf_console {
 class Input {
 
  public:
-   Input(InputDefinition *definition = nullptr) {}
+   Input(InputDefinition *definition = nullptr);
    virtual ~Input() {}
 
  public:
 
    // Bind definition.
-   void bind(const InputDefinition &definition);
+   void bind(InputDefinition *definition);
 
    // Aalidate arguments.
    void validate() const;
@@ -44,32 +44,35 @@ class Input {
    }
 
    // Get arguments.
-   std::map<std::string, InputArgument> get_arguments();
+   std::map<std::string, std::string> get_arguments() const;
 
    // Get argument.
-   InputArgument get_argument(const std::string &name);
+   std::string get_argument(const std::string &name) const;
 
    // Set argument.
-   void set_argument(const InputArgument &argument);
+   void set_argument(const std::string &name, const std::string &value);
 
    // Has argument.
-   bool has_argument(const std::string &name);
+   bool has_argument(const std::string &name) {
+     return definition_->has_argument(name);
+   }
 
    // Get options.
-   std::map<std::string, InputOption> get_options();
+   std::map<std::string, std::string> get_options() const;
 
    // Get option.
-   std::string get_option() const;
+   std::string get_option(const std::string &name) const;
 
    // Set option.
    void set_option(const std::string &name, const std::string &value);
 
    // Has option.
-   bool has_option() const;
+   bool has_option(const std::string &name) const {
+     return definition_->has_option(name);
+   }
 
    // Escapes a token through escapeshellarg if it contains unsafe chars.
    std::string escape_token(const std::string &token) const;
-
 
  protected:
 

@@ -259,7 +259,7 @@ ArgvInput::get_parameter_option(
   return def;
 }
 
-std::string ArgvInput::tostring() const {
+std::string ArgvInput::to_string() const {
   std::vector<std::string> tokens;
   std::regex reg("{^(-[^=]+=)(.+)}");
   std::smatch match;
