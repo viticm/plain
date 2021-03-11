@@ -26,7 +26,7 @@ class InputParameter {
      kModeNone = 1,
      kModeRequired = 2,
      kModeOptional = 4,
-     kModeIsAarray = 8,
+     kModeIsArray = 8,
    } mode_t;
 
  public:
@@ -34,7 +34,7 @@ class InputParameter {
    InputParameter() {}
    
    InputParameter(const std::string &name, 
-                  mode_t mode = kModeNone, 
+                  uint16_t mode = kModeNone, 
                   const std::string &description = "",
                   const std::string &def = "") {
      if (kModeNone == mode) {
@@ -51,7 +51,7 @@ class InputParameter {
    }
 
    InputParameter(const std::string &name, 
-                  mode_t mode = kModeNone, 
+                  uint16_t mode = kModeNone, 
                   const std::string &description = "",
                   const std::vector<std::string> &def = {}) {
      if (kModeNone == mode) {
@@ -91,7 +91,7 @@ class InputParameter {
 
    // Returns true if the argument can take multiple values.
    bool is_array() const {
-     return kModeIsAarray == (kModeIsAarray & mode_);
+     return kModeIsArray == (kModeIsArray & mode_);
    }
 
    // Returns the shortcut name.
@@ -147,7 +147,7 @@ class InputParameter {
  private:
 
    std::string name_;
-   mode_t mode_;
+   uint16_t mode_;
    std::string def_;
    std::vector<std::string> defs_;
    std::string description_;

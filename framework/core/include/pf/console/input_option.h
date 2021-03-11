@@ -25,7 +25,7 @@ class InputOption : public pf_interfaces::console::InputParameter {
    
    InputOption(const std::string &_name, 
                const std::string &shortcut = "",
-               mode_t mode = kModeNone, 
+               uint16_t mode = kModeNone, 
                const std::string &description = "",
                const std::string &def = "") {
      std::string name{_name};
@@ -43,7 +43,7 @@ class InputOption : public pf_interfaces::console::InputParameter {
 
    InputOption(const std::string &_name, 
                const std::string &shortcut = "",
-               mode_t mode = kModeNone, 
+               uint16_t mode = kModeNone, 
                const std::string &description = "",
                const std::vector<std::string> &def = {}) {
      std::string name{_name};

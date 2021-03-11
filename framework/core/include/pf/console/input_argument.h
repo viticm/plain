@@ -23,7 +23,7 @@ class InputArgument : public pf_interfaces::console::InputParameter {
    InputArgument() {}
    
    InputArgument(const std::string &name, 
-                 mode_t mode = kModeNone, 
+                 uint16_t mode = kModeNone, 
                  const std::string &description = "",
                  const std::string &def = "") {
    }

@@ -126,7 +126,7 @@ void Logger::slow_savelog(const char *filename_prefix,
     if (GLOBALS["log.active"] == 0) return;
     char log_filename[FILENAME_MAX]{0};
     get_log_filename(filename_prefix, log_filename, type);
-    FILE* fp;
+    FILE *fp;
     fp = fopen(log_filename, "ab");
     if (fp) {
       fwrite(buffer, 1, strlen(buffer), fp);

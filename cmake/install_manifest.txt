@@ -33,6 +33,7 @@
 /usr/local/include/pf/console/input_argument.h
 /usr/local/include/pf/console/array_input.h
 /usr/local/include/pf/console/command.h
+/usr/local/include/pf/console/output.h
 /usr/local/include/pf/console/application.h
 /usr/local/include/pf/db/define.h
 /usr/local/include/pf/db/grammar.h
@@ -124,6 +125,7 @@
 /usr/local/include/pf/interfaces/console/kernel.h
 /usr/local/include/pf/interfaces/console/config.h
 /usr/local/include/pf/interfaces/console/input_parameter.h
+/usr/local/include/pf/interfaces/console/output.h
 /usr/local/include/pf/interfaces/console/application.h
 /usr/local/include/pf/interfaces/config.h
 /usr/local/include/pf/engine/kernel.h

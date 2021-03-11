@@ -43,6 +43,7 @@
 #include <thread>
 #include <chrono>
 #include <tuple>
+#include <regex>
 /* } C++ */
 
 /* platform { */
