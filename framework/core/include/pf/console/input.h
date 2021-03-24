@@ -82,7 +82,7 @@ class Input {
  protected:
 
    bool interactive_;
-   std::unique_ptr<InputDefinition> definition_; // Problem: definition with other std::unique_ptr.
+   std::unique_ptr<InputDefinition> definition_;
    // If an argument value is array, then it split with '#'.
    std::map<std::string, std::string> arguments_;
    // If an option value is array, then it split wtih '#'.

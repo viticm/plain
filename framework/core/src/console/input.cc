@@ -21,7 +21,9 @@ Input::Input(InputDefinition *definition) {
 void Input::bind(InputDefinition *definition) {
   arguments_.clear();
   options_.clear();
-  std::unique_ptr<InputDefinition> pointer(definition);
+  auto temp = new InputDefinition();
+  *temp = *definition;
+  std::unique_ptr<InputDefinition> pointer(temp);
   definition_ = std::move(pointer);
   parse();
 }
