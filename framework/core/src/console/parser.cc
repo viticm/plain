@@ -12,14 +12,14 @@ Parser::parse(const std::string &expression) {
   std::vector<std::string> r;
   std::regex reg("\\{\\s*(.*?)\\s*\\}");
   std::smatch match;
+  std::vector<InputArgument> arguments;
+  std::vector<InputOption> options;
+
   if (std::regex_match(expression, match, reg)) {
     auto temp = parameters({match.str(1),});
-    std::vector<InputArgument> arguments;
-    std::vector<InputOption> options;
     std::tie (arguments, options) = temp;
-    return {_name, arguments, options};
   }
-  return {_name, {}, {}};
+  return std::make_tuple(_name, arguments, options);
 }
 
 std::string Parser::name(const std::string &expression) {
@@ -44,7 +44,7 @@ Parser::parameters(const std::vector<std::string> &tokens) {
       arguments.emplace_back(parse_argument(token));
     }
   }
-  return { arguments, options };
+  return std::make_tuple(arguments, options);
 }
 
 InputArgument Parser::parse_argument(const std::string &_token) {
