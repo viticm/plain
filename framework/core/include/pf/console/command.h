@@ -21,8 +21,13 @@ namespace pf_console {
 class Command {
 
  public:
-   Command(const std::string &name = "") {
-
+   Command(const std::string &_name = "") {
+     std::unique_ptr<InputDefinition> temp(new InputDefinition());
+     definition_ = std::move(temp);
+     std::string name{_name};
+     if (name == "") name = get_default_name();
+     set_name(name);
+     configure();
    }
    virtual ~Command() {}
 
@@ -51,6 +56,8 @@ class Command {
    virtual bool is_enabled() const {
      return true;
    }
+
+   virtual void set_command(Command *) {}
 
  public:
 
@@ -193,6 +200,27 @@ class Command {
      return usages_;
    }
 
+   // Returns the help string.
+   std::string help() const {
+     return help_;
+   }
+
+   // Sets the help string.
+   void set_help(const std::string &str) {
+     help_ = str;
+   }
+
+   // Sets the application.
+   void set_application(Application *app) {
+     app_ = app;
+   }
+
+   // Gets the application.
+   Application *get_application() {
+     return app_;
+   }
+
+
  protected:
 
    static std::string default_name_;
@@ -229,7 +257,7 @@ class Command {
  protected:
 
    // Configures the current command.
-   void configure();
+   virtual void configure() {}
 
  private:
 
@@ -245,6 +273,7 @@ class Command {
    code_t code_;
    std::map<std::string, std::string> synopsis_;
    std::vector<std::string> usages_;
+   Application *app_;
 
  private:
 

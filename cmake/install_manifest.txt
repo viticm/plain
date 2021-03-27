@@ -26,6 +26,9 @@
 /usr/local/include/pf/console/generator_command.h
 /usr/local/include/pf/console/input_option.h
 /usr/local/include/pf/console/input.h
+/usr/local/include/pf/console/commands/list.h
+/usr/local/include/pf/console/commands/config.h
+/usr/local/include/pf/console/commands/help.h
 /usr/local/include/pf/console/config.h
 /usr/local/include/pf/console/argv_input.h
 /usr/local/include/pf/console/string_input.h

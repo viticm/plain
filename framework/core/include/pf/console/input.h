@@ -15,6 +15,7 @@
 #define PF_CONSOLE_INPUT_H_
 
 #include "pf/console/config.h"
+#include "pf/basic/type/variable.h"
 #include "pf/console/input_definition.h"
 
 namespace pf_console {
@@ -24,6 +25,10 @@ class Input {
  public:
    Input(InputDefinition *definition = nullptr);
    virtual ~Input() {}
+
+ public:
+
+   using variable_t = pf_basic::type::variable_t;
 
  public:
 
@@ -73,6 +78,24 @@ class Input {
 
    // Escapes a token through escapeshellarg if it contains unsafe chars.
    std::string escape_token(const std::string &token) const;
+
+   // Has parameter option.
+   virtual bool has_parameter_option(const std::vector<std::string> &values, 
+       bool only_params = false) const {
+      return false;
+   }
+   // Get parameter option.
+   virtual variable_t get_parameter_option(
+       const std::vector<std::string> &values, 
+       variable_t def = false,
+       bool only_params = false) const {
+     return "";
+   }
+
+   // Get first argument.
+   virtual std::string get_first_argument() const {
+     return "";
+   }
 
  protected:
 

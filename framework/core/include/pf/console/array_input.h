@@ -34,19 +34,22 @@ class ArrayInput : public Input {
 
  public:
 
-   // Get first argument.
-   std::string get_first_argument() const;
-
    // Has parameter option.
-   bool has_parameter_option(const std::vector<std::string> &values, 
-                             bool only_params = false) const;
+   virtual bool has_parameter_option(const std::vector<std::string> &values, 
+                                     bool only_params = false) const;
    // Get parameter option.
-   variable_t get_parameter_option(const std::vector<std::string> &values, 
-                                   variable_t def = false,
-                                   bool only_params = false) const;
+   virtual variable_t 
+     get_parameter_option(const std::vector<std::string> &values, 
+                          variable_t def = false,
+                          bool only_params = false) const;
 
    // Parameters to string.
    std::string to_string() const;
+
+ public:
+
+   // Get first argument.
+   virtual std::string get_first_argument() const;
 
  protected:
 

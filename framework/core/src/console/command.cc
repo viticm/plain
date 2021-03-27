@@ -2,6 +2,9 @@
 
 using namespace pf_console;
 
+// Static member must be initialized.
+std::string Command::default_name_;
+
 uint8_t Command::run(Input *input, Output *output) {
   uint8_t r{0};
   // bind the input against the command specific arguments/options

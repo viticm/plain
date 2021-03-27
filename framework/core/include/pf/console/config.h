@@ -18,4 +18,11 @@
 
 #include "pf/basic/config.h"
 
+namespace pf_console {
+
+class Application;
+class Command;
+
+}
+
 #endif //PF_CONSOLE_CONFIG_H_

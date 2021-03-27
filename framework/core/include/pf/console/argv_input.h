@@ -30,9 +30,6 @@ class ArgvInput : public Input {
 
  public:
 
-   // Get the first argument.
-   std::string get_first_argument() const;
-
    // Has parameter option.
    bool has_parameter_option(const std::vector<std::string> &values, 
                              bool only_params = false) const;
@@ -43,6 +40,11 @@ class ArgvInput : public Input {
 
    // Returns a stringified representation of the args passed to the command.
    std::string to_string() const;
+
+ public:
+
+   // Get the first argument.
+   virtual std::string get_first_argument() const;
 
  protected:
 

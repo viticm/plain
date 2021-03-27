@@ -30,13 +30,15 @@ class Application {
  public:
    Application(const std::string &name = "UNKNOWN",
        const std::string &version = "UNKNOWN") {
-
+      name_ = name;
+      version_ = version;
+      default_command_name_ = "list";
    }
    ~Application() {}
 
  public:
 
-   void reset() {};
+   void reset() {}
 
    // Gets the name of the application. 
    std::string get_name() const {
@@ -46,6 +48,15 @@ class Application {
    // Sets the application name.
    void set_name(const std::string &name) {
      name_ = name;
+   }
+
+   // Get command real name(from name or short name, if not exists return "").
+   std::string get_command_real_name(const std::string &name) {
+     std::string r{name};
+     if (is_null(commands_[name].get())) {
+       r = command_aliases_[name];
+     }
+     return r;
    }
 
    // Gets the application version.
@@ -58,8 +69,22 @@ class Application {
      version_ = version;
    }
 
+   // Gets the InputDefinition related to this Application.
+   //
+   // Not safe in multi threads(when use single command).
+   InputDefinition *get_definition();
+
+   void set_definition(InputDefinition *definition) {
+     std::unique_ptr<InputDefinition> temp(definition);
+     definition_ = std::move(temp);
+   }
+
    // Runs the current application.
-   void run(Input *input = nullptr, Output *output = nullptr);
+   uint8_t run(Input *input = nullptr, Output *output = nullptr);
+
+   // Runs the current application.
+   // @Returns 0 if everything went fine, or an error code
+   uint8_t do_run(Input *input, Output *output);
 
    // Returns the long version of the application.
    std::string get_long_version() const;
@@ -73,13 +98,18 @@ class Application {
    // Adds an array of command objects.
    //
    // If a Command is not enabled it will not be added.
-   void add_commands(std::vector<Command *>commands);
+   void add_commands(std::vector<Command *> commands);
 
    // Returns a registered command by name or alias.
    Command *get(const std::string &name);
 
+   // Gets the help message.
+   std::string get_help() const {
+     return get_long_version();
+   }
+
    // Finds a registered namespace by a name or an abbreviation.
-   std::string find_namespace(const std::string &_namespace) const;
+   std::string find_namespace(const std::string &_namespace);
 
    // Finds a command by name or alias.
    //
@@ -88,7 +118,9 @@ class Application {
    Command *find(const std::string &name);
 
    // Returns true if the command exists, false otherwise. 
-   bool has(const std::string &name) const;
+   bool has(const std::string &name) {
+     return get_command_real_name(name) != "";
+   }
 
    // Gets the commands (registered in the given namespace if provided). 
    //
@@ -102,7 +134,12 @@ class Application {
        const std::string &name, int32_t limit = 0) const;
 
    // Sets the default Command name. 
-   void set_default_command(const std::string &name);
+   Application &set_default_command(
+       const std::string &name, bool is_single_command);
+
+   // Returns an array of all unique namespaces used by currently 
+   // registered commands.
+   std::vector<std::string> get_namespaces();
 
  protected:
 
@@ -120,6 +157,10 @@ class Application {
 
    // Gets the default commands that should always be available.
    std::vector<Command *> get_default_commands() const;
+
+   // Configures the input and output instances based on the 
+   // user arguments and options.
+   void configure_IO(Input *input, Output *output);
 
    bool is_single_command() const {
      return single_command_;
@@ -139,15 +180,22 @@ class Application {
    // Init.
    void init();
 
+   // Returns all namespaces of the command name.
+   std::vector<std::string> extract_all_namespace(const std::string &name);
+
  private:
 
    std::string name_;
    std::string version_;
    std::string default_command_name_;
+   std::unique_ptr<InputDefinition> definition_;
+   std::unique_ptr<InputDefinition> definition_temp_;
    bool single_command_;
    bool initialized_;
-   std::vector< std::unique_ptr<Command> > commands_;
-   std::map<std::string, uint16_t> commands_indexs_; // Name to commands index.
+   bool want_helps_;
+   std::map<std::string, std::unique_ptr<Command> > commands_;
+   std::map<std::string, std::string> command_aliases_;
+   Command *running_command_;
 
 };
 
