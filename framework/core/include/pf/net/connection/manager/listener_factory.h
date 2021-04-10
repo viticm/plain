@@ -23,8 +23,8 @@ namespace manager {
 class PF_API ListenerFactory {
 
  public:
-   ListenerFactory() : last_del_eid_{NET_EID_INVALID} {};
-   ~ListenerFactory() {};
+   ListenerFactory() : last_del_eid_{NET_EID_INVALID} {}
+   ~ListenerFactory() {}
 
  public:
    eid_t newenv(const listener_config_t &config);
@@ -32,12 +32,15 @@ class PF_API ListenerFactory {
    Listener *getenv(eid_t eid) {
      if (envs_[eid]) return envs_[eid].get();
      return nullptr;
-   };
+   }
    void closeenv(eid_t eid) {
      auto it = envs_.find(eid);
      if (it != envs_.end()) envs_.erase(it);
      last_del_eid_ = eid;
-   };
+   }
+   size_t size() const {
+     return envs_.size();
+   }
 
  private:
    eid_t neweid();

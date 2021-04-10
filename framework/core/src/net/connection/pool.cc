@@ -92,14 +92,14 @@ void Pool::remove(int16_t id) {
   ++size_;
 }
 
-bool Pool::create_default_connections() {
+bool Pool::create_default_connections(manager::Interface *manager) {
   if (!is_null(connections_[0]) && !is_null(connections_[max_size_ - 1])) 
     return true;
   std::unique_lock<std::mutex> autolock(mutex_);
   for (uint16_t i = 0; i < max_size_; i++) {
     auto connection = new connection::Basic();
     if (is_null(connection)) return false;
-    connection->set_protocol(manager::Basic::protocol_default());
+    connection->set_protocol(manager->protocol());
     init_data(i, connection);
   }
   return true;

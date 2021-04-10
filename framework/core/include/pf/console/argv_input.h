@@ -21,7 +21,8 @@ class ArgvInput : public Input {
 
  public:
    ArgvInput(const std::vector<std::string> &argv = {},
-             InputDefinition *definition = nullptr);
+             InputDefinition *definition = nullptr,
+             bool no_app_name = false);
    virtual ~ArgvInput() {}
 
  public:
@@ -51,7 +52,12 @@ class ArgvInput : public Input {
    // Set the tokens.
    void set_tokens(const std::vector<std::string> &tokens) {
      tokens_ = tokens;
-   };
+   }
+
+   // Get the tokens.
+   std::vector<std::string> get_tokens() {
+     return tokens_;
+   }
 
    // Parse all commands.
    void parse();
@@ -82,7 +88,7 @@ class ArgvInput : public Input {
  private:
 
    std::vector<std::string> tokens_;
-   std::list<std::string> parsed_;
+   std::vector<std::string> parsed_;
 
 };
 

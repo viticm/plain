@@ -28,6 +28,10 @@ class PF_API Listener : public Basic {
    virtual ~Listener();
 
  public:
+   using standard_callback_t = 
+     std::function<void(const std::string &, pf_net::connection::Basic *)>;
+
+ public:
    virtual bool is_service() const { return true; }
 
  public:
@@ -62,11 +66,19 @@ class PF_API Listener : public Basic {
    const std::string name() const {
      return name_;
    }
+   void set_standard_callback(standard_callback_t callback) {
+     standard_callback_ = callback;
+   }
+
+   standard_callback_t get_standard_callback() {
+     return standard_callback_;
+   }
 
  private:
    std::unique_ptr<socket::Listener> listener_socket_;
    std::string safe_encrypt_str_;
    std::string name_;
+   standard_callback_t standard_callback_;
    bool ready_;
 
 };

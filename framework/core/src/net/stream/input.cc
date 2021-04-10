@@ -358,6 +358,42 @@ uint32_t Input::write(const char *buffer, uint32_t length) {
   return fillcount;
 }
 
+uint32_t Input::get_line_size() {
+  auto buffer = streamdata_.buffer;
+  if (encrypt_isenable()) {
+    buffer = get_decrypt_buffer();
+    memset(buffer, 0, streamdata_.bufferlength_max);
+    encryptor_.decrypt(buffer, 
+                       &(streamdata_.buffer[0]), 
+                       streamdata_.bufferlength);
+  }
+  uint32_t r{0};
+  if (streamdata_.head < streamdata_.tail) {
+    for (auto i = streamdata_.head; i < streamdata_.tail; ++i) {
+      if ('\n' == buffer[i]) {
+        r = i - streamdata_.head + 1;
+        break;
+      }
+    }
+  } else {
+    for (auto i = streamdata_.head; i < streamdata_.bufferlength; ++i) {
+       if ('\n' == buffer[i]) {
+        r = i - streamdata_.head + 1;
+        break;
+      }
+    }
+    if (0 == r) {
+      for (uint32_t i = 0; i < streamdata_.tail; ++i) {
+         if ('\n' == buffer[i]) {
+          r = i + streamdata_.bufferlength - streamdata_.head + 1;
+          break;
+        }
+      }
+    }
+  }
+  return r;
+}
+
 } //namespace stream
 
 } //namespace pf_net

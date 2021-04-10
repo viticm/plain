@@ -17,6 +17,7 @@
 #include "pf/net/connection/manager/config.h"
 #include "pf/cache/manager.h"
 #include "pf/basic/type/variable.h"
+#include "pf/console/config.h"
 
 namespace pf_engine {
 
@@ -46,6 +47,7 @@ class PF_API Kernel : public pf_basic::Singleton< Kernel > {
    pf_script::Interface *get_script();
    pf_db::Factory *get_db_factory() { return db_factory_.get(); }
    pf_script::Factory *get_script_factory() { return script_factory_.get(); }
+   pf_console::Application *get_console() { return console_.get(); }
 
  public:
 
@@ -81,12 +83,20 @@ class PF_API Kernel : public pf_basic::Singleton< Kernel > {
      if (listen_env_.find(name) == listen_env_.end()) return -1;
      return listen_env_[name];
    }
+
+   std::map<std::string, int8_t> get_listen_list() const {
+     return listen_list_;
+   }
+
    int8_t get_connect_configid(const std::string &name) {
      if (connect_env_.find(name) == connect_env_.end()) return -1;
      return connect_env_[name];
    }
-   //Get the net handle script function name.
+   // Get the net handle script function name.
    const std::string get_script_function(pf_net::connection::Basic *);
+   
+   // Get net listener factory.
+   pf_net::connection::manager::ListenerFactory *get_net_listener_factory(bool);
 
  public:
    //Enqueue an envet function in main loop.
@@ -104,6 +114,7 @@ class PF_API Kernel : public pf_basic::Singleton< Kernel > {
    virtual bool init_db();
    virtual bool init_cache();
    virtual bool init_script();
+   virtual bool init_console();
 
  protected:
    std::unique_ptr<pf_net::connection::manager::Basic> net_;
@@ -114,6 +125,7 @@ class PF_API Kernel : public pf_basic::Singleton< Kernel > {
    pf_db::eid_t db_eid_;
    std::unique_ptr<pf_cache::Manager> cache_;
    std::unique_ptr<pf_script::Factory> script_factory_;
+   std::unique_ptr<pf_console::Application> console_;
    pf_script::eid_t script_eid_;
    std::vector< std::thread > thread_workers_;
    std::map<std::string, int8_t> db_list_;  //Database name to factory id.

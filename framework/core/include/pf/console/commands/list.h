@@ -12,7 +12,7 @@
 #ifndef PF_CONSOLE_COMMANDS_LIST_H_
 #define PF_CONSOLE_COMMANDS_LIST_H_
 
-#include "pf/console/config.h"
+#include "pf/console/commands/config.h"
 #include "pf/console/command.h"
 
 namespace pf_console {
@@ -22,12 +22,17 @@ namespace commands {
 class List : public Command {
 
  public:
-   List(const std::string &name = "") {}
+   List(const std::string &name = "list") : Command(name) {}
    virtual ~List() {}
 
- protected:
+ public:
 
    virtual void configure();
+   virtual bool is_parse_input() const {
+     return false;
+   }
+
+ protected:
 
    virtual uint8_t execute(Input *input, Output *output);
 

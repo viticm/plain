@@ -27,7 +27,9 @@ class InputOption : public pf_interfaces::console::InputParameter {
                const std::string &shortcut = "",
                uint16_t mode = kModeNone, 
                const std::string &description = "",
-               const std::string &def = "") {
+               const std::string &def = "") : InputParameter(
+                 _name, mode, description, def
+                 ) {
      std::string name{_name};
      if ("--" == name.substr(0, 1)) {
        name = name.substr(2);
@@ -36,16 +38,17 @@ class InputOption : public pf_interfaces::console::InputParameter {
        AssertEx(false, "An option name cannot be empty.");
      }
      if ("" != shortcut) {
-
+        set_shortcut(shortcut);
      }
-     this->set_default(def);
    }
 
    InputOption(const std::string &_name, 
                const std::string &shortcut = "",
                uint16_t mode = kModeNone, 
                const std::string &description = "",
-               const std::vector<std::string> &def = {}) {
+               const std::vector<std::string> &def = {}) : InputParameter(
+                 _name, mode, description, def
+                 ) {
      std::string name{_name};
      if ("--" == name.substr(0, 1)) {
        name = name.substr(2);
@@ -54,9 +57,8 @@ class InputOption : public pf_interfaces::console::InputParameter {
        AssertEx(false, "An option name cannot be empty.");
      }
      if ("" != shortcut) {
-
+        set_shortcut(shortcut);
      }
-     this->set_defaults(def);
    }
 
    virtual ~InputOption() {}
@@ -65,6 +67,10 @@ class InputOption : public pf_interfaces::console::InputParameter {
 
    // Returns the option shortcut.
    virtual std::string shortcut() const { return shortcut_; }
+
+ protected:
+
+   void set_shortcut(const std::string &shortcut);
 
  private:
 

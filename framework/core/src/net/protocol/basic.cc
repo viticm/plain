@@ -7,6 +7,8 @@
 #include "pf/basic/logger.h"
 #include "pf/net/protocol/basic.h"
 
+#define CANT_PEEK_TIMES_MAX 60
+
 namespace pf_net {
 
 namespace protocol {
@@ -27,15 +29,20 @@ bool Basic::command(connection::Basic *connection, uint16_t count) {
   stream::Input *istream = &connection->istream();
   uint32_t packetcheck, packetsize, packetindex;
   packet::Interface *packet = nullptr;
+  // Error times is check the invalid client connected.
+  auto error_times = connection->get_error_times();
+  if (error_times >= CANT_PEEK_TIMES_MAX) return false;
   if (connection->is_disconnect()) return false; //leave this to connection.
+  bool clear_error{true};
   try {
     uint32_t i;
     for (i = 0; i < count; ++i) {
       memset(packetheader, 0, sizeof(packetheader));
       if (!istream || 0 == istream->size()) return true;
       if (!istream->peek(&packetheader[0], NET_PACKET_HEADERSIZE)) {
-        std::cout << "command can't peek" << std::endl;
         //数据不能填充消息头
+        connection->inc_error_times();
+        clear_error = false;
         break;
       }
       memcpy(&packetid, &packetheader[0], sizeof(packetid));
@@ -144,6 +151,7 @@ bool Basic::command(connection::Basic *connection, uint16_t count) {
     SaveErrorLog();
     return false;
   }
+  if (clear_error) connection->set_error_times(0);
   return true;
 }
 

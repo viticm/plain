@@ -33,7 +33,7 @@ class Input {
  public:
 
    // Bind definition.
-   void bind(InputDefinition *definition);
+   void bind(InputDefinition *definition, bool need_parse = true);
 
    // Aalidate arguments.
    void validate() const;

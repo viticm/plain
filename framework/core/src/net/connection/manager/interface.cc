@@ -21,7 +21,8 @@ Interface::Interface() :
   onestep_accept_{NET_ONESTEP_ACCEPT_DEFAULT},
   pool_{nullptr},
   callback_disconnect_{nullptr},
-  callback_connect_{nullptr} {
+  callback_connect_{nullptr},
+  protocol_standard_{false} {
 }
 
 Interface::~Interface() {
@@ -60,7 +61,7 @@ bool Interface::pool_init(uint16_t connectionmax) {
   if (is_null(pool_)) return false;
   connection_max_size_ = connectionmax;
   if (!pool_->init(connection_max_size_)) return false;
-  if (!pool_->create_default_connections()) return false;
+  if (!pool_->create_default_connections(this)) return false;
   return true;
 }
 
@@ -142,7 +143,7 @@ bool Interface::erase(connection::Basic *connection) {
 }
 
 bool Interface::remove(connection::Basic *connection) {
-  std::cout << "connection->name(): " << connection->name() << std::endl;
+  // std::cout << "connection->name(): " << connection->name() << std::endl;
   on_disconnect(connection);
   if (!is_null(callback_disconnect_)) callback_disconnect_(connection);
   if (connection->name() != "") 

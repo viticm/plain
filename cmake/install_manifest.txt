@@ -29,6 +29,8 @@
 /usr/local/include/pf/console/commands/list.h
 /usr/local/include/pf/console/commands/config.h
 /usr/local/include/pf/console/commands/help.h
+/usr/local/include/pf/console/commands/app.h
+/usr/local/include/pf/console/net_output.h
 /usr/local/include/pf/console/config.h
 /usr/local/include/pf/console/argv_input.h
 /usr/local/include/pf/console/string_input.h
@@ -85,6 +87,7 @@
 /usr/local/include/pf/cache/packet/config.h
 /usr/local/include/pf/cache/packet/db_result.h
 /usr/local/include/pf/cache/manager.h
+/usr/local/include/pf/net/protocol/standard.h
 /usr/local/include/pf/net/protocol/config.h
 /usr/local/include/pf/net/protocol/basic.h
 /usr/local/include/pf/net/protocol/interface.h

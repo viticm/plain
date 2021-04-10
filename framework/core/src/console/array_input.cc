@@ -1,4 +1,3 @@
-#include <stdexcept>
 #include "pf/support/helpers.h"
 #include "pf/console/array_input.h"
 

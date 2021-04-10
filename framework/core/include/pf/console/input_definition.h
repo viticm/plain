@@ -31,11 +31,13 @@ class InputDefinition {
      has_an_array_argument_ = false;
      set_definition(defines);
    }
-   virtual ~InputDefinition() {}
+   virtual ~InputDefinition() {
+     // std::cout << "InputDefinition destruct" << std::endl;
+   }
 
  public:
 
-   // Sets the definition of the input. 
+   // Sets the definition of the input.
    void set_definition(const std::vector<InputParameter *> &defines);
 
    // Sets the InputArgument objects.
@@ -44,8 +46,11 @@ class InputDefinition {
    // Adds an array of InputArgument objects.
    void add_arguments(const std::vector<InputArgument> &arguments);
 
-   // Add an argument.
+   // Adds an argument.
    void add_argument(const InputArgument &argument);
+
+   // Sets an argument.
+   void set_argument(const InputArgument &argument);
 
    // Get an argument by name.
    InputArgument get_argument(const std::string &name);
@@ -86,7 +91,7 @@ class InputDefinition {
    // Returns true if an InputOption object exists by name.
    bool has_option(const std::string &name) const;
 
-   // Gets the array of InputOption objects. 
+   // Gets the array of InputOption objects.
    std::map<std::string, InputOption> get_options();
 
    // Returns true if an InputOption object exists by shortcut.
@@ -107,6 +112,7 @@ class InputDefinition {
  private:
 
    std::map<std::string, InputArgument> arguments_;
+   std::vector<std::string> argument_names_;
    uint32_t required_count_;
    bool has_an_array_argument_;
    bool has_optional_;

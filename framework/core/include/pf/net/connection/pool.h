@@ -12,6 +12,7 @@
 #define PF_NET_CONNECTION_POOL_H_
 
 #include "pf/net/connection/config.h"
+#include "pf/net/connection/manager/config.h"
 #include "pf/sys/thread.h"
 #include "pf/net/connection/basic.h"
 
@@ -35,7 +36,7 @@ class PF_API Pool {
    void unlock();
    uint32_t get_max_size() const { return max_size_; }
    uint32_t size() const { return size_; }
-   bool create_default_connections();
+   bool create_default_connections(manager::Interface *manager);
    bool full() const { return size_ == max_size_; };
 
  private:

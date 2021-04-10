@@ -25,6 +25,7 @@ void InputDefinition::set_definition(
 // Sets the InputArgument objects.
 void InputDefinition::set_arguments(
     const std::vector<InputArgument> &arguments) {
+  arguments_.clear();
   required_count_ = 0;
   has_optional_ = false;
   has_an_array_argument_ = false;
@@ -63,6 +64,16 @@ void InputDefinition::add_argument(const InputArgument &argument) {
   } else {
     has_optional_ = true;
   }
+  argument_names_.emplace_back(argument.name());
+  arguments_[argument.name()] = argument;
+}
+
+// Sets an argument.
+void InputDefinition::set_argument(const InputArgument &argument) {
+  if (arguments_.find(argument.name()) == arguments_.end()) {
+    AssertEx(false, "Cannot set a not exists argument.");
+    return;
+  }
   arguments_[argument.name()] = argument;
 }
 
@@ -81,11 +92,9 @@ InputArgument InputDefinition::get_argument(const std::string &name) {
 
 // Get an argument by position.
 InputArgument InputDefinition::get_argument(uint32_t pos) {
-  using namespace pf_support;
   InputArgument r;
-  auto values = array_values(arguments_);
-  if (pos < values.size())
-    r = values[pos];
+  if (pos < argument_names_.size())
+    r = arguments_[argument_names_[pos]];
   return r;
 }
 
@@ -96,9 +105,7 @@ bool InputDefinition::has_argument(const std::string &name) {
 
 // Returns true if an InputArgument object exists by position.
 bool InputDefinition::has_argument(uint32_t pos) {
-  using namespace pf_support;
-  auto values = array_values(arguments_);
-  return pos < values.size();
+  return pos < argument_names_.size();
 }
 
 // Gets the array of InputArgument objects.
@@ -135,7 +142,7 @@ void InputDefinition::set_options(const std::vector<InputOption> &options) {
 // Adds an array of InputOption objects.
 void InputDefinition::add_options(const std::vector<InputOption> &options) {
   for (const InputOption &option : options) {
-      add_option(option);
+    add_option(option);
   }
 }
 
@@ -145,11 +152,12 @@ void InputDefinition::add_option(const InputOption &option) {
   if (options_.find(option.name()) != options_.end() &&
       option.equals(&options_.find(option.name())->second)) {
     std::string msg{""};
-    msg = "An option named " +option.name()+ " already exists.";
+    msg = "An option named " + option.name() + " already exists.";
     AssertEx(false, msg.c_str());
     return;
   }
   auto shortcuts = option.shortcut();
+  // std::cout << "name: " << option.name() << " shortcuts: " << shortcuts << std::endl;
   if ("" != shortcuts) {
     for (auto &shortcut : explode("|", shortcuts)) {
       if (shortcuts_.find(shortcut.data) != shortcuts_.end() &&
@@ -175,7 +183,7 @@ InputOption InputDefinition::get_option(const std::string &name) {
   InputOption r;
   if (!has_option(name)) {
     std::string msg{""};
-    msg = "The '--"+name+"' option does not exist.";
+    msg = "The '--" + name + "' option does not exist.";
     AssertEx(false, msg.c_str());
     return r;
   }

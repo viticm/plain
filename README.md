@@ -3,9 +3,8 @@
 ## The plain framework, a framework based on c++ for net applictions. ##
 
 - **Author:** Viticm
-- **Website:** [http://www.cnblogs.com/lianyue/](http://www.cnblogs.com/lianyue/)
-- **Version:** 1.0d
-
+- **Website:** [http://www.cnblogs.com/lianyue/](http://www.cnblogs.com/lianyue/)1- **Version:** 1.0d
+- **Version:** 1.1d
 [![Build Status](https://travis-ci.org/viticm/plain.svg)](https://travis-ci.org/viticm/plain)
 
 The core is `SFE`, that is the safe and fast and easy.

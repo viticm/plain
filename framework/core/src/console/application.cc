@@ -1,8 +1,10 @@
 #include "pf/basic/string.h"
 #include "pf/console/argv_input.h"
 #include "pf/console/array_input.h"
+#include "pf/console/commands/app.h"
 #include "pf/console/commands/help.h"
 #include "pf/console/commands/list.h"
+#include "pf/basic/logger.h"
 #include "pf/console/application.h"
 
 using namespace pf_console;
@@ -24,8 +26,8 @@ uint8_t Application::run(Input *input, Output *output) {
   uint8_t exit_code{0};
   try {
     exit_code = do_run(input, output);
-  } catch (...) {
-    std::cout << "Application::run get error!!!" << std::endl;
+  } catch (std::exception &e) {
+    std::cout << "Application::run get error!!!: " << e.what() << std::endl;
   }
   return exit_code;
 }
@@ -56,10 +58,9 @@ uint8_t Application::do_run(Input *input, Output *output) {
   if (name == "") {
     name = default_command_name_;
     auto definition = get_definition();
-    auto arguments = definition->get_arguments();
-    arguments["command"] = InputArgument("command",
+    definition->set_argument(InputArgument("command",
         InputArgument::kModeOptional,
-        definition->get_argument("command").get_description(), name);
+        definition->get_argument("command").get_description(), name));
   }
   Command *command{nullptr};
   try {
@@ -67,6 +68,13 @@ uint8_t Application::do_run(Input *input, Output *output) {
     command = find(name);
   } catch (...) {
 
+  }
+  if (is_null(command)) {
+    FAST_ERRORLOG(CONSOLE_MODULENAME, 
+                  "[console] (Application::run)"
+                  " can't find the command: %s", 
+                  name.c_str());
+    return 1;
   }
   running_command_ = command;
   auto exit_code = do_runcommand(command, input, output);
@@ -102,6 +110,7 @@ std::string Application::get_long_version() const {
 }
 
 Command *Application::add(Command *command) {
+  // std::cout << "Add command: " << command->name() << std::endl;
   if (!command->is_enabled()) {
     return nullptr;
   }
@@ -109,14 +118,19 @@ Command *Application::add(Command *command) {
   command->set_application(this);
   // Will throw if the command is not correctly initialized.
   command->get_definition();
-  if (command->name() == "") {
+  command->configure();
+  auto name = command->name();
+  if (name == "") {
     throw std::logic_error("command cannot have an empty name.");
+  }
+  if (commands_.find(name) != commands_.end()) {
+    return commands_[name].get();
   }
   std::unique_ptr<Command> temp;
   unique_move(Command, command, temp);
-  commands_[command->name()] = std::move(temp);
+  commands_[name] = std::move(temp);
   for (auto const &alias : command->get_aliases()) {
-    command_aliases_[alias] = command->name();
+    command_aliases_[alias] = name;
   }
   return command;
 }
@@ -127,6 +141,7 @@ Command *Application::get(const std::string &_name) {
     std::string e = "The command \"" + _name + "\" does not exist.";
     throw std::invalid_argument(e);
   }
+  if (commands_.find(name) == commands_.end()) return nullptr;
   auto command = commands_[name].get();
   if (want_helps_) {
     want_helps_ = false;
@@ -160,9 +175,13 @@ std::string Application::find_namespace(const std::string &_namespace) {
 Command *Application::find(const std::string &name) {
   init();
   for (auto it = commands_.begin(); it != commands_.end(); ++it) {
-    for (const auto &alias : it->second->get_aliases()) {
-      if ("" == command_aliases_[alias]) 
-        command_aliases_[alias] = it->second->name();
+    if (!is_null(it->second)) {
+      for (const auto &alias : it->second->get_aliases()) {
+        if ("" == command_aliases_[alias]) 
+          command_aliases_[alias] = it->second->name();
+      }
+    } else {
+      std::cout << "find no command: " << it->first << std::endl;
     }
   }
   return get(name);
@@ -199,6 +218,7 @@ Application &Application::set_default_command(
 
 uint8_t Application::do_runcommand(
     Command *command, Input *input, Output *output) {
+  // std::cout << "do_runcommand: " << command->name() << std::endl;
   return command->run(input, output);
 }
 
@@ -301,6 +321,8 @@ std::string Application::extract_namespace(
 void Application::init() {
   if (initialized_) return;
   initialized_ = true;
+  // std::cout << "Application::init" << std::endl;
   add(new commands::Help());
   add(new commands::List());
+  add(new commands::App());
 }

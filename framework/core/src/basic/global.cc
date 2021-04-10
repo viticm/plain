@@ -13,6 +13,10 @@
  * GLOBALS["app.cmdmodel"] = number;              //default 0.
  * GLOBALS["app.forceexit"] = bool;               //default false.
  * GLOBALS["app.console"] = bool;				          //default true.
+ * GLOBALS["app.console.name"] = string;				  //default "console".
+ * GLOBALS["app.console.ip"] = string;				    //default "127.0.0.1".
+ * GLOBALS["app.console.port"] = number;				  //default -1.
+ * GLOBALS["app.console.connmax"] = number;				//default 32.
  * GLOBALS["app.pidfile"] = string;               //default "".
  * GLOBALS["log.active"] = bool;                  //default true.
  * GLOBALS["log.directory"] = number;             //default the exe file path with "/log".
@@ -86,6 +90,11 @@ void set_default_globals(type::variable_set_t &g) {
   g["app.cmdmodel"] = 0;
   g["app.forceexit"] = false;
   g["app.console"] = true;
+  g["app.console.name"] = "console";
+  g["app.console.ip"] = "127.0.0.1";
+  g["app.console.port"] = -1;
+  g["app.console.connmax"] = 32;
+  g["app.console.encrypt"] = "";
   g["app.pidfile"] = "";
 
   g["log.active"] = true;

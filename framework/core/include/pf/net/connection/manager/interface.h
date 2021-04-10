@@ -17,6 +17,7 @@
 #include "pf/sys/thread.h"
 #include "pf/net/packet/interface.h"
 #include "pf/net/protocol/basic.h"
+#include "pf/net/protocol/standard.h"
 #include "pf/net/connection/basic.h"
 #include "pf/net/connection/pool.h"
 
@@ -108,11 +109,20 @@ class PF_API Interface {
    std::thread::id thread_id() const { return thread_id_; }
 
  public:
-   protocol::Interface *protocol() { return protocol_default(); };
+   virtual protocol::Interface *protocol() { 
+     return protocol_standard_ ? protocol_standard() : protocol_default(); 
+   }
    static protocol::Interface *protocol_default() {
      static protocol::Basic proto;
      return &proto;
-   };
+   }
+   static protocol::Interface *protocol_standard() {
+     static protocol::Standard proto;
+     return &proto;
+   }
+   void set_protocol_standard(bool flag) {
+     protocol_standard_ = flag;
+   }
 
  public:
    virtual bool select() = 0;             /* 网络侦测 */
@@ -147,6 +157,7 @@ class PF_API Interface {
    cache_t cache_;
    std::map<std::string, uint16_t> connection_names_; //The connection name to id.
    std::mutex mutex_;
+   bool protocol_standard_;
 
  private:
    std::thread::id thread_id_;

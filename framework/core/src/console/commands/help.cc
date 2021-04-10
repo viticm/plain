@@ -29,11 +29,11 @@ void Help::configure() {
 uint8_t Help::execute(Input *input, Output *output) {
   if (is_null(command_))
     command_ = get_application()->find(input->get_argument("command_name"));
-  if (is_null(command_)) return 1;
+  if (is_null(command_)) return kCommandExecuteInvalid;
 
   // Now just print it.
-  std::cout << command_->help() << std::endl;
+  output->write_ln(command_->name() + ": " + command_->help());
   
   command_ = nullptr;
-  return 0;
+  return kCommandExecuteNone;
 }

@@ -37,7 +37,8 @@ Basic::Basic() :
   status_{0},
   safe_encrypt_{false},
   safe_encrypt_time_{0},
-  name_{""} {
+  name_{""},
+  error_times_{0} {
   //do nothing
 }
 
@@ -217,6 +218,14 @@ void Basic::disconnect() {
   clear();
 }
 
+void Basic::exit() {
+  if (!is_null(listener_)) {
+    listener_->remove(this);
+  } else {
+    disconnect();
+  }
+}
+
 bool Basic::is_valid() {
   if (is_null(socket_.get())) return false;
   bool result = false;
@@ -239,6 +248,7 @@ void Basic::clear() {
   name_ = "";
   params_.clear();
   routing_list_.clear();
+  error_times_ = 0;
 }
 
 uint32_t Basic::get_receive_bytes() {

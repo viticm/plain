@@ -5,6 +5,7 @@
 #include "pf/cache/db_store.h"
 #include "pf/cache/manager.h"
 #include "pf/sys/thread.h"
+#include "pf/console/application.h"
 #include "pf/engine/thread.h"
 
 namespace pf_engine {
@@ -57,6 +58,20 @@ bool for_script(pf_script::Interface *env) {
   if (dtime > 20) {
     SLOW_ERRORLOG("engine", "Thread for_script delay time: %ld", dtime);
   }
+  return true;
+}
+
+bool for_console(pf_console::Application *console) {
+  if (is_null(console)) return false;
+  /**
+  if (!feof(stdin)) {
+    char input_str[512]{0};
+    fgets(input_str, 512, stdin);
+    if (strlen(input_str) > 0) {
+      std::cout << "input_str: " << input_str << std::endl;
+    } 
+  }
+  **/
   return true;
 }
 

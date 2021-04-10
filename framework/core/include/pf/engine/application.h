@@ -7,6 +7,7 @@
  * @user viticm<viticm@126.com/viticm.ti@gmail.com>
  * @date 2015/08/23 17:59
  * @uses The plain framework engine for application.
+ *       Future will use the console application parse the arguments.
  */
 #ifndef PF_ENGINE_APPLICATION_H_
 #define PF_ENGINE_APPLICATION_H_
@@ -44,7 +45,7 @@ class PF_API Application : public pf_basic::Singleton<Application> {
    void view_commands();
    const std::string get_arg(const std::string &name) {
      return args_[name];
-   };
+   }
 
  private:
    bool init();

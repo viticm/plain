@@ -30,9 +30,13 @@ class Application {
  public:
    Application(const std::string &name = "UNKNOWN",
        const std::string &version = "UNKNOWN") {
-      name_ = name;
-      version_ = version;
-      default_command_name_ = "list";
+     name_ = name;
+     version_ = version;
+     default_command_name_ = "list";
+     single_command_ = false;
+     initialized_ = false;
+     want_helps_ = false;
+     running_command_ = nullptr;
    }
    ~Application() {}
 
@@ -53,8 +57,12 @@ class Application {
    // Get command real name(from name or short name, if not exists return "").
    std::string get_command_real_name(const std::string &name) {
      std::string r{name};
-     if (is_null(commands_[name].get())) {
-       r = command_aliases_[name];
+     if (commands_.find(name) == commands_.end()) {
+       if (command_aliases_.find(name) != command_aliases_.end()) {
+         r = command_aliases_[name];  
+       } else {
+         r = "";
+       }
      }
      return r;
    }

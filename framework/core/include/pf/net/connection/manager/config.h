@@ -20,6 +20,7 @@ namespace connection {
 
 namespace manager {
 
+class Interface;
 class Basic;
 class Listener;
 class ListenerFactory;
@@ -51,6 +52,7 @@ struct listener_config_struct {
   uint16_t port;
   uint16_t conn_max;
   std::string encrypt_str;
+  bool protocol_standard;
 };
 using eid_t = int16_t; //Environment.
 

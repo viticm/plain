@@ -211,9 +211,9 @@ int32_t Output::compressflush() {
   uint32_t leftcount = compressor_.getsize();
   uint32_t sendcount = 0;
   uint32_t flag = 0;
-#if __LINUX__
+#if OS_UNIX
   flag = MSG_NOSIGNAL;
-#elif __WINDOWS__
+#elif OS_WIN
   flag = MSG_DONTROUTE;
 #endif
   bool totalsend = true;
@@ -341,9 +341,9 @@ int32_t Output::rawflush() {
   uint32_t leftcount = 0;
   uint32_t result = 0;
   uint32_t flag = 0;
-#if __LINUX__
+#if OS_UNIX
   flag = MSG_NOSIGNAL;
-#elif __WINDOWS__
+#elif OS_WIN
   flag = MSG_DONTROUTE;
 #endif
   if (streamdata_.bufferlength > streamdata_.bufferlength_max) {

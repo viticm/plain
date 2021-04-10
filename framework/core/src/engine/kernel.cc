@@ -21,6 +21,10 @@
 #include "pf/sys/thread.h"
 #include "pf/engine/thread.h"
 #include "pf/file/library.h"
+#include "pf/console/application.h"
+#include "pf/console/argv_input.h"
+#include "pf/console/string_input.h"
+#include "pf/console/net_output.h"
 #include "pf/engine/kernel.h"
 
 using namespace pf_engine;
@@ -46,6 +50,7 @@ Kernel::Kernel() :
   db_eid_{DB_EID_INVALID},
   cache_{nullptr},
   script_factory_{nullptr},
+  console_{nullptr},
   script_eid_{SCRIPT_EID_INVALID},
   isinit_{false},
   stop_{false} {
@@ -78,8 +83,21 @@ pf_net::connection::Basic *Kernel::get_connector(const std::string &name) {
   int16_t id = connect_list_[name];
   return net_connector_->get(id);
 }
+   
+pf_net::connection::manager::ListenerFactory *
+Kernel::get_net_listener_factory(bool create) {
+  using namespace pf_net::connection::manager;
+  if (!create) {
+    return net_listener_factory_.get();
+  } else if (create && is_null(net_listener_factory_)) {
+    auto factory = new ListenerFactory();
+    if (is_null(factory)) return nullptr;
+    unique_move(ListenerFactory, factory, net_listener_factory_);
+  }
+  return net_listener_factory_.get();
+}
 
- pf_net::connection::manager::Listener *Kernel::get_listener(
+pf_net::connection::manager::Listener *Kernel::get_listener(
      const std::string &name) {
   if (is_null(net_listener_factory_) || 
       listen_list_.find(name) == listen_list_.end()) {
@@ -115,6 +133,7 @@ bool Kernel::init() {
   if (!init_db()) return false;
   if (!init_cache()) return false;
   if (!init_script()) return false;
+  if (!init_console()) return false;
   SLOW_DEBUGLOG(ENGINE_MODULENAME, "[%s] Kernel::init ok!", ENGINE_MODULENAME);
   return true;
 }
@@ -122,31 +141,36 @@ bool Kernel::init() {
 void Kernel::run() {
   if (!is_null(net_)) {
     auto net = net_.get();
-    this->newthread([&net]() { return thread::for_net(net); });
+    this->newthread([net]() { return thread::for_net(net); });
   }
   if (!is_null(db_factory_) && db_eid_ != DB_EID_INVALID) {
     auto env = db_factory_->getenv(db_eid_);
-    this->newthread([&env]() { return thread::for_db(env); });
+    this->newthread([env]() { return thread::for_db(env); });
   }
   if (!is_null(script_factory_) && script_eid_ != SCRIPT_EID_INVALID) { 
     auto env = script_factory_->getenv(script_eid_);
     env->call(GLOBALS["default.script.enter"].data);
-    this->newthread([&env]() { return thread::for_script(env); });
+    this->newthread([env]() { return thread::for_script(env); });
   }
   if (!is_null(cache_)) {
     auto cache = cache_.get();
-    this->newthread([&cache]() { return thread::for_cache(cache); });
+    this->newthread([cache]() { return thread::for_cache(cache); });
   }
   if (!is_null(net_listener_factory_)) {
     for (auto it = listen_list_.begin(); it != listen_list_.end(); ++it) {
       auto net = net_listener_factory_->getenv(it->second);
       if (!is_null(net))
-        this->newthread([&net]() { return thread::for_net(net); });
+        this->newthread([net]() { return thread::for_net(net); });
+        // If use &net then in loop the thread work with the last pointer.
+        // this->newthread([&net]() { return thread::for_net(net); });
     }
   }
   if (!is_null(net_connector_))
     this->newthread(
         [this]() { return thread::for_net(net_connector_.get()); });
+  if (!is_null(console_))
+    this->newthread([this]() { return thread::for_console(console_.get()); });
+
   GLOBALS["app.status"] = kAppStatusRunning;
   loop();
 }
@@ -317,9 +341,7 @@ bool Kernel::init_net() {
                   ENGINE_MODULENAME,
                   count);
     using namespace pf_net::connection::manager;
-    auto factory = new ListenerFactory();
-    if (is_null(factory)) return false;
-    unique_move(ListenerFactory, factory, net_listener_factory_);
+    auto factory = get_net_listener_factory(true);
     for (int8_t i = 0; i < count; ++i) {
       //From global values.
       auto name = GLOBALS["server.name" + std::to_string(i)].data;
@@ -335,6 +357,8 @@ bool Kernel::init_net() {
       auto ip = GLOBALS["server.ip" + std::to_string(i)].data;
       auto port = GLOBALS["server.port" + std::to_string(i)].get<uint16_t>();
       auto encrypt_str = GLOBALS["server.encrypt" + std::to_string(i)].data;
+      auto protocol_standard = 
+        GLOBALS["server.protocol_standard" + std::to_string(i)].get<bool>();
       if (0 == port || conn_max <= 0) {
         SLOW_ERRORLOG(ENGINE_MODULENAME,
                       "[%s] Kernel::init_net extra service the port or "
@@ -352,7 +376,8 @@ bool Kernel::init_net() {
       config.port = port;
       config.conn_max = conn_max;
       config.encrypt_str = encrypt_str;
-      auto envid = net_listener_factory_->newenv(config);
+      config.protocol_standard = protocol_standard;
+      auto envid = factory->newenv(config);
       if (NET_EID_INVALID == envid) return false;
       listen_list_[name] = envid;
       listen_env_[name] = i;
@@ -528,6 +553,68 @@ bool Kernel::init_script() {
   return true;
 }
 
+void console_net_handle(
+    const std::string &cmd, pf_net::connection::Basic *connection) {
+  using namespace pf_console;
+  using namespace pf_basic::string;
+  if (is_null(ENGINE_POINTER)) return;
+  auto console = ENGINE_POINTER->get_console();
+  if (is_null(console)) return;
+  if ("quit" == cmd) {
+    connection->exit();
+    return;
+  }
+  /*
+  std::vector<std::string> args;
+  explode(cmd.c_str(), args, " ", true, true);
+  std::cout << "args.size: " << args.size() << std::endl;
+  ArgvInput input(args, nullptr, true);
+  */
+  StringInput input(cmd);
+  NetOutput output(connection);
+  console->run(&input, &output);
+}
+
+bool Kernel::init_console() {
+  if (GLOBALS["app.console"] == false) return true;
+  SLOW_DEBUGLOG(ENGINE_MODULENAME, 
+                "[%s] Kernel::init_console start...", 
+                ENGINE_MODULENAME);
+  auto console = new pf_console::Application();
+  if (is_null(console)) return false;
+  unique_move(pf_console::Application, console, console_);
+  if (GLOBALS["app.console.port"] > 0) {
+    using namespace pf_net;
+    using namespace pf_net::connection::manager;
+    auto factory = get_net_listener_factory(true);
+    //Environment create.
+    std::string name = GLOBALS["app.console.name"].data;
+    auto port = GLOBALS["app.console.port"].get<uint16_t>();
+    auto ip = GLOBALS["app.console.ip"].data;
+    auto conn_max = GLOBALS["app.console.connmax"].get<uint16_t>();
+    listener_config_t config;
+    config.name = name;
+    config.ip = ip;
+    config.port = port;
+    config.conn_max = conn_max;
+    config.encrypt_str = GLOBALS["app.console.encrypt"].data;
+    config.protocol_standard = true;
+    auto envid = factory->newenv(config);
+    if (NET_EID_INVALID == envid) return false;
+    auto pointer = factory->getenv(envid);
+    pointer->set_standard_callback(console_net_handle);
+    listen_list_[name] = envid;
+    SLOW_DEBUGLOG(ENGINE_MODULENAME,
+                  "[%s] service console listen at: host[%s] port[%d] max[%d].",
+                  ENGINE_MODULENAME,
+                  0 == ip.size() ? "*" : ip.c_str(),
+                  port,
+                  conn_max);
+  }
+
+  return true;
+}
+
 //Get the net handle script function name.
 const std::string Kernel::get_script_function(
     pf_net::connection::Basic *connection) {
@@ -566,6 +653,7 @@ void Kernel::loop() {
         this->tasks_.pop();
       }
     }
+
     if (task) task();
     auto reconnect_time = GLOBALS["default.net.reconnect_time"].get<uint32_t>();
     if (reconnect_time > 0 && curtime - last_reconnect > reconnect_time) {

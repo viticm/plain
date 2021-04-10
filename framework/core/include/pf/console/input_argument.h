@@ -25,13 +25,17 @@ class InputArgument : public pf_interfaces::console::InputParameter {
    InputArgument(const std::string &name, 
                  uint16_t mode = kModeNone, 
                  const std::string &description = "",
-                 const std::string &def = "") {
+                 const std::string &def = "") : InputParameter(
+                   name, mode, description, def
+                   ) {
    }
 
    InputArgument(const std::string &name, 
                  mode_t mode = kModeNone, 
                  const std::string &description = "",
-                 const std::vector<std::string> &def = {}) {}
+                 const std::vector<std::string> &def = {}) : InputParameter(
+                   name, mode, description, def
+                   ) {}
 
    virtual ~InputArgument() {}
 

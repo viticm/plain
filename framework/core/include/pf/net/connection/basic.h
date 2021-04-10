@@ -38,13 +38,13 @@ struct packet_async_t {
     packet{nullptr},
     packetid{0},
     flag{kPacketFlagNone} {
-  };
+  }
 
   ~packet_async_t() {
     safe_delete(packet);
     packetid = 0;//ID_INVALID;
     flag = kPacketFlagNone;
-  };
+  }
 };
 
 namespace pf_net {
@@ -72,34 +72,36 @@ class PF_API Basic {
    virtual bool forward(packet::Interface *packet);
 
  public:
-   int16_t get_id() const { return id_; };
-   void set_id(int16_t id) { id_ = id; };
-   int16_t get_managerid() const { return managerid_; };
-   void set_managerid(int16_t managerid) { managerid_ = managerid; };
-   socket::Basic *socket() { return socket_.get(); };
+   int16_t get_id() const { return id_; }
+   void set_id(int16_t id) { id_ = id; }
+   int16_t get_managerid() const { return managerid_; }
+   void set_managerid(int16_t managerid) { managerid_ = managerid; }
+   socket::Basic *socket() { return socket_.get(); }
 
  public:
    virtual void disconnect();
-   virtual void on_disconnect() {};
-   bool empty() const { return empty_; };
-   void set_empty(bool status = true) { empty_ = status; };
-   bool is_disconnect() const { return disconnect_; };
-   void set_disconnect(bool status = true) { disconnect_ = status; };
+   virtual void on_disconnect() {}
+   // Exit the connection(safe with the listener connection).
+   void exit();
+   bool empty() const { return empty_; }
+   void set_empty(bool status = true) { empty_ = status; }
+   bool is_disconnect() const { return disconnect_; }
+   void set_disconnect(bool status = true) { disconnect_ = status; }
    bool is_valid();
    void clear();
-   bool ready() const { return ready_; }; //connection is ready then is true;
-   uint8_t get_execute_count_pretick() const { return execute_count_pretick_; };
+   bool ready() const { return ready_; } //connection is ready then is true;
+   uint8_t get_execute_count_pretick() const { return execute_count_pretick_; }
    void set_execute_count_pretick(uint8_t count) { 
      execute_count_pretick_ = count; 
-   };
-   void set_status(uint8_t status) { status_ = status; };
-   uint8_t get_status() const { return status_; };
-   void set_safe_encrypt(bool flag) { safe_encrypt_ = flag; };
-   bool is_safe_encrypt() const { return safe_encrypt_; };
+   }
+   void set_status(uint8_t status) { status_ = status; }
+   uint8_t get_status() const { return status_; }
+   void set_safe_encrypt(bool flag) { safe_encrypt_ = flag; }
+   bool is_safe_encrypt() const { return safe_encrypt_; }
    bool check_safe_encrypt() const {
      return safe_encrypt_ || 0 == safe_encrypt_time_;
    }
-   void set_safe_encrypt_time(uint32_t time) { safe_encrypt_time_ = time; };
+   void set_safe_encrypt_time(uint32_t time) { safe_encrypt_time_ = time; }
    bool is_safe_encrypt_timeout() const;
    void set_param(const std::string &_name, 
                   const pf_basic::type::variable_t &value) {
@@ -111,7 +113,7 @@ class PF_API Basic {
 
  public:
    void compress_set_mode(compress_mode_t mode);
-   compress_mode_t compress_get_mode() const { return compress_mode_; };
+   compress_mode_t compress_get_mode() const { return compress_mode_; }
    void encrypt_enable(bool enable);
    void encrypt_set_key(const char *key);
    uint32_t get_receive_bytes();
@@ -119,9 +121,9 @@ class PF_API Basic {
 
  public:
    stream::Input &istream() { return *istream_.get(); }
-   stream::Output &ostream() { return *ostream_.get(); };
+   stream::Output &ostream() { return *ostream_.get(); }
    stream::Input &istream_compress() { return *istream_compress_.get(); }
-   int8_t packet_index() { return packet_index_++; };
+   int8_t packet_index() { return packet_index_++; }
    void set_protocol(protocol::Interface *_protocol) {
      protocol_ = _protocol;
    }
@@ -142,6 +144,21 @@ class PF_API Basic {
    }
    void set_routing(const std::string &_name, bool flag) {
      routing_list_[_name] = flag == true ? 1 : -1;
+   }
+
+   // Set the error times(now use in protocol peek).
+   void set_error_times(uint8_t times) {
+     error_times_ = times;
+   }
+
+   // Get the error times.
+   uint8_t get_error_times() const {
+     return error_times_;
+   }
+
+   // Increase error times.
+   void inc_error_times() {
+     error_times_ += 1;
    }
 
  private:
@@ -181,6 +198,7 @@ class PF_API Basic {
    pf_basic::type::variable_set_t params_; //The extend param set.
    std::map<std::string, int8_t> routing_list_; //The connection routing list.
    std::mutex mutex_;
+   uint8_t error_times_;
 
 };
 

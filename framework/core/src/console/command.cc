@@ -1,18 +1,37 @@
+#include "pf/support/helpers.h"
+#include "pf/console/application.h"
 #include "pf/console/command.h"
 
+using namespace pf_support;
 using namespace pf_console;
 
 // Static member must be initialized.
-std::string Command::default_name_;
+std::string Command::default_name_{"unknown"};
+   
+void Command::merge_application_definition(bool merge_args) {
+  if (is_null(app_) or !is_null(full_definition_)) return;
+  unique_move(InputDefinition, new InputDefinition(), full_definition_);
+  full_definition_->set_options(array_values(definition_->get_options()));
+  full_definition_->add_options(
+    array_values(app_->get_definition()->get_options()));
+  if (merge_args) {
+    full_definition_->set_arguments(
+        array_values(app_->get_definition()->get_arguments()));
+    full_definition_->add_arguments(array_values(definition_->get_arguments()));
+  } else {
+    full_definition_->set_arguments(array_values(definition_->get_arguments()));
+  }
+}
 
 uint8_t Command::run(Input *input, Output *output) {
   uint8_t r{0};
+  merge_application_definition();
   // bind the input against the command specific arguments/options
   try {
-    input->bind(definition_.get());
+    input->bind(get_definition(), is_parse_input());
   } catch (std::exception &e) {
     if (!ignore_validation_errors_)
-      throw e;
+      throw std::runtime_error(e.what());
   }
   initialize(input, output);
 

@@ -27,7 +27,7 @@ class Command {
      std::string name{_name};
      if (name == "") name = get_default_name();
      set_name(name);
-     configure();
+     // configure(); // Can't call virtual function in construct.
    }
    virtual ~Command() {}
 
@@ -58,6 +58,14 @@ class Command {
    }
 
    virtual void set_command(Command *) {}
+
+   // Configures the current command.
+   virtual void configure() {}
+
+   // If parse tokens when bind input definition.
+   virtual bool is_parse_input() const {
+     return true;
+   }
 
  public:
 
@@ -91,7 +99,8 @@ class Command {
 
    // Gets the InputDefinition attached to this Command.
    InputDefinition *get_definition() {
-     return definition_.get();
+     return is_null(full_definition_) ? 
+       definition_.get() : full_definition_.get();
    }
 
    // Adds an argument.
@@ -220,6 +229,10 @@ class Command {
      return app_;
    }
 
+   // Merges the application definition with the command definition.
+   //
+   // This method is not part of public API and should not be used directly.
+   void merge_application_definition(bool merge_args = true);
 
  protected:
 
@@ -234,6 +247,7 @@ class Command {
    // execute() method, you set the code to execute by passing
    // a Closure to the setCode() method.
    virtual uint8_t execute(Input *input, Output *output) {
+     std::cout << "execute: in virtual=========================" << std::endl;
      throw std::logic_error("You must override the execute() "
        "method in the concrete command class.");
      return 1;
@@ -254,11 +268,6 @@ class Command {
    // and options.
    virtual void initialize(Input *, Output *) {}
 
- protected:
-
-   // Configures the current command.
-   virtual void configure() {}
-
  private:
 
    std::string name_;
@@ -268,7 +277,7 @@ class Command {
    bool hidden_;
    std::string help_;
    std::string description_;
-   InputDefinition *full_definition_;
+   std::unique_ptr<InputDefinition> full_definition_;
    bool ignore_validation_errors_;
    code_t code_;
    std::map<std::string, std::string> synopsis_;

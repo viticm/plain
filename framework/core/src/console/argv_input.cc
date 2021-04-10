@@ -1,6 +1,3 @@
-#include <stdexcept>
-#include <set>
-#include <regex>
 #include "pf/basic/global.h"
 #include "pf/support/helpers.h"
 #include "pf/basic/string.h"
@@ -10,17 +7,18 @@ using namespace pf_support;
 using namespace pf_console;
 using namespace pf_basic;
 
-ArgvInput::ArgvInput(
-    const std::vector<std::string> &argv, InputDefinition *definition) 
+ArgvInput::ArgvInput( 
+    const std::vector<std::string> &argv, 
+    InputDefinition *definition, bool no_app_name) 
   : Input(definition) {
-  std::vector<std::string> _argv{argv};
+  std::vector<std::string> _argv = argv;
   if (_argv.empty() && !empty(GLOBALS["argv"])) {
     auto temp = explode(" ", GLOBALS["argv"].c_str());
     for (const auto & el: temp) {
       _argv.emplace_back(el.data);
     }
   }
-  if (!_argv.empty()) { // Remove application name.
+  if (!no_app_name && !_argv.empty()) { // Remove application name.
     _argv.erase(_argv.begin());
   }
   tokens_ = _argv;
@@ -28,11 +26,12 @@ ArgvInput::ArgvInput(
 
 void ArgvInput::parse() {
   bool parse_options{true};
-  for (const auto &el : tokens_) {
-    parsed_.emplace_back(el);
+  for (int32_t i = tokens_.size() - 1; i >= 0; --i) {
+    parsed_.emplace_back(tokens_[i]);
   }
   while (!parsed_.empty()) {
-    auto token = parsed_.front(); parsed_.pop_front();
+    auto token = parsed_.back(); parsed_.pop_back();
+    // std::cout << "token: " << token << std::endl;
     if (parse_options && "" == token) {
       parse_argument(token);
     } else if (parse_options && "--" == token) {
@@ -45,6 +44,11 @@ void ArgvInput::parse() {
       parse_argument(token);
     }
   }
+  /**
+  for (auto &op : options_) {
+    std::cout << "op: " << op.first << " v: " << op.second << std::endl;
+  }
+  **/
 }
 
 void ArgvInput::parse_short_option(const std::string &token) {
@@ -86,10 +90,11 @@ void ArgvInput::parse_short_option_set(const std::string &name) {
 void ArgvInput::parse_long_option(const std::string &token) {
   auto name = token.substr(2);
   auto pos = name.find("=");
+  // std::cout << "name: " << name << std::endl;
   if (std::string::npos != pos) {
     auto value = name.substr(pos + 1);
     if (0 == value.size()) {
-      parsed_.emplace_front(value);
+      parsed_.emplace_back(value);
     }
     add_long_option(name.substr(0, pos), value);
   } else {
@@ -98,11 +103,21 @@ void ArgvInput::parse_long_option(const std::string &token) {
 }
 
 void ArgvInput::parse_argument(const std::string &token) {
+
+  // Definition argument is empty then not parse.
+  if (definition_->get_argument_count() <= 0) {
+#if _DEBUG
+    std::string str = "ArgvInput::parse_argument \"" + token + "\"" + " empty";
+    std::cout << str << std::endl;
+#endif
+    return;
+  }
+
   auto c = arguments_.size();
   // if input is expecting another argument, add it
   if (definition_->has_argument(c)) {
     auto arg = definition_->get_argument(c);
-    arguments_[arg.name()] = "#" + token; 
+    arguments_[arg.name()] = (arg.is_array() ? "#" : "") + token; 
   } else if (definition_->has_argument(c - 1) && 
       definition_->get_argument(c - 1).is_array()) {
     auto arg = definition_->get_argument(c - 1);
@@ -162,11 +177,11 @@ void ArgvInput::add_long_option(
   if (value == "" && option.accept_value() && parsed_.size() > 0) {
     // if option accepts an optional or mandatory argument 
     // let's see if there is one provided
-    auto next = parsed_.front(); parsed_.pop_front();
+    auto next = parsed_.back(); parsed_.pop_back();
     if ((next[0] != ' ' && next[0] != '-') || "" == next) {
       value = next;
     } else {
-      parsed_.emplace_front(next);
+      parsed_.emplace_back(next);
     }
   }
   if ("" == value) {
@@ -207,12 +222,13 @@ std::string ArgvInput::get_first_argument() const {
           tokens_[i + 1] == options_[name]) {
         is_option = true;
       }
-      if (is_option) {
-        is_option = false;
-        continue;
-      }
-      return token;
+      continue;
     }
+    if (is_option) {
+      is_option = false;
+      continue;
+    }
+    return token;
   }
   return "";
 }

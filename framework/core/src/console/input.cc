@@ -1,4 +1,3 @@
-#include <regex>
 #include "pf/support/helpers.h"
 #include "pf/basic/string.h"
 #include "pf/console/input.h"
@@ -18,21 +17,27 @@ Input::Input(InputDefinition *definition) {
   }
 }
 
-void Input::bind(InputDefinition *definition) {
+void Input::bind(InputDefinition *definition, bool need_parse) {
   arguments_.clear();
   options_.clear();
-  auto temp = new InputDefinition();
-  *temp = *definition;
-  std::unique_ptr<InputDefinition> pointer(temp);
-  definition_ = std::move(pointer);
-  parse();
+  if (is_null(definition_)) {
+    auto temp = new InputDefinition();
+    *temp = *definition;
+    std::unique_ptr<InputDefinition> pointer(temp);
+    definition_ = std::move(pointer);
+  } else {
+    auto temp = definition_.get();
+    *temp = *definition;
+  }
+  auto options = definition_->get_options();
+  if (need_parse) parse();
 }
 
 void Input::validate() const {
   auto missing_arguments = array_filter<std::string>(
     array_keys(definition_->get_arguments()), 
     [this](const std::string &argument){
-      return arguments_.find(argument) != arguments_.end() 
+      return arguments_.find(argument) == arguments_.end() 
         && definition_->get_argument(argument).is_required();
   });
   if (missing_arguments.size() > 0) {

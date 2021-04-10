@@ -18,10 +18,17 @@
 
 #include "pf/basic/config.h"
 
+#define CONSOLE_MODULENAME "console"
+
 namespace pf_console {
 
 class Application;
 class Command;
+
+typedef enum {
+  kCommandExecuteNone = 0,       // Command execute success.
+  kCommandExecuteInvalid = 1,    // Command execute exit with invalid.
+} command_execute_t;
 
 }
 

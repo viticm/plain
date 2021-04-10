@@ -16,6 +16,7 @@
 #include "pf/db/config.h"
 #include "pf/cache/config.h"
 #include "pf/net/connection/manager/config.h"
+#include "pf/console/application.h"
 
 namespace pf_engine {
 
@@ -25,6 +26,7 @@ bool for_net(pf_net::connection::manager::Basic *net);
 bool for_db(pf_db::Interface *db);
 bool for_cache(pf_cache::Manager *cache);
 bool for_script(pf_script::Interface *env);
+bool for_console(pf_console::Application *console);
 
 } //namespace thread
 
