@@ -70,7 +70,7 @@ class PF_API Kernel : public pf_basic::Singleton< Kernel > {
    //Get the extra listener or connector.
    pf_net::connection::Basic *get_connector(const std::string &name);
    pf_net::connection::manager::Listener *get_listener(const std::string &name);
-   pf_net::connection::manager::Connector *get_connector_manager() {
+   pf_net::connection::manager::Connector *get_connector() {
      return net_connector_.get();
    };
    pf_db::Interface *get_db(const std::string &name);
@@ -92,6 +92,15 @@ class PF_API Kernel : public pf_basic::Singleton< Kernel > {
      if (connect_env_.find(name) == connect_env_.end()) return -1;
      return connect_env_[name];
    }
+
+   std::map<std::string, int8_t> get_connect_list() const {
+     return connect_list_;
+   }
+   
+   std::map<std::string, int8_t> get_db_list() const {
+     return db_list_;
+   }
+
    // Get the net handle script function name.
    const std::string get_script_function(pf_net::connection::Basic *);
    
