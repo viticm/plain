@@ -76,7 +76,10 @@ void App::configure() {
   set_name("app")
     .set_definition(definition)
     .set_description("Apps commands")
-    .set_help("App the all can use command.");
+    .set_help(
+        "App commands\n"
+        " --stop|-k Stop the application\n"
+        " --status|-s Get the application status info");
 }
 
 uint8_t App::execute(Input *input, Output *output) {
