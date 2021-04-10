@@ -5,6 +5,7 @@
 - **Author:** Viticm
 - **Website:** [http://www.cnblogs.com/lianyue/](http://www.cnblogs.com/lianyue/)
 - **Version:** 1.1d
+
 [![Build Status](https://travis-ci.org/viticm/plain.svg)](https://travis-ci.org/viticm/plain)
 
 The core is `SFE`, that is the safe and fast and easy.
