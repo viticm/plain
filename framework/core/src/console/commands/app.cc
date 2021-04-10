@@ -31,6 +31,7 @@ static void status_info(pf_console::Output *output) {
   auto net_factory = ENGINE_POINTER->get_net_listener_factory(false);
   if (net_factory) {
     str = "Extra service: " + std::to_string(net_factory->size());
+    output->write_ln(str);
     auto listen_list = ENGINE_POINTER->get_listen_list();
     for (auto it = listen_list.begin(); it != listen_list.end(); ++it) {
       str = "  name: " + it->first;
