@@ -8,6 +8,8 @@
 
 [![Build Status](https://travis-ci.org/viticm/plain.svg)](https://travis-ci.org/viticm/plain)
 
+<img src="https://github.com/viticm/plain-simple/blob/master/docs/pf-simple.gif" />
+
 The core is `SFE`, that is the safe and fast and easy.
 
 **What's i can do:**
