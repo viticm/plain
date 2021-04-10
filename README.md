@@ -156,7 +156,7 @@ You can use it set the environment file like `0=pf_plugin_lua:global:0`.
 
 You can learn write a plugin of plain framework from this project:
 
-[https://github.com/viticm/pf_plugins](https://github.com/viticm/pf_plugins)
+[https://github.com/viticm/plain-plugins](https://github.com/viticm/plain-plugins)
 
 
 ## Simple project. ##
