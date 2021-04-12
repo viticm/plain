@@ -1,3 +1,5 @@
+#include "pf/cache/db_store.h"
+#include "pf/cache/repository.h"
 #include "pf/db/factory.h"
 #include "pf/db/interface.h"
 #include "pf/engine/application.h"
@@ -57,6 +59,27 @@ static void status_info(pf_console::Output *output) {
     }
   } else {
     output->write_ln("Extra service: 0");
+  }
+
+  // Cache.
+  if (GLOBALS["default.cache.service"] == true) {
+    str = "Cache service: 1";
+    auto cache = ENGINE_POINTER->get_cache();
+    pf_cache::DBStore *store{nullptr};
+    if (!is_null(cache)) {
+      auto driver = cache->get_db_dirver();
+      if (!is_null(driver)) 
+        store = dynamic_cast<pf_cache::DBStore*>(driver->store());
+    }
+    if (!is_null(store)) {
+      str += " query: " + std::to_string(store->get_query_size());
+      str += " forget: " + std::to_string(store->get_forget_size());
+    } else {
+      str += " query: 0 forget 0";
+    }
+    output->write_ln(str);
+  } else {
+    output->write_ln("Cache service: 0");
   }
 
   // The clients.

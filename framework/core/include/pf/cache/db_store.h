@@ -243,6 +243,14 @@ class PF_API DBStore : public StoreInterface {
      return &key_map_;
    }
 
+   size_t get_query_size() const {
+     return query_map_.size();
+   }
+
+   size_t get_forget_size() const {
+     return forgetlist_.size();
+   }
+
  private:
 
    //Cache key is valid.
