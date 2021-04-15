@@ -5,10 +5,16 @@
  * @copyright Copyright (c) 2014- viticm( viticm.ti@gmail.com )
  * @license
  * @user viticm<viticm.ti@gmail.com>
- * @date 2017/08/09 20:22
+ * @date 2021/04/15 10:19
  * @uses connection manager class
- *       With ten million with rand and mix connections pass in 2017-8-9.
- *       With more the 25t buffers send and recv in single connection in 2017-8-26(three days).
+ *       With ten million with rand and mix connections pass on 2017-8-9.
+ *       With more than 25t buffers send and recv in single connection on 2017-8-26(three days).
+ *       cn:
+ *         考虑使用线程池任务的方式来替换网络线程工作方式，目前在kernel中一个网
+ *         络管理器则使用一个线程进行tick，这会导致没有任何连接和数据时CPU的占用
+ *         如果改用触发式向线程池增加任务的方式，那么只需要一个线程来常驻处理（
+ *         *但目前这种一对一线程方式其实没有太多问题，而且在总体上常驻消耗也不太多，
+ *         线程池的方式可以后续再考虑 2021-4-15）
  */
 #ifndef PF_NET_CONNECTION_MANAGER_BASE_H_
 #define PF_NET_CONNECTION_MANAGER_BASE_H_
