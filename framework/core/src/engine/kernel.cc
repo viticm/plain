@@ -201,9 +201,12 @@ pf_net::connection::Basic *Kernel::connect(const std::string &name) {
   auto ip = GLOBALS["client.ip" + std::to_string(id)].data;
   auto port = GLOBALS["client.port" + std::to_string(id)].get<uint16_t>();
   auto encrypt_str = GLOBALS["client.encrypt" + std::to_string(id)].data;
+  auto startup = GLOBALS["client.startup" + std::to_string(id)].get<bool>();
   auto connection = connect(name, ip, port, encrypt_str);
   if (!is_null(connection))
     connect_list_[name] = connection->get_id();
+  else if (startup) // Startup connection will auto reconnect.
+    connect_list_[name] = -1;
   return connection;
 }
 
@@ -656,7 +659,7 @@ void Kernel::loop() {
 
     if (task) task();
     auto reconnect_time = GLOBALS["default.net.reconnect_time"].get<uint32_t>();
-    if (reconnect_time > 0 && curtime - last_reconnect > reconnect_time) {
+    if (reconnect_time > 0 && curtime - last_reconnect >= reconnect_time) {
       last_reconnect = curtime;
       //Reconnect the connected.
       for (auto it = connect_list_.begin(); it != connect_list_.end(); ++it) {
