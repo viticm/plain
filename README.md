@@ -57,6 +57,11 @@ can get it like: `GLOBALS["app.name"]`
 
 1. `name` - Set the appliction name(*by default `""`*).
 2. `pidfile` - Set the pid file name(*by default `""`*).
+3. `console` - If Enable the console.(*by default 0*)
+4. `console.name` - The console name.(*by default `"console"`*)
+5. `console.ip` - The console net listen ip.(*by default `"127.0.0.1"`*)
+6. `console.port` - Then console net listen port.(*by default -1*)
+7. `console.connmax` - The console net connection max.(*by default 32*)
 
 **log**
 
