@@ -53,44 +53,44 @@ cd ../plain/bin && ./app --env=config/.env.example
 
 **app（应用）** 
 
-1. `name` - 设置应用名称(*by default `""`*).
-2. `pidfile` - 设置应用的pid文件路径(*by default `""`*).
-3. `console` - 是否开启控制台.(*by default 0*)
-4. `console.name` - 控制台名称.(*by default `"console"`*)
-5. `console.ip` - 控制台监听IP.(*by default `"127.0.0.1"`*)
-6. `console.port` - 控制台监听端口.(*by default -1*)
-7. `console.connmax` - 控制台支持的网络最大连接数.(*by default 32*)
+1. `name` - 设置应用名称(*默认 `""`*).
+2. `pidfile` - 设置应用的pid文件路径(*默认 `""`*).
+3. `console` - 是否开启控制台.(*默认 0*)
+4. `console.name` - 控制台名称.(*默认 `"console"`*)
+5. `console.ip` - 控制台监听IP.(*默认 `"127.0.0.1"`*)
+6. `console.port` - 控制台监听端口.(*默认 -1*)
+7. `console.connmax` - 控制台支持的网络最大连接数.(*默认 32*)
 
 
 **log（日志）**
 
-1. `active` - 是否开启日志模块(*by default `1`*).
-2. `directory` - 日志的目录(*by default `应用所在目录加上 "/log".`*).
-3. `clear` - 是否在启动应用的时候清除所有日志(*by default `0`*).
+1. `active` - 是否开启日志模块(*默认 `1`*).
+2. `directory` - 日志的目录(*默认 `应用所在目录加上 "/log".`*).
+3. `clear` - 是否在启动应用的时候清除所有日志(*默认 `0`*).
 
 **default（默认）**
 
-1. `engine.frame` - 主线程的帧率(*by default `100`*).
-2. `net.open` - 是否开启默认网络(*by default `0`*).
-3. `net.service` - 默认网络管理器是否为服务(*by default `0`*).
-4. `net.ip` - 默认网络服务的IP(*by default `""`, bind any*).
-5. `net.port` - 默认网络服务的端口(*by default `0`, rand port*).
-6. `net.connmax` - 默认网络服务器连接最大数(*by default `NET_CONNECTION_MAX`*).
-7. `net.reconnect_time` - 默认网络自动重连的时间（秒）(*by default `3`*).
-8. `script.open` - 默认脚本是否开启(*by default `0`*).
-9. `script.rootpath` - 默认脚本文件的根目录(*by default `SCRIPT_ROOT_PATH`*).
-10. `script.workpath` - 默认脚本文件的工作目录(*by default `SCRIPT_WORK_PATH`*).
-11. `script.bootstrap` - 默认脚本文件的启动文件(*by default `bootstrap.lua`*).
-12. `script.reload` - 默认脚本文件重载的文件(*by default `reload.lua`*).
-13. `script.type` - 默认脚本文件的类型（和插件注册类型对应）(*by default `-1`*).
-14. `script.heartbeat` - 默认脚本文件心跳函数(*by default `""`*).
-15. `script.enter` - 默认脚本文件的启动函数(*by default `"main"`*).
-16. `db.open` - 默认数据库是否开启(*by default `0`*).
-17. `db.type` - 默认数据库类型（和插件类型对应）(*by default `-1`*).
-18. `db.name` - 默认数据库名称(*by default `""`*).
-19. `db.user` - 默认数据库用户(*by default `""`*).
-20. `db.password` - 默认数据库密码(*by default `""`*).
-21. `db.encrypt` - 默认数据库的密码是否加密(*by default `0`*)
+1. `engine.frame` - 主线程的帧率(*默认 `100`*).
+2. `net.open` - 是否开启默认网络(*默认 `0`*).
+3. `net.service` - 默认网络管理器是否为服务(*默认 `0`*).
+4. `net.ip` - 默认网络服务的IP(*默认 `""`, bind any*).
+5. `net.port` - 默认网络服务的端口(*默认 `0`, rand port*).
+6. `net.connmax` - 默认网络服务器连接最大数(*默认 `NET_CONNECTION_MAX`*).
+7. `net.reconnect_time` - 默认网络自动重连的时间（秒）(*默认 `3`*).
+8. `script.open` - 默认脚本是否开启(*默认 `0`*).
+9. `script.rootpath` - 默认脚本文件的根目录(*默认 `SCRIPT_ROOT_PATH`*).
+10. `script.workpath` - 默认脚本文件的工作目录(*默认 `SCRIPT_WORK_PATH`*).
+11. `script.bootstrap` - 默认脚本文件的启动文件(*默认 `bootstrap.lua`*).
+12. `script.reload` - 默认脚本文件重载的文件(*默认 `reload.lua`*).
+13. `script.type` - 默认脚本文件的类型（和插件注册类型对应）(*默认 `-1`*).
+14. `script.heartbeat` - 默认脚本文件心跳函数(*默认 `""`*).
+15. `script.enter` - 默认脚本文件的启动函数(*默认 `"main"`*).
+16. `db.open` - 默认数据库是否开启(*默认 `0`*).
+17. `db.type` - 默认数据库类型（和插件类型对应）(*默认 `-1`*).
+18. `db.name` - 默认数据库名称(*默认 `""`*).
+19. `db.user` - 默认数据库用户(*默认 `""`*).
+20. `db.password` - 默认数据库密码(*默认 `""`*).
+21. `db.encrypt` - 默认数据库的密码是否加密(*默认 `0`*)
 
 **plugins（插件）**
 
