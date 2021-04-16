@@ -149,8 +149,8 @@ bool Interface::remove(connection::Basic *connection) {
   if (connection->name() != "") 
     connection_names_[connection->name()] = -1;
   if (!erase(connection)) return false; 
-  pool_->remove(connection->get_id());
   connection->disconnect();
+  pool_->remove(connection->get_id());
   return true;
 }
 

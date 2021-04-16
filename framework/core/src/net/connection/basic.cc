@@ -170,6 +170,7 @@ bool Basic::heartbeat(uint32_t, uint32_t) {
       return false;
     }
   }
+  // Routing check also can put it in input.
   std::string aim_name = params_["routing"].data;
   if (aim_name != "") {
     auto last_check = params_["routing_check"].get<uint32_t>();
