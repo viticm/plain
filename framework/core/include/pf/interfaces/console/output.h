@@ -18,7 +18,7 @@ namespace pf_interfaces {
 
 namespace console {
 
-class Output {
+class PF_API Output {
 
  public:
    Output() {}

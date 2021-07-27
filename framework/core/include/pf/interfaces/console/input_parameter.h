@@ -18,7 +18,7 @@ namespace pf_interfaces {
 
 namespace console {
 
-class InputParameter {
+class PF_API InputParameter {
 
  public:
 

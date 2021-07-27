@@ -134,6 +134,10 @@
 /usr/local/include/pf/interfaces/console/output.h
 /usr/local/include/pf/interfaces/console/application.h
 /usr/local/include/pf/interfaces/config.h
+/usr/local/include/pf/interfaces/queue/job.h
+/usr/local/include/pf/interfaces/queue/config.h
+/usr/local/include/pf/interfaces/queue/interface.h
+/usr/local/include/pf/interfaces/events/config.h
 /usr/local/include/pf/engine/kernel.h
 /usr/local/include/pf/engine/thread.h
 /usr/local/include/pf/engine/config.h

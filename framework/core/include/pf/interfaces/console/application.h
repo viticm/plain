@@ -18,7 +18,7 @@ namespace pf_interfaces {
 
 namespace console {
 
-class Applicaiton {
+class PF_API Applicaiton {
 
  public:
    Applicaiton() {}
@@ -27,19 +27,19 @@ class Applicaiton {
  public:
 
    // Init the application for commands.
-   void init() = 0;
+   virtual void init() = 0;
 
    // Run a console command by name.
-   int32_t call(const std::string &command, 
-                const pf_basic::variable_array_t &params = {}) = 0;
+   virtual int32_t call(const std::string &command, 
+                        const pf_basic::type::variable_array_t &params = {}) = 0;
 
    // Get the output from the last command.
-   std::string output() const = 0;
+   virtual std::string output() const = 0;
 
    // Get all of the commands registered with the console.
-   std::vector<std::string> all() const = 0;
+   virtual std::vector<std::string> all() const = 0;
 
-}
+};
 
 } // namespace console
 
