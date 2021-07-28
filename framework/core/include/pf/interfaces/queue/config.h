@@ -20,6 +20,14 @@ namespace queue {
 
 class Interface;
 class Job;
+class Factory;
+class Clearable;
+class Monitor;
+class Should;
+class EntityResolver;
+class ShouldBeUnique;
+class ShouldBeEncrypted;
+class ShouldBeUniqueUntilProcessing;
 
 } // namespace queue
 
