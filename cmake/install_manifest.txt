@@ -134,9 +134,17 @@
 /usr/local/include/pf/interfaces/console/output.h
 /usr/local/include/pf/interfaces/console/application.h
 /usr/local/include/pf/interfaces/config.h
+/usr/local/include/pf/interfaces/queue/should_be_unique_until_processing.h
+/usr/local/include/pf/interfaces/queue/clearable.h
 /usr/local/include/pf/interfaces/queue/job.h
 /usr/local/include/pf/interfaces/queue/config.h
+/usr/local/include/pf/interfaces/queue/entity_resolver.h
+/usr/local/include/pf/interfaces/queue/factory.h
+/usr/local/include/pf/interfaces/queue/should_be_encrypted.h
 /usr/local/include/pf/interfaces/queue/interface.h
+/usr/local/include/pf/interfaces/queue/should_be_unique.h
+/usr/local/include/pf/interfaces/queue/monitor.h
+/usr/local/include/pf/interfaces/queue/should.h
 /usr/local/include/pf/interfaces/events/config.h
 /usr/local/include/pf/interfaces/events/dispatcher.h
 /usr/local/include/pf/engine/kernel.h
@@ -147,6 +155,8 @@
 /usr/local/include/pf/script/config.h
 /usr/local/include/pf/script/factory.h
 /usr/local/include/pf/script/interface.h
+/usr/local/include/pf/events/config.h
+/usr/local/include/pf/events/dispatcher.h
 /usr/local/include/pf/basic/util.h
 /usr/local/include/pf/basic/rang.h
 /usr/local/include/pf/basic/string.h

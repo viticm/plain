@@ -25,6 +25,11 @@ class PF_API EntityResolver {
    EntityResolver() {}
    virtual ~EntityResolver() {}
 
+ public:
+
+   // Resolve the entity for the given ID.
+   virtual int32_t resolve(const std::string &type, int32_t id) = 0;
+
 };
 
 } // namespace queue

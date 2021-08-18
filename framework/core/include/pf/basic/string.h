@@ -99,6 +99,12 @@ PF_API inline std::string addslashes(const std::string &str) {
       "'", "\\'", str_replace("\"", "\\\"", str_replace("\\", "\\\\", str)));
 }
 
+// Quote string without slashes.
+PF_API inline std::string stripslashes(const std::string &str) {
+  return str_replace(
+      "\\'", "'", str_replace("\\\"", "\"", str_replace("\\\\", "\\", str)));
+}
+
 } //namespace string
 
 } //namespace pf_basic
