@@ -37,6 +37,7 @@
 #define any_HAVE_TWEAK_HEADER  1
 #else
 #define any_HAVE_TWEAK_HEADER  0
+
 //# pragma message("any.hpp: Note: Tweak header not supported.")
 #endif
 
@@ -269,16 +270,15 @@ namespace pf_basic {
 // Presence of C++11 language features:
 
 #define any_HAVE_CONSTEXPR_11       any_CPP11_140
-#define any_HAVE_DEFAULT_FUNCTION_TEMPLATE_ARG \
-                    any_CPP11_120
-#define any_HAVE_INITIALIZER_LIST     any_CPP11_120
-#define any_HAVE_NOEXCEPT         any_CPP11_140
-#define any_HAVE_NULLPTR        any_CPP11_100
-#define any_HAVE_TYPE_TRAITS      any_CPP11_90
+#define any_HAVE_DEFAULT_FUNCTION_TEMPLATE_ARG any_CPP11_120
+#define any_HAVE_INITIALIZER_LIST   any_CPP11_120
+#define any_HAVE_NOEXCEPT           any_CPP11_140
+#define any_HAVE_NULLPTR            any_CPP11_100
+#define any_HAVE_TYPE_TRAITS        any_CPP11_90
 #define any_HAVE_STATIC_ASSERT      any_CPP11_100
-#define any_HAVE_ADD_CONST        any_CPP11_90
-#define any_HAVE_OVERRIDE         any_CPP11_90
-#define any_HAVE_REMOVE_REFERENCE     any_CPP11_90
+#define any_HAVE_ADD_CONST          any_CPP11_90
+#define any_HAVE_OVERRIDE           any_CPP11_90
+#define any_HAVE_REMOVE_REFERENCE   any_CPP11_90
 
 #define any_HAVE_TR1_ADD_CONST      (!! any_COMPILER_GNUC_VERSION)
 #define any_HAVE_TR1_REMOVE_REFERENCE   (!! any_COMPILER_GNUC_VERSION)
