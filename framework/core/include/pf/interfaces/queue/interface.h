@@ -27,48 +27,48 @@ class PF_API Interface {
  public:
 
    // Get the size of the queue.
-   size_t size(const std::string &queue = "") = 0;
+   virtual size_t size(const std::string &queue = "") = 0;
 
    // Push a new job onto the queue.
-   void push(const std::string &job,
-             const std::string &data = "",
-             const std::string &queue = "") = 0;
+   virtual void push(const std::string &job,
+                     const std::string &data = "",
+                     const std::string &queue = "") = 0;
 
    // Push a new job onto the queue.
-   void push_on(const std::string &queue,
-                const std::string &job,
-                const std::string &data = "") = 0;
+   virtual void push_on(const std::string &queue,
+                        const std::string &job,
+                        const std::string &data = "") = 0;
 
    // Push a raw payload onto the queue.
-   void push_raw(const std::string &payload,
-                 const std::string &queue = "",
-                 const std::vector<std::string> &options = {}) = 0;
+   virtual void push_raw(const std::string &payload,
+                         const std::string &queue = "",
+                         const std::vector<std::string> &options = {}) = 0;
 
    // Push a new job onto the queue after a delay.
-   void later(int32_t delay,
-              const std::string &job,
-              const std::string &data = "",
-              const std::string &queue = "") = 0;
+   virtual void later(int32_t delay,
+                      const std::string &job,
+                      const std::string &data = "",
+                      const std::string &queue = "") = 0;
 
    // Push a new job onto the queue after a delay.
-   void later_on(const std::string &queue,
-                 int32_t delay,
-                 const std::string &job,
-                 const std::string &data = "") = 0;
+   virtual void later_on(const std::string &queue,
+                         int32_t delay,
+                         const std::string &job,
+                         const std::string &data = "") = 0;
 
    // Push an array of jobs onto the queue.
-   void bulk(const std::vector<std::string> &jobs,
-             const std::string &data = "",
-             const std::string &queue = "") = 0;
+   virtual void bulk(const std::vector<std::string> &jobs,
+                     const std::string &data = "",
+                     const std::string &queue = "") = 0;
 
    // Pop the next job off of the queue.
-   void pop(queue::Job *job = nullptr) = 0;
+   virtual void pop(queue::Job *job = nullptr) = 0;
 
    // Get the connection name for the queue. 
-   std::string get_connection_name() const = 0;
+   virtual std::string get_connection_name() const = 0;
 
    // Set the connection name for the queue. 
-   Interface &set_connection_name(const std::string &name) = 0;
+   virtual Interface &set_connection_name(const std::string &name) = 0;
 
 };
 
