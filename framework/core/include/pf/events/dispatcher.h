@@ -19,7 +19,7 @@
 
 namespace pf_events {
 
-class PF_API Dispatcher {
+class PF_API Dispatcher : public pf_interfaces::events::Dispatcher {
 
  public:
    Dispatcher() {}
@@ -32,26 +32,26 @@ class PF_API Dispatcher {
  public:
 
    // Register an event listener with the dispatcher.
-   void listen(const any &events, const any &listener = nullptr);
+   virtual void listen(const any &events, const any &listener = nullptr);
 
    // Setup a wildcard listener callback.
    void setup_wildcard_listen(const std::string &event, const any &listener);
 
    // Determine if a given event has listeners.
-   bool has_listeners(const std::string &name);
+   virtual bool has_listeners(const std::string &name);
 
    // Determine if the given event has any wildcard listeners.
    bool has_wildcard_listeners(const std::string &name);
 
    // Register an event and payload to be fired later.
-   void push(const std::string &event,
+   virtual void push(const std::string &event,
        const std::vector<std::string> &payload = {});
 
    // Flush a set of pushed events.
-   void flush(const std::string &event);
+   virtual void flush(const std::string &event);
 
    // Register an event subscriber with the dispatcher.
-   void subscribe(const any &subscriber);
+   virtual void subscribe(const any &subscriber);
 
    // Resolve the subscriber instance.
    any resolve_subscriber(const any &subscriber);
@@ -60,7 +60,7 @@ class PF_API Dispatcher {
    any until(const any &event, const std::vector<std::string> &payload = {});
 
    // Fire an event and call the listeners.
-   void dispatch(const any &event,
+   virtual void dispatch(const any &event,
        const std::vector<std::string> &payload = {},
        bool halt = false);
 
@@ -137,10 +137,10 @@ class PF_API Dispatcher {
    any propagate_listener_options(const any &listener, const any &job);
 
    // Remove a set of listeners from the dispatcher.
-   void forget(const std::string &event);
+   virtual void forget(const std::string &event);
 
    // Forget all of the pushed listeners.
-   void forget_pushed();
+   virtual void forget_pushed();
 
    // Get the queue implementation from the resolver.
    Queue *resolve_queue();
