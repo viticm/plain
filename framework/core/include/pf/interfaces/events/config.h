@@ -19,6 +19,11 @@ namespace pf_interfaces {
 namespace events {
 
 class Dispatcher;
+class Stream;
+class Event;
+
+template <typename, typename, typename ...>
+class ProtectedStream;
 
 } // namespace events
 

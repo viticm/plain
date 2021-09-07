@@ -45,7 +45,7 @@
 #define strnicmp strncasecmp
 #endif
 #define strtoint64(pointer,endpointer,base) strtoll(pointer,endpointer,base)
-#define strtouint64(pointer,endpointer,base) strtoull(pointer,endpointer,base) 
+#define strtouint64(pointer,endpointer,base) strtoull(pointer,endpointer,base)
 #endif
 
 #if OS_WIN

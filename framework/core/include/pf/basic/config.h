@@ -44,6 +44,7 @@
 #include <chrono>
 #include <tuple>
 #include <regex>
+#include <type_traits>
 /* } C++ */
 
 /* platform { */
@@ -72,6 +73,7 @@
 #include "pf/basic/macros/function.h"
 #include "pf/basic/macros/limit.h"
 #include "pf/basic/macros/other.h"
+#include "pf/basic/traits.h"
 /* } PF useful */
 
 #endif //PF_BASIC_CONFIG_H_

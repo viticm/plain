@@ -7,6 +7,7 @@
  * @user viticm( viticm.ti@gmail.com )
  * @date 2021/08/13 17:49
  * @uses The events config file.
+ *       Implement from: https://github.com/gelldur/EventBus.
  */
 
 #ifndef PF_EVENTS_CONFIG_H_
@@ -17,6 +18,14 @@
 namespace pf_events {
 
 class Dispatcher;
+class NoopStream;
+
+class PostponeHelper;
+class BusInterface;
+class Bus;
+
+template <typename>
+class Listener;
 
 } // namespace pf_events
 

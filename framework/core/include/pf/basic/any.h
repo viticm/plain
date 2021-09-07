@@ -626,36 +626,10 @@ any_nodiscard inline ValueType any_cast(any const & operand) {
    const ValueType *result = any_cast<
      typename std11::add_const<
      typename std11::remove_reference<ValueType>::type >::type >(&operand);
-
 #if any_CONFIG_NO_EXCEPTIONS
    assert(result);
 #else
    if (!result) {
-     throw bad_any_cast();
-   }
-#endif
-
-   return *result;
-}
-
-template <
-  class ValueType
-#if any_HAVE_DEFAULT_FUNCTION_TEMPLATE_ARG
-//  any_REQUIRES_T(...) Allow for VC120 (VS2013):
-  , typename = typename std::enable_if<
-  (std::is_reference<ValueType>::value ||
-   std::is_copy_constructible<ValueType>::value),
-  pf_basic::any_lite::detail::enabler >::type
-#endif
->
-any_nodiscard inline ValueType any_cast(any & operand) {
-   const ValueType * result = any_cast<
-   typename std11::remove_reference<ValueType>::type >(&operand);
-
-#if any_CONFIG_NO_EXCEPTIONS
-   assert(result);
-#else
-   if (!result)
      throw bad_any_cast();
    }
 #endif

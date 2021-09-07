@@ -128,7 +128,7 @@ class PF_API Dispatcher : public pf_interfaces::events::Dispatcher {
        const std::vector<std::string> &arguments);
 
    // Create the listener and job for a queued listener.
-   std::vector<any> createListenerAndJob(
+   std::vector<any> create_listener_and_job(
        const std::string &_class, 
        const std::string &method, 
        const std::vector<std::string> &arguments);

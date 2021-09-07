@@ -145,6 +145,8 @@
 /usr/local/include/pf/interfaces/queue/should_be_unique.h
 /usr/local/include/pf/interfaces/queue/monitor.h
 /usr/local/include/pf/interfaces/queue/should.h
+/usr/local/include/pf/interfaces/events/stream.h
+/usr/local/include/pf/interfaces/events/bus.h
 /usr/local/include/pf/interfaces/events/config.h
 /usr/local/include/pf/interfaces/events/dispatcher.h
 /usr/local/include/pf/engine/kernel.h
@@ -155,8 +157,18 @@
 /usr/local/include/pf/script/config.h
 /usr/local/include/pf/script/factory.h
 /usr/local/include/pf/script/interface.h
+/usr/local/include/pf/events/bus_interface.h
+/usr/local/include/pf/events/postpone_bus.h
+/usr/local/include/pf/events/protected_stream.h
+/usr/local/include/pf/events/bus.h
+/usr/local/include/pf/events/listener_attorney.h
+/usr/local/include/pf/events/postpone_helper.h
 /usr/local/include/pf/events/config.h
+/usr/local/include/pf/events/listener.h
+/usr/local/include/pf/events/listener_traits.h
+/usr/local/include/pf/events/id.h
 /usr/local/include/pf/events/dispatcher.h
+/usr/local/include/pf/events/noop_stream.h
 /usr/local/include/pf/basic/util.h
 /usr/local/include/pf/basic/rang.h
 /usr/local/include/pf/basic/string.h
@@ -167,6 +179,7 @@
 /usr/local/include/pf/basic/stringstream.h
 /usr/local/include/pf/basic/any.h
 /usr/local/include/pf/basic/config.h
+/usr/local/include/pf/basic/shared_mutex.h
 /usr/local/include/pf/basic/base64.h
 /usr/local/include/pf/basic/container/config.h
 /usr/local/include/pf/basic/container/basic.h
