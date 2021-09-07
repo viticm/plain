@@ -90,6 +90,9 @@
 #include "pf/engine/application.h"
 #include "pf/engine/kernel.h"
 
+/* events */
+#include "pf/events/bus.h"
+
 /* file */
 #include "pf/file/api.h"
 #include "pf/file/ini.h"

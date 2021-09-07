@@ -175,6 +175,7 @@
 /usr/local/include/pf/basic/rlutil.h
 /usr/local/include/pf/basic/md5.h
 /usr/local/include/pf/basic/global.h
+/usr/local/include/pf/basic/traits.h
 /usr/local/include/pf/basic/io.tcc
 /usr/local/include/pf/basic/stringstream.h
 /usr/local/include/pf/basic/any.h
