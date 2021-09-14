@@ -15,6 +15,7 @@
 #include "pf/events/config.h"
 #include "pf/events/id.h"
 #include "pf/events/postpone_helper.h"
+#include "pf/events/listener.h"
 
 namespace pf_events {
 
@@ -48,7 +49,7 @@ class PF_API BusInterface {
 
  protected:
 
-   virtual bool postpone_event(const PostponeHelper& call) = 0;
+   virtual bool postpone_event(const PostponeHelper &call) = 0;
    virtual pf_interfaces::events::Stream *listen(
        uint32_t listener_id, id_t event_id, 
        create_stream_callback_t create_stream_callback) = 0;
@@ -66,7 +67,7 @@ class PF_API BusInterface {
    }
 
    template <class Event>
-   void listen(const uint32_t listener_id, 
+   void _listen(const uint32_t listener_id, 
        std::function<void(const Event &)> &&callback) {
      static_assert(validate_event<Event>(), "Invalid event");
      constexpr auto event_id = get_id<Event>();
@@ -82,7 +83,7 @@ class PF_API BusInterface {
 };
 
 template <typename Event>
-bool postpone(const BusInterface &bus, const pf_basic::any &event) {
+bool postpone(BusInterface &bus, const pf_basic::any &event) {
   return bus.postpone(std::move(pf_basic::any_cast<Event>(event)));
 }
 

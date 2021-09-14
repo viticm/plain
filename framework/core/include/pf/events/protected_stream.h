@@ -25,7 +25,7 @@ class PF_API ProtectedStream : public pf_interfaces::events::Stream {
 
  public:
    using callback_t = 
-     std::function< CallbackReturn(const Event&, ExtraArgTypes...) >;
+     std::function< CallbackReturn(const Event &, ExtraArgTypes...) >;
    using any = pf_basic::any;
 
  public:
@@ -125,6 +125,10 @@ class PF_API ProtectedStream : public pf_interfaces::events::Stream {
          std::string{"Already added listener for event: "} + 
          typeid(Event).name()};
      }
+     callbacks_.push_back(std::forward<callback_t>(callback));
+     listener_ids_.push_back(id);
+     Assert(listener_ids_.size() == callbacks_.size());
+     return true;
    }
 
    bool raw_remove_listener(const uint32_t id) {

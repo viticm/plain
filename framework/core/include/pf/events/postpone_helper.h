@@ -25,14 +25,15 @@ using DefaultStream = ProtectedStream<Event>;
 using create_stream_callback_t = 
   std::unique_ptr<pf_interfaces::events::Stream> (*const)();
 using postpone_callback_t = 
-  bool (*const)(const Bus &bus, const pf_basic::any &event);
+  bool (*const)(BusInterface &bus, const pf_basic::any &event);
 
 template <typename Event>
-bool postpone(const Bus &bus, const pf_basic::any &event);
+bool postpone(BusInterface &bus, const pf_basic::any &event);
 
 template <typename Event>
 std::unique_ptr<pf_interfaces::events::Stream> create_default_stream() {
-  return pf_basic::make_unique< DefaultStream<Event> >();
+  std::unique_ptr<pf_interfaces::events::Stream> r(new DefaultStream<Event>());
+  return r;
 }
 
 class PF_API PostponeHelper {
@@ -47,7 +48,7 @@ class PF_API PostponeHelper {
  public:
    
    PostponeHelper(const id_t id,
-       pf_basic::any &event,
+       pf_basic::any &&event,
        postpone_callback_t postpone_callback,
        create_stream_callback_t create_stream_callback
        )

@@ -6,7 +6,7 @@
  * @license
  * @user viticm( viticm.ti@gmail.com )
  * @date 2021/09/06 10:40
- * @uses your description
+ * @uses The listener attorney class.
  */
 
 #ifndef PF_EVENTS_LISTENER_ATTORNEY_H_
@@ -22,26 +22,26 @@ class PF_API ListenerAttorney {
 
  public:
    template <typename>
-   friend class Listener;
+   friend class pf_events::Listener;
 
  private:
 
    static constexpr uint32_t new_id(EventBus_t& bus) {
-     return bus.new_id();
+     return bus.new_listener_id();
    }
 
    template <class Event>
-   static constexpr void listen(EventBus_t& bus,
+   static constexpr void listen(EventBus_t &bus,
        const uint32_t id, std::function<void(const Event &)> &&callback) {
-     bus.template listen<Event>(id, 
-         std::forward< std::function< void(const Event&) > >(callback));
+     bus.template _listen<Event>(id, 
+         std::forward< std::function< void(const Event &) > >(callback));
    }
 
-   static constexpr void unlisten_all(EventBus_t& bus, const uint32_t id) {
+   static constexpr void unlisten_all(EventBus_t &bus, const uint32_t id) {
      bus.unlisten_all(id);
    }
 
-   static constexpr void unlisten(EventBus_t& bus,
+   static constexpr void unlisten(EventBus_t &bus,
        const uint32_t listener_id,
        const id_t event_id) {
      bus.unlisten(listener_id, event_id);

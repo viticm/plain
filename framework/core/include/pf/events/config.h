@@ -25,6 +25,9 @@ class BusInterface;
 class Bus;
 
 template <typename>
+class ListenerAttorney;
+
+template <typename>
 class Listener;
 
 } // namespace pf_events

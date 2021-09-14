@@ -31,16 +31,18 @@ class Listener {
    : id_{ListenerAttorney<Bus>::new_id(*bus)},
    bus_{std::move(bus)} {}
 
-   Listener(const Listener& other) = delete;
-   Listener(Listener&& other) = delete;
+   Listener(const Listener &other) = delete;
+   Listener(Listener &&other) = delete;
    ~Listener() {
      if (!is_null(bus_)) unlisten_all();
    }
 
  public:
 
-   static Listener create_not_owning(const Bus& bus) {
-     return Listener{std::shared_ptr<Bus>{&bus, [](Bus*) {}}};
+   static std::unique_ptr<Listener> create_not_owning(Bus &bus) {
+     // return Listener{std::shared_ptr<Bus>{&bus, [](Bus*) {}}};
+     return std::unique_ptr<Listener>(
+         new Listener(std::shared_ptr<Bus>{&bus, [](Bus *) {}}));
    }
 
    template <class Event, typename _ = void>
@@ -70,12 +72,13 @@ class Listener {
 
    template <
      class EventCallback, typename Event = first_argument<EventCallback> >
-   constexpr void listen(EventCallback&& callback) {
-     static_assert(std::is_const_v<
-         std::remove_reference_t<Event> >, "Event should be const");
-     static_assert(std::is_reference_v<Event>, 
+   void listen(EventCallback &&callback) {
+     using namespace pf_basic;
+     static_assert(std::is_const< remove_reference_t<Event> >::value, 
+         "Event should be const");
+     static_assert(std::is_reference<Event>::value, 
          "Event should be const & (reference)");
-     using PureEvent = std::remove_const_t< std::remove_reference_t<Event> >;
+     using PureEvent = remove_const_t< remove_reference_t<Event> >;
      static_assert(validate_event<PureEvent>(), "Invalid event");
      listen_to_callback<PureEvent>(std::forward<EventCallback>(callback));
    }
@@ -89,7 +92,7 @@ class Listener {
    void unlisten() {
      static_assert(validate_event<Event>(), "Invalid event");
      if (is_null(bus_)) throw std::runtime_error{"bus is null"};
-     ListenerAttorney<Bus>::unlisten(*bus_, id_, event_id<Event>());
+     ListenerAttorney<Bus>::unlisten(*bus_, id_, get_id<Event>());
    }
 
    // We want more explicit move so user knows what is going on.
