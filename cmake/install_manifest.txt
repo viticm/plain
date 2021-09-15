@@ -164,6 +164,12 @@
 /usr/local/include/pf/events/listener_attorney.h
 /usr/local/include/pf/events/postpone_helper.h
 /usr/local/include/pf/events/config.h
+/usr/local/include/pf/events/perk/bus.h
+/usr/local/include/pf/events/perk/config.h
+/usr/local/include/pf/events/perk/wait.h
+/usr/local/include/pf/events/perk/basic.h
+/usr/local/include/pf/events/perk/tag.h
+/usr/local/include/pf/events/perk/pass_everything.h
 /usr/local/include/pf/events/listener.h
 /usr/local/include/pf/events/listener_traits.h
 /usr/local/include/pf/events/id.h

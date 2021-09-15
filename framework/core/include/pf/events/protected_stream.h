@@ -133,7 +133,7 @@ class PF_API ProtectedStream : public pf_interfaces::events::Stream {
 
    bool raw_remove_listener(const uint32_t id) {
      auto found = std::find(listener_ids_.begin(), listener_ids_.end(), id);
-     if(found != listener_ids_.end()) return false;
+     if(found == listener_ids_.end()) return false;
      const auto index = std::distance(listener_ids_.begin(), found);
      listener_ids_.erase(found);
      callbacks_.erase(std::next(callbacks_.begin(), index));
