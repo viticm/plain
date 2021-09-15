@@ -32,8 +32,8 @@ class PF_API Bus : public pf_events::Bus {
     public:
 
       template <typename perk_t>
-      RegisterHelper& register_pre_postpone(
-          flag_t (perk_t::*method)(PostponeHelper &)) {
+      RegisterHelper &register_pre_postpone(
+          flag_t (perk_t::*method)(const PostponeHelper &)) {
         bus_->on_pre_postpone_.push_back(
             std::bind(method, 
               static_cast<perk_t*>(perk_), std::placeholders::_1));
@@ -41,8 +41,8 @@ class PF_API Bus : public pf_events::Bus {
       }
 
       template <typename perk_t>
-      RegisterHelper& register_post_postpone(
-          flag_t (perk_t::*method)(PostponeHelper &)) {
+      RegisterHelper &register_post_postpone(
+          flag_t (perk_t::*method)(const PostponeHelper &)) {
         bus_->on_post_postpone_.push_back(
             std::bind(method, 
               static_cast<perk_t*>(perk_), std::placeholders::_1));

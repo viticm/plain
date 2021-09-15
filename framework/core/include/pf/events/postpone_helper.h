@@ -32,8 +32,9 @@ bool postpone(BusInterface &bus, const pf_basic::any &event);
 
 template <typename Event>
 std::unique_ptr<pf_interfaces::events::Stream> create_default_stream() {
-  std::unique_ptr<pf_interfaces::events::Stream> r(new DefaultStream<Event>());
-  return r;
+  // std::unique_ptr<pf_interfaces::events::Stream> r(new DefaultStream<Event>());
+  // return r;
+  return pf_basic::make_unique< DefaultStream<Event> >();
 }
 
 class PF_API PostponeHelper {

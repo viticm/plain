@@ -49,7 +49,7 @@ make_unique(size_t n) {
 }
  
 template<class T, class... Args>
-std::enable_if<detail::is_bounded_array_v<T>> make_unique(Args&&...) = delete;
+enable_if_t<detail::is_bounded_array_v<T>> make_unique(Args&&...) = delete;
 
 template< class T >
 using remove_reference_t = typename std::remove_reference<T>::type;
