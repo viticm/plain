@@ -51,10 +51,10 @@ class EventID : public testing::Test {
 };
 
 TEST_F(EventID, testNormal) {
-	std::cout << "xxx" << std::endl;
-	std::set<pf_events::id_t> unique;
   
-	ASSERT_TRUE(unique.insert(get_id<Anonymous>()).second);
+  std::set<pf_events::id_t> unique;
+	
+  ASSERT_TRUE(unique.insert(get_id<Anonymous>()).second);
   ASSERT_FALSE(unique.insert(get_id<Anonymous>()).second); // already there
 
   // struct TestA // "name collision" but not quite collision
