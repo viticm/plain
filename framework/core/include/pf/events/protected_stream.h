@@ -112,6 +112,7 @@ class PF_API ProtectedStream : public pf_interfaces::events::Stream {
          raw_remove_listener(element.first);
        }
      }
+     waiting_.clear();
    }
 
    bool raw_add_listener(const uint32_t id, callback_t &&callback) {
