@@ -18,7 +18,7 @@ namespace pf_events {
 
 template <typename T>
 struct type_id_ptr {
-  static const T* const id;
+  static const T *const id;
 };
 
 template <typename T>
