@@ -52,6 +52,7 @@ class EventID : public testing::Test {
 
 TEST_F(EventID, testNormal) {
 
+
 	std::set<pf_events::id_t> unique;
 
   ASSERT_TRUE(unique.insert(get_id<Anonymous>()).second);
