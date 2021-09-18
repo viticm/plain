@@ -32,7 +32,7 @@ TEST_F(EventListener, testRemoveAll){
   Bus bus;
   auto listener = Listener<Bus>::create_not_owning(bus);
 
-  int call_count = 0;
+  int32_t call_count{0};
   listener->listen([&](const Value &event) {
     ASSERT_TRUE(event.value == 3);
     ++call_count;
@@ -56,7 +56,7 @@ TEST_F(EventListener, testRemoveAll){
 // listener instance is overriden", "[Bus][Listener]")
 TEST_F(EventListener, testUnlistenAll){
   Bus bus;
-  int call_count = 0;
+  int32_t call_count{0};
   auto listener = Listener<Bus>::create_not_owning(bus);
   listener->listen([&](const Value &event) {
     ASSERT_TRUE(event.value == 3);
@@ -77,7 +77,7 @@ TEST_F(EventListener, testUnlistenAll){
 // When listener instance is destroyed", "[Bus][Listener]")
 TEST_F(EventListener, testUnlistenAll1) {
   Bus bus;
-  int call_count = 0;
+  int32_t call_count{0};
 
   {
     auto listener = Listener<Bus>::create_not_owning(bus);
@@ -125,7 +125,7 @@ TEST_F(EventListener, testKeepListeners){
 //      "[Bus][Listener]")
 TEST_F(EventListener, testReceive){
   auto bus = std::make_shared<Bus>();
-  int call_count = 0;
+  int32_t call_count{0};
   bus->postpone(Value{22});
 
   Listener<Bus> listener{bus};
@@ -145,7 +145,7 @@ TEST_F(EventListener, testReceive){
 TEST_F(EventListener, testUnbind) {
   auto bus = std::make_shared<Bus>();
   struct TestBind {
-    int call_count = 0;
+    int32_t call_count{0};
     Listener<Bus> listener;
 
     TestBind(const std::shared_ptr<Bus>& bus)
@@ -179,7 +179,7 @@ void free_function(const T1 &) {
 TEST_F(EventListener, testDiffForms) {
   Bus bus;
 
-  int call_count = 0;
+  int32_t call_count{0};
 
   // Listen with lambda
   auto listener = Listener<Bus>::create_not_owning(bus);
