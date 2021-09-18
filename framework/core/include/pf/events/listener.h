@@ -46,7 +46,8 @@ class Listener {
    }
 
    template <class Event, typename _ = void>
-   constexpr void listen(std::function<void(const Event &)> &&callback) {
+   // constexpr void listen(std::function<void(const Event &)> &&callback) {
+   void listen(std::function<void(const Event &)> &&callback) {
      static_assert(validate_event<Event>(), "Invalid event");
      listen_to_callback<Event>(
          std::forward< std::function<void(const Event &)> >(callback));
@@ -102,7 +103,7 @@ class Listener {
      // We don't have to reset listener ID as bus is moved and we won't 
      // call unlisten_all.
      id_ = from.id_;
-     bus_ = std::move(bus_);
+     bus_ = std::move(from.bus_);
    }
 
    const std::shared_ptr<Bus> &get_bus() const {
