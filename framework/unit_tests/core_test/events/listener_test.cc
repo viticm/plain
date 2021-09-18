@@ -217,7 +217,7 @@ TEST_F(EventListener, testDiffForms) {
 // TEST_CASE("Should NOT be able to add multiple 
 //    same event callbacks When using same listener",
 //      "[Bus][Listener]")
-TEST_F(EventListener, testMultiple){
+TEST_F(EventListener, testMultiple) {
   // User should use separate Listener instance as it would be unabigious 
   // what should happen when call unlisten<Event>
   Bus bus;
