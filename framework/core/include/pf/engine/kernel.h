@@ -15,6 +15,7 @@
 #include "pf/db/config.h"
 #include "pf/script/config.h"
 #include "pf/net/connection/manager/config.h"
+#include "pf/net/protocol/config.h"
 #include "pf/cache/manager.h"
 #include "pf/basic/type/variable.h"
 #include "pf/console/config.h"

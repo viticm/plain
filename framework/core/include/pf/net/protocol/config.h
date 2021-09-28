@@ -19,6 +19,7 @@ namespace protocol {
 
 class Interface;
 class Basic;
+class Standard;
 
 } //namespace protocol
 

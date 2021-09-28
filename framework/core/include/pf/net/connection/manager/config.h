@@ -52,7 +52,7 @@ struct listener_config_struct {
   uint16_t port;
   uint16_t conn_max;
   std::string encrypt_str;
-  bool protocol_standard;
+  std::string protocol;
 };
 using eid_t = int16_t; //Environment.
 

@@ -31,7 +31,7 @@ using namespace pf_engine;
 
 template <> Kernel *pf_basic::Singleton< Kernel >::singleton_ = nullptr;
 
-pf_db::Interface *db_null_env_creator() { 
+pf_db::Interface *db_null_env_creator() {
   return new pf_db::Null();
 }
 
@@ -83,7 +83,7 @@ pf_net::connection::Basic *Kernel::get_connector(const std::string &name) {
   int16_t id = connect_list_[name];
   return net_connector_->get(id);
 }
-   
+
 pf_net::connection::manager::ListenerFactory *
 Kernel::get_net_listener_factory(bool create) {
   using namespace pf_net::connection::manager;
@@ -99,7 +99,7 @@ Kernel::get_net_listener_factory(bool create) {
 
 pf_net::connection::manager::Listener *Kernel::get_listener(
      const std::string &name) {
-  if (is_null(net_listener_factory_) || 
+  if (is_null(net_listener_factory_) ||
       listen_list_.find(name) == listen_list_.end()) {
     return nullptr;
   }
@@ -121,7 +121,7 @@ pf_net::connection::manager::Listener *Kernel::get_service(
 }
 
 pf_db::Interface *Kernel::get_db(const std::string &name) {
-  if (is_null(db_factory_) || db_list_.find(name) == db_list_.end()) 
+  if (is_null(db_factory_) || db_list_.find(name) == db_list_.end())
     return nullptr;
   return db_factory_->getenv(db_list_[name]);
 }
@@ -147,7 +147,7 @@ void Kernel::run() {
     auto env = db_factory_->getenv(db_eid_);
     this->newthread([env]() { return thread::for_db(env); });
   }
-  if (!is_null(script_factory_) && script_eid_ != SCRIPT_EID_INVALID) { 
+  if (!is_null(script_factory_) && script_eid_ != SCRIPT_EID_INVALID) {
     auto env = script_factory_->getenv(script_eid_);
     env->call(GLOBALS["default.script.enter"].data);
     this->newthread([env]() { return thread::for_script(env); });
@@ -184,13 +184,13 @@ void Kernel::stop() {
 }
 
 pf_net::connection::Basic *Kernel::default_connect(
-    const std::string &name, 
-    const std::string &ip, 
-    uint16_t port, 
+    const std::string &name,
+    const std::string &ip,
+    uint16_t port,
     const std::string &_encrypt_str) {
   using namespace pf_net::connection::manager;
   if (is_null(net_) || net_->is_service()) return nullptr;
-  auto encrypt_str = 
+  auto encrypt_str =
     "" == _encrypt_str ?  GLOBALS["default.net.encrypt"].data : _encrypt_str;
   return connect(net_.get(), name, ip, port, encrypt_str);
 }
@@ -210,18 +210,18 @@ pf_net::connection::Basic *Kernel::connect(const std::string &name) {
   return connection;
 }
 
-pf_net::connection::Basic *Kernel::connect(const std::string &name, 
-                                           const std::string &ip, 
-                                           uint16_t port, 
+pf_net::connection::Basic *Kernel::connect(const std::string &name,
+                                           const std::string &ip,
+                                           uint16_t port,
                                            const std::string &encrypt_str) {
   return connect(net_connector_.get(), name, ip, port, encrypt_str);
 }
 
 pf_net::connection::Basic *Kernel::connect(
     pf_net::connection::manager::Basic *client,
-    const std::string &name, 
-    const std::string &ip, 
-    uint16_t port, 
+    const std::string &name,
+    const std::string &ip,
+    uint16_t port,
     const std::string &encrypt_str) {
   using namespace pf_net::connection::manager;
   using namespace pf_basic;
@@ -257,7 +257,7 @@ pf_net::connection::Basic *Kernel::connect(
 
 bool Kernel::init_base() {
   using namespace pf_basic;
- 
+
   //Time manager.
   if (is_null(TIME_MANAGER_POINTER)) {
     auto time_manager = new TimeManager();
@@ -275,7 +275,7 @@ bool Kernel::init_base() {
 
   if (is_null(LIBRARY_MANAGER_POINTER)) {
     auto librarymanager = new pf_file::LibraryManager;
-    unique_move(pf_file::LibraryManager, librarymanager, g_librarymanager); 
+    unique_move(pf_file::LibraryManager, librarymanager, g_librarymanager);
   }
 
   //Load the plugins.
@@ -308,8 +308,8 @@ bool Kernel::init_base() {
 bool Kernel::init_net() {
   using namespace pf_net;
   using namespace pf_basic;
-  SLOW_DEBUGLOG(ENGINE_MODULENAME, 
-                "[%s] Kernel::init_net start...", 
+  SLOW_DEBUGLOG(ENGINE_MODULENAME,
+                "[%s] Kernel::init_net start...",
                 ENGINE_MODULENAME);
   if (GLOBALS["default.net.open"] == true) {
     connection::manager::Basic *net{nullptr};
@@ -339,8 +339,8 @@ bool Kernel::init_net() {
   //Extra net listeners.
   if (GLOBALS["server.count"] > 0) {
     auto count = GLOBALS["server.count"].get<int8_t>();
-    SLOW_DEBUGLOG(ENGINE_MODULENAME, 
-                  "[%s] Kernel::init_net extra service count: %d", 
+    SLOW_DEBUGLOG(ENGINE_MODULENAME,
+                  "[%s] Kernel::init_net extra service count: %d",
                   ENGINE_MODULENAME,
                   count);
     using namespace pf_net::connection::manager;
@@ -355,13 +355,12 @@ bool Kernel::init_net() {
                       i);
         return false;
       }
-      auto conn_max = 
+      auto conn_max =
         GLOBALS["server.connmax" + std::to_string(i)].get<uint16_t>();
       auto ip = GLOBALS["server.ip" + std::to_string(i)].data;
       auto port = GLOBALS["server.port" + std::to_string(i)].get<uint16_t>();
       auto encrypt_str = GLOBALS["server.encrypt" + std::to_string(i)].data;
-      auto protocol_standard = 
-        GLOBALS["server.protocol_standard" + std::to_string(i)].get<bool>();
+      auto protocol = GLOBALS["server.protocol" + std::to_string(i)].data;
       if (0 == port || conn_max <= 0) {
         SLOW_ERRORLOG(ENGINE_MODULENAME,
                       "[%s] Kernel::init_net extra service the port or "
@@ -379,7 +378,7 @@ bool Kernel::init_net() {
       config.port = port;
       config.conn_max = conn_max;
       config.encrypt_str = encrypt_str;
-      config.protocol_standard = protocol_standard;
+      config.protocol = protocol;
       auto envid = factory->newenv(config);
       if (NET_EID_INVALID == envid) return false;
       listen_list_[name] = envid;
@@ -396,8 +395,8 @@ bool Kernel::init_net() {
   if (GLOBALS["client.count"] > 0 || GLOBALS["client.usercount"] > 0) {
     using namespace pf_net::connection::manager;
     auto count = GLOBALS["client.count"].get<int8_t>();
-    SLOW_DEBUGLOG(ENGINE_MODULENAME, 
-                    "[%s] Kernel::init_net extra client count: %d", 
+    SLOW_DEBUGLOG(ENGINE_MODULENAME,
+                    "[%s] Kernel::init_net extra client count: %d",
                     ENGINE_MODULENAME,
                     count);
     auto connector = new Connector;
@@ -438,8 +437,8 @@ bool Kernel::init_net() {
 bool Kernel::init_db() {
   using namespace pf_db;
   register_env_creator_db(kDBEnvNull, db_null_env_creator);
-  SLOW_DEBUGLOG(ENGINE_MODULENAME, 
-                "[%s] Kernel::init_db start...", 
+  SLOW_DEBUGLOG(ENGINE_MODULENAME,
+                "[%s] Kernel::init_db start...",
                 ENGINE_MODULENAME);
   if (GLOBALS["default.db.open"] == true || GLOBALS["database.count"] > 0) {
     auto factory = new Factory();
@@ -463,12 +462,12 @@ bool Kernel::init_db() {
     auto env = db_factory_->getenv(db_eid_);
     if (!env->init()) return false;
   }
-  
+
   //Extra.
   if (GLOBALS["database.count"] > 0) {
     auto count = GLOBALS["database.count"].get<int8_t>();
-    SLOW_DEBUGLOG(ENGINE_MODULENAME, 
-                  "[%s] Kernel::init_db the extra count: %d", 
+    SLOW_DEBUGLOG(ENGINE_MODULENAME,
+                  "[%s] Kernel::init_db the extra count: %d",
                   ENGINE_MODULENAME,
                   count);
     for (int8_t i = 0; i < count; ++i) {
@@ -483,7 +482,7 @@ bool Kernel::init_db() {
             GLOBALS["database.dbpassword" + std::to_string(i)].data, password);
         conf.password = password;
       } else {
-        conf.password = 
+        conf.password =
           GLOBALS["database.dbpassword" + std::to_string(i)].c_str();
       }
       auto eid = db_factory_->newenv(conf);
@@ -499,8 +498,8 @@ bool Kernel::init_db() {
 bool Kernel::init_cache() {
   using namespace pf_cache;
   if (GLOBALS["default.cache.open"] == false) return true;
-  SLOW_DEBUGLOG(ENGINE_MODULENAME, 
-                "[%s] Kernel::init_cache start...", 
+  SLOW_DEBUGLOG(ENGINE_MODULENAME,
+                "[%s] Kernel::init_cache start...",
                 ENGINE_MODULENAME);
   auto cache = new Manager();
   if (is_null(cache)) return false;
@@ -521,8 +520,8 @@ bool Kernel::init_cache() {
 bool Kernel::init_script() {
   using namespace pf_script;
   if (GLOBALS["default.script.open"] == false) return true;
-  SLOW_DEBUGLOG(ENGINE_MODULENAME, 
-                "[%s] Kernel::init_script start...", 
+  SLOW_DEBUGLOG(ENGINE_MODULENAME,
+                "[%s] Kernel::init_script start...",
                 ENGINE_MODULENAME);
   auto factory = new Factory();
   if (is_null(factory)) return false;
@@ -580,8 +579,8 @@ void console_net_handle(
 
 bool Kernel::init_console() {
   if (GLOBALS["app.console"] == false) return true;
-  SLOW_DEBUGLOG(ENGINE_MODULENAME, 
-                "[%s] Kernel::init_console start...", 
+  SLOW_DEBUGLOG(ENGINE_MODULENAME,
+                "[%s] Kernel::init_console start...",
                 ENGINE_MODULENAME);
   auto console = new pf_console::Application();
   if (is_null(console)) return false;
@@ -601,7 +600,7 @@ bool Kernel::init_console() {
     config.port = port;
     config.conn_max = conn_max;
     config.encrypt_str = GLOBALS["app.console.encrypt"].data;
-    config.protocol_standard = true;
+    config.protocol = "standard";
     auto envid = factory->newenv(config);
     if (NET_EID_INVALID == envid) return false;
     auto pointer = factory->getenv(envid);
@@ -676,11 +675,11 @@ void Kernel::loop() {
       char fps_str[16]{0};
       snprintf(fps_str, sizeof(fps_str) - 1, "FPS: %3d", fps);
       if (fps >= 60) {
-        std::cout << fgB::green; 
+        std::cout << fgB::green;
       } else if (fps >= 30 && fps < 60) {
-        std::cout << fgB::yellow; 
+        std::cout << fgB::yellow;
       } else if (fps >= 0 && fps < 30) {
-        std::cout << fgB::red; 
+        std::cout << fgB::red;
       }
       setString(fps_str);
       std::cout.flush();
@@ -692,11 +691,12 @@ void Kernel::loop() {
   for (;;) {
     auto diff_time = TIME_MANAGER_POINTER->get_tickcount() - check_starttime;
     if (diff_time / 1000 > 30) {
-      pf_basic::io_cerr("[%s] wait thread exit exceed 30 seconds.", 
+      pf_basic::io_cerr("[%s] wait thread exit exceed 30 seconds.",
                         GLOBALS["app.name"].c_str());
       break;
     }
     if (pf_sys::ThreadCollect::count() <= 0) break;
   }
-  SLOW_LOG(ENGINE_MODULENAME, "[%s] exited normally", GLOBALS["app.name"].c_str());
+  SLOW_LOG(ENGINE_MODULENAME, 
+      "[%s] exited normally", GLOBALS["app.name"].c_str());
 }

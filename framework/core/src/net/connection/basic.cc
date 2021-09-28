@@ -51,6 +51,7 @@ bool Basic::init(protocol::Interface *_protocol) {
   if (ready()) return true; 
   if (is_null(_protocol)) return false;
   std::unique_ptr<socket::Basic> _socket(new socket::Basic());
+  protocol_ = _protocol;
   socket_ = std::move(_socket);
   Assert(socket_.get());
   std::unique_ptr<stream::Input> _istream(
@@ -117,6 +118,7 @@ bool Basic::process_input() {
 }
 
 void Basic::process_input_compress() {
+  if (is_null(protocol_)) return;
   protocol_->compress(this, uncompress_buffer_, compress_buffer_);
 }
 

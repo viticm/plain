@@ -9,7 +9,7 @@ eid_t ListenerFactory::newenv(const listener_config_t &config) {
   if (NET_EID_INVALID == eid) return eid;
   std::unique_ptr< Listener > pointer(new Listener);
   if (!is_null(pointer))
-    pointer->set_protocol_standard(config.protocol_standard);
+    pointer->set_protocol(config.protocol);
   if (is_null(pointer) || 
       !pointer->init(config.conn_max, config.port, config.ip)) {
     last_del_eid_ = eid;

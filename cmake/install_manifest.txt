@@ -90,6 +90,7 @@
 /usr/local/include/pf/net/protocol/standard.h
 /usr/local/include/pf/net/protocol/config.h
 /usr/local/include/pf/net/protocol/basic.h
+/usr/local/include/pf/net/protocol/helpers.h
 /usr/local/include/pf/net/protocol/interface.h
 /usr/local/include/pf/net/connection/config.h
 /usr/local/include/pf/net/connection/basic.h

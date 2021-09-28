@@ -21,8 +21,7 @@ Interface::Interface() :
   onestep_accept_{NET_ONESTEP_ACCEPT_DEFAULT},
   pool_{nullptr},
   callback_disconnect_{nullptr},
-  callback_connect_{nullptr},
-  protocol_standard_{false} {
+  callback_connect_{nullptr} {
 }
 
 Interface::~Interface() {
