@@ -29,7 +29,6 @@ inline std::map<std::string, Interface *> &get_all() {
     static Standard standard;
     all["standard"] = &standard;
     initialized = true;
-    std::cout << "get_all: " << &all << std::endl;
   }
   return all;
 }
