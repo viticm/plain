@@ -20,7 +20,7 @@ namespace pf_net {
 
 namespace protocol {
 
-static inline std::map<std::string, Interface *> &get_all() {
+inline std::map<std::string, Interface *> &get_all() {
   static std::map<std::string, Interface *> all;
   static bool initialized{false};
   if (!initialized) {
@@ -29,17 +29,18 @@ static inline std::map<std::string, Interface *> &get_all() {
     static Standard standard;
     all["standard"] = &standard;
     initialized = true;
+    std::cout << "get_all: " << &all << std::endl;
   }
   return all;
 }
 
-static inline void set(const std::string &name, Interface *pointer) {
-  auto all = get_all();
+inline void set(const std::string &name, Interface *pointer) {
+  auto &all = get_all();
   all[name] = pointer;
 }
 
-static inline Interface *get(const std::string &name) {
-  auto all = get_all();
+inline Interface *get(const std::string &name) {
+  auto &all = get_all();
   if (all.find(name) == all.end()) return nullptr;
   return all[name];
 }
