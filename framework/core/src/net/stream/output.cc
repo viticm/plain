@@ -1,3 +1,4 @@
+#include "pf/basic/endian.h"
 #include "pf/net/socket/basic.h"
 #include "pf/net/stream/output.h"
 
@@ -142,38 +143,38 @@ bool Output::write_uint8(uint8_t value) {
 }
 
 bool Output::write_int16(int16_t value) {
-  uint32_t count = write((char*)&value, sizeof(value));
+  uint32_t count = write((char*)&(value = PF_HTON(value)), sizeof(value));
   bool result = count == sizeof(value) ? true : false;
   return result;
 }
 
 bool Output::write_uint16(uint16_t value) {
-  uint32_t count = write((char*)&value, sizeof(value));
+  uint32_t count = write((char*)&(value = PF_HTON(value)), sizeof(value));
   bool result = count == sizeof(value) ? true : false;
   return result;
 }
 
 bool Output::write_int32(int32_t value) {
-  uint32_t count = write((char*)&value, sizeof(value));
+  uint32_t count = write((char*)&(value = PF_HTON(value)), sizeof(value));
   bool result = count == sizeof(value) ? true : false;
   return result;
 }
 
 bool Output::write_uint32(uint32_t value) {
-  uint32_t count = write((char*)&value, sizeof(value));
+  uint32_t count = write((char*)&(value = PF_HTON(value)), sizeof(value));
   bool result = count == sizeof(value) ? true : false;
   return result;
 }
 
 bool Output::write_int64(int64_t value) {
-  uint32_t count = write((char*)&value, sizeof(value));
+  uint32_t count = write((char*)&(value = PF_HTON(value)), sizeof(value));
   bool result = count == sizeof(value) ? true : false;
   return result;
   return false;
 }
    
 bool Output::write_uint64(uint64_t value) {
-  uint32_t count = write((char*)&value, sizeof(value));
+  uint32_t count = write((char*)&(value = PF_HTON(value)), sizeof(value));
   bool result = count == sizeof(value) ? true : false;
   return result;
 }
@@ -189,13 +190,13 @@ bool Output::write_string(const char *value) {
 }
    
 bool Output::write_float(float value) {
-  uint32_t count = write((char*)&value, sizeof(value));
+  uint32_t count = write((char*)&(value = PF_HTON(value)), sizeof(value));
   bool result = count == sizeof(value) ? true : false;
   return result;
 }
 
 bool Output::write_dobule(double value) {
-  uint32_t count = write((char*)&value, sizeof(value));
+  uint32_t count = write((char*)&(value = PF_HTON(value)), sizeof(value));
   bool result = count == sizeof(value) ? true : false;
   return result;
 }

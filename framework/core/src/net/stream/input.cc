@@ -1,5 +1,6 @@
 #include "pf/basic/util.h"
 #include "pf/basic/logger.h"
+#include "pf/basic/endian.h"
 #include "pf/net/socket/basic.h"
 #include "pf/net/stream/input.h"
 
@@ -217,58 +218,51 @@ int32_t Input::fill() {
 }
 
 int8_t Input::read_int8() {
-    int8_t result = 0;
-    read((char*)&result, sizeof(result));
-    return result;
-    return 0;
+  int8_t result = 0;
+  read((char*)&result, sizeof(result));
+  return result;
 }
 
 uint8_t Input::read_uint8() {
-    uint8_t result = 0;
-    read((char*)&result, sizeof(result));
-    return result;
-    return 0;
+  uint8_t result = 0;
+  read((char*)&result, sizeof(result));
+  return result;
 }
 
 int16_t Input::read_int16() {
-    int16_t result = 0;
-    read((char*)&result, sizeof(result));
-    return result;
-    return 0;
+  int16_t result = 0;
+  read((char*)&result, sizeof(result));
+  return PF_NTOH(result);
 }
    
 uint16_t Input::read_uint16() {
-    uint16_t result = 0;
-    read((char*)&result, sizeof(result));
-    return result;
-    return 0;
+  uint16_t result = 0;
+  read((char*)&result, sizeof(result));
+  return PF_NTOH(result);
 }
    
 int32_t Input::read_int32() {
-    int32_t result = 0;
-    read((char*)&result, sizeof(result));
-    return result;
-    return 0;
+  int32_t result = 0;
+  read((char*)&result, sizeof(result));
+  return PF_NTOH(result);
 }
 
 uint32_t Input::read_uint32() {
-    uint32_t result = 0;
-    read((char*)&result, sizeof(result));
-    return result;
-    return 0;
+  uint32_t result = 0;
+  read((char*)&result, sizeof(result));
+  return PF_NTOH(result);
 }
    
 int64_t Input::read_int64() {
-    int64_t result = 0;
-    read((char*)&result, sizeof(result));
-    return result;
-    return 0;
+  int64_t result = 0;
+  read((char*)&result, sizeof(result));
+  return PF_NTOH(result);
 }
    
 uint64_t Input::read_uint64() {
   uint64_t result = 0;
   read((char*)&result, sizeof(result));
-  return result;
+  return PF_NTOH(result);
 }
    
 void Input::read_string(char *buffer, size_t _size) {
@@ -290,13 +284,13 @@ void Input::read_string(char *buffer, size_t _size) {
 float Input::read_float() {
   float result = 0;
   read((char*)&result, sizeof(result));
-  return result;
+  return PF_NTOH(result);
 }
 
 double Input::read_double() {
   double result = 0;
   read((char*)&result, sizeof(result));
-  return result;
+  return PF_NTOH(result);
 }
 
 void Input::compressenable(bool enable) {

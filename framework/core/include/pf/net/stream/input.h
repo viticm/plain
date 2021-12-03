@@ -1,12 +1,13 @@
 /**
  * PLAIN FRAMEWORK ( https://github.com/viticm/plainframework )
- * $Id inputstream.h
+ * $Id input.h
  * @link https://github.com/viticm/plainframework for the canonical source repository
  * @copyright Copyright (c) 2014- viticm( viticm.ti@gmail.com )
  * @license
  * @user viticm<viticm.it@gmail.com>
- * @date 2014/06/20 11:45
- * @uses socket inputstream class
+ * @date 2021/12/03 15:13
+ * @uses socket input stream class
+ *       ! You need think little/big endian of different platforms.
  */
 #ifndef PF_NET_STREAM_INPUTSTREAM_H_
 #define PF_NET_STREAM_INPUTSTREAM_H_

@@ -102,6 +102,7 @@
 /usr/local/include/pf/basic/hashmap/config.h
 /usr/local/include/pf/basic/hashmap/template.tcc
 /usr/local/include/pf/basic/md5.h
+/usr/local/include/pf/basic/endian.h
 /usr/local/include/pf/basic/monitor.h
 /usr/local/include/pf/basic/container/interface.h
 /usr/local/include/pf/basic/container/config.h

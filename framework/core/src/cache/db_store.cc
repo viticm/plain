@@ -718,7 +718,7 @@ bool DBStore::set(const std::string &key, const db_fetch_array_t &hash) {
   scolumns << columns_count;
   for (size_t i = 0; i < hash.keys.size(); ++i) {
     scolumns << hash.keys[i].c_str();
-    scolumns << hash.values[i].type;
+    scolumns << (uint8_t)hash.values[i].type;
   }
   stringstream srows(data, cache->size);
   int32_t row = 0;

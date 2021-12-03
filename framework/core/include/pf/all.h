@@ -21,6 +21,7 @@
 #include "pf/basic/hashmap/template.h"
 #include "pf/basic/type/variable.h"
 #include "pf/basic/base64.h"
+#include "pf/basic/endian.h"
 #include "pf/basic/global.h"
 #include "pf/basic/io.tcc"
 #include "pf/basic/logger.h"

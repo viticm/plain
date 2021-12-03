@@ -1,3 +1,4 @@
+#include "pf/basic/endian.h"
 #include "pf/basic/logger.h"
 #include "pf/net/packet/factorymanager.h"
 #include "pf/net/packet/dynamic.h"
@@ -67,27 +68,27 @@ void Dynamic::write_uint8(uint8_t value) {
 }
    
 void Dynamic::write_int16(int16_t value) {
-  write((char *)&value, sizeof(value));
+  write((char *)&(value = PF_HTON(value)), sizeof(value));
 }
   
 void Dynamic::write_uint16(uint16_t value) {
-  write((char *)&value, sizeof(value));
+  write((char *)&(value = PF_HTON(value)), sizeof(value));
 }
    
 void Dynamic::write_int32(int32_t value) {
-  write((char *)&value, sizeof(value));
+  write((char *)&(value = PF_HTON(value)), sizeof(value));
 }
    
 void Dynamic::write_uint32(uint32_t value) {
-  write((char *)&value, sizeof(value));
+  write((char *)&(value = PF_HTON(value)), sizeof(value));
 }
    
 void Dynamic::write_int64(int64_t value) {
-  write((char *)&value, sizeof(value));
+  write((char *)&(value = PF_HTON(value)), sizeof(value));
 }
    
 void Dynamic::write_uint64(uint64_t value) {
-  write((char *)&value, sizeof(value));
+  write((char *)&(value = PF_HTON(value)), sizeof(value));
 }
    
 void Dynamic::write_string(const char *value) {
@@ -97,11 +98,11 @@ void Dynamic::write_string(const char *value) {
 }
    
 void Dynamic::write_float(float value) {
-  write((char *)&value, sizeof(value));
+  write((char *)&(value = PF_HTON(value)), sizeof(value));
 }
    
 void Dynamic::write_double(double value) {
-  write((char *)&value, sizeof(value));
+  write((char *)&(value = PF_HTON(value)), sizeof(value));
 }
 
 void Dynamic::write_bytes(const unsigned char *value, size_t _size) {
@@ -124,37 +125,37 @@ uint8_t Dynamic::read_uint8() {
 int16_t Dynamic::read_int16() {
   int16_t result = 0;
   read((char *)&result, sizeof(result));
-  return result;
+  return PF_NTOH(result);
 }
    
 uint16_t Dynamic::read_uint16() {
   uint16_t result = 0;
   read((char *)&result, sizeof(result));
-  return result;
+  return PF_NTOH(result);
 }
 
 int32_t Dynamic::read_int32() {
   int32_t result = 0;
   read((char *)&result, sizeof(result));
-  return result;
+  return PF_NTOH(result);
 }
    
 uint32_t Dynamic::read_uint32() {
   uint32_t result = 0;
   read((char *)&result, sizeof(result));
-  return result;
+  return PF_NTOH(result);
 }
    
 int64_t Dynamic::read_int64() {
   int64_t result = 0;
   read((char *)&result, sizeof(result));
-  return result;
+  return PF_NTOH(result);
 }
    
 uint64_t Dynamic::read_uint64() {
   uint64_t result = 0;
   read((char *)&result, sizeof(result));
-  return result;
+  return PF_NTOH(result);
 }
    
 void Dynamic::read_string(char *buffer, size_t _size) {
@@ -166,13 +167,13 @@ void Dynamic::read_string(char *buffer, size_t _size) {
 float Dynamic::read_float() {
   float result = .0f;
   read((char *)&result, sizeof(result));
-  return result;
+  return PF_NTOH(result);
 }
    
 double Dynamic::read_double() {
   double result = .0;
   read((char *)&result, sizeof(result));
-  return result;
+  return PF_NTOH(result);
 }
 
 uint32_t Dynamic::read_bytes(unsigned char *value, size_t _size) {

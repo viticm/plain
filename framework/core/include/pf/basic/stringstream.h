@@ -8,11 +8,13 @@
  * @date 2017/04/27 20:21
  * @uses Like the <sstream>, 
  *       but this class will read/write by string buffer directly.
+ *       * This use network(big) endian stream.
 */
 #ifndef PF_BASIC_STRINGSTREAM_H_
 #define PF_BASIC_STRINGSTREAM_H_
 
 #include "pf/basic/config.h"
+#include "pf/basic/endian.h"
 #include "pf/sys/assert.h"
 
 namespace pf_basic {
@@ -62,6 +64,17 @@ class stringstream {
    template <typename T>
    stringstream &operator >> (T &var) {
      read((char *)&var, sizeof(var));
+     var = PF_NTOH(var);
+     return *this;
+   }
+
+   stringstream &operator >> (int8_t &var) {
+     read((char *)&var, sizeof(var));
+     return *this;
+   }
+
+   stringstream &operator >> (uint8_t &var) {
+     read((char *)&var, sizeof(var));
      return *this;
    }
 
@@ -69,6 +82,7 @@ class stringstream {
      char temp[SSTREAM_STRING_SIZE_MAX]{0};
      int32_t size{0};
      read((char *)&size, sizeof(size));
+     size = PF_NTOH(size);
      if (size > 0) read(temp, size);
      var = temp;
      return *this;
@@ -77,6 +91,7 @@ class stringstream {
    stringstream &operator >> (char *var) {
      int32_t size{0};
      read((char *)&size, sizeof(size));
+     size = PF_NTOH(size);
      if (size > 0) read(var, size);
      return *this;
    }
@@ -84,20 +99,30 @@ class stringstream {
  public:
    template <typename T>
    stringstream &operator << (T var) {
+     write((char *)&(var = PF_HTON(var)), sizeof(var));
+     return *this;
+   }
+
+   stringstream &operator << (int8_t var) {
+     write((char *)&var, sizeof(var));
+     return *this;
+   }
+
+   stringstream &operator << (uint8_t var) {
      write((char *)&var, sizeof(var));
      return *this;
    }
 
    stringstream &operator << (const std::string var) {
-     auto size = var.size();
-     write((char *)&size, sizeof(int32_t));
+     auto size = (int32_t)var.size();
+     write((char *)&(size = PF_HTON(size)), sizeof(int32_t));
      write(var.c_str(), size);
      return *this;
    }
 
    stringstream &operator << (const char *var) {
      auto size = strlen(var);
-     write((char *)&size, sizeof(int32_t));
+     write((char *)&(size = PF_HTON(size)), sizeof(int32_t));
      write(var, size);
      return *this;
    }

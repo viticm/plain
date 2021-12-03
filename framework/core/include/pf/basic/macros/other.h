@@ -49,6 +49,13 @@
 #define __stdcall
 #endif
 
+// C++11 and below don't support contexpr as used here.
+#if __cplusplus >= 201300
+# define PF_CONSTEXPR constexpr 
+#else
+# define PF_CONSTEXPR
+#endif
+
 enum {
   kAppStatusRunning = 0,
   kAppStatusStop,
@@ -63,6 +70,5 @@ enum {
 #define PF_RELEASE	PF_VERSION "." PF_VERSION_RELEASE
 #define PF_COPYRIGHT	PF_RELEASE "  Copyright (C) 2018 by viticm "
 #define PF_AUTHORS	"viticm<viticm.ti@gmail.com>"
-
 
 #endif //PF_BASIC_MACROS_OTHER_H_
