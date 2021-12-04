@@ -122,14 +122,14 @@ bool Epoll::process_input() {
       connection::Basic *connection = nullptr;
       if (ID_INVALID == connection_id) {
         SLOW_WARNINGLOG(NET_MODULENAME, 
-                        "[net.connection.manager] (Epoll::processinput)"
+                        "[net.connection.manager] (Epoll::process_input)"
                         " ID_INVALID == connectionid");
         continue;
       }
       connection = get(connection_id);
       if (nullptr == connection) {
         SLOW_WARNINGLOG(NET_MODULENAME, 
-                        "[net.connection.manager] (Epoll::processinput)"
+                        "[net.connection.manager] (Epoll::process_input)"
                         " nullptr == connection, id: %d", connection_id);
         continue;
       }
@@ -137,7 +137,7 @@ bool Epoll::process_input() {
       //int32_t socket_id = connection->socket()->get_id();
       if (SOCKET_INVALID == socket_id) {
         SLOW_ERRORLOG(NET_MODULENAME,
-                      "[net.connection.manager] (Epoll::processinput)"
+                      "[net.connection.manager] (Epoll::process_input)"
                       " error! socket_id == SOCKET_INVALID, connectionid: %d",
                       connection_id);
         return false;

@@ -44,7 +44,7 @@
  * GLOBALS["default.script.enter"] = string;      //default "main".
  * GLOBALS["default.script.netlost"] = string;    //default "plain_netlost".
  * GLOBALS["default.script.nethandler"] = string; //default "plain_nethandler".
- * GLOBALS["default.script.nethandler"] = string; //default "plain_nethandler".
+ * GLOBALS["default.script.netpack"] = number;    //default 0.
  * GLOBALS["default.script.netrouting"] = string; //default "plain_netrouting".
  * GLOBALS["default.cache.open"] = bool;          //default fasle.
  * GLOBALS["default.cache.service"] = bool;       //default fasle.
@@ -123,6 +123,7 @@ void set_default_globals(type::variable_set_t &g) {
   g["default.script.bootstrap"] = "bootstrap.lua";
   g["default.script.reload"] = "preload.lua";
   g["default.script.type"] = -1;
+  g["default.script.netpack"] = 0;
   g["default.script.netlost"] = "plain_netlost";
   g["default.script.nethandler"] = "plain_nethandler";
   g["default.script.netrouting"] = "plain_netrouting";

@@ -93,10 +93,10 @@ bool FactoryManager::init() {
   return true;
 }
 
-Interface *FactoryManager::packet_create(uint16_t packet_id) {
+Interface *FactoryManager::packet_create(uint16_t packet_id, bool dynamic) {
   Interface *packet = nullptr;
   std::unique_lock<std::mutex> autolock(mutex_);
-  if (is_valid_dynamic_packet_id(packet_id)) {
+  if (is_valid_dynamic_packet_id(packet_id) || dynamic) {
     packet = new Dynamic(packet_id);
   } else {
     bool is_find = id_indexs_.isfind(packet_id);
@@ -209,8 +209,15 @@ uint32_t FactoryManager::packet_execute(
   const std::string &original) {
   if (!function_packet_execute_) {
     auto script = ENGINE_POINTER->get_script();
-    if (is_null(script)) return kPacketExecuteStatusContinue;
-    if (!is_valid_dynamic_packet_id(packet->get_id())) {
+    if (is_null(script)) {
+      FAST_WARNINGLOG(NET_MODULENAME, 
+                      "[net.packet] (FactoryManager::packet_execute) id: %d"
+                      " will not handle", 
+                      packet->get_id());
+      return kPacketExecuteStatusContinue;
+    }
+    if (!is_valid_dynamic_packet_id(packet->get_id()) && 
+        GLOBALS["default.script.netpack"] == 0) {
       return kPacketExecuteStatusError;
     } else {
       dynamic_cast<Dynamic *>(packet)->set_readable(true); //Set enable read.

@@ -116,7 +116,7 @@ class PF_API Kernel : public pf_basic::Singleton< Kernel > {
 
  public:
    template<class F, class... Args>
-   std::thread::id newthread(F&& f, Args&&... args);
+   std::thread::id newthread(const std::string &name, F&& f, Args&&... args);
 
  protected:
    virtual bool init_base();

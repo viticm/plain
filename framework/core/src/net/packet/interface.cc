@@ -12,6 +12,7 @@ queue_struct::~queue_struct() {
 
 uint32_t Interface::execute(connection::Basic *connection) {
   uint32_t result = kPacketExecuteStatusError;
+  std::cout << "Interface::execute" << std::endl;
   if (!NET_PACKET_FACTORYMANAGER_POINTER) return result;
   result = NET_PACKET_FACTORYMANAGER_POINTER->packet_execute(connection, this);
   return result;

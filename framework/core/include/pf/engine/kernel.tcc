@@ -6,13 +6,14 @@
  * @license
  * @user viticm<viticm.ti@gmail.com>
  * @date 2017/01/20 11:39
- * @uses your description
+ * @uses The engine kernel template.
 */
 #ifndef PF_ENGINE_KERNEL_TCC_
 #define PF_ENGINE_KERNEL_TCC_
 
 #include "pf/sys/thread.h"
 #include "pf/basic/util.h"
+#include "pf/basic/logger.h"
 #include "pf/basic/time_manager.h"
 #include "pf/engine/kernel.h"
 
@@ -44,7 +45,8 @@ auto Kernel::enqueue(F&& f, Args&&... args)
 }
 
 template<class F, class... Args>
-std::thread::id Kernel::newthread(F&& f, Args&&... args) {
+std::thread::id Kernel::newthread(
+    const std::string &name, F&& f, Args&&... args) {
   using return_type = typename std::result_of<F(Args...)>::type;
   std::thread::id res;
   {
@@ -54,7 +56,7 @@ std::thread::id Kernel::newthread(F&& f, Args&&... args) {
     auto task = std::make_shared< std::packaged_task<return_type()> >(
         std::bind(std::forward<F>(f), std::forward<Args>(args)...)
       );
-    thread_workers_.emplace_back([task](){ 
+    thread_workers_.emplace_back([task, name](){ 
       pf_sys::thread::start();
       pf_sys::ThreadCollect tc;
       std::future<return_type> task_res = task->get_future();
@@ -67,9 +69,26 @@ std::thread::id Kernel::newthread(F&& f, Args&&... args) {
         worksleep(starttime);
         (*task).reset(); //Remeber it, the packaged_task reset then can call again.
       }
+
+      //Log(this log also can enable with app.debug).
+      auto id_str = pf_sys::thread::get_id();
+      SLOW_DEBUGLOG(ENGINE_MODULENAME,
+                    "[%s] Kernel::newthread(%s) stop with %s.",
+                    ENGINE_MODULENAME,
+                    name.c_str(),
+                    id_str.c_str());
     });
     res = thread_workers_[thread_workers_.size() - 1].get_id();
   }
+
+  //Log(this log also can enable with app.debug).
+  std::stringstream id_str;
+  id_str << res;
+  SLOW_DEBUGLOG(ENGINE_MODULENAME,
+                "[%s] Kernel::newthread(%s) start with %s.",
+                ENGINE_MODULENAME,
+                name.c_str(),
+                id_str.str().c_str());
   return res;
 }
 

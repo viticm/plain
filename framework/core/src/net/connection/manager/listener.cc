@@ -30,6 +30,10 @@ bool Listener::init(uint16_t _max_size, uint16_t _port, const std::string &ip) {
 }
 
 pf_net::connection::Basic *Listener::accept() {
+
+  // Not accept connection when app stop.
+  if (GLOBALS["app.status"] == kAppStatusStop) return nullptr;
+  
   uint32_t step = 0;
   bool result = false;
   pf_net::connection::Basic *newconnection{nullptr};

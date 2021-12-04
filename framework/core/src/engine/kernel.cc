@@ -141,35 +141,43 @@ bool Kernel::init() {
 void Kernel::run() {
   if (!is_null(net_)) {
     auto net = net_.get();
-    this->newthread([net]() { return thread::for_net(net); });
+    this->newthread("net", [net]() { return thread::for_net(net); });
   }
   if (!is_null(db_factory_) && db_eid_ != DB_EID_INVALID) {
     auto env = db_factory_->getenv(db_eid_);
-    this->newthread([env]() { return thread::for_db(env); });
+    this->newthread("db", [env]() { return thread::for_db(env); });
   }
   if (!is_null(script_factory_) && script_eid_ != SCRIPT_EID_INVALID) {
     auto env = script_factory_->getenv(script_eid_);
     env->call(GLOBALS["default.script.enter"].data);
-    this->newthread([env]() { return thread::for_script(env); });
+    this->newthread("script", [env]() { return thread::for_script(env); });
   }
   if (!is_null(cache_)) {
     auto cache = cache_.get();
-    this->newthread([cache]() { return thread::for_cache(cache); });
+    this->newthread("cache", [cache]() { return thread::for_cache(cache); });
   }
   if (!is_null(net_listener_factory_)) {
     for (auto it = listen_list_.begin(); it != listen_list_.end(); ++it) {
       auto net = net_listener_factory_->getenv(it->second);
+      std::string thread_name = "listener" + std::to_string(it->second);
       if (!is_null(net))
-        this->newthread([net]() { return thread::for_net(net); });
+        this->newthread(thread_name, [net]() { return thread::for_net(net); });
         // If use &net then in loop the thread work with the last pointer.
         // this->newthread([&net]() { return thread::for_net(net); });
     }
   }
-  if (!is_null(net_connector_))
+  if (!is_null(net_connector_)) {
     this->newthread(
-        [this]() { return thread::for_net(net_connector_.get()); });
-  if (!is_null(console_))
-    this->newthread([this]() { return thread::for_console(console_.get()); });
+        "client",
+        [this]() { return thread::for_net(net_connector_.get());
+    });
+  }
+  if (!is_null(console_)) {
+    this->newthread(
+        "console",
+        [this]() { return thread::for_console(console_.get());
+    });
+  }
 
   GLOBALS["app.status"] = kAppStatusRunning;
   loop();
@@ -697,6 +705,6 @@ void Kernel::loop() {
     }
     if (pf_sys::ThreadCollect::count() <= 0) break;
   }
-  SLOW_LOG(ENGINE_MODULENAME, 
+  SLOW_LOG(ENGINE_MODULENAME,
       "[%s] exited normally", GLOBALS["app.name"].c_str());
 }

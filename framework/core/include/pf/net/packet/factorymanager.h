@@ -46,7 +46,7 @@ class PF_API FactoryManager : public pf_basic::Singleton<FactoryManager> {
  public:
    bool init();
    //根据消息类型从内存里分配消息实体数据（允许多线程同时调用，必须用removepacket释放）
-   Interface *packet_create(uint16_t packetid);
+   Interface *packet_create(uint16_t packetid, bool dynamic = false);
    Interface *packet_get(int64_t objectid) {
      return alloc_packets_.get(objectid);
    };
