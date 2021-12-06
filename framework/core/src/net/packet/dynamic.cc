@@ -111,7 +111,6 @@ void Dynamic::write_bytes(const unsigned char *value, size_t _size) {
 }
 
 void Dynamic::write_raw(const char *value, size_t _size) {
-  uint32_t length = static_cast<uint32_t>(strlen(value));
   write(value, _size);
 }
 
