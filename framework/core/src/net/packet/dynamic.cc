@@ -186,8 +186,8 @@ uint32_t Dynamic::read_bytes(unsigned char *value, size_t _size) {
   return read((char *)value, _size > length ? length : _size);
 }
 
-void Dynamic::read_raw(char *value, size_t _size) {
-  read(value, _size);
+uint32_t Dynamic::read_raw(char *value, size_t _size) {
+  return read(value, _size);
 }
 
 void Dynamic::check_memory(uint32_t length) {
