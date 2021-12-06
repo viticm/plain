@@ -83,7 +83,7 @@ bool Basic::process_input() {
     if (assistant->isenable()) {
       if (is_null(istream_compress_)) {
         SLOW_ERRORLOG("net",
-                      "[net.connection] (Basic::processinput)"
+                      "[net.connection] (Basic::process_input)"
                       " the socket compress stream is null.");
         return false;
       }
@@ -99,7 +99,7 @@ bool Basic::process_input() {
           errormessage, 
           static_cast<uint16_t>(sizeof(errormessage) - 1));
       SLOW_ERRORLOG("net",
-                    "[net.connection] (Basic::processinput)"
+                    "[net.connection] (Basic::process_input)"
                     " socket_inputstream_->fill() result: %d %s",
                     fillresult,
                     errormessage);

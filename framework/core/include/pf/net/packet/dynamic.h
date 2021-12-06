@@ -62,6 +62,7 @@ class PF_API Dynamic : public packet::Interface {
    void write_float(float value);
    void write_double(double value);
    void write_bytes(const unsigned char *value, size_t size);
+   void write_raw(const char *value, size_t size);
 
  public:
    int8_t read_int8();
@@ -76,6 +77,7 @@ class PF_API Dynamic : public packet::Interface {
    float read_float();
    double read_double();
    uint32_t read_bytes(unsigned char *value, size_t size);
+   void read_raw(char *value, size_t size);
 
  public:
    //some useful.

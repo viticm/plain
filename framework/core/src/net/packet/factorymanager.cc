@@ -140,7 +140,7 @@ void FactoryManager::packet_remove(Interface *packet) {
     return;
   }
   uint16_t packet_id = packet->get_id();
-  if (is_valid_dynamic_packet_id(packet_id)) {
+  if (instanceof(packet, packet::Dynamic)) {
       int64_t pointer = POINTER_TOINT64(packet);
       alloc_packets_.remove(pointer);
       safe_delete(packet);

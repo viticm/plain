@@ -142,7 +142,6 @@ bool Interface::erase(connection::Basic *connection) {
 }
 
 bool Interface::remove(connection::Basic *connection) {
-  // std::cout << "connection->name(): " << connection->name() << std::endl;
   on_disconnect(connection);
   if (!is_null(callback_disconnect_)) callback_disconnect_(connection);
   if (connection->name() != "") 

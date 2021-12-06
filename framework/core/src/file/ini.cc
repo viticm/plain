@@ -199,7 +199,7 @@ bool Ini::_getfloat(const char *section, const char *key, float &result) {
 }
  
 const char *Ini::getstring(int32_t position) {
-return get_bufferstring(position);
+  return get_bufferstring(position);
 }
 
 bool Ini::_getstring(const char *section, 

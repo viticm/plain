@@ -634,12 +634,12 @@ const std::string Kernel::get_script_function(
     auto name = listener->name();
     auto configid = get_listen_configid(name);
     if (configid != -1)
-      key = "server." + name + ".scriptfunc" + std::to_string(configid);
+      key = "server.scriptfunc" + std::to_string(configid);
   } else if (connection->name() != "") {
     auto name = connection->name();
     auto configid = get_connect_configid(name);
     if (configid != -1)
-      key = "client." + name + ".scriptfunc" + std::to_string(configid);
+      key = "client.scriptfunc" + std::to_string(configid);
   }
   if (key == "" || GLOBALS[key] == "")
     key = "default.script.nethandler";
