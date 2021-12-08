@@ -27,8 +27,8 @@ class PF_API TimeManager : public Singleton<TimeManager> {
  public:
    TimeManager();
    ~TimeManager();
-   uint32_t start_time_;
-   uint32_t current_time_;
+   volatile uint32_t start_time_;
+   volatile uint32_t current_time_;
    time_t set_time_;
    tm tm_;
 #if OS_UNIX

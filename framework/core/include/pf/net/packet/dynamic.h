@@ -34,9 +34,10 @@ class PF_API Dynamic : public packet::Interface {
  public:
    void write(const char *buffer, uint32_t length);
    uint32_t read(char *buffer, uint32_t length);
-   void set_readable(bool flag) { readable_ = flag; };
-   void set_writeable(bool flag) { writeable_ = flag; };
+   void set_readable(bool flag) { readable_ = flag; }
+   void set_writeable(bool flag) { writeable_ = flag; }
    void clear();
+   void reset() { size_ = offset_ = 0; }
 
  public:
    virtual void set_id(uint16_t id) { id_ = id; }

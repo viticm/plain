@@ -20,8 +20,8 @@
 
 namespace pf_basic {
 
-std::string base64_encode(unsigned char const* , unsigned int len);
-std::string base64_decode(std::string const& s);
+PF_API std::string base64_encode(unsigned char const* , unsigned int len);
+PF_API std::string base64_decode(std::string const& s);
 
 } //namespace pf_basic
 
