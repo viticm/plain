@@ -36,6 +36,8 @@ class PF_API Interface {
    virtual uint32_t size() const = 0;
    virtual void set_id(uint16_t) {};
    virtual void set_size(uint32_t) {};
+   virtual void set_exstr(const std::string &) {}
+   virtual std::string get_exstr() const { return ""; }
    int8_t get_index() const { return index_; };
    void set_index(int8_t index) { index_ = index; };
    uint8_t get_status() const { return status_; };

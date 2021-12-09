@@ -42,6 +42,8 @@ class PF_API Dynamic : public packet::Interface {
  public:
    virtual void set_id(uint16_t id) { id_ = id; }
    virtual void set_size(uint32_t _size) { size_ = _size; }
+   virtual void set_exstr(const std::string &str) { exstr_ = str; }
+   virtual std::string get_exstr() const { return exstr_; }
 
  public:
    virtual bool read(stream::Input &istream);
@@ -79,6 +81,7 @@ class PF_API Dynamic : public packet::Interface {
    double read_double();
    uint32_t read_bytes(unsigned char *value, size_t size);
    uint32_t read_raw(char *value, size_t size);
+
 
  public:
    //some useful.
@@ -185,6 +188,7 @@ class PF_API Dynamic : public packet::Interface {
    pf_sys::memory::DynamicAllocator allocator_; //内存分配
    uint32_t offset_; //动态包写入或读取到的位置
    uint32_t size_; //包的大小
+   std::string exstr_; //扩展字符串，用于外部自定义一些值或者标记
    bool readable_; //是否可读
    bool writeable_; //是否可写
 

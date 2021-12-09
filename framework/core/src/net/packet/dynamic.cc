@@ -16,7 +16,6 @@ Dynamic::Dynamic() :
   allocator_.malloc(2048);
 }
 
-
 Dynamic::Dynamic(uint16_t id) :
   id_{id},
   offset_{0},
