@@ -22,8 +22,9 @@ namespace pf_engine {
 inline void worksleep(uint32_t starttime) {
   auto worktime = 
     static_cast< int32_t >(TIME_MANAGER_POINTER->get_tickcount() - starttime);
-  auto time = static_cast<int32_t>(
-      1000 / GLOBALS["default.engine.frame"].get<int32_t>()) - worktime;
+  static int32_t frame_time = 
+    GLOBALS["default.engine.frame_time"].get<int32_t>();
+  auto time = frame_time - worktime;
   if (time > 0) std::this_thread::sleep_for(std::chrono::milliseconds(time));
 }
 

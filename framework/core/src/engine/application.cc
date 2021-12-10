@@ -238,6 +238,16 @@ bool Application::set_env_globals(bool perr) {
       GLOBALS[name] = value;
     }
   }
+  auto frame = GLOBALS["default.engine.frame"].get<uint16_t>();
+  if (0 < frame && frame < 1000) {
+    uint16_t frame_time = 1000 / frame;
+    GLOBALS["default.engine.frame_time"] = frame_time;
+  } else {
+    io_cwarn(
+        "[%s] (set_env_globals) frame(%d) is invalid",
+        GLOBALS["app.name"].c_str(),
+        frame);
+  }
   return true;
 }
 

@@ -82,7 +82,6 @@ class PF_API Dynamic : public packet::Interface {
    uint32_t read_bytes(unsigned char *value, size_t size);
    uint32_t read_raw(char *value, size_t size);
 
-
  public:
    //some useful.
    Dynamic &operator >> (bool &var) {
