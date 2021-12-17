@@ -250,7 +250,7 @@ bool Select::socket_remove(int32_t socketid) {
   return true;
 }
 
-bool Select::heartbeat(uint32_t time) {
+bool Select::heartbeat(uint64_t time) {
   bool result = Interface::heartbeat(time);
   return result;
 }

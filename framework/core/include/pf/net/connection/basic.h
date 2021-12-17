@@ -64,7 +64,7 @@ class PF_API Basic {
    virtual bool process_input();
    virtual bool process_output();
    virtual bool process_command();
-   virtual bool heartbeat(uint32_t time = 0, uint32_t flag = 0);
+   virtual bool heartbeat(uint64_t time = 0, uint32_t flag = 0);
    virtual bool send(packet::Interface *packet);
    virtual bool routing(const std::string &name, 
                         packet::Interface *packet, 

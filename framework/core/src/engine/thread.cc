@@ -17,7 +17,10 @@ namespace thread {
 
 bool for_net(pf_net::connection::manager::Basic *net) {
   auto stime = TIME_MANAGER_POINTER->get_tickcount();
-  if (is_null(net)) return false;
+  if (is_null(net)) {
+    std::cout << "engine thread for net is null" << std::endl;
+    return false;
+  }
   net->tick();
   auto etime = TIME_MANAGER_POINTER->get_tickcount();
   auto dtime = etime - stime;

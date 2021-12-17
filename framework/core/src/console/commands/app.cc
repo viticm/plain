@@ -152,6 +152,12 @@ void App::configure() {
         "Get the application status info", "-1"
         ));
   p.emplace_back(p4.get());
+
+  std::unique_ptr<InputParameter> p5(new InputOption(
+        "reload", "", InputParameter::kModeNone, 
+        "Reload the default script files", "-1"
+        ));
+  p.emplace_back(p5.get());
   
   auto definition = new InputDefinition(p);
   set_name("app")
@@ -160,7 +166,9 @@ void App::configure() {
     .set_help(
         "App commands\n"
         " --stop|-k Stop the application\n"
-        " --status|-s Get the application status info");
+        " --status|-s Get the application status info\n"
+        " --reload Reload the default script files"
+        );
 }
 
 uint8_t App::execute(Input *input, Output *output) {
@@ -176,6 +184,10 @@ uint8_t App::execute(Input *input, Output *output) {
   auto status = input->get_option("status");
   if (status != "-1") {
     status_info(output);
+  }
+  auto reload = input->get_option("reload");
+  if (reload != "-1") {
+    kernel->parse_command("reload");
   }
   return kCommandExecuteNone;
 }

@@ -19,12 +19,23 @@
 
 namespace pf_engine {
 
-inline void worksleep(uint32_t starttime) {
+inline void worksleep(uint64_t starttime, const std::string &name) {
   auto worktime = 
     static_cast< int32_t >(TIME_MANAGER_POINTER->get_tickcount() - starttime);
   static int32_t frame_time = 
     GLOBALS["default.engine.frame_time"].get<int32_t>();
   auto time = frame_time - worktime;
+  if (time > 1000) {
+    SLOW_ERRORLOG(ENGINE_MODULENAME,
+                  "[%s] worksleep(%s) time error %d|%d|%d|%d",
+                  ENGINE_MODULENAME,
+                  name.c_str(),
+                  time,
+                  starttime,
+                  worktime,
+                  frame_time);
+    time = 10;
+  }
   if (time > 0) std::this_thread::sleep_for(std::chrono::milliseconds(time));
 }
 
@@ -61,14 +72,26 @@ std::thread::id Kernel::newthread(
       pf_sys::thread::start();
       pf_sys::ThreadCollect tc;
       std::future<return_type> task_res = task->get_future();
+      auto lasttime = TIME_MANAGER_POINTER->get_tickcount();
       for (;;) {
         if (pf_sys::thread::is_stopping()) break;
         auto starttime = TIME_MANAGER_POINTER->get_tickcount();
+        auto diff_time = starttime - lasttime;
+        if (diff_time > 1000) {
+          // std::cout << "thread: " << name << " working" << std::endl;
+          SLOW_DEBUGLOG(ENGINE_MODULENAME,
+                        "[%s] thread(%s) time work start: %d",
+                        ENGINE_MODULENAME,
+                        name.c_str(),
+                        starttime);
+
+          lasttime = starttime;
+        }
         (*task)(); 
+        (*task).reset(); //Remeber it, the packaged_task reset then can call again.
         if (std::is_same<decltype(task_res), bool>::value && !task_res.get())
           pf_sys::thread::stop();
-        worksleep(starttime);
-        (*task).reset(); //Remeber it, the packaged_task reset then can call again.
+        worksleep(starttime, name);
       }
 
       //Log(this log also can enable with app.debug).

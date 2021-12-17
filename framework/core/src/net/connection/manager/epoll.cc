@@ -224,7 +224,7 @@ bool Epoll::process_command() {
   return true;
 }
 
-bool Epoll::heartbeat(uint32_t time) {
+bool Epoll::heartbeat(uint64_t time) {
   bool result = Interface::heartbeat(time);
   return result;
 }

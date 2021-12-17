@@ -60,8 +60,8 @@ void signal_handler(int32_t signal) {
   using namespace pf_basic;
   if (GLOBALS["app.status"] == kAppStatusStop) return;
   //处理前台模式信号
-  static uint32_t last_signaltime = 0;
-  uint32_t currenttime = TIME_MANAGER_POINTER->get_tickcount();
+  static uint64_t last_signaltime = 0;
+  auto currenttime = TIME_MANAGER_POINTER->get_tickcount();
   if (signal == SIGINT) {
     if (currenttime - last_signaltime > 10 * 1000) {
       io_cdebug(
@@ -91,8 +91,8 @@ void signal_handler(int32_t signal) {
 BOOL WINAPI signal_handler(DWORD event) {
   if (GLOBALS["app.status"] == kAppStatusStop) return;
   using namespace pf_basic;
-  static uint32_t last_signaltime = 0;
-  uint32_t currenttime = TIME_MANAGER_POINTER->get_tickcount();
+  static uint64_t last_signaltime = 0;
+  uint64_t currenttime = TIME_MANAGER_POINTER->get_tickcount();
   switch (event) {
     case CTRL_C_EVENT: {
       if (currenttime - last_signaltime > 10 * 1000) {

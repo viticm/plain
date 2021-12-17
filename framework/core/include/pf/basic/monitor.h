@@ -27,7 +27,7 @@ class PF_API monitor {
 
  private:
    std::string name_;
-   uint32_t start_time_;
+   std::clock_t start_time_;
 
 };
 

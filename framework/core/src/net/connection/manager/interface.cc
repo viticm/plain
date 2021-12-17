@@ -74,7 +74,7 @@ void Interface::pool_set(connection::Pool *pool) {
   pool_ = std::move(pointer);
 }
 
-bool Interface::heartbeat(uint32_t) {
+bool Interface::heartbeat(uint64_t) {
   bool result = true;
   return result;
 }

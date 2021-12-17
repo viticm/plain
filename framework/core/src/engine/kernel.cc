@@ -673,7 +673,7 @@ void Kernel::loop() {
         if (-1 == it->second) connect(it->first);
       }
     }
-    worksleep(starttime);
+    worksleep(starttime, "main");
     if (GLOBALS["default.engine.fps"] == true && curtime - last_fps >= 1) {
       const CursorHider hider;
       auto curr_t = TIME_MANAGER_POINTER->get_tickcount();
@@ -704,6 +704,7 @@ void Kernel::loop() {
       break;
     }
     if (pf_sys::ThreadCollect::count() <= 0) break;
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
   SLOW_LOG(ENGINE_MODULENAME,
       "[%s] exited normally", GLOBALS["app.name"].c_str());

@@ -1,4 +1,5 @@
 #include "pf/sys/assert.h"
+#include "pf/basic/io.tcc"
 #include "pf/basic/time_manager.h"
 
 std::unique_ptr< pf_basic::TimeManager > g_time_manager{nullptr};
@@ -28,13 +29,14 @@ TimeManager::~TimeManager() {
 }
 
 bool TimeManager::init() {
+  s_time_ = std::chrono::steady_clock::now();
 #if OS_WIN
   start_time_ = GetTickCount();
   current_time_ = GetTickCount();
 #elif OS_UNIX
   start_time_ = 0;
   current_time_ = 0;
-  gettimeofday(&start_, &time_zone_);
+  // gettimeofday(&start_, &time_zone_);
 #endif
   reset_time();
   g_file_name_fix = get_day_time();
@@ -42,6 +44,9 @@ bool TimeManager::init() {
   return true;
 }
 
+// 多线程下获取这个方法会造成后面获取的时间会小于之前的时间
+// 猜测是end_在多线程下其数值未加锁造成？
+/*
 uint32_t TimeManager::get_tickcount() {
 #if OS_WIN
   current_time_ = GetTickCount();
@@ -55,6 +60,16 @@ uint32_t TimeManager::get_tickcount() {
 #endif
   return current_time_;
 }
+*/
+
+uint64_t TimeManager::get_tickcount() {
+  using namespace std::chrono;
+  auto now = steady_clock::now();
+  auto passed = now - s_time_;
+  auto r = duration_cast<milliseconds>(passed).count();
+  current_time_ = static_cast<uint64_t>(r);
+  return current_time_;
+}
 
 uint32_t TimeManager::get_current_time() {
   reset_time();
@@ -63,11 +78,11 @@ uint32_t TimeManager::get_current_time() {
   return time;
 }
 
-uint32_t TimeManager::get_start_time() const {
+uint64_t TimeManager::get_start_time() const {
   return start_time_;
 }
 
-uint32_t TimeManager::get_saved_time() const {
+uint64_t TimeManager::get_saved_time() const {
   return current_time_;
 }
 
@@ -89,14 +104,12 @@ void TimeManager::reset_time() {
 time_t TimeManager::get_ansi_time() {
   reset_time();
   return set_time_;
-  return set_time_;
 }
 
 uint32_t TimeManager::get_ctime() {
   time_t currenttime = get_ansi_time();
   uint32_t result = static_cast<uint32_t>(currenttime);
   return result;
-  return 0;
 }
 
 void TimeManager::get_full_format_time(char *format_time, uint32_t length) {
@@ -187,9 +200,9 @@ uint32_t TimeManager::get_day_time() {
   return result;
 }
 
-uint32_t TimeManager::get_run_time() {
+uint64_t TimeManager::get_run_time() {
   get_tickcount();
-  uint32_t result = current_time_ - start_time_;
+  auto result = current_time_ - start_time_;
   return result;
 }
 

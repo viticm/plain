@@ -4,7 +4,7 @@
 
 using namespace pf_net::connection::manager;
 
-bool Basic::heartbeat(uint32_t time) {
+bool Basic::heartbeat(uint64_t time) {
   using namespace pf_net;
   auto _time = 0 == time ? TIME_MANAGER_POINTER->get_tickcount() : time;
   auto _size = size();

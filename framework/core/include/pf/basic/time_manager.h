@@ -27,20 +27,20 @@ class PF_API TimeManager : public Singleton<TimeManager> {
  public:
    TimeManager();
    ~TimeManager();
-   volatile uint32_t start_time_;
-   volatile uint32_t current_time_;
+   uint64_t start_time_;
+   uint64_t current_time_;
    time_t set_time_;
    tm tm_;
 #if OS_UNIX
-   struct timeval start_, end_;
-   struct timezone time_zone_;
+   // struct timeval start_, end_;
+   // struct timezone time_zone_;
 #endif
 
  public:
    bool init();
-   uint32_t get_tickcount(); //获取从程序启动到现在经历的时间(ms)
-   uint32_t get_saved_time() const;
-   uint32_t get_start_time() const;
+   uint64_t get_tickcount(); //获取从程序启动到现在经历的时间(ms)
+   uint64_t get_saved_time() const;
+   uint64_t get_start_time() const;
    static TimeManager &getsingleton();
    static TimeManager *getsingleton_pointer();
    void reset_time();
@@ -62,7 +62,7 @@ class PF_API TimeManager : public Singleton<TimeManager> {
    uint32_t diff_dword_time(uint32_t time1, uint32_t time2);
    int32_t diff_day_count(time_t ansi_time1, time_t ansi_time2);
    uint32_t get_day_time(); //20131129
-   uint32_t get_run_time();
+   uint64_t get_run_time();
    uint32_t get_current_time();
    uint32_t diff_time(uint32_t time1, uint32_t time2); //两个时间的差值，毫秒
    void time_totm(uint32_t time, tm *_tm);
@@ -70,6 +70,9 @@ class PF_API TimeManager : public Singleton<TimeManager> {
    uint32_t get_days(); //取得以天为单位的时间值, 千位数代表年份，其他三位代表时间（天数）
    uint32_t get_hours(); //12723表示本年度第127天的5(23/4)点的第3(23%4)刻钟时间
    uint32_t get_weeks(); //取得以周为单位的时间值, 千位数代表年份，其他三位代表时间（周数）
+
+ private:
+   std::chrono::time_point<std::chrono::steady_clock> s_time_;
 
 };
 

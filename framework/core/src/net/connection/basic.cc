@@ -160,7 +160,7 @@ bool Basic::send(packet::Interface *packet) {
   return protocol_->send(this, packet);
 }
 
-bool Basic::heartbeat(uint32_t, uint32_t) {
+bool Basic::heartbeat(uint64_t, uint32_t) {
   using namespace pf_basic;
   auto now = TIME_MANAGER_POINTER->get_ctime();
   if (is_disconnect()) return false;

@@ -46,7 +46,7 @@ class PF_API Interface {
    bool add(connection::Basic *connection);
 
  public:
-   virtual bool heartbeat(uint32_t time = 0);
+   virtual bool heartbeat(uint64_t time = 0);
    //从管理器中移除连接
    virtual bool remove(int16_t id);
    //删除连接包括管理器、socket

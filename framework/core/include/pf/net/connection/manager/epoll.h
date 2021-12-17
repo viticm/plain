@@ -35,7 +35,7 @@ class PF_API Epoll : public Interface {
    virtual bool process_output();     //数据发送接口
    virtual bool process_exception();  //异常连接处理
    virtual bool process_command(); //消息执行
-   virtual bool heartbeat(uint32_t time = 0);
+   virtual bool heartbeat(uint64_t time = 0);
 
  public:
    virtual bool socket_add(int32_t socketid, int16_t connectionid);

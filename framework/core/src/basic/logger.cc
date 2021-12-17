@@ -59,16 +59,16 @@ void Logger::get_log_timestr(char *time_str, int32_t length) {
       snprintf(
           time_str, 
           length, 
-          "%.2d:%.2d:%.2d (%s %.4f)",
+          "%.2d:%.2d:%.2d (%s %.3f)",
           TIME_MANAGER_POINTER->get_hour(),
           TIME_MANAGER_POINTER->get_minute(),
           TIME_MANAGER_POINTER->get_second(),
           pf_sys::thread::get_id().c_str(),
-          static_cast< float >(runtime) / 1000);
+          static_cast< double >(runtime) / 1000);
   } else {
     snprintf(time_str,
              length, 
-             "00:00:00 (%s 0.0000)",
+             "00:00:00 (%s 0.000)",
              pf_sys::thread::get_id().c_str());
   }
 }

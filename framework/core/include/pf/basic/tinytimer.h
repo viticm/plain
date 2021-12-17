@@ -23,16 +23,16 @@ class PF_API TinyTimer {
 
  public:
    bool isstart() const;
-   void set_termtime(uint32_t time);
-   uint32_t get_termtime() const;
-   uint32_t get_last_ticktime() const;
+   void set_termtime(uint64_t time);
+   uint64_t get_termtime() const;
+   uint64_t get_last_ticktime() const;
    void cleanup();
-   void start(uint32_t term, uint32_t now);
-   bool counting(uint32_t time);
+   void start(uint64_t term, uint64_t now);
+   bool counting(uint64_t time);
 
  private:
-   uint32_t tick_termtime_;
-   uint32_t last_ticktime_;
+   uint64_t tick_termtime_;
+   uint64_t last_ticktime_;
    bool isstart_;
 
 };
