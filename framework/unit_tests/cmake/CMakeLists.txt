@@ -45,7 +45,10 @@ endif()
 set(COMMON_LIBS "pf_core;gtest;dl;${CMAKE_THREAD_LIBS_INIT}")
 
  # Plain Framework core flags.
-set(cxx_base_flags "${cxx_base_flags} -std=c++11 -DPF_CORE -DPF_OPEN_EPOLL")
+set(cxx_base_flags "${cxx_base_flags} -DPF_CORE -DPF_OPEN_EPOLL")
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+endif()
 
 
 # Generate a rule to build a unit test executable ${test_name} with
