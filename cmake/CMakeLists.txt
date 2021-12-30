@@ -25,6 +25,11 @@ include("inc/common.cmake")
 include("${fplutil_dir}/buildutil/cmake_common.txt")
 set_common_build_variables()
 
+#For utf8 no boom.
+if (MSVC)                                                                          
+  set(cxx_base_flags "${cxx_base_flags} -wd4819")                                  
+endif()
+
 # Options that control the build configuration.
 # To configure PlainFramework flags per build target, see the
 # plainframework_configure_flags() function.

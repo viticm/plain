@@ -429,7 +429,7 @@ inline int32_t pg_char2int(char b) {
   return x;
 }
 
-static char int2char(char i, int tickcount = 0) {
+static char int2char(char i, uint64_t tickcount = 0) {
   char b;
   Assert(i >= 0 && i <= PG_RESULTLENSTD - 2);
   int size{0};
@@ -483,12 +483,12 @@ static bool pg_encrypt(char *key,
         cc++;
         if (cc > PG_MAXCHAR)
           cc = PG_MINCHAR;
-        key[i % keylength] = cc;
+        key[i % keylength] = (char)cc;
         if (loop++ > 255)
           return false;
       } while (PG_INVALIDCHAR(cc) || PG_INVALIDCHAR(c));
     }
-    buffer[i] = c;
+    buffer[i] = (char)c;
   }
   return true;
 }
@@ -510,7 +510,7 @@ static void pg_decrypt(char *key,
 }
 
 static bool pg_decrypt_password(char *password, const char *encrypted) {
-  int32_t length = strlen(encrypted), pk_length{0}, i{0};
+  int32_t length = (int32_t)strlen(encrypted), pk_length{0}, i{0};
   char buffer[PG_RESULTLENSTD + 1]{0};
   if (length != PG_RESULTLENSTD)
     return false;
@@ -533,7 +533,7 @@ static bool pg_decrypt_password(char *password, const char *encrypted) {
 }
 
 static bool pg_encrypt_password(
-    char *result, const char *password, uint32_t tickcount, int32_t &level) {
+    char *result, const char *password, uint64_t tickcount, int32_t &level) {
   ++level;
   if (level > 32) return false;
 
@@ -544,7 +544,7 @@ static bool pg_encrypt_password(
     5179,  6121,  6833,  7333,  7829,  8353,  9323,  9829,
   };
 
-  int32_t length = strlen(password), keylength = 0;
+  int32_t length = (int32_t)strlen(password), keylength = 0;
   bool encryptok{false};
   if (length > PG_MAXPASSWORDLEN) return false;
   for (int32_t i = 0; i < length; ++i) {
@@ -557,24 +557,24 @@ static bool pg_encrypt_password(
     keylength = 
       (tickcount + 10237) % (keylength - PG_MINPKEYLEN) + PG_MINPKEYLEN;
 
-  result[0] = int2char(keylength, tickcount);
+  result[0] = int2char((char)keylength, tickcount);
 
   //public key
   for (int32_t i = 0; i < keylength; i++) {
-    uint32_t random = tickcount + prime_number_list[i];
+    uint32_t random = (uint32_t)tickcount + prime_number_list[i];
     char c = (char)((random % PG_CHARCOUNT) + PG_MINCHAR);
     if (PG_INVALIDCHAR(c))
       c = (char)((random & 1) ? 'a' + (random % 26) : 'A' + (random % 26));
     result[i + 1] = c;
   }
 
-  result[keylength + 1] = int2char(length, tickcount);
+  result[keylength + 1] = int2char((char)length, tickcount);
   encryptok = 
     pg_encrypt(result + 1, keylength, result + keylength + 2, password, length);
 
   //fill
   for (int32_t i = 0; i < PG_RESULTLENSTD - 2 - keylength - length; i++) {
-    uint32_t random = (tickcount + prime_number_list[PG_RESULTLENSTD - i - 1]);
+    uint32_t random = (uint32_t)(tickcount + prime_number_list[PG_RESULTLENSTD - i - 1]);
     char c = (char)((random % PG_CHARCOUNT) + PG_MINCHAR);
     if (PG_INVALIDCHAR(c))
       c = (char)((random & 1) ? 'a' + (random % 26) : 'A' + (random % 26));
@@ -618,7 +618,7 @@ bool encrypt_number(int32_t number, char _char, std::string &out) {
   out = "";
   for (decltype(number_len) i = 0; i < number_len; ++i) {
     auto n = number / static_cast<int32_t>((pow(10, number_len - i - 1))) % 10;
-    char c = n + _char;
+    char c = (char)n + _char;
     out = out + c;
   }
   return true;
@@ -650,10 +650,10 @@ bool encrypt(const std::string &in, int32_t number, std::string &out) {
   auto rand_pos = std::bind(dis1, rand_engine); rand_pos();
   auto pos = rand_pos();
   std::string pos_str{""};
-  encrypt_number(pos, first_char, pos_str);
+  encrypt_number((int32_t)pos, first_char, pos_str);
   // char pos_char = first_char + pos;
-  char len_char = first_char + number_len; //The length is 0 - 9.
-  char pos_len_char = first_char + pos_str.size(); 
+  char len_char = first_char + (char)number_len; //The length is 0 - 9.
+  char pos_len_char = first_char + (char)pos_str.size(); 
   out = "";
   out = out + first_char + len_char + pos_len_char + pos_str;
   if (0 == pos) {

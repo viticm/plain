@@ -39,7 +39,7 @@ uint32_t CallScript::size() const {
 }
 
 void CallScript::set_params(const std::vector<std::string> &params) {
-  int8_t _size = params.size();
+  int8_t _size = static_cast<int8_t>(params.size());
   if (0 == _size) return;
   char temp[102400]{0,};
   stringstream sstream(temp, sizeof(temp) - 1);

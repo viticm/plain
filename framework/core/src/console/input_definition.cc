@@ -1,4 +1,4 @@
-#include <algorithm>
+#include "pf/basic/string.h"
 #include "pf/support/helpers.h"
 #include "pf/console/input_definition.h"
 
@@ -241,10 +241,8 @@ std::string InputDefinition::get_synopsis(bool _short) {
     for (auto it = options_.begin(); it != options_.end(); ++it) {
       std::string value{""};
       if (it->second.accept_value()) {
-        std::string temp{it->second.name()};
-        std::transform(
-          temp.begin(), temp.end(), temp.begin(), (int (*)(int))std::toupper);
-          value = value + " " + (it->second.is_optional() ? "[" : "")
+        auto temp = pf_basic::string::toupper(it->second.name());
+        value = value + " " + (it->second.is_optional() ? "[" : "")
                   + temp + (it->second.is_optional() ? "[" : "");
       }
       std::string _shortcut = it->second.shortcut();
@@ -256,7 +254,7 @@ std::string InputDefinition::get_synopsis(bool _short) {
     }
   }
 
-  if (elements.size() > 0 and arguments_.size() > 0) {
+  if (elements.size() > 0 && arguments_.size() > 0) {
     elements.emplace_back("[--]");
   }
 

@@ -212,7 +212,7 @@ pf_net::connection::Basic *Kernel::connect(const std::string &name) {
   auto startup = GLOBALS["client.startup" + std::to_string(id)].get<bool>();
   auto connection = connect(name, ip, port, encrypt_str);
   if (!is_null(connection))
-    connect_list_[name] = connection->get_id();
+    connect_list_[name] = (int8_t)connection->get_id();
   else if (startup) // Startup connection will auto reconnect.
     connect_list_[name] = -1;
   return connection;
@@ -254,7 +254,7 @@ pf_net::connection::Basic *Kernel::connect(
     char temp[512]{0,};
     string::safecopy(temp, str.c_str(), sizeof(temp) - 1);
     //std::cout << "str: " << str << std::endl;
-    auto key = base64_encode(reinterpret_cast<unsigned char *>(temp), strlen(temp));
+    auto key = base64_encode(reinterpret_cast<unsigned char *>(temp), (unsigned int)strlen(temp));
     //std::cout << "key: " << key << std::endl;
     pf_net::packet::Handshake handshake;
     handshake.set_key(key);
@@ -389,7 +389,7 @@ bool Kernel::init_net() {
       config.protocol = protocol;
       auto envid = factory->newenv(config);
       if (NET_EID_INVALID == envid) return false;
-      listen_list_[name] = envid;
+      listen_list_[name] = (int8_t)envid;
       listen_env_[name] = i;
       SLOW_DEBUGLOG(ENGINE_MODULENAME,
                     "[%s] service extra listen at: host[%s] port[%d] max[%d].",
@@ -497,7 +497,7 @@ bool Kernel::init_db() {
       if (DB_EID_INVALID == eid) return false;
       auto env = db_factory_->getenv(eid);
       if (!env->init()) return false;
-      db_list_[name] = eid;
+      db_list_[name] = (int8_t)eid;
     }
   }
   return true;
@@ -613,7 +613,7 @@ bool Kernel::init_console() {
     if (NET_EID_INVALID == envid) return false;
     auto pointer = factory->getenv(envid);
     pointer->set_standard_callback(console_net_handle);
-    listen_list_[name] = envid;
+    listen_list_[name] = (int8_t)envid;
     SLOW_DEBUGLOG(ENGINE_MODULENAME,
                   "[%s] service console listen at: host[%s] port[%d] max[%d].",
                   ENGINE_MODULENAME,
@@ -679,7 +679,7 @@ void Kernel::loop() {
       auto curr_t = TIME_MANAGER_POINTER->get_tickcount();
       auto interval = curr_t - starttime;
       int32_t fps{-1};
-      if (interval != 0) fps = 1000 / interval;
+      if (interval != 0) fps = (int32_t)(1000 / interval);
       char fps_str[16]{0};
       snprintf(fps_str, sizeof(fps_str) - 1, "FPS: %3d", fps);
       if (fps >= 60) {

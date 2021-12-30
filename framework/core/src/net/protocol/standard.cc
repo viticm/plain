@@ -9,6 +9,7 @@ using namespace pf_basic::string;
 using namespace pf_net::protocol;
 
 bool Standard::command(connection::Basic *connection, uint16_t count) {
+  UNUSED(count);
   if (connection->is_disconnect()) return false; //Leave this when not connected.
   stream::Input *istream = &connection->istream();
   auto line = istream->readline();
@@ -31,5 +32,7 @@ bool Standard::command(connection::Basic *connection, uint16_t count) {
 }
 
 bool Standard::send(connection::Basic *connection, packet::Interface *packet) {
+  UNUSED(connection);
+  UNUSED(packet);
   return true;
 }

@@ -232,7 +232,7 @@ bool Basic::compress(connection::Basic * connection,
         return false;
       }
       packetsize = NET_PACKET_GETLENGTH(packetcheck);
-      size = istream_compress.size();
+      size = static_cast<uint32_t>(istream_compress.size());
       if (!NET_PACKET_FACTORYMANAGER_POINTER
           ->is_valid_dynamic_packet_id(packetid)) {
         uint32_t sizemax = 
@@ -279,7 +279,7 @@ bool Basic::send(connection::Basic * connection, packet::Interface *packet) {
     return false;
   }
   packet->set_index(connection->packet_index());
-  uint32_t before_writesize = ostream.size();
+  uint32_t before_writesize = static_cast<uint32_t>(ostream.size());
   uint16_t packetid = packet->get_id();
 
   uint32_t packetcheck{0}; //index and size(if diffrent then have error) 
@@ -292,7 +292,7 @@ bool Basic::send(connection::Basic * connection, packet::Interface *packet) {
                 sizeof(packetcheck));
   result = packet->write(ostream);
   Assert(result);
-  uint32_t after_writesize = ostream.size();
+  uint32_t after_writesize = static_cast<uint32_t>(ostream.size());
   if (packet->size() != 
       after_writesize - before_writesize - NET_PACKET_HEADERSIZE) {
     FAST_ERRORLOG(NET_MODULENAME,

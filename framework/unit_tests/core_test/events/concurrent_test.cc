@@ -32,7 +32,7 @@ class EventConcurrent : public testing::Test {
 
 };
 
-
+/*
 static void assertEquals(
     const std::vector<std::string> &a, 
     const std::vector<std::string> &b, 
@@ -43,6 +43,7 @@ static void assertEquals(
   for (size_t i = 0; i < a.size(); ++i)
     ASSERT_STREQ(a[i].c_str(), b[i].c_str());
 }
+*/
 
 constexpr auto ns2 = std::chrono::nanoseconds{2};
 constexpr auto ns3 = std::chrono::nanoseconds{3};
@@ -74,7 +75,7 @@ TEST_F(EventConcurrent, testNormal) {
     }
   }};
   ASSERT_TRUE(0 == counter);
-  int32_t sum_of_consumed = 0;
+  size_t sum_of_consumed = 0;
   while (counter < 20) {
     ASSERT_TRUE(counter == sum_of_consumed);
     sum_of_consumed += bus.process();
@@ -159,8 +160,8 @@ TEST_F(EventConcurrent, waitWork) {
   for (int32_t i = 0; i < 20; ++i) {
     auto start = std::chrono::steady_clock::now();
     if (wait_perk->wait_for(std::chrono::milliseconds(20))) {
-      int32_t before_consumed = consumed;
-      consumed += bus.process();
+      size_t before_consumed = consumed;
+      consumed += (const int32_t)bus.process();
       std::cout << "If events available then consumed count should change" 
         << std::endl;
       EXPECT_TRUE(consumed >= before_consumed);

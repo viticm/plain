@@ -42,7 +42,7 @@ bool Basic::resize(int32_t _size) {
   uint32_t bufferlength = streamdata_.bufferlength;
   uint32_t head = streamdata_.head;
   uint32_t tail = streamdata_.tail;
-  uint32_t _reallength = size();
+  uint32_t _reallength = static_cast<uint32_t>(size());
   //_size = max(_size, static_cast<int32_t>(bufferlength >> 1));
   int32_t newbuffer_length = bufferlength + _size;
   if (newbuffer_length > static_cast<int32_t>(streamdata_.bufferlength_max)) 

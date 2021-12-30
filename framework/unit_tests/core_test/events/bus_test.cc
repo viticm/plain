@@ -25,6 +25,7 @@ class EventBus : public testing::Test {
 
 };
 
+/*
 static void assertEquals(
     const std::vector<std::string> &a, 
     const std::vector<std::string> &b, 
@@ -35,6 +36,7 @@ static void assertEquals(
   for (size_t i = 0; i < a.size(); ++i)
     ASSERT_STREQ(a[i].c_str(), b[i].c_str());
 }
+*/
 
 TEST_F(EventBus, testDeliver) {
   Bus bus;

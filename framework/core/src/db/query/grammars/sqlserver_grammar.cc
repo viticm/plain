@@ -1,4 +1,3 @@
-#include <algorithm>
 #include "pf/basic/string.h"
 #include "pf/support/helpers.h"
 #include "pf/db/query/grammars/sqlserver_grammar.h"
@@ -216,9 +215,7 @@ std::string SqlserverGrammar::compile_delete_with_joins(
   std::string joins = " " + compile_joins(query, query.joins_);
 
   std::string alias{table};
-  std::string temp{table};
-  std::transform(
-      temp.begin(), temp.end(), temp.begin(), (int (*)(int))std::tolower);
+  auto temp = pf_basic::string::tolower(table);
   if (temp.find(" as ") != std::string::npos) 
     alias = explode(" as ", temp)[0].data;
 
@@ -231,9 +228,7 @@ std::vector<std::string> SqlserverGrammar::parse_update_table(
     const std::string &table) {
   std::string _table, alias;
   _table = alias = wrap_table(table);
-  std::string temp{table};
-  std::transform(
-      temp.begin(), temp.end(), temp.begin(), (int (*)(int))std::tolower);
+  auto temp = pf_basic::string::tolower(table);
   if (temp.find("] as [") != std::string::npos) 
     alias = "[" + explode("] as [", temp)[0].data;
 

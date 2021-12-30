@@ -165,7 +165,7 @@ char* ts_strdup_unicode_to_ascii(const wchar_t* str);
 
 inline wchar_t* ts_strdup(const wchar_t* str)
 {
-	return wcsdup(str);
+	return _wcsdup(str);
 }
 
 wchar_t* ts_strdup_ascii_to_unicode(const char* str);

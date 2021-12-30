@@ -145,7 +145,7 @@ bool Interface::remove(connection::Basic *connection) {
   on_disconnect(connection);
   if (!is_null(callback_disconnect_)) callback_disconnect_(connection);
   if (connection->name() != "") 
-    connection_names_[connection->name()] = -1;
+    connection_names_[connection->name()] = (uint16_t)- 1;
   if (!erase(connection)) return false; 
   connection->disconnect();
   pool_->remove(connection->get_id());

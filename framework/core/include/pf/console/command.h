@@ -247,6 +247,8 @@ class Command {
    // execute() method, you set the code to execute by passing
    // a Closure to the setCode() method.
    virtual uint8_t execute(Input *input, Output *output) {
+     UNUSED(input);
+     UNUSED(output);
      std::cout << "execute: in virtual=========================" << std::endl;
      throw std::logic_error("You must override the execute() "
        "method in the concrete command class.");

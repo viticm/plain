@@ -9,6 +9,9 @@
 #include "pf/script/interface.h"
 #include "pf/engine/kernel.h"
 #include "pf/engine/application.h"
+#if OS_WIN
+#include <winsock2.h>
+#endif
 
 using namespace pf_engine;
 
@@ -89,7 +92,7 @@ void signal_handler(int32_t signal) {
 }
 #elif OS_WIN /* }{ */
 BOOL WINAPI signal_handler(DWORD event) {
-  if (GLOBALS["app.status"] == kAppStatusStop) return;
+  if (GLOBALS["app.status"] == kAppStatusStop) return FALSE;
   using namespace pf_basic;
   static uint64_t last_signaltime = 0;
   uint64_t currenttime = TIME_MANAGER_POINTER->get_tickcount();

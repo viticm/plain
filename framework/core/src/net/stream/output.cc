@@ -32,10 +32,10 @@ uint32_t Output::write(const char *buffer, uint32_t length) {
       }
     } else {
       if (encrypt_isenable()) {
-        encryptor_.encrypt(&(streamdata_.buffer[tail]), buffer, freecount);
+        encryptor_.encrypt(&(streamdata_.buffer[tail]), buffer, (uint32_t)freecount);
         encryptor_.encrypt(streamdata_.buffer, 
                            &buffer[freecount], 
-                           bufferlength - freecount);
+                          (uint32_t)(bufferlength - freecount));
       } else {
         memcpy(&(streamdata_.buffer[tail]), buffer, freecount);
         memcpy(streamdata_.buffer, &buffer[freecount], length - freecount);
@@ -202,8 +202,8 @@ bool Output::write_dobule(double value) {
 }
 
 bool Output::write_bytes(const unsigned char *value, size_t _size) {
-  write_uint32(_size);
-  return write((const char *)value, _size) == _size;
+  write_uint32((uint32_t)_size);
+  return write((const char *)value, (uint32_t)_size) == (uint32_t)_size;
 }
 
 int32_t Output::compressflush() {

@@ -119,12 +119,12 @@ InputOption Parser::parse_option(const std::string &_token) {
         description, "");
   } else if (std::regex_match(token, match, std::regex("(.+)\\=\\*(.+)"))) {
     std::string def_str = match.str(2);
-    std::regex reg(",\\s?");
-    std::sregex_token_iterator it(def_str.begin(), def_str.end(), reg, -1);
-    decltype(it) it_end;
+    std::regex reg1(",\\s?");
+    std::sregex_token_iterator it1(def_str.begin(), def_str.end(), reg1, -1);
+    decltype(it1) it_end1;
     std::vector<std::string> defs;
-    for (; it != it_end; ++it)
-      defs.emplace_back(it->str());
+    for (; it1 != it_end1; ++it1)
+      defs.emplace_back(it1->str());
     return InputOption(
         match.str(1), 
         shortcut,

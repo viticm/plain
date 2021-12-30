@@ -11,7 +11,8 @@
 #ifndef PF_BASIC_STRING_H_
 #define PF_BASIC_STRING_H_
 
-#include <map> 
+#include <map>
+#include <algorithm>
 #include "pf/basic/config.h"
 
 namespace pf_basic {
@@ -104,6 +105,31 @@ PF_API inline std::string stripslashes(const std::string &str) {
   return str_replace(
       "\\'", "'", str_replace("\\\"", "\"", str_replace("\\\\", "\\", str)));
 }
+
+#if OS_WIN
+# pragma warning( push )
+# pragma warning( disable: 4244 )
+#endif
+
+// To lower.
+PF_API inline std::string tolower(const std::string &str) {
+  std::string temp{ str };
+  std::transform(
+    temp.begin(), temp.end(), temp.begin(), (int (*)(int))std::tolower);
+  return temp;
+}
+
+// To upper.
+PF_API inline std::string toupper(const std::string &str) {
+  std::string temp{ str };
+  std::transform(
+    temp.begin(), temp.end(), temp.begin(), (int (*)(int))std::toupper);
+  return temp;
+}
+
+#if OS_WIN
+# pragma warning( pop )
+#endif
 
 } //namespace string
 

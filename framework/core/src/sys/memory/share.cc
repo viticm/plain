@@ -140,7 +140,7 @@ HANDLE open(uint32_t key, size_t, bool) {
     char buffer[65];
     memset(buffer, '\0', sizeof(buffer));
     snprintf(buffer, sizeof(buffer) - 1, "%d", key);
-    handle = OpenFileMapping(FILE_MAP_ALL_ACCESS, true, buffer);
+    handle = OpenFileMapping(FILE_MAP_ALL_ACCESS, true, (LPCWSTR)buffer);
 #endif
     return handle;
 }

@@ -9,7 +9,7 @@ using namespace pf_console;
 std::string Command::default_name_{"unknown"};
    
 void Command::merge_application_definition(bool merge_args) {
-  if (is_null(app_) or !is_null(full_definition_)) return;
+  if (is_null(app_) || !is_null(full_definition_)) return;
   unique_move(InputDefinition, new InputDefinition(), full_definition_);
   full_definition_->set_options(array_values(definition_->get_options()));
   full_definition_->add_options(

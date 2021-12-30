@@ -47,6 +47,9 @@ static inline std::string GetLastErrorString(DWORD nErrorCode) {
 
 std::unique_ptr< pf_file::LibraryManager > g_librarymanager{nullptr};
 
+template<> pf_file::LibraryManager*
+pf_basic::Singleton< pf_file::LibraryManager >::singleton_ = nullptr;
+
 namespace pf_file {
 
 void Library::set_filename(const std::string &_filename) {
@@ -74,6 +77,7 @@ bool Library::load(bool tryprefix, bool seeglb) {
   auto fileexists = api::exists(temp);
   if (fileexists) {
 #if OS_WIN
+    UNUSED(seeglb);
     tryprefix = false;
     LPTSTR tstr = ts_strdup_ascii_to_unicode(temp.c_str());
     handle_ = cast(void *, LoadLibrary(tstr));
@@ -143,7 +147,7 @@ bool Library::unload() {
 void *Library::resolve(const std::string &symbol, bool again) {
   void *symbolhandle = nullptr;
 #if OS_WIN
-  symbolhandle = cast(void *, GetProcAddress((HMODULE)handle, symbol.c_str()));
+  symbolhandle = cast(void *, GetProcAddress((HMODULE)symbolhandle, symbol.c_str()));
   if (is_null(symbolhandle)) {
     errorstr_ = GetLastErrorString(GetLastError());
     SLOW_ERRORLOG("library", 
@@ -182,9 +186,6 @@ LibraryManager::LibraryManager() {
   });
 #endif
 }
-
-template<> LibraryManager *
-  pf_basic::Singleton< LibraryManager >::singleton_ = nullptr;
 
 LibraryManager *LibraryManager::getsingleton_pointer() {
   return singleton_;

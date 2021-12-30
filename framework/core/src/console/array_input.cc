@@ -57,6 +57,7 @@ void ArrayInput::parse() {
 
 void ArrayInput::add_argument(
     const std::string &name, const std::string &value) {
+  UNUSED(value);
   if (!definition_->has_argument(name)) {
     std::string e = "The \"" + name + "\" argument does not exist.";
     throw std::invalid_argument(e);

@@ -36,7 +36,7 @@ class PF_API Basic {
    /* Try use the unused buffer size, maybe use the resize extend buffer size. */
    bool use(size_t _size) {
      auto freecount = unused();
-     if (_size >= freecount && !resize(_size - freecount + 1)) return false;
+     if (_size >= freecount && !resize((int32_t)(_size - freecount + 1))) return false;
      return true;
    };
    size_t unused() const {

@@ -26,7 +26,7 @@ ArgvInput::ArgvInput(
 
 void ArgvInput::parse() {
   bool parse_options{true};
-  for (int32_t i = tokens_.size() - 1; i >= 0; --i) {
+  for (auto i = tokens_.size() - 1; i >= 0; --i) {
     parsed_.emplace_back(tokens_[i]);
   }
   while (!parsed_.empty()) {
@@ -113,7 +113,7 @@ void ArgvInput::parse_argument(const std::string &token) {
     return;
   }
 
-  auto c = arguments_.size();
+  auto c = (uint32_t)arguments_.size();
   // if input is expecting another argument, add it
   if (definition_->has_argument(c)) {
     auto arg = definition_->get_argument(c);

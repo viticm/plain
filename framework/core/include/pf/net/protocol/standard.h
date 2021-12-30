@@ -29,9 +29,9 @@ class PF_API Standard : public Interface {
    //处理网络包
    virtual bool command(connection::Basic *connection, uint16_t count);
    //处理压缩数据，主要是将压缩的数据解压
-   virtual bool compress(connection::Basic *connection, 
-                         char *uncompress_buffer, 
-                         char *compress_buffer) { return true; }
+   virtual bool compress(connection::Basic *, 
+                         char *, 
+                         char *) { return true; }
    virtual bool send(connection::Basic *connection, packet::Interface *packet);
    virtual size_t header_size() const { return NET_PACKET_HEADERSIZE; };
 

@@ -82,6 +82,8 @@ class Input {
    // Has parameter option.
    virtual bool has_parameter_option(const std::vector<std::string> &values, 
        bool only_params = false) const {
+      UNUSED(values);
+      UNUSED(only_params);
       return false;
    }
    // Get parameter option.
@@ -89,6 +91,9 @@ class Input {
        const std::vector<std::string> &values, 
        variable_t def = false,
        bool only_params = false) const {
+     UNUSED(values);
+     UNUSED(def);
+     UNUSED(only_params);
      return "";
    }
 

@@ -40,6 +40,21 @@
 #  else
 #   include <sys/endian.h>
 #  endif
+/* Try to derive from arch/compiler-specific macros */
+# elif defined(_X86_) || defined(__x86_64__) || defined(__i386__) || \
+   defined(__i486__) || defined(__i586__) || defined(__i686__) || \
+   defined(__MIPSEL) || defined(_MIPSEL) || defined(MIPSEL) || \
+   defined(__ARMEL__) || \
+   defined(__MSP430__) || \
+   (defined(__LITTLE_ENDIAN__) && __LITTLE_ENDIAN__ == 1) || \
+   (defined(_LITTLE_ENDIAN) && _LITTLE_ENDIAN == 1) || \
+   defined(_M_ARM) || defined(_M_ARM64) || \
+   defined(_M_IX86) || defined(_M_AMD64) /* MSVC */ //little endian
+#   ifndef _BYTE_ORDER
+#     define _BYTE_ORDER 0
+#     define _LITTLE_ENDIAN 0
+#     define _BIG_ENDIAN 1
+#   endif
 # endif
 #endif
 
@@ -506,13 +521,13 @@ struct byte_swapper<2> {
 template<>
 struct byte_swapper<4> {
   template<class T>
-  T operator()(const T &t) { return PF_BYTE_SWAP_32(t); }
+  T operator()(const T &t) { return static_cast<T>(PF_BYTE_SWAP_32(static_cast<uint32_t>(t))); }
 };
 
 template<>
 struct byte_swapper<8> {
   template<class T>
-  T operator()(const T &t) { return PF_BYTE_SWAP_64(t); }
+  T operator()(const T &t) { return static_cast<T>(PF_BYTE_SWAP_64(static_cast<uint64_t>(t))); }
 };
 
 // --

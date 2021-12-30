@@ -13,14 +13,14 @@
 
 #include "pf/file/config.h"
 
-#if __LINUX__ /* { */
+#if OS_UNIX /* { */
 #include <sys/types.h>  // for open()
 #include <sys/stat.h>   // for open()
 #include <unistd.h>     // for fcntl()
 #include <fcntl.h>      // for fcntl()
 #include <sys/ioctl.h>  // for ioctl()
 #include <errno.h>      // for errno
-#elif __WINDOWS__ /* }{ */
+#elif OS_WIN /* }{ */
 #include <io.h>         // for _open()
 #include <fcntl.h>      // for _open()/_close()/_read()/_write()...
 #endif /* } */

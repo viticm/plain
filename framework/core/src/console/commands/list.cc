@@ -26,6 +26,7 @@ void List::configure() {
 }
 
 uint8_t List::execute(Input *input, Output *output) {
+  UNUSED(input);
   output->write_ln("The command list:");
   auto app = get_application();
   if (!is_null(app)) {

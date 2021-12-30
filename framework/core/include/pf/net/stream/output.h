@@ -93,7 +93,7 @@ class PF_API Output : public Basic {
      return *this;
    };
    Output &operator << (const std::string &var) {
-     auto length = var.size();
+     auto length = (uint32_t)var.size();
      if (!write_uint32(length)) return *this;
      write(var.c_str(), length);
      return *this;

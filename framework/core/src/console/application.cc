@@ -168,7 +168,7 @@ std::vector<std::string> Application::get_namespaces() {
   return r;
 }
 
-std::string Application::find_namespace(const std::string &_namespace) {
+std::string Application::find_namespace(const std::string &) {
   return "";
 }
 
@@ -281,11 +281,14 @@ std::vector<Command *> Application::get_default_commands() const {
 
 std::string Application::get_abbreviation_suggestions(
     const std::vector<std::string> &abbrevs) const {
+  UNUSED(abbrevs);
   return "";
 }
 
 std::vector<std::string> Application::find_alternatives(
     const std::string &name, const std::vector<std::string> &collection) const {
+  UNUSED(name);
+  UNUSED(collection);
   return {};
 }
 
@@ -315,6 +318,8 @@ std::vector<std::string> Application::extract_all_namespace(
 
 std::string Application::extract_namespace(
     const std::string &name, int32_t limit) const {
+  UNUSED(name);
+  UNUSED(limit);
   return "";
 }
 

@@ -1,0 +1,13 @@
+{
+  "ExpandedNodes": [
+    "\\cmake\\out",
+    "\\dependencies\\fplutil",
+    "\\dependencies\\fplutil\\libfplutil\\include",
+    "\\dependencies\\fplutil\\libfplutil\\include\\fplutil",
+    "\\dependencies\\fplutil\\libfplutil\\jni",
+    "\\framework\\core",
+    "\\framework\\core\\src",
+    "\\framework\\core\\src\\basic"
+  ],
+  "PreviewInSolutionExplorer": false
+}

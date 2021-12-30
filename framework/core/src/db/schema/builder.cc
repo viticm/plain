@@ -1,4 +1,4 @@
-#include <algorithm>
+#include "pf/basic/string.h"
 #include "pf/support/helpers.h"
 #include "pf/db/connection.h"
 #include "pf/db/schema/grammars/grammar.h"
@@ -21,9 +21,7 @@ bool Builder::has_column(const std::string &a_table, const std::string &column) 
   auto columns = get_column_listing(a_table);
   bool result = false;
   for (const std::string &item : columns) {
-    std::string temp{item};
-    std::transform(
-      temp.begin(), temp.end(), temp.begin(), (int (*)(int))std::tolower);
+    auto temp = pf_basic::string::tolower(item);
     if (temp == column) {
       result = true;
       break;

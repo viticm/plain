@@ -1,4 +1,3 @@
-#include <algorithm>
 #include "pf/basic/string.h"
 #include "pf/support/helpers.h"
 #include "pf/db/concerns/builds_queries.h"
@@ -264,7 +263,7 @@ Grammar::variable_array_t Grammar::compile_wheres_toarray(Builder &query) {
   variable_array_t array;
   for (db_query_array_t &where : query.wheres_) {
     std::string r = where["boolean"].data + " " + 
-                    safe_call_where(where["type"], query, where);
+                    safe_call_where(where["type"].data, query, where);
     /**
     std::cout << "compile_wheres_toarray: " << r << " " << where["type"] << std::endl;
     **/

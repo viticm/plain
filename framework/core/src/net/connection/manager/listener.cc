@@ -43,7 +43,7 @@ pf_net::connection::Basic *Listener::accept() {
     if (listener_socket_->accept(&socket)) {
       socket.close();
     }
-    static uint32_t checktime{0};
+    static uint64_t checktime{0};
     auto _tick = TIME_MANAGER_POINTER->get_tickcount();
     if (0 == checktime || _tick - checktime >= 600000) {
       SLOW_WARNINGLOG(NET_MODULENAME, 

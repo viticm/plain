@@ -209,7 +209,7 @@ void path_towindows(char *buffer, uint16_t length) {
 void get_module_filename(char *buffer, size_t size) {
   int32_t resultcode = 0;
 #if OS_WIN
-  resultcode = (int32_t)GetModuleFileName(nullptr, buffer, (DWORD)size);
+  resultcode = (int32_t)GetModuleFileName(nullptr, reinterpret_cast<LPWSTR>(buffer), (DWORD)size);
   Assert(resultcode);
 #elif OS_UNIX
   resultcode = readlink("/proc/self/exe", buffer, size);

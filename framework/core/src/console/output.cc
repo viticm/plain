@@ -6,6 +6,7 @@ using namespace pf_console;
 
 void Output::write(
     const std::string &messages, bool newline, uint16_t options) {
+  UNUSED(options);
   char filename[FILENAME_MAX]{0};
   pf_basic::Logger::get_log_filename("console", filename);
   FILE *fp;

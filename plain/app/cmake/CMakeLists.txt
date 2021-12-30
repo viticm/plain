@@ -45,7 +45,14 @@ set(COMMON_LIBS "pf_core;${CMAKE_THREAD_LIBS_INIT}")
  # Plain Framework core flags.
 set(cxx_base_flags "${cxx_base_flags} -DPF_CORE -DPF_OPEN_EPOLL")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+endif()
+
+#For utf8 no boom.
+if (MSVC)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -wd4819")
+endif()
 
 # Generate a rule to build a unit test executable ${test_name} with
 # source file ${source}.  For details of additional arguments, see

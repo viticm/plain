@@ -5,7 +5,7 @@
 std::unique_ptr< pf_basic::TimeManager > g_time_manager{nullptr};
 
 int32_t g_file_name_fix = 0;
-uint32_t g_file_name_fix_last = 0;
+uint64_t g_file_name_fix_last = 0;
 
 namespace pf_basic {
 

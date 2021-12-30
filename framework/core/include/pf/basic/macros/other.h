@@ -33,15 +33,22 @@
 //unreachable code
 #pragma warning (disable: 4702)
 
+//utf8 no boom(This will disable with cmake)
+#pragma warning (disable: 4819)
+
 #endif
 
 #if OS_WIN
 
 //check the rename script
-#define NOT_RENAME_SOURCE
-#ifdef NOT_RENAME_SOURCE
-#error "Not rename vc script, are you forgot use the tools/script/bat/rename_forvsbuild.bat?"
-#endif //NOT_RENAME_SOURCE
+//#define NOT_RENAME_SOURCE
+# ifdef NOT_RENAME_SOURCE
+#   error "Not rename vc script, are you forgot use the tools/script/bat/rename_forvsbuild.bat?"
+# endif //NOT_RENAME_SOURCE
+
+# ifndef _CRT_SECURE_NO_WARNINGS
+    #define _CRT_SECURE_NO_WARNINGS
+# endif
 
 #endif
 
