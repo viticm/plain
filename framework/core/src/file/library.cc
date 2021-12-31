@@ -8,16 +8,6 @@ typedef void (__stdcall *function_open)(void *);
 #if OS_WIN
 #define LIBRARY_PREFIX ""
 #define LIBRARY_SUFFIX ".dll"
-// #include "pf/basic/ts_string.h"
-/* Routines to convert from UTF8 to native Windows text */
-/*
-#if UNICODE
-#define WIN_StringToUTF8(S) ts_strdup_unicode_to_ascii(S)
-#define WIN_UTF8ToString(S) (WCHAR *)ts_strdup_ascii_to_unicode(S)
-#else
-#error Not Implemented
-#endif
-*/
 
 std::string wchar_tToString(wchar_t* wchar) {
   std::string szDst;
