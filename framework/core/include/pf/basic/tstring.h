@@ -6,14 +6,17 @@
  * @license
  * @user viticm( viticm.ti@gmail.com )
  * @date 2021/12/31 21:21
- * @uses The tstring for windows.
+ * @uses The tstring for windows(c++20).
  *
  */
 #ifndef PF_BASIC_TSTRING_H_
 #define PF_BASIC_TSTRING_H_
 
-#if OS_WIN
+#include "pf/basic/config.h"
 
+#if OS_WIN_UNUSED
+
+#include <Windows.h>
 #include <initializer_list>
 #include <mutex>
 #include <optional>

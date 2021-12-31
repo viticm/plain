@@ -18,10 +18,8 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#if OS_WIN
-
-#include "ts_string.h"
-
+#include "pf/basic/ts_string.h"
+#if OS_WIN_UNUSED
 
 void ascii2unicode(const char* ascii, WCHAR* unicode)
 {

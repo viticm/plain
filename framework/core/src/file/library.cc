@@ -1,4 +1,3 @@
-#include <algorithm>
 #include "pf/basic/logger.h"
 #include "pf/file/api.h"
 #include "pf/file/library.h"
@@ -9,14 +8,38 @@ typedef void (__stdcall *function_open)(void *);
 #if OS_WIN
 #define LIBRARY_PREFIX ""
 #define LIBRARY_SUFFIX ".dll"
-#include "pf/basic/ts_string.h"
+// #include "pf/basic/ts_string.h"
 /* Routines to convert from UTF8 to native Windows text */
+/*
 #if UNICODE
 #define WIN_StringToUTF8(S) ts_strdup_unicode_to_ascii(S)
 #define WIN_UTF8ToString(S) (WCHAR *)ts_strdup_ascii_to_unicode(S)
 #else
 #error Not Implemented
 #endif
+*/
+
+std::string wchar_tToString(wchar_t* wchar) {
+  std::string szDst;
+  wchar_t* wText = wchar;
+  DWORD dwNum = WideCharToMultiByte(CP_OEMCP, NULL, wText, -1, NULL, 0, NULL, FALSE);
+  char* psText;
+  psText = new char[dwNum];
+  WideCharToMultiByte(CP_OEMCP, NULL, wText, -1, psText, dwNum, NULL, FALSE);
+  szDst = psText;
+  delete[]psText;
+  return szDst;
+}
+
+wchar_t* stringToWchar_t(const std::string &str) {
+  std::string temp = str;
+  int len = MultiByteToWideChar(CP_ACP, 0, (LPCSTR)temp.c_str(), -1, NULL, 0);
+  wchar_t* wszUtf8 = new wchar_t[len + 1];
+  memset(wszUtf8, 0, len * 2 + 2);
+  MultiByteToWideChar(CP_ACP, 0, (LPCSTR)temp.c_str(), -1, (LPWSTR)wszUtf8, len);
+  return wszUtf8;
+}
+
 static inline std::string GetLastErrorString(DWORD nErrorCode) {
   WCHAR *msg = 0; //Qt: wchar_t
   // Ask Windows to prepare a standard message for a GetLastError() code:
@@ -29,9 +52,7 @@ static inline std::string GetLastErrorString(DWORD nErrorCode) {
                 (LPTSTR)&msg,
                 0,
                 NULL);
-  char *amsg = ts_strdup_unicode_to_ascii(msg);
-  std::string s(amsg);
-  free(amsg);
+  std::string s = wchar_tToString(msg);
   LocalFree(msg);
   return s;
 }
@@ -79,9 +100,8 @@ bool Library::load(bool tryprefix, bool seeglb) {
 #if OS_WIN
     UNUSED(seeglb);
     tryprefix = false;
-    LPTSTR tstr = ts_strdup_ascii_to_unicode(temp.c_str());
-    handle_ = cast(void *, LoadLibrary(tstr));
-    free(tstr);
+    auto wstr = stringToWchar_t(temp);
+    handle_ = cast(void *, LoadLibrary(wstr));
     if (is_null(handle_)) 
       errorstr_ = GetLastErrorString(GetLastError());
 #else
