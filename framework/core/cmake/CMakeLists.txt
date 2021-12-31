@@ -104,8 +104,11 @@ set(INSTALL_PF ON)
 file(GLOB_RECURSE LIB_SOURCES "${pf_SOURCE_DIR}/src/*.cc")
 file(GLOB_RECURSE LIB_SOURCES_C "${pf_SOURCE_DIR}/src/*.c")
 
-set(WITH_LIBS "dl")
-
+if (MSVC)
+  set(WITH_LIBS "ws2_32")
+else()
+  set(WITH_LIBS "dl")
+endif()
 # Plain Framework libraries.  We build them using more strict warnings than what
 # are used for other targets, to ensure that pf can be compiled by a user
 # aggressive about warnings.
