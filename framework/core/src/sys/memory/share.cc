@@ -114,7 +114,7 @@ HANDLE create(uint32_t key, size_t size) {
                                 PAGE_READWRITE, 
                                 0, 
                                 (DWORD)size, 
-                                buffer));
+                                (LPCWSTR)buffer));
 #endif
     return handle;
 }
