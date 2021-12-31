@@ -105,7 +105,7 @@ void Dynamic::write_double(double value) {
 }
 
 void Dynamic::write_bytes(const unsigned char *value, size_t _size) {
-  write_uint32(_size);
+  write_uint32((uint32_t)_size);
   write((const char *)value, (uint32_t)_size);
 }
 

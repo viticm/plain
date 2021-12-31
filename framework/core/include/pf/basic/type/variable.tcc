@@ -82,6 +82,11 @@ template <>
 inline bool variable_struct::_get<bool>() const {
   return data != "0" && data != "";
 }
+
+template <>
+inline std::string variable_struct::_get<std::string>() const {
+  return data;
+}
   
 template <typename T>
 inline T variable_struct::get() const {
