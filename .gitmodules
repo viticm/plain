@@ -4,3 +4,6 @@
 [submodule "dependencies/googletest"]
 	path = dependencies/googletest
 	url = http://github.com/google/googletest.git
+[submodule "plain/plugins"]
+	path = plain/plugins
+	url = https://github.com/viticm/plain-plugins
