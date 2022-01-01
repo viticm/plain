@@ -155,7 +155,7 @@ struct db_query_array_struct {
   pf_basic::type::variable_set_t items;
 
   //The query builder pointer.
-  std::unique_ptr<query::Builder> query;
+  std::shared_ptr<query::Builder> query;
 
   //The values of query(always it is empty).
   pf_basic::type::variable_set_t values;

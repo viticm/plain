@@ -56,7 +56,7 @@ class PF_API Builder : public concerns::BuildsQueries {
    std::string from_;
 
    //The table joins for the query.
-   std::vector< std::unique_ptr<JoinClause> > joins_;
+   std::vector< std::shared_ptr<JoinClause> > joins_;
 
    //The where constraints for the query.
    std::vector<db_query_array_t> wheres_;

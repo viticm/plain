@@ -231,10 +231,10 @@ std::string Grammar::compile_aggregate(
 
 //Compile the "join" portions of the query.
 std::string Grammar::compile_joins(
-    Builder &query, std::vector< std::unique_ptr<JoinClause> > &joins) {
+    Builder &query, std::vector< std::shared_ptr<JoinClause> > &joins) {
   UNUSED(query);
   std::vector<std::string> array;
-  for (std::unique_ptr<JoinClause> &join : joins) {
+  for (std::shared_ptr<JoinClause> &join : joins) {
     std::string table = this->wrap_table(join->table_);
     std::string r = join->type_ + " join " + table + " " + 
                     this->compile_wheres(*join.get());

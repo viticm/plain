@@ -19,6 +19,9 @@ if(EXISTS "${dependencies_gtest_dir}/../../third_party")
 endif()
 set(gtest_libdir ${dependencies_gtest_dir})
 
+if (MSVC)
+  option(PF_BUILD_AS_DLL "Build plain framwork as dll." ON)
+endif()
 
 # Include helper functions and macros used by Google Test.
 include(${gtest_libdir}/cmake/internal_utils.cmake)

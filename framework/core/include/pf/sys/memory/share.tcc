@@ -81,7 +81,7 @@ bool UnitPool<T>::init(uint32_t _key, size_t _size, uint8_t type) {
                    (sizeof(T) + data_extend_size_ ) * _size;
   result = ref_obj_pointer_->attach(_key, full_size, false);
   if (kSmptDefault == type && !result) {
-    result = ref_obj_pointer_->create(key, full_size);
+    result = ref_obj_pointer_->create(_key, full_size);
     need_init = true;
   } else if (!result) {
     return false;

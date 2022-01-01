@@ -95,7 +95,7 @@ class PF_API Grammar : public pf_db::Grammar {
 
     //Compile the "join" portions of the query.
    std::string compile_joins(
-       Builder &query, std::vector< std::unique_ptr<JoinClause> > &joins);
+       Builder &query, std::vector< std::shared_ptr<JoinClause> > &joins);
 
    //Compile the "where" portions of the query.
    std::string compile_wheres(Builder &query);

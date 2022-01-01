@@ -138,7 +138,7 @@ std::string PostgresGrammar::compile_update_from(Builder &query) {
   // clause, which is different than other systems like MySQL. Here, we will
   // compile out the tables that are joined and add them to a from clause.
   std::vector<std::string> froms;
-  for (std::unique_ptr<JoinClause> &join : query.joins_) {
+  for (std::shared_ptr<JoinClause> &join : query.joins_) {
     froms.emplace_back(wrap_table(join->table_));
   }
   return froms.empty() ? "" : " from " + implode(", ", froms);
@@ -168,7 +168,7 @@ std::string PostgresGrammar::compile_update_join_wheres(Builder &query) {
   // Here we will just loop through all of the join constraints and compile them
   // all out then implode them. This should give us "where" like syntax after 
   // everything has been built and then we will join it to the real wheres.
-  for (std::unique_ptr<JoinClause> &join : query.joins_) {
+  for (std::shared_ptr<JoinClause> &join : query.joins_) {
     for (db_query_array_t &where : join->wheres_) {
       join_wheres.emplace_back(
           where["boolean"].data + " " + 
@@ -183,7 +183,7 @@ std::string PostgresGrammar::compile_delete_with_joins(
     Builder &query, const std::string &table) {
   std::string _using{" USING "};
   std::vector<std::string> froms;
-  for (std::unique_ptr<JoinClause> &join : query.joins_) {
+  for (std::shared_ptr<JoinClause> &join : query.joins_) {
     froms.emplace_back(wrap_table(join->table_));
   }
   _using += implode(", ", froms);

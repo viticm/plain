@@ -20,9 +20,13 @@ option(pf_build_tests "Build all of pf's own tests." OFF)
 
 option(pf_build_shared "Build all of pf as share library." OFF)
 
+option(PF_BUILD_AS_DLL "Build plain framwork as dll." OFF)
+
 option(pf_build_samples "Build pf's sample programs." OFF)
 
 option(pf_disable_pthreads "Disable uses of pthreads in pf." OFF)
+
+option(PF_CORE "The plain framework core library." ON)
 
 
 option(
@@ -117,6 +121,9 @@ if (pf_build_shared)
 else()
   cxx_library(pf_core "${cxx_strict}" ${LIB_SOURCES} ${LIB_SOURCES_C})
 endif()
+
+set_target_properties(pf_core PROPERTIES DEFINE_SYMBOL PF_BUILD_AS_DLL)
+set_target_properties(pf_core PROPERTIES SOVERSION 1)
 
 # If the CMake version supports it, attach header directory information
 # to the targets for when we are part of a parent build (ie being pulled
