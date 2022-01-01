@@ -77,9 +77,9 @@ TEST_F(EventConcurrent, testNormal) {
   ASSERT_TRUE(0 == counter);
   size_t sum_of_consumed = 0;
   while (counter < 20) {
-    ASSERT_TRUE(counter == sum_of_consumed);
+    ASSERT_TRUE(counter == (int32_t)sum_of_consumed);
     sum_of_consumed += bus.process();
-    ASSERT_TRUE(counter == sum_of_consumed);
+    ASSERT_TRUE(counter == (int32_t)sum_of_consumed);
   }
   worker1.join();
   worker2.join();
@@ -144,8 +144,8 @@ TEST_F(EventConcurrent, waitWork) {
 
   // Worker which will send event every 10 ms
   std::atomic<bool> is_working{true};
-  std::atomic<int> produced{0};
-  std::atomic<int> consumed{0};
+  std::atomic<int32_t> produced{0};
+  std::atomic<int32_t> consumed{0};
 
   std::thread producer{[&bus, &is_working, &produced]() { 
     while(is_working) {
@@ -161,10 +161,10 @@ TEST_F(EventConcurrent, waitWork) {
     auto start = std::chrono::steady_clock::now();
     if (wait_perk->wait_for(std::chrono::milliseconds(20))) {
       size_t before_consumed = consumed;
-      consumed += (const int32_t)bus.process();
+      consumed += (int32_t)bus.process();
       std::cout << "If events available then consumed count should change" 
         << std::endl;
-      EXPECT_TRUE(consumed >= before_consumed);
+      EXPECT_TRUE(consumed >= (int32_t)before_consumed);
     }
     std::cout << "I was sleeping for: "
       << std::chrono::duration_cast<std::chrono::milliseconds>(

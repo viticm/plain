@@ -271,3 +271,4 @@ pf/plugin/bak/*
 pf_*.cc
 pf_*.cc
 applications_*.cc
+install_manifest.txt
