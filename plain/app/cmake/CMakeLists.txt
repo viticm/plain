@@ -26,7 +26,7 @@ endif()
 # Include helper functions and macros used by Google Test.
 include(${gtest_libdir}/cmake/internal_utils.cmake)
 config_compiler_and_linker()
-string(REPLACE "-W4" "-W3" cxx_default "${cxx_default}")
+# string(REPLACE "-W4" "-W3" cxx_default "${cxx_default}")
 string(REPLACE "-Wshadow" "" cxx_default "${cxx_default}")
 string(REPLACE "-Wextra" "" cxx_default "${cxx_default}")
 
