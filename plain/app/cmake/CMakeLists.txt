@@ -30,9 +30,6 @@ config_compiler_and_linker()
 string(REPLACE "-Wshadow" "" cxx_default "${cxx_default}")
 string(REPLACE "-Wextra" "" cxx_default "${cxx_default}")
 
-# This is the directory into which the executables are built.
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-
 include_directories(${gtest_incdir}
                     ${gtest_hack_incdir}
                     ${plainframework_dir}/include/
@@ -65,6 +62,7 @@ function(test_executable test_name source)
     ${source} ${PLAINFRAMEWORK_HEADERS})
   plainframework_configure_flags(${test_name} ${ARGN})
   plainframework_enable_warnings(${test_name})
+  set_target_properties(${test_name} PROPERTIES DEBUG_POSTFIX "d")
 endfunction()
 
 # Generate a rule to build unit test executables.
@@ -76,4 +74,4 @@ endfunction()
 
 file(GLOB_RECURSE CORE_TEST_SOURCES "../src/*.cc")
 
-test_executables(../../bin/app "${CORE_TEST_SOURCES}")
+test_executables(app "${CORE_TEST_SOURCES}")

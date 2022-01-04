@@ -12,7 +12,6 @@ cmake_minimum_required(VERSION 2.8.12)
 
 set_compiler_flags_for_external_libraries()
 add_subdirectory(${dependencies_gtest_dir} googletest)
-add_subdirectory(${plainframework_dir}/cmake plainframework)
 restore_compiler_flags()
 
 set(gtest_incdir ${dependencies_gtest_dir}/include)
@@ -28,12 +27,13 @@ endif()
 # Include helper functions and macros used by Google Test.
 include(${gtest_libdir}/cmake/internal_utils.cmake)
 config_compiler_and_linker()
-string(REPLACE "-W4" "-W3" cxx_default "${cxx_default}")
+# string(REPLACE "-W4" "-W3" cxx_default "${cxx_default}")
 string(REPLACE "-Wshadow" "" cxx_default "${cxx_default}")
 string(REPLACE "-Wextra" "" cxx_default "${cxx_default}")
 
 # This is the directory into which the executables are built.
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+# set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+# set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${root_dir}/plain/bin)
 
 include_directories(${gtest_incdir}
                     ${gtest_hack_incdir}
@@ -78,6 +78,7 @@ endfunction()
 function(test_executables test_name source)
   # Default build options for the target architecture.
   test_executable(${test_name}_tests "${source}")
+    set_target_properties(${test_name}_tests PROPERTIES DEBUG_POSTFIX "d")
   MESSAGE(${source})
 endfunction()
 

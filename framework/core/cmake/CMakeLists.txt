@@ -28,7 +28,6 @@ option(pf_disable_pthreads "Disable uses of pthreads in pf." OFF)
 
 option(PF_CORE "The plain framework core library." ON)
 
-
 option(
   pf_hide_internal_symbols
   "Build pf with internal symbols hidden in shared libraries."
@@ -59,7 +58,7 @@ else()
   cmake_policy(SET CMP0048 NEW)
   project(pf VERSION 1.9.0 LANGUAGES CXX C)
 endif()
-cmake_minimum_required(VERSION 2.6.4)
+cmake_minimum_required(VERSION 2.8.12)
 
 if (POLICY CMP0063) # Visibility
   cmake_policy(SET CMP0063 NEW)
@@ -113,6 +112,10 @@ if (MSVC)
 else()
   set(WITH_LIBS "dl")
 endif()
+
+# This is the directory into which the executables are built.
+# set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${root_dir}/plain/bin)
+
 # Plain Framework libraries.  We build them using more strict warnings than what
 # are used for other targets, to ensure that pf can be compiled by a user
 # aggressive about warnings.
