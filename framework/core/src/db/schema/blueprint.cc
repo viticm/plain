@@ -96,7 +96,7 @@ void Blueprint::add_fluent_indexes() {
     }
   };
   for (auto &column : columns_) {
-    for (const std::string &_index : {"primary", "unique", "index"}) {
+    for (const char *_index : {"primary", "unique", "index"}) {
       // If the index has been specified on the given column, but is simply equal
       // to "true" (boolean), no name has been specified for this index so the
       // index method can be called without a name and it will generate one.

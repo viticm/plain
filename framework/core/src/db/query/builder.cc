@@ -1123,7 +1123,7 @@ Builder &Builder::merge_bindings(Builder &query) {
 variable_array_t Builder::get_bindings() {
   if (bindings_.empty()) return {};
   variable_array_t r;
-  for (const std::string &name : DB_BINDING_KEYS) {
+  for (const char *name : DB_BINDING_KEYS) {
     for (const variable_t &_value : bindings_[name])
       r.push_back(_value);
   }

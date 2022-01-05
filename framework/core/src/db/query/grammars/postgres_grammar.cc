@@ -63,8 +63,8 @@ variable_array_t PostgresGrammar::prepare_bindings_forupdate(
   // added to the end of the "where" clause statements as typical where clauses.
   variable_array_t r;
   variable_array_t bindings_without_join;
-  for (const std::string &key : DB_BINDING_KEYS) {
-    if (key != "join") {
+  for (const char *key : DB_BINDING_KEYS) {
+    if (strcmp(key, "join") != 0) {
       for (const variable_t &value : bindings[key])
         bindings_without_join.emplace_back(value);
     }

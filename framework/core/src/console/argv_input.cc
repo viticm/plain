@@ -26,7 +26,7 @@ ArgvInput::ArgvInput(
 
 void ArgvInput::parse() {
   bool parse_options{true};
-  for (auto i = tokens_.size() - 1; i >= 0; --i) {
+  for (auto i = tokens_.size() - 1; i > 0; --i) {
     parsed_.emplace_back(tokens_[i]);
   }
   while (!parsed_.empty()) {

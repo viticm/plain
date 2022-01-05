@@ -26,6 +26,9 @@ include("inc/common.cmake")
 include("${fplutil_dir}/buildutil/cmake_common.txt")
 set_common_build_variables()
 
+# This define in fplutil.
+string(REPLACE "-std=c++0x" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+
 # This is the directory into which the executables are built.
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${root_dir}/plain/bin)
 
@@ -33,9 +36,11 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${root_dir}/plain/bin)
 SET(LIBRARY_OUTPUT_PATH ${root_dir}/plain/lib)
 
 #For utf8 no boom.
-if (MSVC)                                                                          
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -wd4819")                                
+if (MSVC)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -wd4819")
 endif()
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-expansion-to-defined")
 
 # Options that control the build configuration.
 # To configure PlainFramework flags per build target, see the

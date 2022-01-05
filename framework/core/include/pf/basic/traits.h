@@ -18,6 +18,7 @@
 
 namespace pf_basic {
 
+/*
 // C++14 make_unique
 namespace detail {
 
@@ -56,6 +57,64 @@ using remove_reference_t = typename std::remove_reference<T>::type;
 
 template< class T >
 using remove_const_t = typename std::remove_const<T>::type;
+*/
+namespace detail {
+
+// helper to construct a non-array unique_ptr
+template <typename T>
+struct make_unique_helper {
+  typedef std::unique_ptr<T> unique_ptr;
+
+  template <typename... Args>
+  static inline unique_ptr make(Args&&... args) {
+    return unique_ptr(new T(std::forward<Args>(args)...));
+  }
+};
+
+// helper to construct an array unique_ptr
+template<typename T>
+struct make_unique_helper<T[]> {
+  typedef std::unique_ptr<T[]> unique_ptr;
+
+  template <typename... Args>
+  static inline unique_ptr make(Args&&... args) {
+    return unique_ptr(new T[sizeof...(Args)]{std::forward<Args>(args)...});
+}
+};
+
+// helper to construct an array unique_ptr with specified extent
+template<typename T, std::size_t N>
+struct make_unique_helper<T[N]> {
+  typedef std::unique_ptr<T[]> unique_ptr;
+
+  template <typename... Args>
+  static inline unique_ptr make(Args&&... args) {
+    static_assert(N >= sizeof...(Args),
+        "For make_unique<T[N]> N must be as largs as the number of arguments");
+    return unique_ptr(new T[N]{std::forward<Args>(args)...});
+  }
+
+#if __GNUC__ == 4 && __GNUC_MINOR__ <= 6
+  // G++ 4.6 has an ICE when you have no arguments
+  static inline unique_ptr make() {
+    return unique_ptr(new T[N]);
+  }
+#endif
+};
+
+} // namespace detail
+
+template< class T >
+using remove_reference_t = typename std::remove_reference<T>::type;
+
+template< class T >
+using remove_const_t = typename std::remove_const<T>::type;
+
+template <typename T, typename... Args>
+inline typename detail::make_unique_helper<T>::unique_ptr
+make_unique(Args&&... args) {
+  return detail::make_unique_helper<T>::make(std::forward<Args>(args)...);
+}
 
 } // namespace pf_basic
 

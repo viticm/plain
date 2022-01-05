@@ -78,6 +78,13 @@ class PF_API map_iterator {
     map_{nullptr} {
    }
 
+   map_iterator(const map_iterator &obj) {
+     this->first = obj.first;
+     this->second = obj.second;
+     this->current_ = obj.current_;
+     this->map_ = obj.map_;
+   }
+
    map_iterator(Map *_map, int32_t current) : 
      current_{current},
      map_{_map} {
@@ -93,7 +100,7 @@ class PF_API map_iterator {
      return *this;
    }
    
-   map_iterator operator ++(int) {
+   map_iterator operator ++(int32_t) {
      map_iterator temp = *this;
      ++current_;
      generate_data();
@@ -177,6 +184,13 @@ class PF_API map_reverse_iterator {
     map_{nullptr} {
    }
 
+   map_reverse_iterator(const map_reverse_iterator &obj) {
+     this->first = obj.first;
+     this->second = obj.second;
+     this->current_ = obj.current_;
+     this->map_ = obj.map_;
+   }
+
    map_reverse_iterator(Map *_map, int32_t current) : 
      current_{current},
      map_{_map} {
@@ -192,7 +206,7 @@ class PF_API map_reverse_iterator {
      return *this;
    }
    
-   map_reverse_iterator operator ++(int) {
+   map_reverse_iterator operator ++(int32_t) {
      map_reverse_iterator temp = *this;
      --current_;
      generate_data();
@@ -205,7 +219,7 @@ class PF_API map_reverse_iterator {
      return *this;
    }
    
-   map_reverse_iterator operator --(int) {
+   map_reverse_iterator operator --(int32_t) {
      map_reverse_iterator temp = *this;
      ++current_;
      generate_data();
