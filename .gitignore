@@ -265,6 +265,7 @@ pf/plugin/bak/*
 *.tlog
 *.a
 .vs/*
+build/*
 
 #######################
 ## rename source files
