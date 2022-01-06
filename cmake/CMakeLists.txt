@@ -11,7 +11,7 @@
 cmake_minimum_required(VERSION 2.8.12)
 
 set(PROJECT_NAME PlainFramework)
-set(PF_VERSION 1.1)
+set(PF_VERSION 1.1.0)
 
 if (CMAKE_VERSION VERSION_LESS 3.0)
   project(PlainFramework CXX C)
@@ -105,6 +105,8 @@ macro(plainframework_set_ios_attributes project)
 endmacro(plainframework_set_ios_attributes)
 
 file(GLOB_RECURSE PLAINFRAMEWORK_HEADERS ${CMAKE_CURRENT_LIST_DIR}/framework/core/include *.h)
+
+set(VERSION_RC ${root_dir}/inc/version.rc.in)
 
 add_subdir(${plainframework_dir}/cmake plainframework)
 

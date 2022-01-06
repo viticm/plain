@@ -59,7 +59,7 @@ endif()
 # mathfu_configure_flags().
 function(test_executable test_name source)
   cxx_executable_with_flags(${test_name} "${cxx_base_flags} ${cxx_default}" "${COMMON_LIBS}"
-    ${source} ${PLAINFRAMEWORK_HEADERS})
+    ${source} ${PLAINFRAMEWORK_HEADERS} ${ARGN})
   plainframework_configure_flags(${test_name} ${ARGN})
   plainframework_enable_warnings(${test_name})
   set_target_properties(${test_name} PROPERTIES DEBUG_POSTFIX "d")
@@ -74,4 +74,10 @@ endfunction()
 
 file(GLOB_RECURSE CORE_TEST_SOURCES "../src/*.cc")
 
-test_executables(app "${CORE_TEST_SOURCES}")
+# Version rc.
+if (MSVC AND VERSION_RC)
+  set(app_version_rc "${CMAKE_BINARY_DIR}/app.rc")
+  configure_file(${VERSION_RC} ${app_version_rc} @ONLY)
+endif()
+
+test_executables(app "${CORE_TEST_SOURCES}" ${app_version_rc})

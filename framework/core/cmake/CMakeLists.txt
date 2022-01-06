@@ -118,11 +118,17 @@ endif()
 # This is the directory into which the executables are built.
 # set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${root_dir}/plain/bin)
 
+# Version rc.
+if (MSVC AND VERSION_RC)
+  set(pf_core_version_rc "${CMAKE_BINARY_DIR}/pf_core.rc")
+  configure_file(${VERSION_RC} ${pf_core_version_rc} @ONLY)
+endif()
+
 # Plain Framework libraries.  We build them using more strict warnings than what
 # are used for other targets, to ensure that pf can be compiled by a user
 # aggressive about warnings.
 if (pf_build_shared)
-  cxx_shared_library(pf_core "${cxx_default}" "${WITH_LIBS}" ${LIB_SOURCES} ${LIB_SOURCES_C})
+  cxx_shared_library(pf_core "${cxx_default}" "${WITH_LIBS}" ${LIB_SOURCES} ${LIB_SOURCES_C} ${pf_core_version_rc})
 else()
   cxx_library(pf_core "${cxx_strict}" ${LIB_SOURCES} ${LIB_SOURCES_C})
 endif()
