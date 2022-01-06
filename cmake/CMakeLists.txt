@@ -106,7 +106,7 @@ endmacro(plainframework_set_ios_attributes)
 
 file(GLOB_RECURSE PLAINFRAMEWORK_HEADERS ${CMAKE_CURRENT_LIST_DIR}/framework/core/include *.h)
 
-set(VERSION_RC ${root_dir}/inc/version.rc.in)
+set(VERSION_RC ${root_dir}/cmake/inc/version.rc.in)
 
 add_subdir(${plainframework_dir}/cmake plainframework)
 
