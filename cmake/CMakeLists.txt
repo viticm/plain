@@ -17,7 +17,7 @@ if (CMAKE_VERSION VERSION_LESS 3.0)
 else()
   cmake_policy(SET CMP0048 NEW)
   cmake_policy(SET CMP0037 NEW)
-  project(PlainFramework VERSION 1.9.0 LANGUAGES CXX C)
+  project(PlainFramework VERSION 1.1 LANGUAGES CXX C)
 endif()
 
 # Call fplutil to get locations of dependencies and set common build settings.
@@ -26,7 +26,7 @@ include("inc/common.cmake")
 include("${fplutil_dir}/buildutil/cmake_common.txt")
 set_common_build_variables()
 
-# This define in fplutil.
+# This define in fplutil(error append to c flags).
 string(REPLACE "-std=c++0x" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 
 # This is the directory into which the executables are built.
@@ -39,8 +39,6 @@ SET(LIBRARY_OUTPUT_PATH ${root_dir}/plain/lib)
 if (MSVC)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -wd4819")
 endif()
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-expansion-to-defined")
 
 # Options that control the build configuration.
 # To configure PlainFramework flags per build target, see the
@@ -98,7 +96,6 @@ endmacro(plainframework_set_ios_attributes)
 
 file(GLOB_RECURSE PLAINFRAMEWORK_HEADERS ${CMAKE_CURRENT_LIST_DIR}/framework/core/include *.h)
 
-#add_subdirectory(${root_dir}/framework/core/cmake ${root_dir}/framework/unit_tests/core/build)
 add_subdirectory(${plainframework_dir}/cmake plainframework)
 
 if(plainframework_build_tests)

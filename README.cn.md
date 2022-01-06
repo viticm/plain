@@ -34,8 +34,7 @@
 在UNIX相关的系统中你需要使用以下命令安装g++和cmake:
 
 ```shell
-git clone https://github.com/viticm/plain && cd plain
-git submodule init && git submodule update
+git clone --recursive https://github.com/viticm/plain && cd plain
 cd cmake && cmake ./ && sudo make install
 cd ../plain/bin && ./app --env=config/.env.example
 ```

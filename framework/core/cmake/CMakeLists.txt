@@ -56,7 +56,7 @@ if (CMAKE_VERSION VERSION_LESS 3.0)
   project(pf CXX C)
 else()
   cmake_policy(SET CMP0048 NEW)
-  project(pf VERSION 1.9.0 LANGUAGES CXX C)
+  project(pf VERSION 1.1 LANGUAGES CXX C)
 endif()
 cmake_minimum_required(VERSION 2.8.12)
 
@@ -96,6 +96,8 @@ include_directories(
 if (MSVC AND MSVC_VERSION EQUAL 1700)
   add_definitions(/D _VARIADIC_MAX=10)
 endif()
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-expansion-to-defined")
 
 ########################################################################
 #

@@ -36,8 +36,7 @@ file. If you want some diffrent then can write owner plugins.
 On Linux, use the command build and run, make sure installed g++ and cmake:
 
 ```shell
-git clone https://github.com/viticm/plain && cd plain
-git submodule init && git submodule update
+git clone --recursive https://github.com/viticm/plain && cd plain
 cd cmake && cmake ./ && sudo make install
 cd ../plain/bin && ./app --env=config/.env.example
 ```
