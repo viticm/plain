@@ -55,54 +55,6 @@ option(plainframework_build_tests "Build PlainFramework unit tests." ON)
 # Build plain framework plugins.
 option(plainframework_build_plugins "Build PlainFramework plugins" ON)
 
-function(plainframework_configure_flags target)
-
-  # Add required includes to the target.
-  target_include_directories(${target}
-    PRIVATE ${plainframework_dir}/include)
-
-  # Parse optional arguments.
-  set(additional_args ${ARGN})
-  list(LENGTH additional_args num_additional_args)
-  if(${num_additional_args} GREATER 0)
-    list(GET additional_args 0 enable_simd)
-  endif()
-  if(${num_additional_args} GREATER 1)
-    list(GET additional_args 1 force_padding)
-  endif()
-endfunction()
-
-# Modify CMAKE_C_FLAGS and CMAKE_CXX_FLAGS to enable a maximum reasonable
-# warning level.
-function(plainframework_enable_warnings target)
-  get_target_property(target_compile_flags ${target} COMPILE_FLAGS)
-  if(MSVC)
-    # C4127: conditional expression is constant
-    # C4577: 'noexcept' used with no exception handling mode specified.
-    target_compile_options(${target} PRIVATE /W4 /WX /wd4127 /wd4577)
-  elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX OR
-      CMAKE_COMPILER_IS_CLANGXX)
-    # Set the maximum warning level for gcc.
-    target_compile_options(${target} PRIVATE -Wall -Wextra -Werror
-      -Wno-long-long -Wno-variadic-macros)
-  endif()
-endfunction()
-
-# Macro defined here so that it can be used by all projects included
-macro(plainframework_set_ios_attributes project)
-  if(fpl_ios)
-    set_target_properties(${project} PROPERTIES
-      XCODE_ATTRIBUTE_SDKROOT "iphoneos")
-    set_target_properties(${project} PROPERTIES
-      XCODE_ATTRIBUTE_ARCHS "$(ARCHS_STANDARD)")
-    set_target_properties(${project} PROPERTIES
-      XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH "NO")
-    set_target_properties(${project} PROPERTIES
-      XCODE_ATTRIBUTE_VALID_ARCHS "$(ARCHS_STANDARD)")
-    set_target_properties(${project} PROPERTIES
-      XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET "8.0")
-  endif()
-endmacro(plainframework_set_ios_attributes)
 
 file(GLOB_RECURSE PLAINFRAMEWORK_HEADERS ${CMAKE_CURRENT_LIST_DIR}/framework/core/include *.h)
 

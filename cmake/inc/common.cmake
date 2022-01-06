@@ -22,6 +22,23 @@ set(root_dir ${CMAKE_CURRENT_LIST_DIR}/../.. CACHE INTERNAL "plainframework root
 set(plainframework_dir ${root_dir}/framework/core CACHE INTERNAL "plainframework directory")
 set(dependencies_dir ${root_dir}/dependencies CACHE INTERNAL "plainframework dependencies directory")
 
+function(plainframework_configure_flags target)
+
+  # Add required includes to the target.
+  target_include_directories(${target}
+    PRIVATE ${plainframework_dir}/include)
+
+  # Parse optional arguments.
+  set(additional_args ${ARGN})
+  list(LENGTH additional_args num_additional_args)
+  if(${num_additional_args} GREATER 0)
+    list(GET additional_args 0 enable_simd)
+  endif()
+  if(${num_additional_args} GREATER 1)
+    list(GET additional_args 1 force_padding)
+  endif()
+endfunction()
+
 # Modify CMAKE_C_FLAGS and CMAKE_CXX_FLAGS to enable a maximum reasonable
 # warning level.
 function(plainframework_enable_warnings target)
@@ -38,11 +55,27 @@ function(plainframework_enable_warnings target)
   endif()
 endfunction()
 
+# Macro defined here so that it can be used by all projects included
+macro(plainframework_set_ios_attributes project)
+  if(fpl_ios)
+    set_target_properties(${project} PROPERTIES
+      XCODE_ATTRIBUTE_SDKROOT "iphoneos")
+    set_target_properties(${project} PROPERTIES
+      XCODE_ATTRIBUTE_ARCHS "$(ARCHS_STANDARD)")
+    set_target_properties(${project} PROPERTIES
+      XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH "NO")
+    set_target_properties(${project} PROPERTIES
+      XCODE_ATTRIBUTE_VALID_ARCHS "$(ARCHS_STANDARD)")
+    set_target_properties(${project} PROPERTIES
+      XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET "8.0")
+  endif()
+endmacro(plainframework_set_ios_attributes)
+
 # Safe add_subdirectory.
 function(add_subdir target target_build)
-  set(old_root_dir ${root_dir} CACHE INTERNAL "cache")
+  set(old_root_dir ${root_dir} CACHE INTERNAL "root directory cache")
   add_subdirectory(${target} ${target_build})
-  set(root_dir ${old_root_dir} CACHE INTERNAL "recover")
+  set(root_dir ${old_root_dir} CACHE INTERNAL "root directory recover")
 endfunction(add_subdir)
 
 # Sets and caches `var` to the first path in 'paths' that exists.
