@@ -77,7 +77,7 @@ file(GLOB_RECURSE CORE_TEST_SOURCES "../src/*.cc")
 # Version rc.
 if (MSVC AND VERSION_RC)
   set(app_version_rc "${CMAKE_BINARY_DIR}/app.rc")
-  configure_file(${VERSION_RC} ${app_version_rc} @ONLY)
+  configure_file(${VERSION_RC} ${app_version_rc})
 endif()
 
 test_executables(app "${CORE_TEST_SOURCES}" ${app_version_rc})

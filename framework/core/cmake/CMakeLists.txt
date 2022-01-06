@@ -120,7 +120,7 @@ endif()
 # Version rc.
 if (MSVC AND VERSION_RC)
   set(pf_core_version_rc "${CMAKE_BINARY_DIR}/pf_core.rc")
-  configure_file(${VERSION_RC} ${pf_core_version_rc} @ONLY)
+  configure_file(${VERSION_RC} ${pf_core_version_rc})
 endif()
 
 # Plain Framework libraries.  We build them using more strict warnings than what
