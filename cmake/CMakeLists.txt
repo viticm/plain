@@ -11,13 +11,14 @@
 cmake_minimum_required(VERSION 2.8.12)
 
 set(PROJECT_NAME PlainFramework)
+set(PF_VERSION 1.1)
 
 if (CMAKE_VERSION VERSION_LESS 3.0)
   project(PlainFramework CXX C)
 else()
   cmake_policy(SET CMP0048 NEW)
   cmake_policy(SET CMP0037 NEW)
-  project(PlainFramework VERSION 1.1 LANGUAGES CXX C)
+  project(PlainFramework VERSION ${PF_VERSION} LANGUAGES CXX C)
 endif()
 
 # Call fplutil to get locations of dependencies and set common build settings.
@@ -29,11 +30,15 @@ set_common_build_variables()
 # This define in fplutil(error append to c flags).
 string(REPLACE "-std=c++0x" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 
-# This is the directory into which the executables are built.
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${root_dir}/plain/bin)
+if (not has_output_path)
 
-# This is the directory into which the librarys are built.
-SET(LIBRARY_OUTPUT_PATH ${root_dir}/plain/lib)
+  # This is the directory into which the executables are built.
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${root_dir}/plain/bin)
+
+  # This is the directory into which the librarys are built.
+  set(LIBRARY_OUTPUT_PATH ${root_dir}/plain/lib)
+
+endif()
 
 #For utf8 no boom.
 if (MSVC)
@@ -44,6 +49,9 @@ endif()
 # To configure PlainFramework flags per build target, see the
 # plainframework_configure_flags() function.
 option(plainframework_build_tests "Build PlainFramework unit tests." ON)
+
+# Build plain framework plugins.
+option(plainframework_build_plugins "Build PlainFramework plugins" ON)
 
 function(plainframework_configure_flags target)
 
@@ -96,12 +104,16 @@ endmacro(plainframework_set_ios_attributes)
 
 file(GLOB_RECURSE PLAINFRAMEWORK_HEADERS ${CMAKE_CURRENT_LIST_DIR}/framework/core/include *.h)
 
-add_subdirectory(${plainframework_dir}/cmake plainframework)
+add_subdir(${plainframework_dir}/cmake plainframework)
+
+# Plugins.
+if (plainframework_build_plugins)
+  add_subdir(${root_dir}/plain/plugins/cmake plugins)
+endif()
 
 if(plainframework_build_tests)
-  add_subdirectory(${root_dir}/framework/unit_tests/cmake
-                   ${root_dir}/framework/unit_tests/cmake/build)
-  add_subdirectory(${root_dir}/plain/app/cmake
-                   ${root_dir}/plain/app/cmake/build)
-
+  add_subdir(${root_dir}/framework/unit_tests/cmake
+             ${root_dir}/framework/unit_tests/cmake/build)
+  add_subdir(${root_dir}/plain/app/cmake
+             ${root_dir}/plain/app/cmake/build)
 endif()

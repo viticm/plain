@@ -49,14 +49,14 @@ endif()
 # Name of the project.
 #
 # CMake files in this project can refer to the root source directory
-# as ${pf_SOURCE_DIR} and to the root binary directory as
+# as ${PF_SOURCE_DIR} and to the root binary directory as
 # ${pf_BINARY_DIR}.
 # Language "C" is required for find_package(Threads).
 if (CMAKE_VERSION VERSION_LESS 3.0)
   project(pf CXX C)
 else()
   cmake_policy(SET CMP0048 NEW)
-  project(pf VERSION 1.1 LANGUAGES CXX C)
+  project(pf VERSION ${PF_VERSION} LANGUAGES CXX C)
 endif()
 cmake_minimum_required(VERSION 2.8.12)
 
@@ -78,12 +78,12 @@ include(inc/internal_utils.cmake)
 
 config_compiler_and_linker()  # Defined in internal_utils.cmake.
 
-set(pf_SOURCE_DIR "..")
+set(PF_SOURCE_DIR "..")
 
 # Where Plain Framework's .h files can be found.
 include_directories(
-  "${pf_SOURCE_DIR}/include"
-  "${pf_SOURCE_DIR}")
+  "${PF_SOURCE_DIR}/include"
+  "${PF_SOURCE_DIR}")
 
 # Summary of tuple support for Microsoft Visual Studio:
 # Compiler    version(MS)  version(cmake)  Support
@@ -106,8 +106,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-expansion-to-defined")
 
 set(pf_build_shared ON)
 set(INSTALL_PF ON)
-file(GLOB_RECURSE LIB_SOURCES "${pf_SOURCE_DIR}/src/*.cc")
-file(GLOB_RECURSE LIB_SOURCES_C "${pf_SOURCE_DIR}/src/*.c")
+file(GLOB_RECURSE LIB_SOURCES "${PF_SOURCE_DIR}/src/*.cc")
+file(GLOB_RECURSE LIB_SOURCES_C "${PF_SOURCE_DIR}/src/*.c")
 
 if (MSVC)
   set(WITH_LIBS "ws2_32")
@@ -134,7 +134,7 @@ set_target_properties(pf_core PROPERTIES SOVERSION 1)
 # to the targets for when we are part of a parent build (ie being pulled
 # in via add_subdirectory() rather than being a standalone build).
 if (DEFINED CMAKE_VERSION AND NOT "${CMAKE_VERSION}" VERSION_LESS "2.8.12")
-  target_include_directories(pf_core      SYSTEM INTERFACE "${pf_SOURCE_DIR}/include")
+  target_include_directories(pf_core      SYSTEM INTERFACE "${PF_SOURCE_DIR}/include")
 endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
@@ -165,7 +165,7 @@ if(INSTALL_PF)
     RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
     ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
     LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}")
-  install(DIRECTORY "${pf_SOURCE_DIR}/include/pf"
+  install(DIRECTORY "${PF_SOURCE_DIR}/include/pf"
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 
   # configure and install pkgconfig files

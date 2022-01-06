@@ -11,6 +11,10 @@
 cmake_minimum_required(VERSION 2.8.12)
 
 set_compiler_flags_for_external_libraries()
+
+# For gtest new(future will change it to googletest dir).
+set(GOOGLETEST_VERSION 1.11.0)
+
 add_subdirectory(${dependencies_gtest_dir} googletest)
 restore_compiler_flags()
 

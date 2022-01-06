@@ -16,11 +16,11 @@ if (CMAKE_VERSION VERSION_LESS 2.8.5)
 else()
   include(GNUInstallDirs)
 endif()
-
 # Save the plainframework directory, store this in the cache so that it's globally
 # accessible from plainframework_configure_flags().
 set(root_dir ${CMAKE_CURRENT_LIST_DIR}/../.. CACHE INTERNAL "plainframework root directory")
 set(plainframework_dir ${root_dir}/framework/core CACHE INTERNAL "plainframework directory")
+set(dependencies_dir ${root_dir}/dependencies CACHE INTERNAL "plainframework dependencies directory")
 
 # Modify CMAKE_C_FLAGS and CMAKE_CXX_FLAGS to enable a maximum reasonable
 # warning level.
@@ -37,3 +37,23 @@ function(plainframework_enable_warnings target)
       -Wno-long-long -Wno-variadic-macros)
   endif()
 endfunction()
+
+# Safe add_subdirectory.
+function(add_subdir target target_build)
+  set(old_root_dir ${root_dir} CACHE INTERNAL "cache")
+  add_subdirectory(${target} ${target_build})
+  set(root_dir ${old_root_dir} CACHE INTERNAL "recover")
+endfunction(add_subdir)
+
+# Sets and caches `var` to the first path in 'paths' that exists.
+# If none of the paths are found, sets `var` to an error value of
+# "path_not_found".
+function(set_to_first_path_that_exists var paths description)
+  foreach(path ${paths})
+    if(EXISTS "${path}")
+      set(${var} "${path}" CACHE PATH description)
+      return()
+    endif()
+  endforeach(path)
+  set(${var} "path_not_found_to_${var}" CACHE PATH description)
+endfunction(set_to_first_path_that_exists)
