@@ -26,7 +26,7 @@ template<class>
 constexpr bool is_unbounded_array_v = false;
 template<class T>
 constexpr bool is_unbounded_array_v<T[]> = true;
- 
+
 template<class>
 constexpr bool is_bounded_array_v = false;
 template<class T, size_t N>
@@ -36,19 +36,19 @@ constexpr bool is_bounded_array_v<T[N]> = true;
 
 template< bool B, class T = void >
 using enable_if_t = typename std::enable_if<B,T>::type;
- 
+
 template<class T, class... Args>
 enable_if_t<!std::is_array<T>::value, std::unique_ptr<T>>
 make_unique(Args&&... args) {
     return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
 }
- 
+
 template<class T>
 enable_if_t<detail::is_unbounded_array_v<T>, std::unique_ptr<T>>
 make_unique(size_t n) {
     return std::unique_ptr<T>(new std::remove_extent<T>[n]());
 }
- 
+
 template<class T, class... Args>
 enable_if_t<detail::is_bounded_array_v<T>> make_unique(Args&&...) = delete;
 
@@ -113,7 +113,8 @@ using remove_const_t = typename std::remove_const<T>::type;
 template <typename T, typename... Args>
 inline typename detail::make_unique_helper<T>::unique_ptr
 make_unique(Args&&... args) {
-  return detail::make_unique_helper<T>::make(std::forward<Args>(args)...);
+  return pf_basic::detail::make_unique_helper<T>::make(
+      std::forward<Args>(args)...);
 }
 
 } // namespace pf_basic
