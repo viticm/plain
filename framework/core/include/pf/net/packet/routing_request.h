@@ -20,7 +20,7 @@ namespace pf_net {
 
 namespace packet {
 
-class RoutingRequest : public pf_net::packet::Interface {
+class PF_API RoutingRequest : public pf_net::packet::Interface {
 
  public:
    RoutingRequest() : destination_{0}, aim_name_{0}, aim_id_{0} {}

@@ -20,7 +20,7 @@ namespace pf_net {
 
 namespace packet {
 
-class Handshake : public pf_net::packet::Interface {
+class PF_API Handshake : public pf_net::packet::Interface {
 
  public:
    Handshake() : key_{0} {}

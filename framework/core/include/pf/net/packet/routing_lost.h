@@ -20,7 +20,7 @@ namespace pf_net {
 
 namespace packet {
 
-class RoutingLost : public pf_net::packet::Interface {
+class PF_API RoutingLost : public pf_net::packet::Interface {
 
  public:
    RoutingLost() : aim_name_{0} {}

@@ -17,8 +17,6 @@
 
 namespace pf_basic {
 
-PF_API extern std::mutex g_log_mutex;
-
 const uint32_t kLogBufferTemp = 4096;
 const uint32_t kLogNameTemp = 128;
 const uint32_t kDefaultLogCacheSize = 1024 * 1024 * 4;
@@ -34,8 +32,7 @@ class PF_API Logger : public Singleton<Logger> {
  public:
    typedef pf_basic::hashmap::Template< std::string, int32_t > logids_t;
    typedef pf_basic::hashmap::Template< int32_t, int32_t > log_position_t;
-   typedef pf_basic::hashmap::Template< int32_t, char * > 
-     logcache_t;
+   typedef pf_basic::hashmap::Template< int32_t, char * > logcache_t;
    typedef pf_basic::hashmap::Template< int32_t, std::mutex * > loglock_t;
 
  public:
@@ -61,6 +58,7 @@ class PF_API Logger : public Singleton<Logger> {
    //模板函数 type 0 普通日志 1 警告日志 2 错误日志 3 调试日志 9 只写日志
    template <uint8_t type>
    static void slow_savelog(const char *logname, const char *format, ...);
+   static std::mutex& get_mutex();
 
  private:
    logids_t logids_;

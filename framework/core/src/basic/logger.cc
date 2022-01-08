@@ -7,7 +7,7 @@ std::unique_ptr< pf_basic::Logger > g_logger{nullptr};
 
 namespace pf_basic {
 
-std::mutex g_log_mutex;
+static std::mutex g_log_mutex;
 
 template<> Logger *Singleton< Logger >::singleton_ = nullptr;
 
@@ -34,7 +34,11 @@ Logger::~Logger() {
     safe_delete_array(it->second);
   for (auto it = loglock_.begin(); it != loglock_.end(); ++it)
     safe_delete(it->second);
-}   
+}
+
+std::mutex& Logger::get_mutex() {
+  return g_log_mutex;
+}
    
 bool Logger::register_fastlog(const char *logname) {
   uint8_t count = static_cast<uint8_t>(logids_.getcount());

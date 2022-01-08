@@ -20,7 +20,7 @@ namespace pf_net {
 
 namespace packet {
 
-class Forward : public pf_net::packet::Interface {
+class PF_API Forward : public pf_net::packet::Interface {
 
  public:
    Forward() : original_{0} {}

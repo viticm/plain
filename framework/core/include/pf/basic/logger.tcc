@@ -93,7 +93,7 @@ void Logger::fast_savelog(const char *logname, const char *format, ...) {
 template <uint8_t type>
 void Logger::slow_savelog(const char *filename_prefix, 
     const char *format, ...) {
-  std::unique_lock<std::mutex> autolock(g_log_mutex);
+  std::unique_lock<std::mutex> autolock(get_mutex());
   char buffer[5120]{0};
   char temp[4096]{0};
   va_list argptr;

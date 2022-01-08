@@ -14,7 +14,7 @@
 #include "pf/net/packet/routing_response.h"
 #include "pf/net/packet/factorymanager.h"
 
-std::unique_ptr< pf_net::packet::FactoryManager > 
+std::unique_ptr< pf_net::packet::FactoryManager >
   g_packetfactory_manager{nullptr};
 
 template<> 

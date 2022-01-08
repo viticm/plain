@@ -20,7 +20,7 @@ namespace pf_net {
 
 namespace packet {
 
-class CallScript : public pf_net::packet::Interface {
+class PF_API CallScript : public pf_net::packet::Interface {
 
  public:
    CallScript() : func_{0}, params_{""}, eid_{-1} {}

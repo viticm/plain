@@ -20,7 +20,7 @@ namespace pf_net {
 
 namespace packet {
 
-class RegisterConnectionName : public pf_net::packet::Interface {
+class PF_API RegisterConnectionName : public pf_net::packet::Interface {
 
  public:
    RegisterConnectionName() : name_{""} {}

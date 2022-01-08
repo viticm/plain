@@ -16,7 +16,7 @@
 
 namespace pf_basic {
 
-template <typename T> class Singleton {
+template <typename T> class PF_API Singleton {
  
  public:
    Singleton() {
