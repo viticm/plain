@@ -25,6 +25,7 @@ endif()
 # Call fplutil to get locations of dependencies and set common build settings.
 include("inc/find_fplutil.cmake")
 include("inc/common.cmake")
+# This will be remove in future(dependencies).
 include("${fplutil_dir}/buildutil/cmake_common.txt")
 set_common_build_variables()
 
