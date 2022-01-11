@@ -62,16 +62,20 @@ file(GLOB_RECURSE PLAINFRAMEWORK_HEADERS ${CMAKE_CURRENT_LIST_DIR}/framework/cor
 
 set(VERSION_RC ${root_dir}/cmake/inc/version.rc.in)
 
-add_subdir(${plainframework_dir}/cmake plainframework)
+add_subdir(${plainframework_dir}/cmake plainframework plainframework)
 
 # Plugins.
 if (plainframework_build_plugins)
-  add_subdir(${root_dir}/plain/plugins/cmake plugins)
+  add_subdir(${root_dir}/plain/plugins/cmake plugins plainframework)
 endif()
 
 if(plainframework_build_tests)
   add_subdir(${root_dir}/framework/unit_tests/cmake
-             ${root_dir}/framework/unit_tests/cmake/build)
-  add_subdir(${root_dir}/plain/app/cmake
-             ${root_dir}/plain/app/cmake/build)
+             ${root_dir}/framework/unit_tests/cmake/build
+             plainframework)
+  if (NOT plainframework_no_app)
+    add_subdir(${root_dir}/plain/app/cmake
+               ${root_dir}/plain/app/cmake/build
+               plainframework)
+  endif()
 endif()
