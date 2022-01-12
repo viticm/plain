@@ -46,7 +46,7 @@ On windows(vs 2019+ can build with cmake directly).
 Update all submodule.
 
 ```shell
-git submodule update --remote
+git submodule update --remote --recursive
 ```
 
 ## Customize your application by environment file. ##

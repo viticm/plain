@@ -44,9 +44,8 @@ Windows(vs 2019+ 以上版本可以直接在工程中右键cmake/CMakeList.txt�
 更新子模块.
 
 ```shell
-git submodule update --remote
+git submodule update --remote --recursive
 ```
-
 
 
 ## 定制你自己的应用环境配置. ##
