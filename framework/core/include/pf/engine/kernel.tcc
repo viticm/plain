@@ -72,10 +72,13 @@ std::thread::id Kernel::newthread(
       pf_sys::thread::start();
       pf_sys::ThreadCollect tc;
       std::future<return_type> task_res = task->get_future();
+#if _DEBUG
       auto lasttime = TIME_MANAGER_POINTER->get_tickcount();
+#endif
       for (;;) {
         if (pf_sys::thread::is_stopping()) break;
         auto starttime = TIME_MANAGER_POINTER->get_tickcount();
+#if _DEBUG
         auto diff_time = starttime - lasttime;
         if (diff_time > 1000) {
           // std::cout << "thread: " << name << " working" << std::endl;
@@ -87,6 +90,7 @@ std::thread::id Kernel::newthread(
 
           lasttime = starttime;
         }
+#endif
         (*task)(); 
         (*task).reset(); //Remeber it, the packaged_task reset then can call again.
         if (std::is_same<decltype(task_res), bool>::value && !task_res.get())
