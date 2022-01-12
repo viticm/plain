@@ -39,7 +39,14 @@ cd cmake && cmake ./ && sudo make install
 cd ../plain/bin && ./app --env=config/.env.example
 ```
 
-框架支持跨平台，在windows上的快速编译即将来到.
+Windows(vs 2019+ 以上版本可以直接在工程中右键cmake/CMakeList.txt生成).
+
+更新子模块.
+
+```shell
+git submodule update --remote
+```
+
 
 
 ## 定制你自己的应用环境配置. ##

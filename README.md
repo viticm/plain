@@ -41,8 +41,13 @@ cd cmake && cmake ./ && sudo make install
 cd ../plain/bin && ./app --env=config/.env.example
 ```
 
-On windows, will come soon.
+On windows(vs 2019+ can build with cmake directly).
 
+Update all submodule.
+
+```shell
+git submodule update --remote
+```
 
 ## Customize your application by environment file. ##
 
