@@ -251,6 +251,20 @@ bool LibraryManager::load(const std::string &name,
         break;
       }
     }
+#if OS_WIN
+    // Try load debug files.
+    if (!loaded) {
+      std::string debug_name = _name + "d";
+      library->set_filename(debug_name);
+      for (const std::string &path : searchpaths_) {
+        library->set_path(path);
+        if (library->load(true, seeglb)) {
+          loaded = true;
+          break;
+        }
+      }
+    }
+#endif
     if (!loaded) {
       std::string err{"The file mybe not found!"};
       if (library->errorstr() != "")
