@@ -113,6 +113,8 @@ Pool<T, BlockSize>::allocate_block() {
 template <typename T, size_t BlockSize>
 inline typename Pool<T, BlockSize>::pointer
 Pool<T, BlockSize>::allocate(size_type n, const_pointer hint) {
+  UNUSED(n);
+  UNUSED(hint);
   if (freeslot_ != nullptr) {
     pointer result = reinterpret_cast<pointer>(freeslot_);
     freeslot_ = freeslot_->next;
