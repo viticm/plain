@@ -18,7 +18,7 @@ namespace pf_events {
 
 namespace perk {
 
-class PF_API Basic {
+class Basic {
 
 public:
 

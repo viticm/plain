@@ -71,7 +71,8 @@ class PF_API Logger : public Singleton<Logger> {
 
 } //namespace pf_basic
 
-extern std::unique_ptr< pf_basic::Logger > g_logger;
+extern
+std::unique_ptr< pf_basic::Logger > g_logger;
 
 //log sytem macros
 #define LOGSYSTEM_POINTER pf_basic::Logger::getsingleton_pointer()

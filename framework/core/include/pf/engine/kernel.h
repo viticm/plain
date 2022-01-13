@@ -53,19 +53,19 @@ class PF_API Kernel : public pf_basic::Singleton< Kernel > {
  public:
 
    //Use these interface will send handshake packt after connected.
-   pf_net::connection::Basic *default_connect(const std::string &name, 
-                                              const std::string &ip, 
-                                              uint16_t port, 
+   pf_net::connection::Basic *default_connect(const std::string &name,
+                                              const std::string &ip,
+                                              uint16_t port,
                                               const std::string &encrypt_str = "");
    pf_net::connection::Basic *connect(const std::string &name);
-   pf_net::connection::Basic *connect(const std::string &name, 
-                                      const std::string &ip, 
-                                      uint16_t port, 
+   pf_net::connection::Basic *connect(const std::string &name,
+                                      const std::string &ip,
+                                      uint16_t port,
                                       const std::string &encrypt_str = "");
    pf_net::connection::Basic *connect(pf_net::connection::manager::Basic *,
-                                      const std::string &name, 
-                                      const std::string &ip, 
-                                      uint16_t port, 
+                                      const std::string &name,
+                                      const std::string &ip,
+                                      uint16_t port,
                                       const std::string &encrypt_str = "");
 
    //Get the extra listener or connector.
@@ -97,21 +97,21 @@ class PF_API Kernel : public pf_basic::Singleton< Kernel > {
    std::map<std::string, int8_t> get_connect_list() const {
      return connect_list_;
    }
-   
+
    std::map<std::string, int8_t> get_db_list() const {
      return db_list_;
    }
 
    // Get the net handle script function name.
    const std::string get_script_function(pf_net::connection::Basic *);
-   
+
    // Get net listener factory.
    pf_net::connection::manager::ListenerFactory *get_net_listener_factory(bool);
 
  public:
    //Enqueue an envet function in main loop.
    template<class F, class... Args>
-   auto enqueue(F&& f, Args&&... args) 
+   auto enqueue(F&& f, Args&&... args)
    -> std::future<typename std::result_of<F(Args...)>::type>;
 
  public:
@@ -160,7 +160,8 @@ class PF_API Kernel : public pf_basic::Singleton< Kernel > {
 
 #include "pf/engine/kernel.tcc"
 
-PF_API extern std::unique_ptr< pf_engine::Kernel > g_engine;
+extern
+std::unique_ptr< pf_engine::Kernel > g_engine;
 #define ENGINE_POINTER pf_engine::Kernel::getsingleton_pointer()
 
 #endif //PF_ENGINE_KERNEL_H_
