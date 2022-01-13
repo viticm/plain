@@ -36,6 +36,9 @@
 //utf8 no boom(This will disable with cmake)
 #pragma warning (disable: 4819)
 
+//API warnings.
+#pragma warning (disable: 4996)
+
 #endif
 
 #if OS_WIN
