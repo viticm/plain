@@ -7,6 +7,7 @@
  * @user viticm<viticm.ti@gmail.com>
  * @date 2017/11/30 15:06
  * @uses The query builder class.
+ *       class.joins_ use the unique_ptr will be better but error on windows.
 */
 #ifndef PF_DB_QUERY_BUILDER_H_
 #define PF_DB_QUERY_BUILDER_H_
@@ -55,8 +56,8 @@ class PF_API Builder : public concerns::BuildsQueries {
    //The table which the query is targeting.
    std::string from_;
 
-   //The table joins for the query.
-   std::vector< std::shared_ptr<JoinClause> > joins_;
+   //The table joins for the query(JoinClause).
+   std::vector< std::shared_ptr<Builder> > joins_;
 
    //The where constraints for the query.
    std::vector<db_query_array_t> wheres_;

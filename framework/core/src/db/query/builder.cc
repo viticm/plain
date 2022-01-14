@@ -204,7 +204,7 @@ Builder &Builder::join(const std::string &table,
   if (_where) {
     _join->where(_first, oper, second);
   } else {
-    reinterpret_cast<Builder *>(_join.get())->on(_first, oper, second);
+    _join->on(_first, oper, second);
   }
   
   add_bindings(_join->get_bindings(), "join");

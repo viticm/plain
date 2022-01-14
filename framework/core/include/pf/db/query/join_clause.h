@@ -43,9 +43,9 @@ class PF_API JoinClause : public Builder {
 
     //Add an "on" clause to the join.
     virtual Builder &on(const std::string &_first, 
-                        const std::string &oper, 
-                        const std::string &second, 
-                        const std::string &boolean) {
+                        const std::string &oper = "", 
+                        const std::string &second = "", 
+                        const std::string &boolean = "and") {
       return where_column(_first, oper, second, boolean);
     };
 
@@ -53,14 +53,14 @@ class PF_API JoinClause : public Builder {
     virtual Builder &on(closure_t callback, 
                         const std::string &, 
                         const std::string &, 
-                        const std::string &boolean) {
+                        const std::string &boolean = "and") {
       return where_nested(callback, boolean);
     };
 
     //Add an "or on" clause to the join.
     virtual Builder &or_on(const std::string &_first,
-                           const std::string &oper,
-                           const std::string &second) {
+                           const std::string &oper = "",
+                           const std::string &second = "") {
       return on(_first, oper, second, "or");
     };
 
