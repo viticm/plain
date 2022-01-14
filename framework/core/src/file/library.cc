@@ -157,7 +157,7 @@ bool Library::unload() {
 void *Library::resolve(const std::string &symbol, bool again) {
   void *symbolhandle = nullptr;
 #if OS_WIN
-  symbolhandle = cast(void *, GetProcAddress((HMODULE)symbolhandle, symbol.c_str()));
+  symbolhandle = cast(void *, GetProcAddress((HMODULE)handle_, symbol.c_str()));
   if (is_null(symbolhandle)) {
     errorstr_ = GetLastErrorString(GetLastError());
     SLOW_ERRORLOG("library", 
