@@ -1,8 +1,9 @@
 #include "pf/basic/logger.h"
 #include "pf/file/api.h"
+#include "pf/engine/kernel.h"
 #include "pf/file/library.h"
 
-typedef void (__stdcall *function_open)(void *);
+typedef void (__stdcall *function_open)(pf_engine::Kernel *, void *);
 
 /* The diffrent os library prefix and suffix. */
 #if OS_WIN
@@ -291,7 +292,7 @@ bool LibraryManager::load(const std::string &name,
 __extension__
 #endif
     function_open openfunc = reinterpret_cast<function_open>(openhanlde);
-    openfunc(cast(void *, &params));
+    openfunc(ENGINE_POINTER, cast(void *, &params));
   }
 
   librarymap_[name] = nullptr;

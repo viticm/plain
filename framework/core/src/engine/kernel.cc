@@ -10,6 +10,7 @@
 #include "pf/net/connection/manager/connector.h"
 #include "pf/net/packet/handshake.h"
 #include "pf/net/packet/register_connection_name.h"
+#include "pf/net/protocol/helpers.h"
 #include "pf/db/interface.h"
 #include "pf/db/null.h"
 #include "pf/db/factory.h"
@@ -105,7 +106,6 @@ pf_net::connection::manager::Listener *Kernel::get_listener(
   }
   return net_listener_factory_->getenv(listen_list_[name]);
 }
-
 
 pf_net::connection::manager::Listener *Kernel::get_service(
     const std::string &name) {
@@ -561,6 +561,11 @@ bool Kernel::init_script() {
     return false;
   }
   return true;
+}
+
+void Kernel::register_protocol(
+    const std::string &name, pf_net::protocol::Interface *protocol) {
+  pf_net::protocol::set(name, protocol);
 }
 
 void console_net_handle(

@@ -109,6 +109,22 @@ class PF_API Kernel : public pf_basic::Singleton< Kernel > {
    pf_net::connection::manager::ListenerFactory *get_net_listener_factory(bool);
 
  public:
+   
+   //Register script env creator.
+   void register_script(uint8_t type, function_env_creator_script func) {
+     register_env_creator_script(type, func);
+   }
+
+   //Register db env creator.
+   void register_db(uint8_t type, function_env_creator_db func) {
+     register_env_creator_db(type, func);
+   }
+
+   //Register protocol.
+   void register_protocol(const std::string &name,
+       pf_net::protocol::Interface *protocol);
+
+ public:
    //Enqueue an envet function in main loop.
    template<class F, class... Args>
    auto enqueue(F&& f, Args&&... args)
