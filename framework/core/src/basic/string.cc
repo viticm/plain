@@ -749,10 +749,10 @@ std::string str_replaces(const std::vector<std::string> &search ,
 std::string wstr2str(const std::wstring &str) {
   std::string r;
 #if OS_WIN
-  wchar_t *wText = str.c_str();
+  auto wText = str.c_str();
   DWORD dwNum =
     WideCharToMultiByte(CP_OEMCP, NULL, wText, -1, NULL, 0, NULL, FALSE);
-  psText = new char[dwNum];
+  char *psText = new char[dwNum];
   WideCharToMultiByte(CP_OEMCP, NULL, wText, -1, psText, dwNum, NULL, FALSE);
   r = psText;
   delete[] psText;

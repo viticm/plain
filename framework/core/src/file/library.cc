@@ -75,7 +75,7 @@ bool Library::load(bool tryprefix, bool seeglb) {
     UNUSED(seeglb);
     tryprefix = false;
     auto wstr = str2wstr(temp);
-    handle_ = cast(void *, LoadLibrary(wstr));
+    handle_ = cast(void *, LoadLibrary(wstr.c_str()));
     if (is_null(handle_)) 
       errorstr_ = GetLastErrorString(GetLastError());
 #else
