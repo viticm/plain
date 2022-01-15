@@ -5,9 +5,6 @@
 # ctest.  You can select which tests to run using 'ctest -R regex'.
 # For more options, run 'ctest --help'.
 
-# BUILD_SHARED_LIBS is a standard CMake variable.
-option(BUILD_SHARED_LIBS "Build shared libraries (DLLs)." ON)
-
 # When other libraries are using a shared version of runtime libraries,
 # Plain Framework also has to use one.
 option(

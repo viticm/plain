@@ -24,16 +24,9 @@ if(EXISTS "${dependencies_gtest_dir}/../../third_party")
 endif()
 set(gtest_libdir ${dependencies_gtest_dir})
 
-if (MSVC)
-  option(PF_BUILD_AS_DLL "Build plain framwork as dll." ON)
-endif()
-
 # Include helper functions and macros used by Google Test.
 include(${gtest_libdir}/cmake/internal_utils.cmake)
-option(
-  gtest_force_shared_crt
-  "Use shared (DLL) run-time lib even when Google Test is built as static lib."
-  ON)
+set(gtest_force_shared_crt ON)
 config_compiler_and_linker()
 
 # string(REPLACE "-W4" "-W3" cxx_default "${cxx_default}")
@@ -54,7 +47,6 @@ include_directories(${gtest_incdir}
 if(NOT MSVC)
   find_package(Threads)
 endif()
-# set(COMMON_LIBS "pf_core;gtest;dl;${CMAKE_THREAD_LIBS_INIT}")
 
 if (MSVC)
   set(COMMON_LIBS "pf_core;gtest;${CMAKE_THREAD_LIBS_INIT}")
