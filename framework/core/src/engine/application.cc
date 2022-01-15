@@ -374,6 +374,9 @@ void Application::start() {
 void Application::stop() {
   engine_->stop();
   remove(GLOBALS["app.pidfile"].c_str());
+#if OS_WIN
+  system("pause");
+#endif
 }
 
 void Application::register_commandhandler(
