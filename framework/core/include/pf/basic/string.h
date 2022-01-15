@@ -127,6 +127,9 @@ PF_API inline std::string toupper(const std::string &str) {
   return temp;
 }
 
+PF_API std::string wstr2str(const std::wstring &str);
+PF_API std::wstring str2wstr(const std::string &str);
+
 #if OS_WIN
 # pragma warning( pop )
 #endif

@@ -1,4 +1,5 @@
 #include "pf/basic/logger.h"
+#include "pf/basic/string.h"
 #include "pf/file/api.h"
 #include "pf/engine/kernel.h"
 #include "pf/file/library.h"
@@ -10,28 +11,8 @@ typedef void (__stdcall *function_open)(pf_engine::Kernel *, void *);
 #define LIBRARY_PREFIX ""
 #define LIBRARY_SUFFIX ".dll"
 
-std::string wchar_tToString(wchar_t* wchar) {
-  std::string szDst;
-  wchar_t* wText = wchar;
-  DWORD dwNum = WideCharToMultiByte(CP_OEMCP, NULL, wText, -1, NULL, 0, NULL, FALSE);
-  char* psText;
-  psText = new char[dwNum];
-  WideCharToMultiByte(CP_OEMCP, NULL, wText, -1, psText, dwNum, NULL, FALSE);
-  szDst = psText;
-  delete[]psText;
-  return szDst;
-}
-
-wchar_t* stringToWchar_t(const std::string &str) {
-  std::string temp = str;
-  int len = MultiByteToWideChar(CP_ACP, 0, (LPCSTR)temp.c_str(), -1, NULL, 0);
-  wchar_t* wszUtf8 = new wchar_t[len + 1];
-  memset(wszUtf8, 0, len * 2 + 2);
-  MultiByteToWideChar(CP_ACP, 0, (LPCSTR)temp.c_str(), -1, (LPWSTR)wszUtf8, len);
-  return wszUtf8;
-}
-
 static inline std::string GetLastErrorString(DWORD nErrorCode) {
+  using namespace pf_basic::string;
   WCHAR *msg = 0; //Qt: wchar_t
   // Ask Windows to prepare a standard message for a GetLastError() code:
   FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | 
@@ -43,10 +24,11 @@ static inline std::string GetLastErrorString(DWORD nErrorCode) {
                 (LPTSTR)&msg,
                 0,
                 NULL);
-  std::string s = wchar_tToString(msg);
+  std::string s = wstr2str(msg);
   LocalFree(msg);
   return s;
 }
+
 #elif OS_MAC
 #define LIBRARY_PREFIX "lib"
 #define LIBRARY_SUFFIX ".dylib"
@@ -85,13 +67,14 @@ void Library::set_filename(const std::string &_filename) {
 }
 
 bool Library::load(bool tryprefix, bool seeglb) {
+  using namespace pf_basic::string;
   std::string temp = path_ + filename_;
   auto fileexists = api::exists(temp);
   if (fileexists) {
 #if OS_WIN
     UNUSED(seeglb);
     tryprefix = false;
-    auto wstr = stringToWchar_t(temp);
+    auto wstr = str2wstr(temp);
     handle_ = cast(void *, LoadLibrary(wstr));
     if (is_null(handle_)) 
       errorstr_ = GetLastErrorString(GetLastError());
