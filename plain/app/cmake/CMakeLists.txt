@@ -10,6 +10,8 @@
 # limitations under the License.
 cmake_minimum_required(VERSION 2.8.12)
 
+option(BUILD_SHARED_LIBS "Build shared libraries (DLLs)." ON)
+
 set_compiler_flags_for_external_libraries()
 restore_compiler_flags()
 
