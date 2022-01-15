@@ -22,8 +22,6 @@ option(pf_build_samples "Build pf's sample programs." OFF)
 
 option(pf_disable_pthreads "Disable uses of pthreads in pf." OFF)
 
-option(PF_CORE "The plain framework core library." ON)
-
 option(
   pf_hide_internal_symbols
   "Build pf with internal symbols hidden in shared libraries."
@@ -71,7 +69,7 @@ endif()
 
 # Define helper functions and macros used by Plain Framework.
 include(inc/internal_utils.cmake)
-
+set(pf_force_shared_crt ON)
 config_compiler_and_linker()  # Defined in internal_utils.cmake.
 
 set(PF_SOURCE_DIR "..")
