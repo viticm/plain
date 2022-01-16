@@ -289,6 +289,10 @@ bool Kernel::init_base() {
   //Load the plugins.
   if (GLOBALS["plugins.count"] > 0) {
     auto count = GLOBALS["plugins.count"].get<uint8_t>();
+    SLOW_DEBUGLOG(ENGINE_MODULENAME,
+                  "[%s] Kernel::init_base try load(%d) plugins",
+                  ENGINE_MODULENAME, count);
+
     uint8_t i;
     for (i = 0; i < count; ++i) {
       std::string str = GLOBALS["plugins." + std::to_string(i)].data;
