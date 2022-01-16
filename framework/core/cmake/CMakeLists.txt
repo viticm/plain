@@ -5,6 +5,24 @@
 # ctest.  You can select which tests to run using 'ctest -R regex'.
 # For more options, run 'ctest --help'.
 
+########################################################################
+#
+# Project-wide settings
+
+# Name of the project.
+#
+# CMake files in this project can refer to the root source directory
+# as ${PF_SOURCE_DIR} and to the root binary directory as
+# ${pf_BINARY_DIR}.
+# Language "C" is required for find_package(Threads).
+if (CMAKE_VERSION VERSION_LESS 3.0)
+  project(plain CXX C)
+else()
+  cmake_policy(SET CMP0048 NEW)
+  project(plain VERSION ${PF_VERSION} LANGUAGES CXX C)
+endif()
+cmake_minimum_required(VERSION 2.8.12)
+
 # When other libraries are using a shared version of runtime libraries,
 # Plain Framework also has to use one.
 option(
@@ -15,8 +33,6 @@ option(
 option(pf_build_tests "Build all of pf's own tests." OFF)
 
 option(pf_build_shared "Build all of pf as share library." OFF)
-
-option(PF_BUILD_AS_DLL "Build plain framwork as dll." OFF)
 
 option(pf_build_samples "Build pf's sample programs." OFF)
 
@@ -29,30 +45,15 @@ option(
 
 set(CMAKE_DEBUG_POSTFIX "d" CACHE STRING "Generate debug library name with a postfix.")
 
+# Windows crt.
+set(pf_force_shared_crt pf_build_shared)
+
 # Defines pre_project_set_up_hermetic_build() and set_up_hermetic_build().
 include(inc/hermetic_build.cmake OPTIONAL)
 
 if (COMMAND pre_project_set_up_hermetic_build)
   pre_project_set_up_hermetic_build()
 endif()
-
-########################################################################
-#
-# Project-wide settings
-
-# Name of the project.
-#
-# CMake files in this project can refer to the root source directory
-# as ${PF_SOURCE_DIR} and to the root binary directory as
-# ${pf_BINARY_DIR}.
-# Language "C" is required for find_package(Threads).
-if (CMAKE_VERSION VERSION_LESS 3.0)
-  project(pf CXX C)
-else()
-  cmake_policy(SET CMP0048 NEW)
-  project(pf VERSION ${PF_VERSION} LANGUAGES CXX C)
-endif()
-cmake_minimum_required(VERSION 2.8.12)
 
 if (POLICY CMP0063) # Visibility
   cmake_policy(SET CMP0063 NEW)

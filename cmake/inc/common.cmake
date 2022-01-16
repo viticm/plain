@@ -7,7 +7,7 @@
 #   Therefore it shouldn't have any side effects other than defining
 #   the functions and macros.
 
-#For install paths.
+# For install paths.
 if (CMAKE_VERSION VERSION_LESS 2.8.5)
   set(CMAKE_INSTALL_BINDIR "bin" CACHE STRING "User executables (bin)")
   set(CMAKE_INSTALL_LIBDIR "lib${LIB_SUFFIX}" CACHE STRING "Object code libraries (lib)")
@@ -16,6 +16,7 @@ if (CMAKE_VERSION VERSION_LESS 2.8.5)
 else()
   include(GNUInstallDirs)
 endif()
+
 # Save the plainframework directory, store this in the cache so that it's globally
 # accessible from plainframework_configure_flags().
 set(root_dir ${CMAKE_CURRENT_LIST_DIR}/../.. CACHE INTERNAL "plainframework root directory")
@@ -71,11 +72,61 @@ macro(plainframework_set_ios_attributes project)
   endif()
 endmacro(plainframework_set_ios_attributes)
 
+# External code should be compiled with these compiler options.
+# Call this function before add_subdirectory([external project]), and then
+# call restore_comiler_flags() after.
+function(set_compiler_flags_for_external_libraries)
+  # Save current compiler flags so that we can restore them in
+  # restore_compiler_flags()
+  set(SAVED_CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}" PARENT_SCOPE)
+  set(SAVED_CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}" PARENT_SCOPE)
+  set(SAVED_CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}" PARENT_SCOPE)
+  set(SAVED_CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE}" PARENT_SCOPE)
+  set(SAVED_CMAKE_C_FLAGS "${CMAKE_C_FLAGS}" PARENT_SCOPE)
+  set(SAVED_CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}" PARENT_SCOPE)
+  set(SAVED_CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}" PARENT_SCOPE)
+
+  # Detect clang
+  if(${CMAKE_CXX_COMPILER_ID} STREQUAL Clang)
+    set(using_clangxx 1)
+  endif()
+
+  # Suppress all warnings.
+  if( CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX OR
+      using_clangxx OR APPLE )
+    set(CMAKE_CXX_FLAGS "-std=c++0x -w -Wno-deprecated-declarations" PARENT_SCOPE)
+    set(CMAKE_C_FLAGS "-w" PARENT_SCOPE)
+  elseif(MSVC)
+    set(CMAKE_C_FLAGS "${MSVC_FLAGS}" PARENT_SCOPE)
+    set(CMAKE_C_FLAGS_DEBUG "${MSVC_FLAGS_DEBUG}" PARENT_SCOPE)
+    set(CMAKE_C_FLAGS_RELEASE "${MSVC_FLAGS_RELEASE}" PARENT_SCOPE)
+    set(CMAKE_CXX_FLAGS "${MSVC_FLAGS}" PARENT_SCOPE)
+    set(CMAKE_CXX_FLAGS_DEBUG "${MSVC_FLAGS_DEBUG}" PARENT_SCOPE)
+    set(CMAKE_CXX_FLAGS_RELEASE "${MSVC_FLAGS_RELEASE}" PARENT_SCOPE)
+    set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${MSVC_LINKER_FLAGS_RELEASE}" PARENT_SCOPE)
+    add_definitions("${MSVC_DEFINES}")
+  endif()
+endfunction(set_compiler_flags_for_external_libraries)
+
+# Restore the compiler flags to the values they had before
+# set_compiler_flags_for_external_libraries() was called.
+function(restore_compiler_flags)
+  set(CMAKE_CXX_FLAGS "${SAVED_CMAKE_CXX_FLAGS}" PARENT_SCOPE)
+  set(CMAKE_CXX_FLAGS_DEBUG "${SAVED_CMAKE_CXX_FLAGS_DEBUG}" PARENT_SCOPE)
+  set(CMAKE_CXX_FLAGS_RELEASE "${SAVED_CMAKE_CXX_FLAGS_RELEASE}" PARENT_SCOPE)
+  set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${SAVED_CMAKE_EXE_LINKER_FLAGS_RELEASE}" PARENT_SCOPE)
+  set(CMAKE_C_FLAGS "${SAVED_CMAKE_C_FLAGS}" PARENT_SCOPE)
+  set(CMAKE_C_FLAGS_DEBUG "${SAVED_CMAKE_C_FLAGS_DEBUG}" PARENT_SCOPE)
+  set(CMAKE_C_FLAGS_RELEASE "${SAVED_CMAKE_C_FLAGS_RELEASE}" PARENT_SCOPE)
+endfunction()
+
 # Safe add_subdirectory.
 function(add_subdir target target_build project)
-  set(old_root_dir${project} ${root_dir} CACHE INTERNAL "root dir cache")
+  set_compiler_flags_for_external_libraries()
+  set(saved_root_dir${project} ${root_dir} CACHE INTERNAL "root dir cache")
   add_subdirectory(${target} ${target_build})
-  set(root_dir ${old_root_dir${project}} CACHE INTERNAL "root dir recover")
+  set(root_dir ${saved_root_dir${project}} CACHE INTERNAL "root dir recover")
+  restore_compiler_flags()
 endfunction(add_subdir)
 
 # Sets and caches `var` to the first path in 'paths' that exists.

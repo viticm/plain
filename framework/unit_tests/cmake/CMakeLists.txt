@@ -10,13 +10,19 @@
 # limitations under the License.
 cmake_minimum_required(VERSION 2.8.12)
 
-set_compiler_flags_for_external_libraries()
+if (MSVC)
+  # For utf8 no boom.
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -wd4819")
+endif()
 
 # For gtest new(future will change it to googletest dir).
 set(GOOGLETEST_VERSION 1.11.0)
 
-add_subdirectory(${dependencies_gtest_dir} googletest)
-restore_compiler_flags()
+add_subdir(${dependencies_gtest_dir} gtest googletest)
+
+if (MSVC)
+  set(gtest_force_shared_crt pf_build_shared)
+endif()
 
 set(gtest_incdir ${dependencies_gtest_dir}/include)
 if(EXISTS "${dependencies_gtest_dir}/../../third_party")
@@ -26,16 +32,11 @@ set(gtest_libdir ${dependencies_gtest_dir})
 
 # Include helper functions and macros used by Google Test.
 include(${gtest_libdir}/cmake/internal_utils.cmake)
-set(gtest_force_shared_crt ON)
 config_compiler_and_linker()
 
 # string(REPLACE "-W4" "-W3" cxx_default "${cxx_default}")
 string(REPLACE "-Wshadow" "" cxx_default "${cxx_default}")
 string(REPLACE "-Wextra" "" cxx_default "${cxx_default}")
-
-# This is the directory into which the executables are built.
-# set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-# set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${root_dir}/plain/bin)
 
 include_directories(${gtest_incdir}
                     ${gtest_hack_incdir}
@@ -54,16 +55,12 @@ else()
   set(COMMON_LIBS "pf_core;gtest;${CMAKE_THREAD_LIBS_INIT}")
 endif()
 
- # Plain Framework core flags.
+# Plain Framework core flags.
 set(cxx_base_flags "${cxx_base_flags} -DPF_CORE -DPF_OPEN_EPOLL")
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 endif()
 
-#For utf8 no boom.
-if (MSVC)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -wd4819")
-endif()
 
 # Generate a rule to build a unit test executable ${test_name} with
 # source file ${source}.  For details of additional arguments, see
