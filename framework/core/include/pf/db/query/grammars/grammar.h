@@ -190,8 +190,6 @@ class PF_API Grammar : public pf_db::Grammar {
    std::map< std::string, 
      std::function<std::string(Builder &, db_query_array_t &)> > where_calls_;
 
-   std::map<std::string, std::string> a_;
-
  protected:
 
    //Compile a single union statement.
