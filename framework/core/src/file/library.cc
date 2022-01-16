@@ -224,7 +224,7 @@ bool LibraryManager::load(const std::string &name,
   }
   std::vector<std::string> names = namesmap_[name];
   if (0 == names.size()) names.push_back(name);
-  auto library = new Library();
+  std::unique_ptr<Library> library(new Library());
   for (const std::string &_name : names) {
     bool loaded{false};
     library->set_filename(_name);
@@ -241,6 +241,7 @@ bool LibraryManager::load(const std::string &name,
       std::string debug_name = _name + "d";
       library->set_filename(debug_name);
       for (const std::string &path : searchpaths_) {
+
         library->set_path(path);
         if (library->load(true, seeglb)) {
           loaded = true;
@@ -260,7 +261,6 @@ bool LibraryManager::load(const std::string &name,
     }
   }
   if (!library->isloaded()) {
-    safe_delete(library);
     return false;
   }
 
@@ -279,8 +279,7 @@ __extension__
   }
 
   librarymap_[name] = nullptr;
-  std::unique_ptr<Library> &pointer = librarymap_[name];
-  unique_move(pf_file::Library, library, pointer);
+  librarymap_[name] = std::move(library);
   SLOW_DEBUGLOG("library", "[library] load(%s) ok!", name.c_str());
   return true;
 }
