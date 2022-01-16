@@ -755,7 +755,9 @@ std::string wstr2str(const std::wstring &str) {
   char *psText = new char[dwNum];
   WideCharToMultiByte(CP_OEMCP, NULL, wText, -1, psText, dwNum, NULL, FALSE);
   r = psText;
-  delete[] psText;
+  safe_delete_array(psText);
+#else
+  UNUSED(str);
 #endif
   return r;
 }
@@ -768,7 +770,9 @@ std::wstring str2wstr(const std::string &str) {
   memset(wszUtf8, 0, len * 2 + 2);
   MultiByteToWideChar(CP_ACP, 0, (LPCSTR)str.c_str(), -1, (LPWSTR)wszUtf8, len);
   r = wszUtf8;
-  delete[] wszUtf8;
+  safe_delete_array(wszUtf8);
+#else
+  UNUSED(str);
 #endif
   return r;
 }
