@@ -107,7 +107,7 @@ class PF_API Input : public Basic {
      memset(temp, 0, _size);
      read(temp, _size);
      var = temp;
-     safe_delete(temp);
+     safe_delete_array(temp);
      return *this;
    };
 
