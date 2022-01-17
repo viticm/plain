@@ -55,8 +55,12 @@ else()
   set(COMMON_LIBS "pf_core;gtest;${CMAKE_THREAD_LIBS_INIT}")
 endif()
 
-# Plain Framework core flags.
-set(cxx_base_flags "${cxx_base_flags} -DPF_BUILD_AS_DLL -DPF_OPEN_EPOLL")
+# Plain Framework flags.
+set(cxx_base_flags "${cxx_base_flags} -DPF_OPEN_EPOLL")
+if (MSVC AND pf_build_shared)
+  set(cxx_base_flags "${cxx_base_flags} -DPF_BUILD_AS_DLL")
+endif()
+
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 endif()
