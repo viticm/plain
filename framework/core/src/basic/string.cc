@@ -13,13 +13,13 @@ namespace pf_basic {
 namespace string {
 
 /***
-  * ¿ìËÙ×Ö·û´®×ª»»³ÉÕûÊıÄ£°åÍ¨ÓÃº¯Êı
-  * @str: ĞèÒª±»×ª»»µÄ×Ö·û´®
-  * @result: ´æ´¢×ª»»ºóµÄ½á¹û
-  * @max_length: ¸ÃÕûÊıÀàĞÍ¶ÔÓ¦µÄ×Ö·û´®µÄ×î¶à×Ö·û¸öÊı£¬²»°üÀ¨½áÎ²·û
-  * @converted_length: ĞèÒª×ª»»µÄ×Ö·û´®³¤¶È£¬Èç¹ûÎª0Ôò±íÊ¾×ª»»Õû¸ö×Ö·û´®
-  * @ignored_zero: ÊÇ·ñºöÂÔ¿ªÍ·µÄ0
-  * @return: Èç¹û×ª»»³É¹¦·µ»Øtrue, ·ñÔò·µ»Øfalse
+  * å¿«é€Ÿå­—ç¬¦ä¸²è½¬æ¢æˆæ•´æ•°æ¨¡æ¿é€šç”¨å‡½æ•°
+  * @str: éœ€è¦è¢«è½¬æ¢çš„å­—ç¬¦ä¸²
+  * @result: å­˜å‚¨è½¬æ¢åçš„ç»“æœ
+  * @max_length: è¯¥æ•´æ•°ç±»å‹å¯¹åº”çš„å­—ç¬¦ä¸²çš„æœ€å¤šå­—ç¬¦ä¸ªæ•°ï¼Œä¸åŒ…æ‹¬ç»“å°¾ç¬¦
+  * @converted_length: éœ€è¦è½¬æ¢çš„å­—ç¬¦ä¸²é•¿åº¦ï¼Œå¦‚æœä¸º0åˆ™è¡¨ç¤ºè½¬æ¢æ•´ä¸ªå­—ç¬¦ä¸²
+  * @ignored_zero: æ˜¯å¦å¿½ç•¥å¼€å¤´çš„0
+  * @return: å¦‚æœè½¬æ¢æˆåŠŸè¿”å›true, å¦åˆ™è¿”å›false
   */
 template <typename IntType>
 static bool fast_toint(const char *str,
@@ -31,19 +31,19 @@ static bool fast_toint(const char *str,
   const char *tmp_str = str;
   if (nullptr == str) return false;
 
-  // ´¦Àí¸ºÊı
+  // å¤„ç†è´Ÿæ•°
   if ('-' == tmp_str[0]) {
-    // ¸ºÊı
+    // è´Ÿæ•°
     negative = true;
     ++tmp_str;
   }
 
-  // ´¦Àí¿Õ×Ö·û´®
+  // å¤„ç†ç©ºå­—ç¬¦ä¸²
   if ('\0' == tmp_str[0]) return false;
 
-  // ´¦Àí0´òÍ·µÄ
+  // å¤„ç†0æ‰“å¤´çš„
   if ('0' == tmp_str[0]) {
-    // Èç¹ûÊÇ0¿ªÍ·£¬ÔòÖ»ÄÜÓĞÒ»Î»Êı×Ö
+    // å¦‚æœæ˜¯0å¼€å¤´ï¼Œåˆ™åªèƒ½æœ‰ä¸€ä½æ•°å­—
     if (('\0' == tmp_str[1]) || (1 == converted_length)) {
       result = 0;
       return true;
@@ -61,7 +61,7 @@ static bool fast_toint(const char *str,
     }
   }
 
-  // ¼ì²éµÚÒ»¸ö×Ö·û
+  // æ£€æŸ¥ç¬¬ä¸€ä¸ªå­—ç¬¦
   if ((*tmp_str < '0') || (*tmp_str > '9')) return false;
   result = (*tmp_str - '0');
 
@@ -172,7 +172,7 @@ void decrypt(const char *in, char *out, int32_t out_length) {
   int32_t length = static_cast<int32_t>(strlen(temp));
   int32_t right_length = length - 2 - 3 - 1;
   char *_temp = new char[right_length + 1];
-  int32_t middle = //ÓÃÕıÈ·µÄ³¤¶ÈËã³öÖĞ¼äÖµ
+  int32_t middle = //ç”¨æ­£ç¡®çš„é•¿åº¦ç®—å‡ºä¸­é—´å€¼
     0 == right_length % 2 ? right_length / 2 : (right_length + 1) / 2;
   int i, j;
   i = j = 0;
