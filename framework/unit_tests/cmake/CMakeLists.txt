@@ -20,7 +20,6 @@ set(GOOGLETEST_VERSION 1.11.0)
 
 # Plain framework crt.
 if (pf_build_shared AND MSVC)
-  set(gtest_force_shared_crt ON)
   option(BUILD_SHARED_LIBS "plainframework build shared" ON)
 endif()
 
