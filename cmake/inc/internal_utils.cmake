@@ -30,7 +30,7 @@ macro(fix_default_compiler_settings_)
              CMAKE_C_FLAGS_MINSIZEREL CMAKE_C_FLAGS_RELWITHDEBINFO
              CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE
              CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO)
-      if (NOT BUILD_SHARED_LIBS AND NOT gtest_force_shared_crt)
+      if (NOT BUILD_SHARED_LIBS AND NOT pf_force_shared_crt)
         # When Plain Framework is built as a shared library, it should also use
         # shared runtime libraries.  Otherwise, it may end up with multiple
         # copies of runtime library data in different modules, resulting in
@@ -60,7 +60,7 @@ macro(config_compiler_and_linker)
   # Note: pthreads on MinGW is not supported, even if available
   # instead, we use windows threading primitives
   unset(PF_HAS_PTHREAD)
-  if (NOT gtest_disable_pthreads AND NOT MINGW)
+  if (NOT pf_disable_pthreads AND NOT MINGW)
     # Defines CMAKE_USE_PTHREADS_INIT and CMAKE_THREAD_LIBS_INIT.
     find_package(Threads)
     if (CMAKE_USE_PTHREADS_INIT)
@@ -133,18 +133,18 @@ macro(config_compiler_and_linker)
   endif()
   set(cxx_base_flags "${cxx_base_flags} ${PF_HAS_PTHREAD_MACRO}")
 
-  # For building gtest's own tests and samples.
+  # For building pf's own tests and samples.
   set(cxx_exception "${cxx_base_flags} ${cxx_exception_flags}")
   set(cxx_no_exception
     "${CMAKE_CXX_FLAGS} ${cxx_base_flags} ${cxx_no_exception_flags}")
   set(cxx_default "${cxx_exception}")
   set(cxx_no_rtti "${cxx_default} ${cxx_no_rtti_flags}")
 
-  # For building the gtest libraries.
+  # For building the pf libraries.
   set(cxx_strict "${cxx_default} ${cxx_strict_flags}")
 endmacro()
 
-# Defines the gtest & gtest_main libraries.  User tests should link
+# Defines the pf & pf_main libraries.  User tests should link
 # with one of them.
 function(cxx_library_with_type name type cxx_flags)
   # type can be either STATIC or SHARED to denote a static or shared library.
