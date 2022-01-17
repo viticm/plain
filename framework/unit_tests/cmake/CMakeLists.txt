@@ -85,9 +85,16 @@ file(GLOB_RECURSE CORE_TEST_SOURCES "../core_test/*.cc")
 test_executables(core "${CORE_TEST_SOURCES}")
 
 # Copy gtest libraries.
-if (pf_build_shared AND BUILD_SHARED_LIBS)
-  add_custom_command(TARGET core_tests
-    POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/lib/*.* ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
-  )
+if (MSVC AND pf_build_shared AND BUILD_SHARED_LIBS)
+  if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+    add_custom_command(TARGET core_tests
+      POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_BINARY_DIR}/bin/gtestd.dll ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+    )
+  else()
+    add_custom_command(TARGET core_tests
+      POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_BINARY_DIR}/bin/gtest.dll ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+    )
+  endif()
 endif()
