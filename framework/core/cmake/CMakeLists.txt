@@ -8,6 +8,7 @@
 ########################################################################
 #
 # Project-wide settings
+cmake_minimum_required(VERSION 2.8.12)
 
 # Name of the project.
 #
@@ -21,7 +22,6 @@ else()
   cmake_policy(SET CMP0048 NEW)
   project(plain VERSION ${PF_VERSION} LANGUAGES CXX C)
 endif()
-cmake_minimum_required(VERSION 2.8.12)
 
 # When other libraries are using a shared version of runtime libraries,
 # Plain Framework also has to use one.
@@ -32,7 +32,7 @@ option(
 
 option(pf_build_tests "Build all of pf's own tests." OFF)
 
-option(pf_build_shared "Build all of pf as share library." OFF)
+option(pf_build_shared "Build all of pf as share library." ON)
 
 option(pf_build_samples "Build pf's sample programs." OFF)
 
@@ -47,6 +47,10 @@ set(CMAKE_DEBUG_POSTFIX "d" CACHE STRING "Generate debug library name with a pos
 
 # Windows crt.
 set(pf_force_shared_crt pf_build_shared)
+
+if (COMMAND config_compiler_and_linker)
+  config_compiler_and_linker()
+endif()
 
 # Defines pre_project_set_up_hermetic_build() and set_up_hermetic_build().
 include(inc/hermetic_build.cmake OPTIONAL)
@@ -68,11 +72,6 @@ if (pf_hide_internal_symbols)
   set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
 endif()
 
-# Define helper functions and macros used by Plain Framework.
-include(inc/internal_utils.cmake)
-set(pf_force_shared_crt ON)
-config_compiler_and_linker()  # Defined in internal_utils.cmake.
-
 set(PF_SOURCE_DIR "..")
 
 # Where Plain Framework's .h files can be found.
@@ -92,13 +91,11 @@ if (MSVC AND MSVC_VERSION EQUAL 1700)
   add_definitions(/D _VARIADIC_MAX=10)
 endif()
 
-
 ########################################################################
 #
 # Defines the pf_core libraries.  User tests should link
 # with one of them.
 
-set(pf_build_shared ON)
 set(INSTALL_PF ON)
 file(GLOB_RECURSE LIB_SOURCES "${PF_SOURCE_DIR}/src/*.cc")
 file(GLOB_RECURSE LIB_SOURCES_C "${PF_SOURCE_DIR}/src/*.c")
@@ -122,12 +119,14 @@ endif()
 # are used for other targets, to ensure that pf can be compiled by a user
 # aggressive about warnings.
 if (pf_build_shared)
-  cxx_shared_library(pf_core "${cxx_default}" "${WITH_LIBS}" ${LIB_SOURCES} ${LIB_SOURCES_C} ${pf_core_version_rc})
+  cxx_shared_library(pf_core "${cxx_default}" ${LIB_SOURCES} ${LIB_SOURCES_C} ${pf_core_version_rc})
+  target_link_libraries(pf_core PUBLIC ${WITH_LIBS})
 else()
   cxx_library(pf_core "${cxx_strict}" ${LIB_SOURCES} ${LIB_SOURCES_C})
 endif()
 
 set_target_properties(pf_core PROPERTIES DEFINE_SYMBOL PF_BUILD_AS_DLL)
+set_target_properties(pf_core PROPERTIES DEFINE_SYMBOL PF_CORE)
 set_target_properties(pf_core PROPERTIES SOVERSION 1)
 
 # If the CMake version supports it, attach header directory information

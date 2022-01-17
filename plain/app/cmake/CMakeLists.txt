@@ -10,24 +10,10 @@
 # limitations under the License.
 cmake_minimum_required(VERSION 2.8.12)
 
-set_compiler_flags_for_external_libraries()
-restore_compiler_flags()
-
-set(gtest_incdir ${dependencies_gtest_dir}/include)
-if(EXISTS "${dependencies_gtest_dir}/../../third_party")
-  set(gtest_hack_incdir "${dependencies_gtest_dir}/../..")
-endif()
-set(gtest_libdir ${dependencies_gtest_dir})
-
-if (MSVC)
-  option(PF_BUILD_AS_DLL "Build plain framwork as dll." ON)
+if (COMMAND config_compiler_and_linker)
+  config_compiler_and_linker()
 endif()
 
-# Include helper functions and macros used by Google Test.
-include(${gtest_libdir}/cmake/internal_utils.cmake)
-set(gtest_force_shared_crt ON)
-config_compiler_and_linker()
-# string(REPLACE "-W4" "-W3" cxx_default "${cxx_default}")
 string(REPLACE "-Wshadow" "" cxx_default "${cxx_default}")
 string(REPLACE "-Wextra" "" cxx_default "${cxx_default}")
 
@@ -44,7 +30,7 @@ endif()
 set(COMMON_LIBS "pf_core;${CMAKE_THREAD_LIBS_INIT}")
 
  # Plain Framework core flags.
-set(cxx_base_flags "${cxx_base_flags} -DPF_CORE -DPF_OPEN_EPOLL")
+set(cxx_base_flags "${cxx_base_flags} -DPF_OPEN_EPOLL")
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")

@@ -18,11 +18,13 @@ endif()
 # For gtest new(future will change it to googletest dir).
 set(GOOGLETEST_VERSION 1.11.0)
 
-add_subdir(${dependencies_gtest_dir} gtest googletest)
-
-if (MSVC)
-  set(gtest_force_shared_crt pf_build_shared)
+# Plain framework crt.
+if (pf_build_shared AND MSVC)
+  set(gtest_force_shared_crt ON)
+  option(BUILD_SHARED_LIBS "plainframework build shared" ON)
 endif()
+
+add_subdir(${dependencies_gtest_dir} gtest googletest)
 
 set(gtest_incdir ${dependencies_gtest_dir}/include)
 if(EXISTS "${dependencies_gtest_dir}/../../third_party")
@@ -30,8 +32,6 @@ if(EXISTS "${dependencies_gtest_dir}/../../third_party")
 endif()
 set(gtest_libdir ${dependencies_gtest_dir})
 
-# Include helper functions and macros used by Google Test.
-include(${gtest_libdir}/cmake/internal_utils.cmake)
 config_compiler_and_linker()
 
 # string(REPLACE "-W4" "-W3" cxx_default "${cxx_default}")
@@ -61,7 +61,6 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 endif()
 
-
 # Generate a rule to build a unit test executable ${test_name} with
 # source file ${source}.  For details of additional arguments, see
 # mathfu_configure_flags().
@@ -70,6 +69,7 @@ function(test_executable test_name source)
     ${source} ${PLAINFRAMEWORK_HEADERS})
   plainframework_configure_flags(${test_name} ${ARGN})
   plainframework_enable_warnings(${test_name})
+  target_link_libraries(${test_name} ${COMMON_LIBS})
 endfunction()
 
 # Generate a rule to build unit test executables.
@@ -83,3 +83,11 @@ endfunction()
 file(GLOB_RECURSE CORE_TEST_SOURCES "../core_test/*.cc")
 
 test_executables(core "${CORE_TEST_SOURCES}")
+
+# Copy gtest libraries.
+if (pf_build_shared AND BUILD_SHARED_LIBS)
+  add_custom_command(TARGET core_tests
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/lib/*.* ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+  )
+endif()

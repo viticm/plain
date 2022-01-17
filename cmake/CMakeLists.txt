@@ -25,12 +25,11 @@ endif()
 # Call fplutil to get locations of dependencies and set common build settings.
 include("inc/find_fplutil.cmake")
 include("inc/common.cmake")
-# This will be remove in future(dependencies).
-include("${fplutil_dir}/buildutil/cmake_common.txt")
-set_common_build_variables()
+include("inc/internal_utils.cmake")
 
-# This define in fplutil(error append to c flags).
-string(REPLACE "-std=c++0x" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+if (NOT dependencies_gtest_dir)
+  set(dependencies_gtest_dir ${root_dir}/dependencies/googletest/googletest)
+endif()
 
 if (NOT has_output_path)
 
@@ -56,7 +55,6 @@ option(plainframework_build_tests "Build PlainFramework unit tests." ON)
 
 # Build plain framework plugins.
 option(plainframework_build_plugins "Build PlainFramework plugins" ON)
-
 
 file(GLOB_RECURSE PLAINFRAMEWORK_HEADERS ${CMAKE_CURRENT_LIST_DIR}/framework/core/include *.h)
 
