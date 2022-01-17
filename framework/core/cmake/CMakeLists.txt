@@ -119,14 +119,13 @@ endif()
 # are used for other targets, to ensure that pf can be compiled by a user
 # aggressive about warnings.
 if (pf_build_shared)
-  cxx_shared_library(pf_core "${cxx_default}" ${LIB_SOURCES} ${LIB_SOURCES_C} ${pf_core_version_rc})
+  cxx_shared_library(pf_core "${cxx_default} -DPF_CORE" ${LIB_SOURCES} ${LIB_SOURCES_C} ${pf_core_version_rc})
   target_link_libraries(pf_core PUBLIC ${WITH_LIBS})
 else()
   cxx_library(pf_core "${cxx_strict}" ${LIB_SOURCES} ${LIB_SOURCES_C})
 endif()
 
 set_target_properties(pf_core PROPERTIES DEFINE_SYMBOL PF_BUILD_AS_DLL)
-set_target_properties(pf_core PROPERTIES DEFINE_SYMBOL PF_CORE)
 set_target_properties(pf_core PROPERTIES SOVERSION 1)
 
 # If the CMake version supports it, attach header directory information
