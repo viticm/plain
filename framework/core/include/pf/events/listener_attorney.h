@@ -18,7 +18,7 @@
 namespace pf_events {
 
 template <typename EventBus_t>
-class PF_API ListenerAttorney {
+class ListenerAttorney {
 
  public:
    template <typename>

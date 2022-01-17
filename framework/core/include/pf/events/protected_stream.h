@@ -21,7 +21,7 @@ namespace pf_events {
 
 template 
 < typename Event, typename CallbackReturn = void, typename... ExtraArgTypes >
-class PF_API ProtectedStream : public pf_interfaces::events::Stream {
+class ProtectedStream : public pf_interfaces::events::Stream {
 
  public:
    using callback_t = 
