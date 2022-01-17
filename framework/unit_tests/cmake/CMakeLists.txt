@@ -80,8 +80,8 @@ endfunction()
 function(test_executables test_name source)
   # Default build options for the target architecture.
   test_executable(${test_name}_tests "${source}")
-    set_target_properties(${test_name}_tests PROPERTIES DEBUG_POSTFIX "d")
-  MESSAGE(${source})
+  set_target_properties(${test_name}_tests PROPERTIES DEBUG_POSTFIX "d")
+  # MESSAGE(${source})
 endfunction()
 
 file(GLOB_RECURSE CORE_TEST_SOURCES "../core_test/*.cc")
