@@ -14,6 +14,20 @@
 
 #include "pf/basic/macros/platform.h"
 
+// Compatible for anthor defined for dll.
+#if OS_WIN && (defined(PF_LINKED_AS_SHARED_LIBRARY) || \
+  defined(PF_CREATE_SHARED_LIBRARY)) /* { */
+
+// Defined macro.
+#ifndef PF_BUILD_AS_DLL
+#define PF_BUILD_AS_DLL 1
+#endif
+#if defined(PF_CREATE_SHARED_LIBRARY) && !defined(PF_CORE)
+#define PF_CORE 1
+#endif
+
+#endif /* } */
+
 /*
 @@ PF_API is a mark for all core API functions.
 @@ PFLIB_API is a mark for all auxiliary library functions.

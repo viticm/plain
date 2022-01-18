@@ -73,6 +73,11 @@ function(test_executable test_name source)
   plainframework_configure_flags(${test_name} ${ARGN})
   plainframework_enable_warnings(${test_name})
   target_link_libraries(${test_name} ${COMMON_LIBS})
+  if (BUILD_SHARED_LIBS)
+    set_target_properties(${test_name}
+      PROPERTIES
+      COMPILE_DEFINITIONS "GTEST_LINKED_AS_SHARED_LIBRARY=1")
+  endif()
 endfunction()
 
 # Generate a rule to build unit test executables.
