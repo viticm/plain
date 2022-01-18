@@ -11,6 +11,8 @@
 #ifndef PF_BASIC_RLUTIL_H_
 #define PF_BASIC_RLUTIL_H_
 
+#include "pf/basic/config.h"
+
 /**
  * File: rlutil.h
  *
@@ -600,7 +602,6 @@ RLUTIL_INLINE void locate(int x, int y) {
 #ifdef __cplusplus
 RLUTIL_INLINE void setString(const RLUTIL_STRING_T & str_) {
 	const char * const str = str_.data();
-	unsigned int len = (unsigned int)str_.size();
 #else // __cplusplus
 RLUTIL_INLINE void setString(RLUTIL_STRING_T str) {
 	unsigned int len = strlen(str);
@@ -611,7 +612,16 @@ RLUTIL_INLINE void setString(RLUTIL_STRING_T str) {
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 
 	GetConsoleScreenBufferInfo(hConsoleOutput, &csbi);
-	WriteConsoleOutputCharacter(hConsoleOutput, (LPCWSTR)str, len, csbi.dwCursorPosition, &numberOfCharsWritten);
+#ifdef _UNICODE
+	int len1 = MultiByteToWideChar(CP_ACP, 0, (LPCSTR)str, -1, NULL, 0);
+	std::vector<wchar_t> wszUtf8(len1 + 1, 0);
+	MultiByteToWideChar(CP_ACP, 0, (LPCSTR)str, -1, (LPWSTR)&wszUtf8[0], len1);
+	WriteConsoleOutputCharacter(hConsoleOutput, &wszUtf8[0], len1, csbi.dwCursorPosition, &numberOfCharsWritten);
+#else
+	unsigned int len = (unsigned int)str_.size();
+	WriteConsoleOutputCharacter(hConsoleOutput, (LPCSTR)str, len, csbi.dwCursorPosition, &numberOfCharsWritten);
+#endif // _UNICODE
+
 #else // _WIN32 || USE_ANSI
 	RLUTIL_PRINT(str);
 	#ifdef __cplusplus
