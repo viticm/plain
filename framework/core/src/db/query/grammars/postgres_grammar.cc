@@ -215,7 +215,8 @@ std::string PostgresGrammar::wrap_json_selector(const std::string &value) {
   path.erase(path.begin());
   wrap_json_path_attributes(path);
   auto attribute = path[path.size() - 1];
-  path.erase(path.end());
+  path.pop_back();
+  // path.erase(path.end()); // This is a very wrong code.
   if (!path.empty())
     return field + "->" + implode("->", path) + "->>" + attribute;
   return field + "->>" + attribute;
