@@ -31,8 +31,8 @@ TimeManager::~TimeManager() {
 bool TimeManager::init() {
   s_time_ = std::chrono::steady_clock::now();
 #if OS_WIN
-  start_time_ = GetTickCount();
-  current_time_ = GetTickCount();
+  start_time_ = get_tickcount();
+  current_time_ = get_tickcount();
 #elif OS_UNIX
   start_time_ = 0;
   current_time_ = 0;
