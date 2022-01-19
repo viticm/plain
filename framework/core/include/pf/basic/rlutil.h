@@ -604,7 +604,6 @@ RLUTIL_INLINE void setString(const RLUTIL_STRING_T & str_) {
 	const char * const str = str_.data();
 #else // __cplusplus
 RLUTIL_INLINE void setString(RLUTIL_STRING_T str) {
-	unsigned int len = strlen(str);
 #endif // __cplusplus
 #if defined(_WIN32) && !defined(RLUTIL_USE_ANSI)
 	HANDLE hConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -624,6 +623,7 @@ RLUTIL_INLINE void setString(RLUTIL_STRING_T str) {
 
 #else // _WIN32 || USE_ANSI
 	RLUTIL_PRINT(str);
+	unsigned int len = strlen(str);
 	#ifdef __cplusplus
 		RLUTIL_PRINT("\033[" << len << 'D');
 	#else // __cplusplus
