@@ -54,7 +54,10 @@ function(test_executable test_name source)
   plainframework_configure_flags(${test_name} ${ARGN})
   plainframework_enable_warnings(${test_name})
   set_target_properties(${test_name} PROPERTIES DEBUG_POSTFIX "d")
-  set_target_properties(${test_name} PROPERTIES LINK_FLAGS "-Wl,-rpath,./")
+  # Find shared libraries in current directory.
+  if (NOT MSVC)
+    set_target_properties(${test_name} PROPERTIES LINK_FLAGS "-Wl,-rpath,./")
+  endif()
 endfunction()
 
 # Generate a rule to build unit test executables.
