@@ -46,7 +46,7 @@ option(
 set(CMAKE_DEBUG_POSTFIX "d" CACHE STRING "Generate debug library name with a postfix.")
 
 # Windows crt.
-set(pf_force_shared_crt pf_build_shared)
+set(pf_force_shared_crt ${pf_build_shared})
 
 if (COMMAND config_compiler_and_linker)
   config_compiler_and_linker()
