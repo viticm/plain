@@ -62,11 +62,6 @@ set(VERSION_RC ${root_dir}/cmake/inc/version.rc.in)
 
 add_subdir(${plainframework_dir}/cmake plainframework plainframework)
 
-# Plugins.
-if (plainframework_build_plugins)
-  add_subdir(${root_dir}/plain/plugins/cmake plugins plainframework)
-endif()
-
 if(plainframework_build_tests)
   add_subdir(${root_dir}/framework/unit_tests/cmake
              ${root_dir}/framework/unit_tests/cmake/build
@@ -76,4 +71,11 @@ if(plainframework_build_tests)
                ${root_dir}/plain/app/cmake/build
                plainframework)
   endif()
+endif()
+
+# Plugins.
+# If put build plugin before tests then will have a read access permission
+# conflicts on windows.
+if (plainframework_build_plugins)
+  add_subdir(${root_dir}/plain/plugins/cmake plugins plainframework)
 endif()
