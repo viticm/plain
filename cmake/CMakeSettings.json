@@ -9,14 +9,7 @@
       "installRoot": "${projectDir}\\out\\install\\${name}",
       "cmakeCommandArgs": "",
       "buildCommandArgs": "",
-      "ctestCommandArgs": "",
-      "variables": [
-        {
-          "name": "PF_BUILD_AS_DLL",
-          "value": "False",
-          "type": "BOOL"
-        }
-      ]
+      "ctestCommandArgs": ""
     },
     {
       "name": "x64-Release",
