@@ -4,7 +4,7 @@
 
 - **Author:** Viticm
 - **Website:** [http://www.cnblogs.com/lianyue/](http://www.cnblogs.com/lianyue/)
-- **Version:** 1.1d
+- **Version:** 1.1.0rc
 
 [![Build Status](https://travis-ci.org/viticm/plain.svg)](https://travis-ci.org/viticm/plain)
 

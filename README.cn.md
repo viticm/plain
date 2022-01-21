@@ -4,7 +4,7 @@
 
 - **作者:** Viticm
 - **网站:** [http://www.cnblogs.com/lianyue/](http://www.cnblogs.com/lianyue/)
-- **版本:** 1.1d
+- **版本:** 1.1.0rc
 
 [![Build Status](https://travis-ci.org/viticm/plain.svg)](https://travis-ci.org/viticm/plain)
 
