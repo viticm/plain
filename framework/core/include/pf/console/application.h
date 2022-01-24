@@ -82,9 +82,8 @@ class Application {
    // Not safe in multi threads(when use single command).
    InputDefinition *get_definition();
 
-   void set_definition(InputDefinition *definition) {
-     std::unique_ptr<InputDefinition> temp(definition);
-     definition_ = std::move(temp);
+   void set_definition(std::unique_ptr<InputDefinition> &definition) {
+     definition_ = std::move(definition);
    }
 
    // Runs the current application.

@@ -7,18 +7,18 @@ using namespace pf_interfaces::console;
 using namespace pf_console::commands;
 
 void List::configure() {
-  std::vector<InputParameter *> p;
+  std::vector< std::shared_ptr<InputParameter> > p;
   std::unique_ptr<InputParameter> p1(new InputArgument(
         "namespace", InputParameter::kModeOptional, 
         "The namespace name", "list"
         ));
-  p.emplace_back(p1.get());
+  p.emplace_back(std::move(p1));
   std::unique_ptr<InputParameter> p2(new InputOption(
         "raw", "", InputParameter::kModeNone, "To output raw command help", ""
         ));
-  p.emplace_back(p2.get());
+  p.emplace_back(std::move(p2));
   
-  auto definition = new InputDefinition(p);
+  std::unique_ptr<InputDefinition> definition(new InputDefinition(p));
   set_name("list")
     .set_definition(definition)
     .set_description("Lists commands")

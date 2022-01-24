@@ -23,9 +23,10 @@ class InputDefinition {
  public:
 
    using InputParameter = pf_interfaces::console::InputParameter;
+   using defines_t = std::vector< std::shared_ptr<InputParameter> >;
 
  public:
-   InputDefinition(const std::vector<InputParameter *> &defines = {}) {
+   InputDefinition(const defines_t &defines = {}) {
      required_count_ = 0;
      has_optional_ = false;
      has_an_array_argument_ = false;
@@ -38,7 +39,7 @@ class InputDefinition {
  public:
 
    // Sets the definition of the input.
-   void set_definition(const std::vector<InputParameter *> &defines);
+   void set_definition(const defines_t &defines);
 
    // Sets the InputArgument objects.
    void set_arguments(const std::vector<InputArgument> &arguments);

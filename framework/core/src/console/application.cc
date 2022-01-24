@@ -227,49 +227,49 @@ std::string Application::get_command_name(Input *input) const {
 }
 
 InputDefinition Application::get_default_input_definition() const {
-  std::vector<InputParameter *> p;
+  std::vector< std::shared_ptr<InputParameter> > p;
   std::unique_ptr<InputParameter> p1(new InputArgument(
         "command", InputParameter::kModeRequired,
         "The command to execute", ""
         ));
-  p.emplace_back(p1.get());
+  p.emplace_back(std::move(p1));
   std::unique_ptr<InputParameter> p2(new InputOption(
         "--help", "-h", InputParameter::kModeNone,
         "Display help for the given command. When no command"
         " is given display help for the" + default_command_name_ + "command", ""
         ));
-  p.emplace_back(p2.get());
+  p.emplace_back(std::move(p2));
   std::unique_ptr<InputParameter> p3(new InputOption(
         "--quiet", "-q", InputParameter::kModeNone,
         "Do not output any message", ""
         ));
-  p.emplace_back(p3.get());
+  p.emplace_back(std::move(p3));
   std::unique_ptr<InputParameter> p4(new InputOption(
         "--verbose", "-v|vv|vvv", InputParameter::kModeNone,
         "Increase the verbosity of messages: 1 for normal output, "
         "2 for more verbose output and 3 for debug", ""
         ));
-  p.emplace_back(p4.get());
+  p.emplace_back(std::move(p4));
   std::unique_ptr<InputParameter> p5(new InputOption(
         "--version", "-V", InputParameter::kModeNone,
         "Display this application version", ""
         ));
-  p.emplace_back(p5.get());
+  p.emplace_back(std::move(p5));
   std::unique_ptr<InputParameter> p6(new InputOption(
         "--ansi", "", InputParameter::kModeNone,
         "Force ANSI output", ""
         ));
-  p.emplace_back(p6.get());
+  p.emplace_back(std::move(p6));
   std::unique_ptr<InputParameter> p7(new InputOption(
         "--no-ansi", "", InputParameter::kModeNone,
         "Disable ANSI output", ""
         ));
-  p.emplace_back(p7.get());
+  p.emplace_back(std::move(p7));
   std::unique_ptr<InputParameter> p8(new InputOption(
         "--no-interaction", "-n", InputParameter::kModeNone,
         "Do not ask any interactive question", ""
         ));
-  p.emplace_back(p8.get());
+  p.emplace_back(std::move(p8));
 
   return InputDefinition(p);
 }

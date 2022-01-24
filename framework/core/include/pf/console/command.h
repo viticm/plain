@@ -91,9 +91,8 @@ class Command {
    }
 
    // Sets an array of argument and option instances.
-   Command &set_definition(InputDefinition *definition) {
-     std::unique_ptr<InputDefinition> pointer(definition);
-     definition_ = std::move(pointer);
+   Command &set_definition(std::unique_ptr<InputDefinition> &definition) {
+     definition_ = std::move(definition);
      return *this;
    }
 

@@ -5,16 +5,16 @@
 using namespace pf_console;
 
 // Sets the definition of the input. 
-void InputDefinition::set_definition(
-    const std::vector<InputParameter *> &defines) {
+void InputDefinition::set_definition(const defines_t &defines) {
   std::vector<InputOption> options;
   std::vector<InputArgument> arguments;
-  for (InputParameter *define : defines) {
-    if (instanceof(define, InputOption)) {
-      InputOption option = *dynamic_cast<InputOption *>(define);
+  for (auto define : defines) {
+    auto p = define.get();
+    if (instanceof(p, InputOption)) {
+      InputOption option = *dynamic_cast<InputOption *>(p);
       options.emplace_back(option);
     } else {
-      InputArgument argument = *dynamic_cast<InputArgument *>(define);
+      InputArgument argument = *dynamic_cast<InputArgument *>(p);
       arguments.emplace_back(argument);
     }
   }

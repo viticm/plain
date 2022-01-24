@@ -131,35 +131,35 @@ static void status_info(pf_console::Output *output) {
 }
 
 void App::configure() {
-  std::vector<InputParameter *> p;
+  std::vector< std::shared_ptr<InputParameter> > p;
   std::unique_ptr<InputParameter> p1(new InputArgument(
         "namespace", InputParameter::kModeOptional, 
         "The namespace name", "app"
         ));
-  p.emplace_back(p1.get());
+  p.emplace_back(std::move(p1));
   std::unique_ptr<InputParameter> p2(new InputOption(
         "raw", "", InputParameter::kModeNone, "To output raw command help", ""
         ));
-  p.emplace_back(p2.get());
+  p.emplace_back(std::move(p2));
 
   std::unique_ptr<InputParameter> p3(new InputOption(
         "stop", "k", InputParameter::kModeNone, "Stop the application", "-1"
         ));
-  p.emplace_back(p3.get());
+  p.emplace_back(std::move(p3));
 
   std::unique_ptr<InputParameter> p4(new InputOption(
         "status", "s", InputParameter::kModeNone, 
         "Get the application status info", "-1"
         ));
-  p.emplace_back(p4.get());
+  p.emplace_back(std::move(p4));
 
   std::unique_ptr<InputParameter> p5(new InputOption(
         "reload", "", InputParameter::kModeNone, 
         "Reload the default script files", "-1"
         ));
-  p.emplace_back(p5.get());
+  p.emplace_back(std::move(p5));
   
-  auto definition = new InputDefinition(p);
+  std::unique_ptr<InputDefinition> definition(new InputDefinition(p));
   set_name("app")
     .set_definition(definition)
     .set_description("Apps commands")
