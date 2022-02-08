@@ -82,7 +82,7 @@ InputArgument InputDefinition::get_argument(const std::string &name) {
   InputArgument r;
   if (!has_argument(name)) {
     std::string msg{""};
-    msg = "The " +name+ " argument does not exist.";
+    msg = "The " + name + " argument does not exist.";
     AssertEx(false, msg.c_str());
     return r;
   }

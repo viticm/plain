@@ -26,9 +26,10 @@ ArgvInput::ArgvInput(
 
 void ArgvInput::parse() {
   bool parse_options{true};
-  for (auto i = tokens_.size() - 1; i > 0; --i) {
+  for (int16_t i = static_cast<int16_t>(tokens_.size() - 1); i >= 0; --i) {
     parsed_.emplace_back(tokens_[i]);
   }
+
   while (!parsed_.empty()) {
     auto token = parsed_.back(); parsed_.pop_back();
     // std::cout << "token: " << token << std::endl;
