@@ -142,6 +142,7 @@ bool test_fastmempool(int cnt, std::size_t each_size) {
   FastPool<16000000, 16, 16, false, false> fast_mem_pool;
   for (int i = 0; i < cnt; ++i) {
     void *ptr = fast_mem_pool.malloc(each_size);
+    UNUSED(ptr);
 //    if (ptr)
 //    {
 //      all allocations in FastPool, no need vec_allocs for free

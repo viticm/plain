@@ -58,9 +58,9 @@ public:
    */
   void *malloc(std::size_t allocation_size) {
     // Allocation will include a header with service information:
-    const int32_t real_size = allocation_size + sizeof(AllocHeader);
+    const int32_t real_size = static_cast<int32_t>(allocation_size + sizeof(AllocHeader));
     // Starting leaf for finding the allocation place:
-    const int32_t start_leaf = cur_leaf_.load(std::memory_order_relaxed);
+    const int32_t start_leaf = static_cast<int32_t>(cur_leaf_.load(std::memory_order_relaxed));
     // Selected leaf identifier:
     int32_t leaf_id = start_leaf;
     // Resulting allocation:
@@ -133,7 +133,7 @@ public:
         head->leaf_id = leaf_id;
         head->tag_this = ((uint64_t)this) + leaf_id;
       }
-      head->size = allocation_size;
+      head->size = (int32_t)allocation_size;
       return (re + sizeof(AllocHeader));
     }
 
@@ -273,7 +273,7 @@ public:
         std::end(buf_array),
         [](const void *lh, const void *rh) {
           return (uint64_t)(lh) < (uint64_t)(rh);});
-    uint64_t last = 0;
+    // uint64_t last = 0;
     for (int32_t i = 0; i < kLeafCount; ++i) {
       if (buf_array[i]) {
         leaf_array_[i].buf = static_cast<char *>(buf_array[i]);
@@ -437,13 +437,13 @@ public:
 
 #endif
 private:
-  typedef struct {
+  struct leaf_t {
     char *buf;
     // available == offset
     std::atomic<int32_t> available{ kLeafSizeBytes };
     // control of deallocations:
     std::atomic<int32_t> deallocated{ 0 };
-  } leaf_t;
+  };
 
   /*
    * AllocHeader
