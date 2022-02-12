@@ -48,7 +48,7 @@ void *StaticAllocator::realloc(void *data, size_t newsize) {
   auto data_offset = _data - buffer;
   if (static_cast<size_t>(data_offset) != offset_) {
    SLOW_ERRORLOG("error",
-                  "[sys.memory] (DynamicAllocator::realloc)"
+                  "[sys.memory] (StaticAllocator::realloc)"
                   " the realloc pointer not on top");
     Assert(false);
     return nullptr;

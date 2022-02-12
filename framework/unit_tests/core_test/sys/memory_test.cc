@@ -1,8 +1,10 @@
 #include "gtest/gtest.h"
 #include "pf/sys/memory/pool.h"
 #include "pf/sys/memory/stack_allocator.h"
+#include "pf/sys/memory/fast_pool.h"
 
 using namespace pf_sys::memory;
+using TestFun = std::function<bool(int cnt, std::size_t each_size)>;
 
 /* Adjust these values depending on how much you trust your computer */
 #define ELEMS 1000000
@@ -112,4 +114,113 @@ class Memory : public testing::Test {
 
 TEST_F(Memory, testStackCompare) {
   stack_compare();
+}
+
+bool test_OS_malloc(int cnt, std::size_t each_size) {
+  bool re = true;
+  std::vector<void *> vec_allocs;
+  vec_allocs.reserve(cnt);
+  for (int i = 0; i < cnt; ++i) {
+    void *ptr = malloc(each_size);
+    if (ptr) {
+      vec_allocs.emplace_back(ptr);
+    }
+  }
+  for (auto &&it : vec_allocs) {
+    free(it);
+  }
+  return re;
+} 
+
+bool test_fastmempool(int cnt, std::size_t each_size) {
+  using namespace pf_sys::memory;
+  bool re = true;
+  //std::vector<void *> vec_allocs;
+  //vec_allocs.reserve(cnt);
+
+  // FastPool Constructor will takes time here:
+  FastPool<16000000, 16, 16, false, false> fast_mem_pool;
+  for (int i = 0; i < cnt; ++i) {
+    void *ptr = fast_mem_pool.malloc(each_size);
+//    if (ptr)
+//    {
+//      all allocations in FastPool, no need vec_allocs for free
+//      vec_allocs.emplace_back(ptr);
+//    }
+  }
+
+//  for (auto &&it : vec_allocs) {
+//      all allocations in FastPool, no need vec_allocs for free
+//    free(it);
+//  }
+
+  // FastPool Destructor will takes time here..
+  return re;
+}
+
+TEST_F(Memory, testFastPool) {
+  int threads_cnt = 2;
+  /*
+  if (argc > 1) {
+    threads_cnt  = static_cast<int>(
+    stoll(argv[1], static_cast<int>(strlen(argv[1]))));
+    if (!threads_cnt)  threads_cnt  =  2;
+  }
+  */
+  // std::cout << "\nMemory overhead for each allocation bytes=" << 
+  // sizeof (FastPool<>::AllocHeader) << std::endl;
+  struct AllocHeader {
+    /*
+     label of own allocations:
+     tag_this = (uint64_t)this + leaf_id */
+    uint64_t tag_this{ 2020071700 };
+    // allocation size (without sizeof(AllocHeader)):
+    int32_t size;
+    // allocation place id (Leaf ID or OS_malloc_id):
+    int32_t leaf_id{ -2020071708 };
+  };
+  std::cout << "\nMemory overhead for each allocation bytes=" 
+    << sizeof(AllocHeader) << std::endl;
+  // For the convenience of a random choice, 
+  // we will emplace these methods into a vector:
+
+  std::map<std::string, TestFun> map_fun;
+
+  std::cout << "\nMulti threaded (threads =" 
+    <<  threads_cnt  << "), msec for each count:";
+  map_fun.emplace("|  test_fastmempool           ", test_fastmempool);
+  map_fun.emplace("|  test_OS_malloc             ", test_OS_malloc);
+  std::cout 
+    << 
+    "\n-----------------------------------------------------------------------"
+    "----------"            
+    << 
+    "\n|  test name, msec for allocs:|\t1000|\t10000|\t100000|\t1000000|"
+    << 
+    "\n-----------------------------------------------------------------------"
+    "----------";
+
+  for (auto &&it : map_fun) {
+    std::cout << std::endl << it.first << "|\t";
+    for (int32_t cnt = 1000; cnt < 1000001; cnt *= 10) {
+      std::vector<std::thread> vec_threads;
+      int64_t start = std::chrono::duration_cast<std::chrono::milliseconds>
+        (std::chrono::system_clock::now().time_since_epoch()).count();
+      for (int32_t n = 0; n < threads_cnt; ++n) {
+        //vec_threads.emplace_back(run_TestFun(it.second,  cnt,  256));
+        vec_threads.emplace_back(it.second,  cnt,  256);
+      }
+      // Wait:
+      for (auto &it2 : vec_threads) {
+        it2.join();
+      }
+      int64_t end = std::chrono::duration_cast<std::chrono::milliseconds>
+        (std::chrono::system_clock::now().time_since_epoch()).count();
+      std::cout << (end - start) << "|\t";
+    }
+  }
+  std::cout
+    << 
+    "\n-----------------------------------------------------------------------"
+    "----------\n";
 }
