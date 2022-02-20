@@ -72,8 +72,9 @@ class PF_API Basic {
    virtual bool forward(packet::Interface *packet);
 
  public:
-   virtual std::function<uint32_t(connection::Basic *, packet::Interface *)> 
-   get_packet_execute_function() {
+   using packet_execute_function = 
+     std::function<uint32_t(connection::Basic *, packet::Interface *)>;
+   virtual packet_execute_function get_packet_execute_function() {
      return nullptr;
    }
 
