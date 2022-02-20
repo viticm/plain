@@ -58,9 +58,11 @@ public:
    */
   void *malloc(std::size_t allocation_size) {
     // Allocation will include a header with service information:
-    const int32_t real_size = static_cast<int32_t>(allocation_size + sizeof(AllocHeader));
+    const int32_t real_size = static_cast<int32_t>(
+        allocation_size + sizeof(AllocHeader));
     // Starting leaf for finding the allocation place:
-    const int32_t start_leaf = static_cast<int32_t>(cur_leaf_.load(std::memory_order_relaxed));
+    const int32_t start_leaf = static_cast<int32_t>(
+        cur_leaf_.load(std::memory_order_relaxed));
     // Selected leaf identifier:
     int32_t leaf_id = start_leaf;
     // Resulting allocation:
@@ -76,7 +78,8 @@ public:
       const int32_t available =
         leaf_array_[leaf_id].available.load(std::memory_order_acquire);
       if (available >= real_size) {
-        // we reserve memory (the buffer is distributed from the end with a bite):
+        // we reserve memory 
+        // (the buffer is distributed from the end with a bite):
         const int32_t available_after =
           leaf_array_[leaf_id].available.fetch_sub(
               real_size, std::memory_order_acq_rel) - real_size;
@@ -86,7 +89,7 @@ public:
           // the resulting distribution address is easy to obtain, because it
           // starts immediately after "available", since addressing from &[0]
           // then this is "buf + available":
-          re  =  leaf_array_[leaf_id].buf + available_after;
+          re = leaf_array_[leaf_id].buf + available_after;
           if (available_after < kAverageAllocation) {
             // Let's tell the rest of the threads to use a different
             // memory page:
@@ -111,7 +114,7 @@ public:
 #if defined(PF_FP_AUTO_DEALLOCATE)
    #if not defined(Debug)
         if (re) {
-          std::lock_guard<std::mutex>  lg(mut_set_alloc_info_);
+          std::lock_guard<std::mutex> lg(mut_set_alloc_info_);
           set_alloc_info_.emplace(re);
         }
   #endif
@@ -159,7 +162,7 @@ public:
             real_size, std::memory_order_acq_rel) + real_size;
       int32_t available =
         leaf_array_[head->leaf_id].available.load(std::memory_order_acquire);
-      if (deallocated  == (kLeafSizeBytes - available)) {
+      if (deallocated == (kLeafSizeBytes - available)) {
         // everything that was allocated is now returned, we will try, carefully, reset the Leaf
         if (leaf_array_[head->leaf_id].available.compare_exchange_strong(
               available, kLeafSizeBytes)) {
@@ -264,7 +267,7 @@ public:
    * @brief FastPool - construct
    */
   FastPool() noexcept {
-    void  *buf_array[kLeafCount];
+    void *buf_array[kLeafCount];
     for (int32_t i = 0; i < kLeafCount; ++i) {
       buf_array[i] = malloc(kLeafSizeBytes);
     }
@@ -279,10 +282,10 @@ public:
         leaf_array_[i].buf = static_cast<char *>(buf_array[i]);
         leaf_array_[i].available.store(
             kLeafSizeBytes, std::memory_order_relaxed);
-        leaf_array_[i].deallocated.store(0,  std::memory_order_relaxed);
-      }  else  {
+        leaf_array_[i].deallocated.store(0, std::memory_order_relaxed);
+      } else {
         leaf_array_[i].buf = nullptr;
-        leaf_array_[i].available.store(0,  std::memory_order_relaxed);
+        leaf_array_[i].available.store(0, std::memory_order_relaxed);
         leaf_array_[i].deallocated.store(
             kLeafSizeBytes, std::memory_order_relaxed);
       }

@@ -72,6 +72,12 @@ class PF_API Basic {
    virtual bool forward(packet::Interface *packet);
 
  public:
+   virtual std::function<uint32_t(connection::Basic *, packet::Interface *)> 
+   get_packet_execute_function() {
+     return nullptr;
+   }
+
+ public:
    int16_t get_id() const { return id_; }
    void set_id(int16_t id) { id_ = id; }
    int16_t get_managerid() const { return managerid_; }
