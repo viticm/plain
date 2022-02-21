@@ -72,6 +72,8 @@ class PF_API Basic {
    virtual bool forward(packet::Interface *packet);
 
  public:
+   //! 建议不使用此方式，该接口很可能在将来被删除
+   //支持自定义连接包执行的接口(不过这种方式外部需重写connection,后考虑优化)
    using packet_execute_function = 
      std::function<uint32_t(connection::Basic *, packet::Interface *)>;
    virtual packet_execute_function get_packet_execute_function() {
