@@ -19,6 +19,27 @@
 
 namespace pf_engine {
 
+// For application can use framework without kernel.init
+inline bool init_basic_env() {
+  using namespace pf_basic;
+
+  //Time manager.
+  if (is_null(TIME_MANAGER_POINTER)) {
+    auto time_manager = new TimeManager();
+    if (is_null(time_manager)) return false;
+    unique_move(TimeManager, time_manager, g_time_manager);
+    if (!g_time_manager->init()) return false;
+  }
+
+  //Logger.
+  if (is_null(LOGSYSTEM_POINTER)) {
+    auto logger = new Logger();
+    if (is_null(logger)) return false;
+    unique_move(Logger, logger, g_logger);
+  }
+  return true;
+}
+
 inline void worksleep(uint64_t starttime, const std::string &name) {
   auto worktime = 
     static_cast< int32_t >(TIME_MANAGER_POINTER->get_tickcount() - starttime);
