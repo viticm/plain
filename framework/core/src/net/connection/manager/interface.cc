@@ -80,6 +80,7 @@ bool Interface::heartbeat(uint64_t) {
 }
 
 bool Interface::add(connection::Basic *connection) {
+  std::unique_lock<std::mutex> autolock(mutex_);
   Assert(connection);
   if (size_ >= max_size_) return false;
   //首先处理socket

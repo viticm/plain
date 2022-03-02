@@ -43,7 +43,7 @@ class PF_API Interface {
    bool init(uint16_t maxcount = NET_CONNECTION_MAX);
    bool pool_init(uint16_t connectionmax = NET_CONNECTION_MAX);
    void pool_set(connection::Pool *pool);
-   bool add(connection::Basic *connection);
+   bool add(connection::Basic *connection); // Multi safed.
 
  public:
    virtual bool heartbeat(uint64_t time = 0);
