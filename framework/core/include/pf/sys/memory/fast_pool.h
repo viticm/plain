@@ -171,13 +171,13 @@ public:
       }
 
       // Cleanup so that unique TAG_my_alloc will be keep unique in RAM:
-      memset(head, 0, sizeof(AllocHeader));
-    } else if (kTagOSMalloc == head->tag_this
+      memset((char *)head, 0, sizeof(AllocHeader));
+    } else if ((uint64_t)kTagOSMalloc == head->tag_this
         && kOSMallocID == head->leaf_id
         && head->size > 0) {
       // ok, to OS malloc
       // Cleanup so that unique TAG_my_alloc will be keep unique in RAM:
-      memset(head,  0,  sizeof(AllocHeader));
+      memset((char *)head,  0,  sizeof(AllocHeader));
 #if defined(PF_FP_AUTO_DEALLOCATE)
    #if !_DEBUG
         {
