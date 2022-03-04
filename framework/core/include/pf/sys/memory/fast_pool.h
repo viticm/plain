@@ -77,6 +77,8 @@ public:
     do {
       const int32_t available =
         leaf_array_[leaf_id].available.load(std::memory_order_acquire);
+      // std::cout << "available: " << available << std::endl;
+      if (available <= 0) break;
       if (available >= real_size) {
         // we reserve memory 
         // (the buffer is distributed from the end with a bite):
@@ -110,7 +112,7 @@ public:
     bool do_os_malloc = !re;
     if (do_os_malloc) { // Now the escalation to OS malloc will occur:
       if (kDoOSMalloc) {
-        re = static_cast<char*>(malloc(real_size));
+        re = static_cast<char*>(::malloc(real_size));
 #if defined(PF_FP_AUTO_DEALLOCATE)
    #if not defined(Debug)
         if (re) {
@@ -186,7 +188,7 @@ public:
         }
   #endif
 #endif
-      free(head);
+      ::free(head);
     } else {
       // this is someone else's allocation, Exception
       if (kRaiseExeptions) {
@@ -269,7 +271,7 @@ public:
   FastPool() noexcept {
     void *buf_array[kLeafCount];
     for (int32_t i = 0; i < kLeafCount; ++i) {
-      buf_array[i] = malloc(kLeafSizeBytes);
+      buf_array[i] = ::malloc(kLeafSizeBytes);
     }
     std::sort(
         std::begin(buf_array),
@@ -309,14 +311,14 @@ public:
 
   ~FastPool() {
     for (int32_t i = 0; i < kLeafCount; ++i) {
-      if (leaf_array_[i].buf) free(leaf_array_[i].buf);
+      if (leaf_array_[i].buf) ::free(leaf_array_[i].buf);
     }
 #if defined(PF_FP_AUTO_DEALLOCATE)
     #if _DEBUG
     {
-      std::lock_guard<std::mutex>  lg(mut_map_alloc_info_);
+      std::lock_guard<std::mutex> lg(mut_map_alloc_info_);
       for (auto &&it : map_alloc_info_) {
-        free(it.first);
+        ::free(it.first);
       }
       map_alloc_info_.clear();
     }
@@ -325,7 +327,7 @@ public:
       std::lock_guard<std::mutex>  lg(mut_set_alloc_info_);
       for (auto &&it : set_alloc_info_) {
         //std::cout << " auto deallocated :" << (uint64_t(it)) << std::endl;
-        free(it);
+        ::free(it);
       }
       set_alloc_info_.clear();
     }
@@ -409,7 +411,7 @@ public:
             .append("  line, in ").append(function_name);
         it->second.allocated = false;
       }
-      free(ptr);
+      ::free(ptr);
     }
     return;
   } // freed
