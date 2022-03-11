@@ -198,7 +198,7 @@ void Basic::disconnect() {
   using namespace pf_basic::type;
   //Notice routing original.
   std::string aim_name = params_["routing"].data;
-  if (aim_name != "") {
+  if (!is_null(ENGINE_POINTER) && aim_name != "") {
     std::string service = params_["routing_service"].data;
     manager::Listener *listener = ENGINE_POINTER->get_service(service);
     if (is_null(listener)) return;
@@ -209,7 +209,8 @@ void Basic::disconnect() {
       connection->send(&packet);
     }
   }
-  auto script = ENGINE_POINTER->get_script();
+  auto script = 
+    !is_null(ENGINE_POINTER) ? ENGINE_POINTER->get_script() : nullptr;
   if (!is_null(script) && GLOBALS["default.script.netlost"] != "") {
     auto func = GLOBALS["default.script.netlost"].data;
     variable_array_t params;
