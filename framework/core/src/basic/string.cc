@@ -757,7 +757,9 @@ std::string wstr2str(const std::wstring &str) {
   r = psText;
   safe_delete_array(psText);
 #else
-  UNUSED(str);
+  char temp[512]{0,};
+  wcstombs(temp, str.c_str(), sizeof(temp) - 1);
+  r = temp;
 #endif
   return r;
 }
@@ -772,7 +774,9 @@ std::wstring str2wstr(const std::string &str) {
   r = wszUtf8;
   safe_delete_array(wszUtf8);
 #else
-  UNUSED(str);
+  wchar_t temp[512]{0,};
+  mbstowcs(temp, str.c_str(), sizeof(temp) - 1);
+  r = temp;
 #endif
   return r;
 }
