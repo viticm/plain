@@ -97,6 +97,7 @@ bool Interface::add(connection::Basic *connection) {
   }
   connection->set_disconnect(false); //connect is success
   connection->set_empty(false);      //Pool use flag.
+  connection->set_manager(this);
   on_connect(connection);
   if (!is_null(callback_connect_)) callback_connect_(connection);
   return true;

@@ -198,10 +198,17 @@ bool Select::socket_add(int32_t socketid, int16_t) {
 }
 
 bool Select::socket_remove(int32_t socketid) {
+  if (SOCKET_INVALID == socketid) {
+    SLOW_ERRORLOG(NET_MODULENAME,
+                  "[net.connection.manager] (Select::socket_remove) error!"
+                  " SOCKET_INVALID == socket_id");
+    return false;
+  }
   connection::Basic *connection = nullptr;
   int32_t _listener_socket_id = listener_socket_id();
   uint16_t i;
-  Assert(minfd_ != SOCKET_INVALID || maxfd_ != SOCKET_INVALID);
+  if (is_service())
+    Assert(minfd_ != SOCKET_INVALID || maxfd_ != SOCKET_INVALID);
   Assert(fdsize_ > 0);
   if (socketid == minfd_) { //the first connection
     int32_t socketid_max = maxfd_;

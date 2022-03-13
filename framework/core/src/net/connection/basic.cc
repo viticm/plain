@@ -23,7 +23,7 @@ Basic::Basic() :
   istream_compress_{nullptr},
   ostream_{nullptr},
   protocol_{nullptr},
-  listener_{nullptr},
+  manager_{nullptr},
   empty_{true},
   disconnect_{false},
   ready_{false},
@@ -178,7 +178,7 @@ bool Basic::heartbeat(uint64_t, uint32_t) {
     auto last_check = params_["routing_check"].get<uint32_t>();
     if (now - last_check >= 3) {
       std::string service = params_["routing_service"].data;
-      manager::Listener *listener = ENGINE_POINTER->get_service(service);
+      auto listener = ENGINE_POINTER->get_service(service);
       if (is_null(listener)) return false;
       auto connection = listener->get(aim_name);
       if (is_null(connection) || connection->is_disconnect()) {
@@ -200,9 +200,9 @@ void Basic::disconnect() {
   std::string aim_name = params_["routing"].data;
   if (!is_null(ENGINE_POINTER) && aim_name != "") {
     std::string service = params_["routing_service"].data;
-    manager::Listener *listener = ENGINE_POINTER->get_service(service);
-    if (is_null(listener)) return;
-    auto connection = listener->get(aim_name);
+    manager::Interface *manager = ENGINE_POINTER->get_service(service);
+    if (is_null(manager)) return;
+    auto connection = manager->get(aim_name);
     if (!is_null(connection) && name_ != "") {
       packet::RoutingLost packet;
       packet.set_aim_name(name_);
@@ -223,8 +223,8 @@ void Basic::disconnect() {
 }
 
 void Basic::exit() {
-  if (!is_null(listener_)) {
-    listener_->remove(this);
+  if (!is_null(manager_)) {
+    manager_->remove(this);
   } else {
     disconnect();
   }
@@ -335,6 +335,61 @@ bool Basic::forward(packet::Interface *packet) {
   forward_packet.set_original(name());
   forward_packet.set_packet_size(packet->size());
   return connection->send(&forward_packet) && connection->send(packet);
+}
+
+bool Basic::connect(const std::string &ip, uint16_t port) {
+  std::unique_lock<std::mutex> autolock(mutex_);
+  if (!is_null(manager_) && manager_->is_service()) {
+    SLOW_ERRORLOG("net",
+                  "[net.connection] (Basic::connect)"
+                  " service connection can't connect(%s:%d)",
+                  ip.c_str(),
+                  port);
+    return false;
+  }
+  clear();
+  if (is_null(socket_)) {
+    Assert(socket_);
+    return false;
+  }
+  bool result = false;
+  uint8_t step = 0;
+  try {
+    result = socket_->is_valid() ? true : socket_->create();
+    if (!result) {
+      step = 1;
+      goto EXCEPTION;
+    }
+    result = socket_->connect(ip.c_str(), port);
+    if (!result) {
+      step = 2;
+      goto EXCEPTION;
+    }
+    result = socket_->set_nonblocking();
+    if (!result) {
+      step = 3;
+      goto EXCEPTION;
+    }
+    result = socket_->set_linger(0);
+    if (!result) {
+      step = 4;
+      goto EXCEPTION;
+    }
+  } catch (...) {
+    step = 5;
+    goto EXCEPTION;
+  }
+  set_disconnect(false);
+EXCEPTION:
+  SLOW_LOG(NET_MODULENAME,
+           "[net.connection] (Basic::connect) %s !"
+           " ip: %s, port: %d step(%d)",
+           result ? "success" : "failed",
+           ip.c_str(),
+           port,
+           step);
+
+  return result;
 }
 
 } //namespace connection

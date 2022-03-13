@@ -638,7 +638,8 @@ bool Kernel::init_console() {
 const std::string Kernel::get_script_function(
     pf_net::connection::Basic *connection) {
   std::string key{""};
-  auto listener = connection->get_listener();
+  auto listener = dynamic_cast<pf_net::connection::manager::Listener *>(
+      connection->get_manager());
   if (!is_null(listener) && listener->name() != "") {
     auto name = listener->name();
     auto configid = get_listen_configid(name);

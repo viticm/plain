@@ -27,14 +27,15 @@ uint32_t RegisterConnectionName::size() const {
 uint32_t RegisterConnectionName::execute(pf_net::connection::Basic *connection) {
   using namespace pf_net::connection;
   using namespace pf_basic;
-  auto listener = connection->get_listener();
+  auto listener = dynamic_cast<manager::Listener *>(connection->get_manager());
   /**
   std::cout << "RegisterConnectionName" << "connname: " << connection->name() 
             << " name: " << name_ << " listener: " << listener << " id: " 
             << connection->get_id() << std::endl;
   **/
   std::string name{name_};
-  if (is_null(listener)) return kPacketExecuteStatusContinue;
+  if (is_null(listener) || !listener->is_service())
+    return kPacketExecuteStatusContinue;
   if (connection->name() != "" || name == "") 
     return kPacketExecuteStatusContinue;
   if (!is_null(listener->get(name))) return kPacketExecuteStatusError;

@@ -15,8 +15,9 @@ bool Standard::command(connection::Basic *connection, uint16_t count) {
   auto line = istream->readline();
   if (!line.empty()) {
     if (!connection->check_safe_encrypt()) return false;
-    auto listener = connection->get_listener();
-    if (!is_null(listener)) {
+    auto listener = dynamic_cast<pf_net::connection::manager::Listener *>(
+        connection->get_manager());
+    if (!is_null(listener) && listener->is_service()) {
       rtrim(line); // Remove '\n' '\r' or other words on last.
       auto callback = listener->get_standard_callback();
       if (callback) callback(line, connection);

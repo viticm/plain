@@ -29,8 +29,9 @@ uint32_t Handshake::size() const {
 uint32_t Handshake::execute(pf_net::connection::Basic *connection) {
   using namespace pf_net::connection;
   using namespace pf_basic;
-  auto listener = connection->get_listener();
-  if (!listener) return kPacketExecuteStatusError;
+  auto listener = dynamic_cast<manager::Listener *>(connection->get_manager());
+  if (!listener || !listener->is_service())
+    return kPacketExecuteStatusError;
   std::string encrypt_str = listener->get_safe_encrypt_str();
   if ("" == encrypt_str) {
     io_cwarn("[%s] The handshake isn't a encrypt connection!",

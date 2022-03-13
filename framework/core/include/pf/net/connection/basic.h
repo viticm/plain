@@ -90,7 +90,7 @@ class PF_API Basic {
  public:
    virtual void disconnect();
    virtual void on_disconnect() {}
-   // Exit the connection(safe with the listener connection).
+   // Exit the connection(safe with the manager connection).
    void exit();
    bool empty() const { return empty_; }
    void set_empty(bool status = true) { empty_ = status; }
@@ -119,6 +119,7 @@ class PF_API Basic {
    pf_basic::type::variable_t get_param(const std::string &_name) {
      return params_[_name];
    }
+   bool connect(const std::string &ip, uint16_t port);
 
  public:
    void compress_set_mode(compress_mode_t mode);
@@ -139,11 +140,11 @@ class PF_API Basic {
    protocol::Interface *protocol() {
      return protocol_;
    }
-   void set_listener(manager::Listener *listener) {
-     listener_ = listener;
+   void set_manager(manager::Interface *manager) {
+     manager_ = manager;
    }
-   manager::Listener *get_listener() {
-     return listener_;
+   manager::Interface *get_manager() {
+     return manager_;
    }
    const std::string name() const {
      return name_;
@@ -181,7 +182,7 @@ class PF_API Basic {
    std::unique_ptr<stream::Input> istream_compress_;
    std::unique_ptr<stream::Output> ostream_;
    protocol::Interface *protocol_; //用个引用来做是否好些？
-   manager::Listener *listener_;
+   manager::Interface *manager_;
 
  private:
    bool empty_;

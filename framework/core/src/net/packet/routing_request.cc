@@ -36,10 +36,11 @@ uint32_t RoutingRequest::size() const {
 uint32_t RoutingRequest::execute(pf_net::connection::Basic *connection) {
   using namespace pf_net::connection;
   using namespace pf_basic;
-  auto listener = connection->get_listener();
+  auto listener = dynamic_cast<manager::Listener *>(connection->get_manager());
   std::string destination{destination_};
   std::string aim_name{aim_name_};
-  if (!listener) return kPacketExecuteStatusContinue;
+  if (!listener || !listener->is_service())
+    return kPacketExecuteStatusContinue;
   /**
   std::cout << "RoutingRequest-> " << listener->name() << "destination: " 
             << destination << " aim_name: " << aim_name << std::endl;
