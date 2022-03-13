@@ -74,7 +74,7 @@ bool Basic::init(protocol::Interface *_protocol) {
 }
 
 bool Basic::process_input() {
-  bool result = false;
+  bool result = true;
   if (is_disconnect()) return true;
   pf_util::compressor::Assistant *assistant = nullptr;
   assistant = istream_->getcompressor()->getassistant();    
@@ -104,8 +104,7 @@ bool Basic::process_input() {
                     fillresult,
                     errormessage);
       result = false;
-    } else {
-      result = true;
+    } else if (fillresult > 0) {
       receive_bytes_ += static_cast<uint32_t>(fillresult); //网络流量
     }
   } catch(...) {
@@ -123,7 +122,7 @@ void Basic::process_input_compress() {
 }
 
 bool Basic::process_output() {
-  bool result = false;
+  bool result = true;
   if (is_disconnect()) return true;
   try {
     int32_t flushresult = ostream_->flush();
@@ -138,8 +137,7 @@ bool Basic::process_output() {
                     flushresult,
                     errormessage);
       result = false;
-    } else {
-      result = true;
+    } else if (flushresult > 0) {
       send_bytes_ += static_cast<uint32_t>(flushresult);
     }
   } catch(...) {
