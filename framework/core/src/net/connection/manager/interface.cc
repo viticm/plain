@@ -80,24 +80,27 @@ bool Interface::heartbeat(uint64_t) {
 }
 
 bool Interface::add(connection::Basic *connection) {
-  std::unique_lock<std::mutex> autolock(mutex_);
-  Assert(connection);
-  if (size_ >= max_size_) return false;
-  //首先处理socket
-  if (!socket_add(connection->socket()->get_id(), connection->get_id()))
-    return false;
-  //再处理管理器ID
-  if (ID_INVALID == connection_idset_[size_]) {
-    connection_idset_[size_] = connection->get_id();
-    connection->set_managerid(size_);
-    ++size_;
-    Assert(size_ <= max_size_);
-  } else {
-    Assert(false);
+  {
+    std::unique_lock<std::mutex> autolock(mutex_);
+    Assert(connection);
+    if (size_ >= max_size_) return false;
+    //首先处理socket
+    if (!socket_add(connection->socket()->get_id(), connection->get_id()))
+      return false;
+    //再处理管理器ID
+    if (ID_INVALID == connection_idset_[size_]) {
+      connection_idset_[size_] = connection->get_id();
+      connection->set_managerid(size_);
+      ++size_;
+      Assert(size_ <= max_size_);
+    } else {
+      Assert(false);
+    }
+    connection->set_disconnect(false); //connect is success
+    connection->set_empty(false);      //Pool use flag.
+    connection->set_manager(this);
   }
-  connection->set_disconnect(false); //connect is success
-  connection->set_empty(false);      //Pool use flag.
-  connection->set_manager(this);
+  // Callback not multi thread safe.
   on_connect(connection);
   if (!is_null(callback_connect_)) callback_connect_(connection);
   return true;
