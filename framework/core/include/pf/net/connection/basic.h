@@ -81,15 +81,20 @@ class PF_API Basic {
    }
 
  public:
+   virtual void disconnect();
+   virtual void on_connect();
+   virtual void on_disconnect();
+ 
+ public:
+   void callback_connect(std::function<void (Basic *)> callback);
+   void callback_disconnect(std::function<void (Basic *)> callback); 
+
+ public:
    int16_t get_id() const { return id_; }
    void set_id(int16_t id) { id_ = id; }
    int16_t get_managerid() const { return managerid_; }
    void set_managerid(int16_t managerid) { managerid_ = managerid; }
    socket::Basic *socket() { return socket_.get(); }
-
- public:
-   virtual void disconnect();
-   virtual void on_disconnect() {}
    // Exit the connection(safe with the manager connection).
    void exit();
    bool empty() const { return empty_; }

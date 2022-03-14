@@ -101,7 +101,8 @@ bool Interface::add(connection::Basic *connection) {
     connection->set_manager(this);
   }
   // Callback not multi thread safe.
-  on_connect(connection);
+  on_connect(connection); // This will remove in future(connection has this).
+  connection->on_connect();
   if (!is_null(callback_connect_)) callback_connect_(connection);
   return true;
 }
@@ -147,7 +148,8 @@ bool Interface::erase(connection::Basic *connection) {
 }
 
 bool Interface::remove(connection::Basic *connection) {
-  on_disconnect(connection);
+  on_disconnect(connection); // This will remove in future(connection has this).
+  connection->on_disconnect();
   if (!is_null(callback_disconnect_)) callback_disconnect_(connection);
   if (connection->name() != "") 
     connection_names_[connection->name()] = (uint16_t)- 1;

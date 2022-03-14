@@ -15,6 +15,16 @@ namespace pf_net {
 
 namespace connection {
 
+// Connection too many, this global map is the address and type to function 
+// can reduce memory use.
+std::map< std::string, std::function<void (Basic *)> > f_callbacks;
+inline std::string get_callback_key(void *pointer, const std::string &type) {
+  pf_basic::type::variable_t r{""};
+  r += POINTER_TOINT64(pointer);
+  r += type;
+  return r.data;
+}
+
 Basic::Basic() : 
   id_{ID_INVALID},
   managerid_{ID_INVALID},
@@ -218,6 +228,30 @@ void Basic::disconnect() {
     script->call(func, params, results);
   }
   clear();
+}
+
+void Basic::on_connect() {
+  auto key = get_callback_key(this, "__connect");
+  if (f_callbacks.find(key) == f_callbacks.end()) return;
+  auto func = f_callbacks[key];
+  func(this);
+}
+
+void Basic::on_disconnect() {
+  auto key = get_callback_key(this, "__disconnect");
+  if (f_callbacks.find(key) == f_callbacks.end()) return;
+  auto func = f_callbacks[key];
+  func(this);
+}
+
+void Basic::callback_connect(std::function<void (Basic *)> callback) {
+  auto key = get_callback_key(this, "__connect");
+  f_callbacks[key] = callback;
+}
+
+void Basic::callback_disconnect(std::function<void (Basic *)> callback) {
+  auto key = get_callback_key(this, "__disconnect");
+  f_callbacks[key] = callback;
 }
 
 void Basic::exit() {
