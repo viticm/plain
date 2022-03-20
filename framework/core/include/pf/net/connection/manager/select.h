@@ -5,8 +5,14 @@
  * @copyright Copyright (c) 2014- viticm( viticm.ti@gmail.com )
  * @license
  * @user viticm<viticm.ti@gmail.com>
- * @date 2014/07/17 10:56
+ * @date 2022/03/20 10:56
  * @uses connection manager with select mode
+ *       cn: 
+ *       注意：这里在头文件包含时有个顺序问题，如果在WINDOWS下使用需要谨慎！！
+ *       否则会造成内存越界，其原因是类似readfds_的类型fd_set中的FD_SETSIZE
+ *       在头文件前后包含不一致的问题
+ *       如果你的项目中使用了winsock.h/winsock2.h那么这两个包含文件应当在这个
+ *       文件之后(当前你也可以在编译PF时将FD_SETSIZE指定会和系统默认的一致！)
  */
 #ifndef PF_NET_CONNECTION_MANAGER_SELECT_H_
 #define PF_NET_CONNECTION_MANAGER_SELECT_H_
