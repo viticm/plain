@@ -119,7 +119,7 @@ class PF_API Interface {
      protocol_ = name;
      Assert(!is_null(protocol()));
    }
-   virtual protocol::Interface *protocol() {
+   protocol::Interface *protocol() {
      std::string name = protocol_.empty() ? "default" : protocol_;
      return protocol::get(name);
    }
