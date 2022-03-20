@@ -49,6 +49,7 @@
 
 /* platform { */
 #include "pf/basic/macros/platform.h"
+#include "pf/basic/macros/limit.h" // FD_SETSIZE will replace system on windows.
 #if OS_WIN
 #include <windows.h>
 #include <crtdbg.h>
@@ -71,7 +72,6 @@
 /* PF useful { */
 #include "pf/basic/macros/export.h"
 #include "pf/basic/macros/function.h"
-#include "pf/basic/macros/limit.h"
 #include "pf/basic/macros/other.h"
 #include "pf/basic/traits.h"
 /* } PF useful */

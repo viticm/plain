@@ -13,7 +13,6 @@
 
 #include "pf/net/connection/manager/config.h"
 #include "pf/net/connection/manager/basic.h"
-#include "pf/net/socket/listener.h"
 
 namespace pf_net {
 
