@@ -26,6 +26,7 @@
  * GLOBALS["log.clear"] = bool;                   //default false.
  * GLOBALS["cache.gsinit"] = bool;                //default false.
  * GLOBALS["thread.collects"] = number;           //default 0.
+ * GLOBALS["socket.env_init"] = bool;             //default false.
  * GLOBALS["default.engine.frame"] = number;      //default 100.
  * GLOBALS["default.engine.frame_time"] = number; //default 0.
  * GLOBALS["default.engine.fps"] = bool;          //default false.
@@ -109,6 +110,8 @@ void set_default_globals(type::variable_set_t &g) {
   g["cache.gsinit"] = false;
 
   g["thread.collects"] = 0;
+  
+  g["socket.env_init"] = false;
 
   g["default.engine.frame"] = 100;
   g["default.engine.frame_time"] = 0;

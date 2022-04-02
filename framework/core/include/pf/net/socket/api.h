@@ -34,6 +34,8 @@ namespace socket {
 
 namespace api {
 
+PF_API bool env_init();
+
 PF_API int32_t socketex(int32_t domain, int32_t type, int32_t protocol);
 
 PF_API bool bindex(int32_t socketid, 

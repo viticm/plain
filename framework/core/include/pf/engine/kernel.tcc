@@ -15,6 +15,7 @@
 #include "pf/basic/util.h"
 #include "pf/basic/logger.h"
 #include "pf/basic/time_manager.h"
+#include "pf/net/socket/api.h"
 #include "pf/engine/kernel.h"
 
 namespace pf_engine {
@@ -23,7 +24,7 @@ namespace pf_engine {
 inline bool init_basic_env() {
   using namespace pf_basic;
 
-  //Time manager.
+  // Time manager.
   if (is_null(TIME_MANAGER_POINTER)) {
     auto time_manager = new TimeManager();
     if (is_null(time_manager)) return false;
@@ -31,12 +32,15 @@ inline bool init_basic_env() {
     if (!g_time_manager->init()) return false;
   }
 
-  //Logger.
+  // Logger.
   if (is_null(LOGSYSTEM_POINTER)) {
     auto logger = new Logger();
     if (is_null(logger)) return false;
     unique_move(Logger, logger, g_logger);
   }
+
+  // Socket enviroment.
+  if (!pf_net::socket::api::env_init()) return false;
   return true;
 }
 

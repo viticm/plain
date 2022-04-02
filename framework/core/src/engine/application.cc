@@ -6,6 +6,7 @@
 #include "pf/sys/util.h"
 #include "pf/file/ini.h"
 #include "pf/file/api.h"
+#include "pf/net/socket/api.h"
 #include "pf/script/interface.h"
 #include "pf/engine/kernel.h"
 #include "pf/engine/application.h"
@@ -332,20 +333,8 @@ void Application::start() {
     io_cerr("----------------------------------------"
             "----------------------------------------");
   }
-  signal(SIGPIPE, SIG_IGN); //Socket has error will get this signal.
-  if (!pf_sys::util::set_core_rlimit()) {
-    io_cerr("[app] (Application::run) change core rlimit failed!");
-    return;
-  }
 #endif
-  
-#if OS_WIN
-  WORD versionrequested;
-  WSADATA data;
-  int32_t error;
-  versionrequested = MAKEWORD(2, 2);
-  error = WSAStartup(versionrequested, &data);
-#endif
+  if (!pf_net::socket::api::env_init()) return; 
   if (nullptr == engine_) return;
   if (!engine_->init()) return;
   if (!pf_sys::process::writeid(GLOBALS["app.pidfile"].c_str())) { 
