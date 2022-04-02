@@ -35,10 +35,9 @@ bool env_init() {
 #elif OS_WIN
   WORD versionrequested;
   WSADATA data;
-  int32_t error{0};
   versionrequested = MAKEWORD(2, 2);
-  error = WSAStartup(versionrequested, &data);
-  r = 0 == error;
+  auto _error = WSAStartup(versionrequested, &data);
+  r = 0 == _error;
 #endif
   GLOBALS["socket.env_init"] = r;
   return r;

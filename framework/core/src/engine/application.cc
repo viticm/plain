@@ -10,9 +10,6 @@
 #include "pf/script/interface.h"
 #include "pf/engine/kernel.h"
 #include "pf/engine/application.h"
-#if OS_WIN
-#include <winsock2.h>
-#endif
 
 using namespace pf_engine;
 
