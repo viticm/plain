@@ -36,8 +36,9 @@ if (MSVC AND pf_build_shared)
   set(cxx_base_flags "${cxx_base_flags} -DPF_BUILD_AS_DLL")
 endif()
 
+set(CMAKE_CXX_STANDARD 11)
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+  # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 endif()
 
 #For utf8 no boom.

@@ -73,9 +73,8 @@ class Dynamic;
 class Factory;
 class FactoryManager;
 
-typedef PF_API struct queue_struct queue_t;
 
-struct queue_struct {
+struct PF_API queue_struct {
   Interface *packet;
   uint16_t connectionid;
   uint32_t flag;
@@ -86,6 +85,8 @@ struct queue_struct {
   };
   ~queue_struct();
 };
+
+typedef queue_struct queue_t;
 
 } //namespace packet
 

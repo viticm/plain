@@ -29,8 +29,7 @@ class Epool;
 class Iocp;
 class Select;
 
-typedef PF_API struct cache_struct cache_t;
-struct cache_struct {
+struct PF_API cache_struct {
   packet::queue_t *queue;
   uint32_t head;
   uint32_t tail;
@@ -45,6 +44,8 @@ struct cache_struct {
     safe_delete_array(queue);
   };
 };
+
+typedef cache_struct cache_t;
 
 struct listener_config_struct {
   std::string name;

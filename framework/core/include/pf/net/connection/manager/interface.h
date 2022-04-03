@@ -16,8 +16,8 @@
  *         *但目前这种一对一线程方式其实没有太多问题，而且在总体上常驻消耗也不太多，
  *         线程池的方式可以后续再考虑 2021-4-15）
  */
-#ifndef PF_NET_CONNECTION_MANAGER_BASE_H_
-#define PF_NET_CONNECTION_MANAGER_BASE_H_
+#ifndef PF_NET_CONNECTION_MANAGER_INTERFACE_H_
+#define PF_NET_CONNECTION_MANAGER_INTERFACE_H_
 
 #include "pf/net/connection/manager/config.h"
 #include "pf/sys/thread.h"
@@ -170,4 +170,4 @@ class PF_API Interface {
 
 } //namespace pf_net
 
-#endif //PF_NET_CONNECTION_MANAGER_BASE_H_
+#endif //PF_NET_CONNECTION_MANAGER_INTERFACE_H_
