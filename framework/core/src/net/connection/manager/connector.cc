@@ -175,3 +175,8 @@ EXCEPTION:
   }
   return nullptr;
 }
+
+Connector *Connector::defalut() {
+  static Connector connector;
+  return &connector;
+}

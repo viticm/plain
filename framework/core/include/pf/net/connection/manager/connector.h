@@ -31,6 +31,9 @@ class PF_API Connector : public Basic {
    virtual connection::Basic *connect(const char *ip, uint16_t port);
    virtual connection::Basic *group_connect(const char *ip, uint16_t port);
 
+ public:
+   static Connector *defalut(); // Get the global defalut connector.
+
 };
 
 } //namespace manager
