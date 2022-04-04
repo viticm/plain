@@ -7,12 +7,12 @@ namespace pf_basic {
 namespace util {
 
 char ascii_table[] = {
-  '0', '1', '2', '3', '4', '5', '6', '7', '8', 
+  '0', '1', '2', '3', '4', '5', '6', '7', '8',
   '9', 'A', 'B', 'C', 'D', 'E', 'F'
 };
 char value_toascii(char in) {
-  char out = 
-    0 < in && sizeof(ascii_table) / sizeof(char) > 
+  char out =
+    0 < in && sizeof(ascii_table) / sizeof(char) >
     static_cast< size_t >(in) ? ascii_table[(uint8_t)in] : '?';
    return out;
 }
@@ -105,10 +105,10 @@ bool binary_tostring(const char *in, uint32_t in_length, char *out) {
   return true;
 }
 
-bool string_tobinary(const char *in, 
-                     uint32_t in_length, 
-                     char *out, 
-                     uint32_t out_limit, 
+bool string_tobinary(const char *in,
+                     uint32_t in_length,
+                     char *out,
+                     uint32_t out_limit,
                      uint32_t &out_length) {
   if (0 == in_length) return false;
   uint32_t out_index = 0;
@@ -209,8 +209,12 @@ void path_towindows(char *buffer, uint16_t length) {
 void get_module_filename(char *buffer, size_t size) {
   int32_t resultcode = 0;
 #if OS_WIN
-  resultcode = (int32_t)GetModuleFileName(nullptr, reinterpret_cast<LPWSTR>(buffer), (DWORD)size);
-  Assert(resultcode);
+#ifdef _UNICODE
+  resultcode = (int32_t)GetModuleFileName(
+		nullptr, reinterpret_cast<LPWSTR>(buffer), (DWORD)size);
+#else
+  resultcode = (int32_t)GetModuleFileName(nullptr, buffer, (DWORD)size);
+#endif
 #elif OS_UNIX
   resultcode = readlink("/proc/self/exe", buffer, size);
   Assert(resultcode > 0 && resultcode < static_cast<int32_t>(size));

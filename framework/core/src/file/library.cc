@@ -74,8 +74,12 @@ bool Library::load(bool tryprefix, bool seeglb) {
 #if OS_WIN
     UNUSED(seeglb);
     tryprefix = false;
+#ifdef _UNICODE
     auto wstr = str2wstr(temp);
     handle_ = cast(void *, LoadLibrary(wstr.c_str()));
+#else
+    handle_ = cast(void*, LoadLibrary(temp.c_str()));
+#endif
     if (is_null(handle_)) 
       errorstr_ = GetLastErrorString(GetLastError());
 #else

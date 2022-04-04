@@ -13,36 +13,36 @@
 
 namespace pf_sys {
 
-namespace memory { 
+namespace memory {
 
 namespace share {
 
 header_struct::header_struct() :
-  key{0}, 
+  key{0},
   size{0},
   version{0},
   pool_position{0},
   mutex{kFlagFree} {
 
-}                                                                                  
+}
 
 void header_struct::clear() {
-  key = 0;                                                                       
-  size = 0;                                                                      
+  key = 0;
+  size = 0;
   mutex.exchange(kFlagFree);
-  version = 0;                                                                   
+  version = 0;
   pool_position = 0;
 }
 
 void header_struct::lock(int8_t type) {
   share::lock(mutex, type);
 }
-  
+
 void header_struct::unlock(int8_t type) {
   share::unlock(mutex, type);
 }
-                                                                                  
-header_struct::~header_struct() {                                          
+
+header_struct::~header_struct() {
   //do nothing
 }
 
@@ -62,7 +62,7 @@ void dataheader_struct::clear() {
   mutex.exchange(kFlagFree);
 }
 
-  
+
 dataheader_t &dataheader_struct::operator = (const dataheader_t &object) {
   key = object.key;
   version = object.version;
@@ -71,7 +71,7 @@ dataheader_t &dataheader_struct::operator = (const dataheader_t &object) {
   pool_id = object.pool_id;
   return *this;
 }
-  
+
 dataheader_t *dataheader_struct::operator = (const dataheader_t *object) {
   if (object) {
     key = object->key;
@@ -83,7 +83,7 @@ dataheader_t *dataheader_struct::operator = (const dataheader_t *object) {
   }
   return this;
 }
- 
+
 //struct end --
 
 namespace api {
@@ -100,21 +100,26 @@ HANDLE create(uint32_t key, size_t size) {
     if (HANDLE_INVALID == handle) {
       SLOW_ERRORLOG(
           GLOBALS["app.name"].c_str(),
-          "[sys.memory.share] (api::create) handle = %d," 
+          "[sys.memory.share] (api::create) handle = %d,"
           " key = %d, error: %d",
-          handle, 
-          key, 
+          handle,
+          key,
           errno);
     }
 #elif OS_WIN
     char buffer[65]{0,};
     snprintf(buffer, sizeof(buffer) - 1, "%d", key);
-    handle = (CreateFileMapping(reinterpret_cast<HANDLE>(0xFFFFFFFFFFFFFFFF), 
-                                nullptr, 
-                                PAGE_READWRITE, 
-                                0, 
-                                (DWORD)size, 
-                                (LPCWSTR)buffer));
+#ifdef _UNICODE
+    std::wstring name = pf_basic::string::str2wstr(buffer);
+#else
+    std::string name{ buffer };
+#endif // _UNICODE
+    handle = (CreateFileMapping(reinterpret_cast<HANDLE>(0xFFFFFFFFFFFFFFFF),
+                                nullptr,
+                                PAGE_READWRITE,
+                                0,
+                                (DWORD)size,
+                                name.c_str()));
 #endif
     return handle;
 }
@@ -129,18 +134,24 @@ HANDLE open(uint32_t key, size_t, bool) {
     handle = shmget(key, size, 0);
     if (HANDLE_INVALID == handle && errorlog) {
       SLOW_ERRORLOG(
-          GLOBALS["app.name"].c_str(), 
+          GLOBALS["app.name"].c_str(),
           "[sys.memory.share] (api::open) handle = %d,"
-          " key = %d, error: %d", 
-          handle, 
-          key, 
+          " key = %d, error: %d",
+          handle,
+          key,
           errno);
     }
 #elif OS_WIN
     char buffer[65];
     memset(buffer, '\0', sizeof(buffer));
     snprintf(buffer, sizeof(buffer) - 1, "%d", key);
-    handle = OpenFileMapping(FILE_MAP_ALL_ACCESS, true, (LPCWSTR)buffer);
+#ifdef _UNICODE
+    std::wstring name = pf_basic::string::str2wstr(buffer);
+#else
+    std::string name{ buffer };
+#endif // _UNICODE
+
+    handle = OpenFileMapping(FILE_MAP_ALL_ACCESS, true, name.c_str());
 #endif
     return handle;
 }
@@ -154,7 +165,7 @@ char *map(HANDLE handle) {
 #if OS_UNIX
     result = static_cast<char *>(shmat(handle, 0, 0));
 #elif OS_WIN
-    result = 
+    result =
       static_cast<char *>(MapViewOfFile(handle, FILE_MAP_ALL_ACCESS, 0, 0, 0));
 #endif
     return result;
@@ -200,10 +211,10 @@ bool Base::create(uint32_t _key, size_t _size) {
     handle_ = api::create(_key, _size);
     if (HANDLE_INVALID == handle_) {
       SLOW_ERRORLOG(
-          GLOBALS["app.name"].c_str(), 
+          GLOBALS["app.name"].c_str(),
           "[sys.memory.share] (Base::create)"
           " failed! handle = %d, key = %d",
-          handle_, 
+          handle_,
           _key);
       return false;
     }
@@ -215,18 +226,18 @@ bool Base::create(uint32_t _key, size_t _size) {
       header()->size = _size;
       size_ = _size;
       SLOW_LOG(
-          GLOBALS["app.name"].c_str(), 
+          GLOBALS["app.name"].c_str(),
           "[sys.memory.share] (Base::create)"
           " success! handle = %d, key = %d",
-          handle_, 
+          handle_,
           _key);
       return true;
     } else {
       SLOW_ERRORLOG(
-          GLOBALS["app.name"].c_str(), 
+          GLOBALS["app.name"].c_str(),
           "[sys.memory.share] (Base::create)"
-          "map failed! handle = %d, key = %d", 
-          handle_, 
+          "map failed! handle = %d, key = %d",
+          handle_,
           _key);
       return false;
     }
@@ -255,16 +266,16 @@ bool Base::attach(uint32_t _key, size_t _size, bool errorlog) {
       release();
       SLOW_LOG(
           GLOBALS["app.name"].c_str(),
-          "[sys.memory.share] (Base::attach) close memory, key = %d", 
+          "[sys.memory.share] (Base::attach) close memory, key = %d",
           _key);
       return false;
     }
     if (HANDLE_INVALID == handle_) {
       if (errorlog) {
         SLOW_ERRORLOG(
-            GLOBALS["app.name"].c_str(), 
-            "[sys.memory.share] (Base::attach) failed, key = %d", 
-            _key); 
+            GLOBALS["app.name"].c_str(),
+            "[sys.memory.share] (Base::attach) failed, key = %d",
+            _key);
       }
       return false;
     }
@@ -275,16 +286,16 @@ bool Base::attach(uint32_t _key, size_t _size, bool errorlog) {
       Assert(header()->size == _size);
       size_ = _size;
       SLOW_LOG(
-          GLOBALS["app.name"].c_str(), 
-          "[sys.memory.share] (Base::attach) success, key = %d", 
-          _key); 
+          GLOBALS["app.name"].c_str(),
+          "[sys.memory.share] (Base::attach) success, key = %d",
+          _key);
       return true;
     } else {
       if (errorlog) {
         SLOW_ERRORLOG(
-            GLOBALS["app.name"].c_str(), 
-            "[sys.memory.share] (Base::attach) map failed, key = %d", 
-            _key); 
+            GLOBALS["app.name"].c_str(),
+            "[sys.memory.share] (Base::attach) map failed, key = %d",
+            _key);
       }
       return false;
     }
@@ -295,7 +306,7 @@ char *Base::get(uint32_t index, size_t _size) {
     Assert(_size > 0);
     Assert(_size * index < size_);
     char *result;
-    result = 
+    result =
       (_size <= 0 || _size * index > size_) ? nullptr : data_ + _size * index;
     return result;
 }
@@ -385,14 +396,14 @@ GroupPool::GroupPool(uint32_t _key, const std::vector<group_item_t> &group) :
     group_conf_[item.index] = temp;
     size_t _size{0};
     if (item.same_header) {
-      _size = sizeof(group_item_header_t) + 
-              item.header_size + 
+      _size = sizeof(group_item_header_t) +
+              item.header_size +
               item.data_size * item.size;
     } else {
       _size = sizeof(group_item_header_t) +
               (item.header_size + item.data_size) * _size;
     }
-    size_ += _size; 
+    size_ += _size;
   }
 }
 
@@ -445,7 +456,7 @@ char *GroupPool::get_data(int16_t index) {
 group_header_t *GroupPool::header() {
   return reinterpret_cast<group_header_t *>(ref_obj_pointer_->get());
 }
-   
+
 char *GroupPool::item_data_header(int16_t index, int16_t data_index) {
   if (INDEX_INVALID == index || INDEX_INVALID == data_index) return nullptr;
   if (!is_valid_index(index)) return nullptr;
@@ -457,12 +468,12 @@ char *GroupPool::item_data_header(int16_t index, int16_t data_index) {
   if (item.same_header) {
     result = data + header_size;
   } else {
-    result = 
+    result =
       data + header_size + (item.header_size + item.data_size) * data_index;
   }
   return result;
 }
-  
+
 group_item_header_t *GroupPool::item_header(int16_t index) {
   char *data = get_data(index);
   return reinterpret_cast<group_item_header_t *>(data);
@@ -473,16 +484,16 @@ int32_t GroupPool::item_data_postion(int16_t index, int16_t data_index) {
   int32_t position{INDEX_INVALID};
   const group_item_t &item = group_conf_[index];
   if (item.same_header) {
-    position = static_cast<int32_t>(item.header_size + data_index * item.data_size + 
+    position = static_cast<int32_t>(item.header_size + data_index * item.data_size +
                sizeof(group_item_header_t));
   } else {
-    position = static_cast<int32_t>(item.header_size + 
+    position = static_cast<int32_t>(item.header_size +
                (item.header_size + item.data_size) * data_index +
                sizeof(group_item_header_t));
   }
   return position;
 }
-   
+
 char *GroupPool::item_data(int16_t index, int16_t data_index) {
   if (INDEX_INVALID == index || INDEX_INVALID == data_index) return nullptr;
   if (!is_valid_index(index)) return nullptr;
