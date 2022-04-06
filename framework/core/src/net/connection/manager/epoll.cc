@@ -174,9 +174,7 @@ bool Epoll::process_output() {
     if (connection->socket()->error()) {
       char msg[1024]{0};
       connection->socket()->get_last_error_message(msg, sizeof(msg) - 1);
-      pf_basic::io_cerr("msg: %s", msg);
-      throw 1;
-      pf_basic::io_cerr("connection->socket()->error() 1");
+      pf_basic::io_cerr("connection->socket()->error(): %s", msg);
       remove(connection);
     } else {
       try {
