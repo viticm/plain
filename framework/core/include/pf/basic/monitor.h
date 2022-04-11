@@ -18,7 +18,7 @@ namespace pf_basic {
 class PF_API monitor {
 
  public:
-   monitor(const std::string &name);
+   monitor(const std::string &name, uint32_t time = 0);
    ~monitor();
 
  private:
@@ -28,6 +28,7 @@ class PF_API monitor {
  private:
    std::string name_;
    std::clock_t start_time_;
+   uint32_t time_;
 
 };
 
