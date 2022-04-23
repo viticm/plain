@@ -115,14 +115,16 @@ class stringstream {
 
    stringstream &operator << (const std::string var) {
      auto size = (int32_t)var.size();
-     write((char *)&(size = PF_HTON(size)), sizeof(int32_t));
+     auto temp = PF_HTON(size);
+     write((char *)&temp, sizeof(int32_t));
      write(var.c_str(), size);
      return *this;
    }
 
    stringstream &operator << (const char *var) {
-     auto size = strlen(var);
-     write((char *)&(size = PF_HTON(size)), sizeof(int32_t));
+     auto size = (int32_t)strlen(var);
+     auto temp = PF_HTON(size);
+     write((char *)&temp, sizeof(int32_t));
      write(var, size);
      return *this;
    }
