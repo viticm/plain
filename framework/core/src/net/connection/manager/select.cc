@@ -205,45 +205,45 @@ bool Select::socket_remove(int32_t socketid) {
     return false;
   }
   connection::Basic *connection = nullptr;
-  int32_t _listener_socket_id = listener_socket_id();
+  // int32_t _listener_socket_id = listener_socket_id();
   uint16_t i;
   if (is_service())
     Assert(minfd_ != SOCKET_INVALID || maxfd_ != SOCKET_INVALID);
   Assert(fdsize_ > 0);
+  // Min and max fd reset(the max and min can be same).
   if (socketid == minfd_) { //the first connection
-    int32_t socketid_max = maxfd_;
-    uint16_t _size = size();
-    for (i = 0; i < _size; ++i) {
-      if (ID_INVALID == connection_idset_[i]) continue;
-      connection = pool_->get(connection_idset_[i]);
-      Assert(connection);
-      if (nullptr == connection) continue;
-      int32_t _socketid = connection->socket()->get_id();
-      if (socketid == _socketid || SOCKET_INVALID == _socketid) continue;
-      if (socketid_max < _socketid) socketid_max = _socketid;
+    if (minfd_ == maxfd_) { 
+      minfd_ = maxfd_ = SOCKET_INVALID;
+    } else {
+      int32_t socketid_min = maxfd_;
+      uint16_t _size = size();
+      for (i = 0; i < _size; ++i) {
+        if (ID_INVALID == connection_idset_[i]) continue;
+        connection = pool_->get(connection_idset_[i]);
+        Assert(connection);
+        if (nullptr == connection) continue;
+        int32_t _socketid = connection->socket()->get_id();
+        if (socketid == _socketid || SOCKET_INVALID == _socketid) continue;
+        if (socketid_min > _socketid) socketid_min = _socketid;
+      }
+      minfd_ = socketid_min;
     }
+  } else if (socketid == maxfd_) { // The max.
     if (minfd_ == maxfd_) {
       minfd_ = maxfd_ = SOCKET_INVALID;
     } else {
-      minfd_ = socketid_max > listener_socket_id() ? minfd_ : socketid_max;
-    }
-  } else if (socketid == maxfd_) { //
-    int32_t socketid_min = minfd_;
-    uint16_t _size = size();
-    for (i = 0; i < _size; ++i) {
-      if (ID_INVALID == connection_idset_[i]) continue;
-      connection = pool_->get(connection_idset_[i]);
-      Assert(connection);
-      if (nullptr == connection) continue;
-      int32_t _socketid = connection->socket()->get_id();
-      if (socketid == _socketid || SOCKET_INVALID == _socketid) continue;
-      if (socketid_min > _socketid) socketid_min = _socketid;
-    }
-    if (minfd_ == maxfd_) {
-      minfd_ = maxfd_ = SOCKET_INVALID;
-    } else {
-      maxfd_ = 
-        socketid_min < _listener_socket_id ? _listener_socket_id : socketid_min;
+      int32_t socketid_max = minfd_;
+      uint16_t _size = size();
+      for (i = 0; i < _size; ++i) {
+        if (ID_INVALID == connection_idset_[i]) continue;
+        connection = pool_->get(connection_idset_[i]);
+        Assert(connection);
+        if (nullptr == connection) continue;
+        int32_t _socketid = connection->socket()->get_id();
+        if (socketid == _socketid || SOCKET_INVALID == _socketid) continue;
+        if (socketid_max < _socketid) socketid_max = _socketid;
+      }
+      maxfd_ = socketid_max;
     }
   }
   FD_CLR(static_cast<uint32_t>(socketid), &readfds_[kSelectFull]);
