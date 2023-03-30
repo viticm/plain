@@ -208,6 +208,7 @@ uint32_t FactoryManager::packet_execute(
   Interface *packet, 
   const std::string &original) {
   if (!function_packet_execute_) {
+    if (is_null(ENGINE_POINTER)) return kPacketExecuteStatusError;
     auto script = ENGINE_POINTER->get_script();
     if (is_null(script)) {
       FAST_WARNINGLOG(NET_MODULENAME, 
