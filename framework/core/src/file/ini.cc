@@ -1,11 +1,9 @@
-#include <memory>
-#include <iostream>
-#include "pf/basic/string.h"
-#include "pf/basic/type/variable.h"
-#include "pf/sys/assert.h"
-#include "pf/file/ini.h"
+#include "plain/file/ini.h"
+#include "plain/basic/utility.h"
+#include "plain/basic/type/variable.h"
+#include "plain/sys/assert.h"
 
-namespace pf_file {
+using namespace plain;
 
 Ini::Ini() :
   current_section_{nullptr},
@@ -146,8 +144,7 @@ bool Ini::getstring(const char *section,
 
 void Ini::get(const char *section, 
               const char *key, 
-              pf_basic::type::variable_t &variable) {
-  using namespace pf_basic::string;
+              plain::variable_t &variable) {
   sectionset_t::iterator it = sectiondata_.find(section);
   if(it == sectiondata_.end()) return;
   valueset_t *_section = it->second;
@@ -206,7 +203,6 @@ bool Ini::_getstring(const char *section,
                    const char *key, 
                    char *str, 
                    int32_t size) {
-  using namespace pf_basic::string;
   sectionset_t::iterator it = sectiondata_.find(section);
   if(it == sectiondata_.end()) return false;
   valueset_t *_section = it->second;
@@ -291,5 +287,3 @@ int32_t Ini::_add_bufferstring(char *str) {
   bufferlength_ += static_cast<int32_t>(size) + 1;
   return position;
 }
-
-} //namespace pf_file

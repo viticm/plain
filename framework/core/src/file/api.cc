@@ -1,4 +1,4 @@
-#include "pf/file/api.h"
+#include "plain/file/api.h"
 
 #if OS_UNIX /* { */
 #include <sys/types.h>  // for open()
@@ -12,13 +12,7 @@
 #include <fcntl.h>      // for _open()/_close()/_read()/_write()...
 #endif /* } */
 
-#if OS_UNIX
-// extern int32_t errno;
-#endif
-
-namespace pf_file {
-
-namespace api {
+namespace plain {
 
 int32_t openex(const char *filename, int32_t flag) {
 #if OS_UNIX
@@ -172,7 +166,7 @@ void closeex(int32_t fd) {
 #endif
 }
 
-int32_t fcntlex(int32_t fd, int32_t cmd) {
+int32_t fcntlex([[maybe_unused]] int32_t fd, [[maybe_unused]] int32_t cmd) {
 #if OS_UNIX
   int32_t result = fcntl(fd, cmd);
   if (result < 0) {
@@ -191,13 +185,14 @@ int32_t fcntlex(int32_t fd, int32_t cmd) {
   }
   return result;
 #elif OS_WIN
-  UNUSED(fd);
-  UNUSED(cmd);
   return 0 ;
 #endif
 }
 
-int32_t fcntlarg_ex(int32_t fd, int32_t cmd, int32_t arg) {
+int32_t fcntlarg_ex(
+    [[maybe_unused]] int32_t fd,
+    [[maybe_unused]] int32_t cmd,
+    [[maybe_unused]] int32_t arg) {
 #if OS_UNIX
   int32_t result = fcntl(fd, cmd, arg);
   if (result < 0) {
@@ -217,22 +212,20 @@ int32_t fcntlarg_ex(int32_t fd, int32_t cmd, int32_t arg) {
   }
   return result;
 #elif OS_WIN
-  UNUSED(fd); UNUSED(cmd); UNUSED(arg);
   return 0 ;
 #endif
 }
 
-bool get_nonblocking_ex(int32_t fd) {
+bool get_nonblocking_ex([[maybe_unused]] int32_t fd) {
 #if OS_UNIX
   int32_t flag = fcntlarg_ex(fd, F_GETFL, 0);
   return flag | O_NONBLOCK;
 #elif OS_WIN
-  UNUSED(fd);
   return false;
 #endif
 }
 
-void set_nonblocking_ex(int32_t fd, bool on) {
+void set_nonblocking_ex([[maybe_unused]] int32_t fd, [[maybe_unused]] bool on) {
 #if OS_UNIX
   int32_t flag = fcntlarg_ex(fd, F_GETFL, 0);
   if (on)
@@ -249,7 +242,10 @@ void set_nonblocking_ex(int32_t fd, bool on) {
 #endif
 }
 
-void ioctlex(int32_t fd, int32_t request, void *argp) {
+void ioctlex(
+    [[maybe_unused]] int32_t fd,
+    [[maybe_unused]] int32_t request,
+    [[maybe_unused]] void *argp) {
 #if OS_UNIX
   if (ioctl(fd,request,argp) < 0) {
     switch (errno) {
@@ -262,31 +258,26 @@ void ioctlex(int32_t fd, int32_t request, void *argp) {
       }
     }
   }
-#elif OS_WIN
-  UNUSED(fd); UNUSED(request); UNUSED(argp);
 #endif
 }
 
-void setnonblocking_ex(int32_t fd, bool on) {
+void setnonblocking_ex([[maybe_unused]] int32_t fd, [[maybe_unused]] bool on) {
 #if OS_UNIX
   uint64_t arg = (true == on ? 1 : 0 );
   ioctlex(fd, FIONBIO, &arg);
 #elif OS_WIN
-  UNUSED(fd);
-  UNUSED(on);
   //do nothing
 #endif
 }
 
 
-uint32_t availableex(int32_t fd) {
+uint32_t availableex([[maybe_unused]] int32_t fd) {
 #if OS_UNIX
   uint32_t arg = 0;
   ioctlex(fd, FIONREAD, &arg);
   std::cout << "availableex: " << arg << std::endl;
   return arg;
 #elif OS_WIN
-  UNUSED(fd);
   return 0;
 #endif
 }
@@ -335,10 +326,9 @@ int64_t lseekex(int32_t fd, uint64_t offset, int32_t whence) {
   return result;
 }
 
-int64_t tellex(int32_t fd) {
+int64_t tellex([[maybe_unused]] int32_t fd) {
   int64_t result = 0;
 #if OS_UNIX
-  UNUSED(fd);
   //do nothing
 #elif OS_WIN
   result = _tell(fd);
@@ -355,6 +345,4 @@ bool truncate(const char *filename) {
   return true;
 }
 
-} //namespace api
-
-} //namespace pf_file
+} // namespace plain

@@ -4,7 +4,7 @@
 
 - **作者:** Viticm
 - **网站:** [http://www.cnblogs.com/lianyue/](http://www.cnblogs.com/lianyue/)
-- **版本:** 1.1.0rc
+- **版本:** 2.0d(C++23 没用使用模块(modules))
 
 [![Build Status](https://travis-ci.org/viticm/plain.svg)](https://travis-ci.org/viticm/plain)
 

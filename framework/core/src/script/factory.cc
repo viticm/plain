@@ -1,8 +1,7 @@
-#include "pf/script/interface.h"
-#include "pf/basic/logger.h"
-#include "pf/script/factory.h"
+#include "plain/script/factory.h"
+#include "plain/script/interface.h"
 
-using namespace pf_script;
+using namespace plain::script;
 
 eid_t Factory::newenv(const config_t &config) {
   eid_t eid = neweid();

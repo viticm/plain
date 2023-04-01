@@ -1,0 +1,9 @@
+libdir=@CMAKE_INSTALL_FULL_LIBDIR@
+includedir=@CMAKE_INSTALL_FULL_INCLUDEDIR@
+
+Name: plain
+Description: PlainFramework (without main() function)
+Version: @PROJECT_VERSION@
+URL: https://github.com/viticm/plain
+Libs: -L${libdir} -lplain @CMAKE_THREAD_LIBS_INIT@
+Cflags: -I${includedir} @GTEST_HAS_PTHREAD_MACRO@ @CMAKE_THREAD_LIBS_INIT@

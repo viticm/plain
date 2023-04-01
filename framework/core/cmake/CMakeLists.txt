@@ -13,40 +13,40 @@ cmake_minimum_required(VERSION 2.8.12)
 # Name of the project.
 #
 # CMake files in this project can refer to the root source directory
-# as ${PF_SOURCE_DIR} and to the root binary directory as
-# ${pf_BINARY_DIR}.
+# as ${PLAIN_SOURCE_DIR} and to the root binary directory as
+# ${PLAIN_BINARY_DIR}.
 # Language "C" is required for find_package(Threads).
 if (CMAKE_VERSION VERSION_LESS 3.0)
   project(plain CXX C)
 else()
   cmake_policy(SET CMP0048 NEW)
-  project(plain VERSION ${PF_VERSION} LANGUAGES CXX C)
+  project(plain VERSION ${PLAIN_VERSION} LANGUAGES CXX C)
 endif()
 
 # When other libraries are using a shared version of runtime libraries,
 # Plain Framework also has to use one.
 option(
-  pf_force_shared_crt
+  plain_force_shared_crt
   "Use shared (DLL) run-time lib even when Plain Framework is built as static lib."
   OFF)
 
-option(pf_build_tests "Build all of pf's own tests." OFF)
+option(plain_build_tests "Build all of pf's own tests." OFF)
 
-option(pf_build_shared "Build all of pf as share library." ON)
+option(plain_build_shared "Build all of pf as share library." ON)
 
-option(pf_build_samples "Build pf's sample programs." OFF)
+option(plain_build_samples "Build pf's sample programs." OFF)
 
-option(pf_disable_pthreads "Disable uses of pthreads in pf." OFF)
+option(plain_disable_pthreads "Disable uses of pthreads in pf." OFF)
 
 option(
-  pf_hide_internal_symbols
+  plain_hide_internal_symbols
   "Build pf with internal symbols hidden in shared libraries."
   OFF)
 
 set(CMAKE_DEBUG_POSTFIX "d" CACHE STRING "Generate debug library name with a postfix.")
 
 # Windows crt.
-set(pf_force_shared_crt ${pf_build_shared})
+set(plain_force_shared_crt ${plain_build_shared})
 
 if (COMMAND config_compiler_and_linker)
   config_compiler_and_linker()
@@ -67,17 +67,17 @@ if (COMMAND set_up_hermetic_build)
   set_up_hermetic_build()
 endif()
 
-if (pf_hide_internal_symbols)
+if (plain_hide_internal_symbols)
   set(CMAKE_CXX_VISIBILITY_PRESET hidden)
   set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
 endif()
 
-set(PF_SOURCE_DIR "..")
+set(PLAIN_SOURCE_DIR "..")
 
 # Where Plain Framework's .h files can be found.
 include_directories(
-  "${PF_SOURCE_DIR}/include"
-  "${PF_SOURCE_DIR}")
+  "${PLAIN_SOURCE_DIR}/include"
+  "${PLAIN_SOURCE_DIR}")
 
 # Summary of tuple support for Microsoft Visual Studio:
 # Compiler    version(MS)  version(cmake)  Support
@@ -93,18 +93,18 @@ endif()
 
 ########################################################################
 #
-# Defines the pf_core libraries.  User tests should link
+# Defines the plain libraries.  User tests should link
 # with one of them.
 
-set(INSTALL_PF ON)
-file(GLOB_RECURSE LIB_SOURCES "${PF_SOURCE_DIR}/src/*.cc")
-file(GLOB_RECURSE LIB_SOURCES_C "${PF_SOURCE_DIR}/src/*.c")
+set(INSTALL_PLAIN ON)
+file(GLOB_RECURSE LIB_SOURCES "${PLAIN_SOURCE_DIR}/src/*.cc")
+file(GLOB_RECURSE LIB_SOURCES_C "${PLAIN_SOURCE_DIR}/src/*.c")
 
 if (MSVC)
   set(WITH_LIBS "ws2_32")
 else()
   set(WITH_LIBS "dl")
-  set(core_flags "-DPF_OPEN_EPOLL")
+  set(core_flags "-DPLAIN_OPEN_EPOLL")
 endif()
 
 # This is the directory into which the executables are built.
@@ -112,8 +112,8 @@ endif()
 
 # Version rc.
 if (MSVC AND VERSION_RC)
-  set(pf_core_version_rc "${CMAKE_BINARY_DIR}/pf_core.rc")
-  configure_file(${VERSION_RC} ${pf_core_version_rc})
+  set(plain_version_rc "${CMAKE_BINARY_DIR}/plain.rc")
+  configure_file(${VERSION_RC} ${plain_version_rc})
 endif()
 
 if (WIN32)
@@ -122,29 +122,28 @@ if (WIN32)
 endif()
 
 # Plain Framework libraries.  We build them using more strict warnings than what
-# are used for other targets, to ensure that pf can be compiled by a user
+# are used for other targets, to ensure that plain can be compiled by a user
 # aggressive about warnings.
-if (pf_build_shared)
-  cxx_shared_library(pf_core "${core_flags} ${cxx_default} -DPF_CORE" ${LIB_SOURCES} ${LIB_SOURCES_C} ${pf_core_version_rc})
-  target_link_libraries(pf_core PUBLIC ${WITH_LIBS})
+if (plain_build_shared)
+  cxx_shared_library(plain "${core_flags} ${cxx_default} -DPLAIN_CORE" ${LIB_SOURCES} ${LIB_SOURCES_C} ${plain_version_rc})
+  target_link_libraries(plain PUBLIC ${WITH_LIBS})
 else()
-  cxx_library(pf_core "${core_flags} ${cxx_strict}" ${LIB_SOURCES} ${LIB_SOURCES_C})
+  cxx_library(plain "${core_flags} ${cxx_strict}" ${LIB_SOURCES} ${LIB_SOURCES_C})
 endif()
 
-set_target_properties(pf_core PROPERTIES DEFINE_SYMBOL PF_BUILD_AS_DLL)
-set_target_properties(pf_core PROPERTIES SOVERSION 1)
+set_target_properties(plain PROPERTIES DEFINE_SYMBOL PLAIN_BUILD_AS_DLL)
+set_target_properties(plain PROPERTIES SOVERSION 1)
 
 # If the CMake version supports it, attach header directory information
 # to the targets for when we are part of a parent build (ie being pulled
 # in via add_subdirectory() rather than being a standalone build).
 if (DEFINED CMAKE_VERSION AND NOT "${CMAKE_VERSION}" VERSION_LESS "2.8.12")
-  target_include_directories(pf_core      SYSTEM INTERFACE "${PF_SOURCE_DIR}/include")
+  target_include_directories(plain SYSTEM INTERFACE "${PLAIN_SOURCE_DIR}/include")
 endif()
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 23)
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-expansion-to-defined")
-  #  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99")
 endif()
 
@@ -166,32 +165,32 @@ endif()
 ########################################################################
 #
 # Install rules
-if(INSTALL_PF)
-  install(TARGETS pf_core
+if(INSTALL_PLAIN)
+  install(TARGETS plain
     RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
     ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
     LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}")
-  install(DIRECTORY "${PF_SOURCE_DIR}/include/pf"
+  install(DIRECTORY "${PLAIN_SOURCE_DIR}/include/plain"
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 
   # configure and install pkgconfig files
   configure_file(
-    inc/pf.pc.in
-    "${CMAKE_BINARY_DIR}/pf.pc"
+    inc/plain.pc.in
+    "${CMAKE_BINARY_DIR}/plain.pc"
     @ONLY)
-  install(FILES "${CMAKE_BINARY_DIR}/pf.pc"
+  install(FILES "${CMAKE_BINARY_DIR}/plain.pc"
     DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
 endif()
 
 ########################################################################
 #
-# Samples on how to link user tests with pf or pf_main.
+# Samples on how to link user tests with plain or plain_main.
 #
 # They are not built by default.  To build them, set the
-# pf_build_samples option to ON.  You can do it by running ccmake
-# or specifying the -Dpf_build_samples=ON flag when running cmake.
+# plain_build_samples option to ON.  You can do it by running ccmake
+# or specifying the -Dplain_build_samples=ON flag when running cmake.
 
-if (pf_build_samples)
+if (plain_build_samples)
 
 endif()
 
@@ -203,10 +202,10 @@ endif()
 # Plain Framework itself.
 #
 # The tests are not built by default.  To build them, set the
-# pf_build_tests option to ON.  You can do it by running ccmake
-# or specifying the -Dpf_build_tests=ON flag when running cmake.
+# plain_build_tests option to ON.  You can do it by running ccmake
+# or specifying the -Dplain_build_tests=ON flag when running cmake.
 
-if (pf_build_tests)
+if (plain_build_tests)
   # This must be set in the root directory for the tests to be run by
   # 'make test' or ctest.
   enable_testing()
@@ -214,7 +213,7 @@ if (pf_build_tests)
   ############################################################
   # C++ tests built with standard compiler flags.
 
-  #cxx_test(pf-death-test_test pf_main)
+  #cxx_test(pf-death-test_test plain_main)
 
   ############################################################
   # C++ tests built with non-standard compiler flags.

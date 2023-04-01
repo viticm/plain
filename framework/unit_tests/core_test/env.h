@@ -1,8 +1,8 @@
-#ifndef PF_CORE_TEST_ENV_H_
-#define PF_CORE_TEST_ENV_H_
+#ifndef PLAIN_CORE_TEST_ENV_H_
+#define PLAIN_CORE_TEST_ENV_H_
 
-#include "pf/engine/kernel.h"
+#include "plain/engine/kernel.h"
 
-extern std::unique_ptr<pf_engine::Kernel> engine;
+// extern std::unique_ptr<plain_engine::Kernel> engine;
 
-#endif //PF_CORE_TEST_ENV_H_
+#endif //PLAIN_CORE_TEST_ENV_H_

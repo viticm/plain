@@ -29,9 +29,9 @@
 
 */
 
-#include "pf/basic/base64.h"
+#include "plain/basic/base64.h"
 
-namespace pf_basic {
+using namespace plain;
 
 static const std::string base64_chars = 
              "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -121,5 +121,3 @@ std::string base64_decode(std::string const& encoded_string) {
 
   return ret;
 }
-
-} //namespace pf_basic

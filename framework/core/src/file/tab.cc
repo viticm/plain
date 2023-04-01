@@ -1,11 +1,8 @@
-#include <map>
-#include <assert.h>
-#include <exception>
-#include "pf/basic/string.h"
-#include "pf/sys/assert.h"
-#include "pf/file/tab.h"
+#include "plain/file/tab.h"
+#include "plain/basic/utility.h"
+#include "plain/sys/assert.h"
 
-namespace pf_file {
+using namespace plain;
 
 Tab::Tab(uint32_t id) : 
   id_{id},
@@ -24,7 +21,7 @@ Tab::~Tab() {
 }
 
 bool Tab::open_from_txt(const char *filename) {
-  assert(filename);
+  Assert(filename);
   FILE *fp = fopen(filename, "rb");
   if (nullptr == fp) return false;
   fseek(fp, 0, SEEK_END);
@@ -93,12 +90,12 @@ const Tab::field_data *Tab::search_position(int32_t line,
     memset(temp, '\0', sizeof(temp));
     snprintf(temp, 
              sizeof(temp) - 1, 
-             "pf_file::Tab::search_position is failed,"
+             "plain_file::Tab::search_position is failed,"
              " position out for range[line:%d, column:%d] position:%d",
              line,
              column,
              position);
-#ifdef _PF_THROW_EXCEPTION_AS_STD_STRING
+#ifdef _plain_THROW_EXCEPTION_AS_STD_STRING
     throw std::string(temp);
 #else
     AssertEx(false, temp);
@@ -160,7 +157,7 @@ void Tab::create_index(int32_t column, const char *filename) {
                filename, 
                i + 1, 
                _field_data->int_value);
-#ifdef _PF_THROW_EXCEPTION_AS_STD_STRING
+#ifdef _plain_THROW_EXCEPTION_AS_STD_STRING
       throw std::string(temp);
 #else
       AssertEx(false, temp);
@@ -191,8 +188,8 @@ const char *Tab::get_line_from_memory(char *str,
 }
 
 bool Tab::field_equal(field_type_enum type, 
-                           const field_data &a, 
-                           const field_data &b) {
+                      const field_data &a, 
+                      const field_data &b) {
   bool result = false;
   if (kTypeInt == type) {
     result = a.int_value == b.int_value;
@@ -209,16 +206,15 @@ bool Tab::field_equal(field_type_enum type,
 }
 
 bool Tab::open_from_memory_text(const char *memory, 
-                                     const char *end, 
-                                     const char *filename) {
-  using namespace pf_basic;
+                                const char *end, 
+                                const char *filename) {
   char line[(1024 * 10) + 1]; //long string
   memset(line, '\0', sizeof(line));
   register const char *_memory = memory;
   _memory = get_line_from_memory(line, sizeof(line) - 1, _memory, end);
   if (!_memory) return false;
   std::vector<std::string> result;
-  string::explode(line, result, "\t", true, true);
+  explode(line, result, "\t", true, true);
   if (result.empty()) return false;
   field_type _field_type;
   _field_type.resize(result.size());
@@ -242,7 +238,7 @@ bool Tab::open_from_memory_text(const char *memory,
   std::map<std::string, int32_t> map_string_buffer;
   _memory = get_line_from_memory(line, sizeof(line) - 1, _memory, end);
   //第二行为列名（相当于数据库的字段名），应尽量使用英文
-  string::explode(line, fieldnames_, "\t", true, true);
+  explode(line, fieldnames_, "\t", true, true);
   if (!_memory) return false;
   int32_t string_buffer_size = 0;
   bool loop = true;
@@ -251,7 +247,7 @@ bool Tab::open_from_memory_text(const char *memory,
     _memory = get_line_from_memory(line, sizeof(line) - 1, _memory, end);
     if (!_memory) break;
     if ('#' == line[0]) continue; //注释行
-    string::explode(line, result, "\t", true, false);
+    explode(line, result, "\t", true, false);
     if (result.empty()) continue; //空行
     if (static_cast<int32_t>(result.size()) != field_number) { //列数不对
       int32_t left_number = 
@@ -283,12 +279,12 @@ bool Tab::open_from_memory_text(const char *memory,
           char *convert_str = new char[convert_strlength];
           memset(convert_str, 0, convert_strlength);
           int32_t convert_result = 
-            string::charset_convert("GBK",
-                                    "UTF-8",
-                                    convert_str,
-                                    convert_strlength,
-                                    value,
-                                    static_cast<int32_t>(strlen(value)));
+            charset_convert("GBK",
+                            "UTF-8",
+                             convert_str,
+                             convert_strlength,
+                             value,
+                             static_cast<int32_t>(strlen(value)));
           if (convert_result > 0) {
             value = convert_str;
             result[i] = convert_str;
@@ -526,7 +522,7 @@ const Tab::field_data *Tab::get_fielddata(int32_t line,
   return _field_data;
 }
 
-bool Tab::save_totext_line(std::vector<std::string> _data){
+bool Tab::save_totext_line(const std::vector<std::string> &_data){
   if(static_cast<int32_t>(_data.size()) != field_number_)
     return false;
 
@@ -551,5 +547,3 @@ bool Tab::save_totext_line(std::vector<std::string> _data){
   } 
   return true;
 }
-
-} //namespace pf_file

@@ -94,7 +94,7 @@ function(set_compiler_flags_for_external_libraries)
   # Suppress all warnings.
   if( CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX OR
       using_clangxx OR APPLE )
-    set(CMAKE_CXX_FLAGS "-std=c++0x -w -Wno-deprecated-declarations" PARENT_SCOPE)
+    set(CMAKE_CXX_FLAGS "-std=c++23 -w -Wno-deprecated-declarations" PARENT_SCOPE)
     set(CMAKE_C_FLAGS "-w" PARENT_SCOPE)
   elseif(MSVC)
     set(CMAKE_C_FLAGS "${MSVC_FLAGS}" PARENT_SCOPE)

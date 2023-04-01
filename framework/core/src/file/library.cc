@@ -1,10 +1,13 @@
-#include "pf/basic/logger.h"
-#include "pf/basic/string.h"
-#include "pf/file/api.h"
-#include "pf/engine/kernel.h"
-#include "pf/file/library.h"
+#include "plain/file/library.h"
+#include "plain/basic/logger.h"
+#include "plain/basic/utility.h"
+#include "plain/basic/global.h"
+#include "plain/file/api.h"
+#include "plain/engine/kernel.h"
 
-typedef void (__stdcall *function_open)(pf_engine::Kernel *, void *);
+using namespace plain;
+
+typedef void (__stdcall *function_open)(plain::Kernel *, void *);
 
 /* The diffrent os library prefix and suffix. */
 #if OS_WIN
@@ -12,7 +15,7 @@ typedef void (__stdcall *function_open)(pf_engine::Kernel *, void *);
 #define LIBRARY_SUFFIX ".dll"
 
 static inline std::string GetLastErrorString(DWORD nErrorCode) {
-  using namespace pf_basic::string;
+  using namespace plain_basic::string;
   WCHAR *msg = 0; //Qt: wchar_t
   // Ask Windows to prepare a standard message for a GetLastError() code:
   FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | 
@@ -39,12 +42,9 @@ static inline std::string GetLastErrorString(DWORD nErrorCode) {
 #include <dlfcn.h>
 #endif
 
-std::unique_ptr< pf_file::LibraryManager > g_librarymanager{nullptr};
-
-template<> pf_file::LibraryManager*
-pf_basic::Singleton< pf_file::LibraryManager >::singleton_ = nullptr;
-
-namespace pf_file {
+template <>
+std::shared_ptr<LibraryManager>
+Singleton<LibraryManager>::singleton_ = nullptr;
 
 void Library::set_filename(const std::string &_filename) {
   filename_ = _filename;
@@ -67,9 +67,8 @@ void Library::set_filename(const std::string &_filename) {
 }
 
 bool Library::load(bool tryprefix, bool seeglb) {
-  using namespace pf_basic::string;
   std::string temp = path_ + filename_;
-  auto fileexists = api::exists(temp);
+  auto fileexists = exists(temp);
   if (fileexists) {
 #if OS_WIN
     UNUSED(seeglb);
@@ -93,10 +92,12 @@ bool Library::load(bool tryprefix, bool seeglb) {
         filename_.substr(0, strlen(LIBRARY_PREFIX)) == LIBRARY_PREFIX) {
 #if _DEBUG
       if (fileexists) {
+        /*
         SLOW_ERRORLOG("library", 
                     "[library] load (%s) error: %s", 
                     filename_.c_str(), 
                     errorstr_.c_str());
+        */
       }
 #endif
       return false;
@@ -148,10 +149,12 @@ void *Library::resolve(const std::string &symbol, bool again) {
   symbolhandle = cast(void *, GetProcAddress((HMODULE)handle_, symbol.c_str()));
   if (is_null(symbolhandle)) {
     errorstr_ = GetLastErrorString(GetLastError());
+    /*
     SLOW_ERRORLOG("library", 
                   "[library] resolve(%s) failed, error: %s", 
                   symbol.c_str(), 
                   errorstr_.c_str());
+    */
   }
 #else
   symbolhandle = dlsym(handle_, symbol.c_str());
@@ -185,14 +188,7 @@ LibraryManager::LibraryManager() {
 #endif
 }
 
-LibraryManager *LibraryManager::getsingleton_pointer() {
-  return singleton_;
-}
-
-LibraryManager &LibraryManager::getsingleton() {
-  Assert(singleton_);
-  return *singleton_;
-}
+LibraryManager::~LibraryManager() = default;
 
 void LibraryManager::add_searchpaths(const std::vector<std::string> &paths) {
   for (const std::string &path : paths) {
@@ -221,9 +217,9 @@ void LibraryManager::remove_librarynames(const std::string &onlyname,
    
 bool LibraryManager::load(const std::string &name, 
                           bool seeglb,
-                          const pf_basic::type::variable_array_t &params) {
+                          const variable_array_t &params) {
   if (librarymap_[name]) {
-    SLOW_DEBUGLOG("library", "[library] load(%s) has loaded", name.c_str());
+    // SLOW_DEBUGLOG("library", "[library] load(%s) has loaded", name.c_str());
     return true;
   }
   std::vector<std::string> names = namesmap_[name];
@@ -258,10 +254,12 @@ bool LibraryManager::load(const std::string &name,
       std::string err{"The file mybe not found!"};
       if (library->errorstr() != "")
         err = library->errorstr();
+      /*
       SLOW_ERRORLOG("library", 
                     "[library] load(%s) error-> %s", 
                     _name.c_str(),
                     err.c_str());
+      */
     }
   }
   if (!library->isloaded()) {
@@ -272,37 +270,37 @@ bool LibraryManager::load(const std::string &name,
   std::string mainfunc{name};
   if (mainfunc.find(".") != std::string::npos)
     mainfunc.replace(mainfunc.find("."), mainfunc.size() - 1, "");
-  mainfunc = "pfopen_" + mainfunc;
+  mainfunc = "plainopen_" + mainfunc;
   auto openhanlde = library->resolve(mainfunc);
   if (!is_null(openhanlde)) {
 #ifdef __GNUC__
 __extension__
 #endif
     function_open openfunc = reinterpret_cast<function_open>(openhanlde);
-    openfunc(ENGINE_POINTER, cast(void *, &params));
+    // openfunc(ENGINE_POINTER, cast(void *, &params));
   }
 
   librarymap_[name] = nullptr;
   librarymap_[name] = std::move(library);
-  SLOW_DEBUGLOG("library", "[library] load(%s) ok!", name.c_str());
+  // SLOW_DEBUGLOG("library", "[library] load(%s) ok!", name.c_str());
   return true;
 }
 
 bool LibraryManager::unload(const std::string &name) {
   auto it = librarymap_.find(name);
   if (it == librarymap_.end()) {
-    SLOW_DEBUGLOG("library", "[library] load(%s) has unloaded", name.c_str());
+    // SLOW_DEBUGLOG("library", "[library] load(%s) has unloaded", name.c_str());
     return true;
   }
   if (!it->second->unload()) {
+    /*
     SLOW_ERRORLOG("library", 
                   "[library] load(%s) error: %s", 
                   name.c_str(), 
                   it->second->errorstr().c_str());
+    */
     return false;
   }
   librarymap_.erase(name);
   return true;
 }
-
-} //namespace pf_file

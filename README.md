@@ -4,7 +4,7 @@
 
 - **Author:** Viticm
 - **Website:** [http://www.cnblogs.com/lianyue/](http://www.cnblogs.com/lianyue/)
-- **Version:** 2.0(cpp23)
+- **Version:** 2.0d(cpp23 without modules)
 
 [![Build Status](https://travis-ci.org/viticm/plain.svg)](https://travis-ci.org/viticm/plain)
 
