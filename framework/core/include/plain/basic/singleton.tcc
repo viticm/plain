@@ -24,7 +24,7 @@ class PLAIN_API Singleton : noncopyable {
    ~Singleton() = default;
 
    static std::shared_ptr<T> get_instance() {
-     std::call_once(once_flag_, [&singleton_]{
+     std::call_once(once_flag_, [&]{
        singleton_ = std::make_shared<T>();
      });
      return singleton_;
@@ -38,6 +38,12 @@ class PLAIN_API Singleton : noncopyable {
 
 };
 
-} //namespace plain
+} // namespace plain
+
+#define PLAIN_SINGLETON_DECL(T) \
+template <> \
+std::shared_ptr<T> plain::Singleton<T>::singleton_{nullptr}; \
+template <> \
+std::once_flag plain::Singleton<T>::once_flag_{};
 
 #endif //PLAIN_BASIC_SINGLETON_H_

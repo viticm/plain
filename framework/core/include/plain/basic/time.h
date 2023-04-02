@@ -26,16 +26,16 @@ class PLAIN_API Time : public Singleton<Time> {
  public:
    
    // Get tick count from start.
-   uint64_t get_tick() const;
+   uint64_t get_tick() const noexcept;
    
    // Get unix timestamp.
-   uint32_t get_timestamp() const;
+   static uint32_t get_timestamp();
    
    // Get format string like{Y-m-d H:M:S}
-   std::string format() const;
+   static std::string format();
    
    // Get format string like{Y-m-d H:M:S[.ms]}
-   std::string format(bool show_microseconds = true) const;
+   static std::string format(bool show_microseconds = true);
 
  private:
    std::chrono::time_point<std::chrono::steady_clock> s_time_;

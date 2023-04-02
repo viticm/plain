@@ -5,6 +5,8 @@
 #include "plain/file/api.h"
 #include "plain/engine/kernel.h"
 
+PLAIN_SINGLETON_DECL(plain::LibraryManager);
+
 using namespace plain;
 
 typedef void (__stdcall *function_open)(plain::Kernel *, void *);
@@ -41,10 +43,6 @@ static inline std::string GetLastErrorString(DWORD nErrorCode) {
 #define LIBRARY_SUFFIX ".so"
 #include <dlfcn.h>
 #endif
-
-template <>
-std::shared_ptr<LibraryManager>
-Singleton<LibraryManager>::singleton_ = nullptr;
 
 void Library::set_filename(const std::string &_filename) {
   filename_ = _filename;

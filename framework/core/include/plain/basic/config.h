@@ -41,7 +41,6 @@
 #include <atomic>
 #include <mutex>
 #include <thread>
-#include <chrono>
 #include <tuple>
 #include <regex>
 #include <type_traits>
