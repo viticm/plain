@@ -13,7 +13,7 @@
 
 #include "plain/script/config.h"
 #include "plain/basic/type/variable.h"
-#include "plain/basic/task_queue.tcc"
+#include "plain/basic/task_queue.h"
 
 namespace plain::script {
 

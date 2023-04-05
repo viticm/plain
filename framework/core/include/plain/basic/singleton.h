@@ -1,6 +1,6 @@
 /**
  * PLAIN FRAMEWORK ( https://github.com/viticm/plain )
- * $Id singleton.tcc
+ * $Id singleton.h
  * @link https://github.com/viticm/plain for the canonical source repository
  * @copyright Copyright (c) 2023- viticm( viticm.ti@gmail.com )
  * @license

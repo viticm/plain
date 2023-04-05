@@ -17,10 +17,11 @@ namespace plain {
 
 struct variable_struct;
 
-//Commonly used definitions.
+// Commonly used definitions.
+// The variable_struct is a abstract data type(ADT).
 using variable_t = variable_struct;
-using variable_array_t = std::vector< variable_t >;
-using variable_map_t = std::unordered_map< std::string, variable_t > ;
+using variable_array_t = std::vector<variable_t>;
+using variable_map_t = std::unordered_map<std::string, variable_t>;
 using closure_t = std::function<void()>;
 
 enum class Variable {

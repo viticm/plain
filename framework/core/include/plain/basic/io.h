@@ -1,6 +1,6 @@
 /**
  * PLAIN FRAMEWORK ( https://github.com/viticm/plainframework )
- * $Id io.tcc
+ * $Id io.h
  * @link https://github.com/viticm/plainframework for the canonical source repository
  * @copyright Copyright (c) 2014- viticm( viticm.ti@gmail.com )
  * @license
@@ -11,8 +11,8 @@
  *       cwarn: yellow font.
  *       cdebug: green font.
 */
-#ifndef PLAIN_BASIC_IO_TCC_
-#define PLAIN_BASIC_IO_TCC_
+#ifndef PLAIN_BASIC_IO_H_
+#define PLAIN_BASIC_IO_H_
 
 #include "plain/basic/config.h"
 
@@ -93,4 +93,4 @@ void io_cdebug(const char *format, TS... args) {
 
 } // namespace plain
 
-#endif //PLAIN_BASIC_IO_TCC_
+#endif //PLAIN_BASIC_IO_H_

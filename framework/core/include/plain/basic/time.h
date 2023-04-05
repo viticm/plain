@@ -13,7 +13,7 @@
 #define PLAIN_BASIC_TIME_H_
 
 #include "plain/basic/config.h"
-#include "plain/basic/singleton.tcc"
+#include "plain/basic/singleton.h"
 
 namespace plain {
 
@@ -26,16 +26,19 @@ class PLAIN_API Time : public Singleton<Time> {
  public:
    
    // Get tick count from start.
-   uint64_t get_tick() const noexcept;
+   uint64_t tickcount() const noexcept;
    
    // Get unix timestamp.
-   static uint32_t get_timestamp();
+   static uint32_t timestamp();
    
    // Get format string like{Y-m-d H:M:S}
    static std::string format();
    
    // Get format string like{Y-m-d H:M:S[.ms]}
    static std::string format(bool show_microseconds = true);
+
+   // Get current nanoseconds.
+   static uint64_t nanoseconds();
 
  private:
    std::chrono::time_point<std::chrono::steady_clock> s_time_;

@@ -22,11 +22,11 @@
 #include "plain/basic/base64.h"
 #include "plain/basic/endian.h"
 #include "plain/basic/global.h"
-#include "plain/basic/io.tcc"
+#include "plain/basic/io.h"
 #include "plain/basic/logger.h"
 #include "plain/basic/md5.h"
 #include "plain/basic/monitor.h"
-#include "plain/basic/singleton.tcc"
+#include "plain/basic/singleton.h"
 #include "plain/basic/stringstream.h"
 #include "plain/basic/utility.h"
 

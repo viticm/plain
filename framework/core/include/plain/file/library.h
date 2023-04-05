@@ -13,7 +13,7 @@
 #define PLAIN_FILE_LIBRARY_H_
 
 #include "plain/file/config.h"
-#include "plain/basic/singleton.tcc"
+#include "plain/basic/singleton.h"
 #include "plain/basic/type/variable.h"
 
 namespace plain {

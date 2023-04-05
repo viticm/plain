@@ -12,15 +12,108 @@
 #define PLAIN_BASIC_LOGGER_H_
 
 #include "plain/basic/config.h"
-#include "plain/basic/singleton.tcc"
+#include "plain/basic/ring.h"
 
 namespace plain {
 
-class PLAIN_API Logger : public Singleton<Logger> {
+// The log level enum define.
+enum class LogLevel {
+  Trace,
+  Debug,
+  Info,
+  Warn,
+  Error,
+  Fatal,
+  Nums,
+};
+
+class PLAIN_API Logger /*: public Singleton<Logger>*/ {
+
+using Buffer = FixedRing<char, 4096>;
 
  public:
    Logger();
    ~Logger();
+ 
+ public:
+   // Set log level.
+   static void set_level(LogLevel level);
+ 
+   // Get log level.
+   static LogLevel get_level();
+
+ public:
+  Logger &operator<<(bool v) {
+    buffer_.write(v ? "1" : "0", 1);
+    return *this;
+  }
+  
+  Logger &operator<<(short);
+  Logger &operator<<(unsigned short);
+  Logger &operator<<(int);
+  Logger &operator<<(unsigned int);
+  Logger &operator<<(long);
+  Logger &operator<<(unsigned long);
+  Logger &operator<<(long long);
+  Logger &operator<<(unsigned long long);
+  
+  Logger &operator<<(const void*);
+  
+  Logger &operator<<(float v) {
+    *this << static_cast<double>(v);
+    return *this;
+  }
+  Logger &operator<<(double);
+  
+  Logger &operator<<(char v) {
+    buffer_.write(&v, 1);
+    return *this;
+  }
+  
+  Logger &operator<<(const char* str) {
+    if (str) {
+      buffer_.write(str, strlen(str));
+    } else {
+      buffer_.write("(null)", 6);
+    }
+    return *this;
+  }
+  
+  Logger &operator<<(const unsigned char* str) {
+    return operator<<(reinterpret_cast<const char*>(str));
+  }
+  
+  Logger &operator<<(const std::string& v) {
+    buffer_.write(v.c_str(), v.size());
+    return *this;
+  }
+  
+  //Logger &operator<<(const StringPiece& v) {
+  //  buffer_.append(v.data(), v.size());
+  //  return *this;
+  //} 
+  
+  //Logger &operator<<(const Buffer& v) {
+  //  *this << v.toStringPiece();
+  //  return *this;
+  //}
+  
+  void append(const char* data, std::size_t len) { buffer_.write(data, len); }
+  const Buffer& buffer() const { return buffer_; }
+  void reset_buffer() { buffer_.producer_clear(); }
+  
+ private:
+  void static_check();
+
+  template<typename T>
+  void format_integer(T);
+
+ private:
+  static LogLevel level_;
+  static const int kMaxNumericSize = 48;
+
+ private:
+  Buffer buffer_;
 
 };
 

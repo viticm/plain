@@ -11,6 +11,8 @@
 #ifndef PLAIN_BASIC_MACROS_OTHER_H_
 #define PLAIN_BASIC_MACROS_OTHER_H_
 
+#ifdef OS_WIN
+
 //why use it? for FD_* functions
 #pragma warning(disable: 4127)
 
@@ -30,15 +32,10 @@
 //API warnings.
 #pragma warning (disable: 4996)
 
-#if OS_UNIX
-#define __stdcall
 #endif
 
-// C++11 and below don't support contexpr as used here.
-#if __cplusplus >= 201300
-# define PLAIN_CONSTEXPR constexpr 
-#else
-# define PLAIN_CONSTEXPR
+#if OS_UNIX
+#define __stdcall
 #endif
 
 enum class AppStatus {
@@ -55,5 +52,12 @@ enum class AppStatus {
 #define PLAIN_RELEASE	PLAIN_VERSION "." PLAIN_VERSION_RELEASE
 #define PLAIN_COPYRIGHT	PLAIN_RELEASE "  Copyright (C) 2023 by viticm "
 #define PLAIN_AUTHORS	"viticm<viticm.ti@gmail.com>"
+
+// The function name.
+#ifndef OS_UNIX
+#define PLAIN_FUNCTION __FUNCSIG__
+#else
+#define PLAIN_FUNCTION __PRETTY_FUNCTION__
+#endif
 
 #endif //PLAIN_BASIC_MACROS_OTHER_H_

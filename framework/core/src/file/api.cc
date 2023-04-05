@@ -14,7 +14,7 @@
 
 namespace plain {
 
-int32_t openex(const char *filename, int32_t flag) {
+int32_t openex(const char* filename, int32_t flag) {
 #if OS_UNIX
   int32_t fd = open(filename, flag);
 #elif OS_WIN
@@ -50,7 +50,7 @@ int32_t openex(const char *filename, int32_t flag) {
   return fd;
 }
 
-int32_t openmode_ex(const char * filename, int32_t flag, int32_t mode) {
+int32_t openmode_ex(const char*  filename, int32_t flag, int32_t mode) {
 #if OS_UNIX
   int32_t fd = open(filename, flag, mode);
 #elif OS_WIN
@@ -338,7 +338,7 @@ int64_t tellex([[maybe_unused]] int32_t fd) {
   return result ;
 }
 
-bool truncate(const char *filename) {
+bool truncate(const char* filename) {
   FILE *fp = fopen(filename, "w");
   if (nullptr == fp) return false;
   fclose(fp);

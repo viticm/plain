@@ -5,15 +5,15 @@
  * @copyright Copyright (c) 2014- viticm( viticm.ti@gmail.com )
  * @license
  * @user viticm<viticm.ti@gmail.com>
- * @date 2016/05/07 00:09
+ * @date 2023/04/03 12:02
  * @uses The System module config file.
 */
-#ifndef PF_SYS_CONFIG_H_
-#define PF_SYS_CONFIG_H_
+#ifndef PLAIN_SYS_CONFIG_H_
+#define PLAIN_SYS_CONFIG_H_
 
-#include "pf/basic/config.h"
+#include "plain/basic/config.h"
 
-namespace pf_sys {
+namespace plain {
 
 class ThreadCollect;
 class ThreadPool;
@@ -23,6 +23,6 @@ enum {
   kThreadStatusRun,
 };
 
-} //namespace pf_sys
+} //namespace plain
 
-#endif //PF_SYS_CONFIG_H_
+#endif //PLAIN_SYS_CONFIG_H_

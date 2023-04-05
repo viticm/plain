@@ -13,14 +13,14 @@ Time::Time() :
 
 Time::~Time() = default;
 
-uint32_t Time::get_timestamp() {
+uint32_t Time::timestamp() {
   auto now = std::chrono::system_clock::now();
   auto now_s = std::chrono::time_point_cast<std::chrono::seconds>(now);
   auto value = now_s.time_since_epoch();
   return value.count();
 }
 
-uint64_t Time::get_tick() const noexcept {
+uint64_t Time::tickcount() const noexcept {
   using namespace std::chrono;
   auto now = steady_clock::now();
   auto passed = now - s_time_;
@@ -47,4 +47,11 @@ std::string Time::format(bool show_microseconds) {
     os << (value % 1000);
   }
   return os.str();
+}
+
+uint64_t Time::nanoseconds() {
+  auto now = std::chrono::steady_clock::now();
+  auto now_ns = std::chrono::time_point_cast<std::chrono::nanoseconds>(now);
+  auto value = now_ns.time_since_epoch();
+  return value.count();
 }

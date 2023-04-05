@@ -369,7 +369,7 @@ class Node {
 
 } //namespace pf_sys
 
-#include "pf/sys/memory/share.tcc"
+#include "pf/sys/memory/share.h"
 
 #ifndef share_lock
 #define share_lock(t,o,n,f) pf_sys::memory::share::unique_lock<t> n(o, f)

@@ -30,11 +30,6 @@ namespace plain::script {
 class Interface;
 class Factory;
 
-typedef enum {
-  kTypeLua = 0,   //Lua script.
-  kTypeNumber,    //The script type number.
-} type_t;
-
 struct config_struct {
   std::string rootpath;
   std::string workpath;

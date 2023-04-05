@@ -13,6 +13,7 @@
 #define PLAIN_SYS_THREAD_H_
 
 #include "plain/sys/config.h"
+#include "plain/basic/io.h"
 #include "plain/basic/global.h"
 
 namespace plain {
@@ -44,7 +45,7 @@ class PLAIN_API ThreadCollect {
    ~ThreadCollect();
 
  public:
-   static int32_t count() const {
+   static int32_t count() {
      return count_;
    }
 
@@ -53,8 +54,163 @@ class PLAIN_API ThreadCollect {
 
 };
 
-} //namespace plain
 
-#include "plain/sys/thread.tcc"
+// the constructor just launches some amount of workers
+ThreadPool::ThreadPool(size_t threads)
+  : stop_(false) {
+  for(size_t i = 0; i < threads; ++i)
+    workers_.emplace_back(
+      [this] {
+        for(;;) {
+          std::function<void()> task;
+          {
+            std::unique_lock<std::mutex> lock(this->queue_mutex_);
+            this->condition_.wait(lock,
+              [this]{ return this->stop_ || !this->tasks_.empty(); });
+            if(this->stop_ && this->tasks_.empty())
+              return;
+            task = std::move(this->tasks_.front());
+            this->tasks_.pop();
+          }
+          task();
+        }
+      }
+    );
+}
+
+// add new work item to the pool
+template<class F, class... Args>
+auto ThreadPool::enqueue(F&& f, Args&&... args) 
+  -> std::future<typename std::result_of<F(Args...)>::type> {
+  using return_type = typename std::result_of<F(Args...)>::type;
+  auto task = std::make_shared< std::packaged_task<return_type()> >(
+      std::bind(std::forward<F>(f), std::forward<Args>(args)...)
+    );
+  std::future<return_type> res = task->get_future();
+  {
+    std::unique_lock<std::mutex> lock(queue_mutex_);
+
+    // don't allow enqueueing after stopping the pool
+    if (stop_)
+      throw std::runtime_error("enqueue on stopped ThreadPool");
+
+    tasks_.emplace([task](){ (*task)(); });
+  }
+  condition_.notify_one();
+  return res;
+}
+
+// the destructor joins all threads
+ThreadPool::~ThreadPool() {
+  {
+    std::unique_lock<std::mutex> lock(queue_mutex_);
+    stop_ = true;
+  }
+  condition_.notify_all();
+  for(std::thread & worker : workers_)
+    worker.join();
+}
+
+namespace thread {
+
+inline const std::string get_id() {
+  std::stringstream ss;
+  ss << std::this_thread::get_id();
+  return std::string(ss.str());
+}
+
+inline const std::string get_id(const std::thread &thread) {
+  std::stringstream ss;
+  ss << thread.get_id();
+  return std::string(ss.str());
+}
+
+//用下面的方法的线程可以启动与停止
+inline const std::string status_key(std::thread &thread) {
+  std::string _status_key{"thread.status."};
+  _status_key += get_id(thread);
+  return _status_key;
+}
+
+inline const std::string status_key() {
+  std::string _status_key{"thread.status."};
+  _status_key += get_id();
+  return _status_key;
+}
+
+template<typename _Callable, typename... _Args>
+inline void start(std::thread &thread, _Callable &&__f, _Args...__args) {
+  thread = std::move(std::thread(
+        std::forward<_Callable>(__f), 
+        std::forward<_Args>(__args)...));
+  const std::string _status_key = status_key(thread);
+  GLOBALS[_status_key] = kThreadStatusRun;
+}
+
+inline void start(std::thread &thread) {
+  const std::string _status_key = status_key(thread);
+  GLOBALS[_status_key] = kThreadStatusRun;
+}
+
+inline void start() {
+  const std::string _status_key = status_key();
+  GLOBALS[_status_key] = kThreadStatusRun;
+}
+
+inline void stop() {
+  const std::string _status_key = status_key();
+  GLOBALS[_status_key] = kThreadStatusStop;
+}
+
+inline void stop(std::thread &thread) {
+  const std::string _status_key = status_key(thread);
+  if (GLOBALS[_status_key] == kThreadStatusRun) 
+    GLOBALS[_status_key] = kThreadStatusStop;
+}
+
+inline uint8_t status(std::thread &thread) {
+  const std::string _status_key = status_key(thread);
+  return GLOBALS[_status_key].get<uint8_t>();
+}
+
+inline bool is_running(std::thread &thread) {
+  return kThreadStatusRun == status(thread);
+}
+
+inline bool is_stopping(std::thread &thread) {
+  return kThreadStatusStop == status(thread);
+}
+
+inline uint8_t status() {
+  const std::string _status_key = status_key();
+  return GLOBALS[_status_key].get<uint8_t>();
+}
+
+inline bool is_running() {
+  return kThreadStatusRun == status();
+}
+
+inline bool is_stopping() {
+  return kThreadStatusStop == status();
+}
+
+} //namespace thread
+
+inline ThreadCollect::ThreadCollect() {
+  ++count_;
+}
+
+inline ThreadCollect::~ThreadCollect() {
+  --count_;
+  if (GLOBALS["app.debug"] == true) {
+    plain::io_cdebug(
+        "[%s] thread(%s) collect wait exit: %d", 
+        GLOBALS["app.name"].c_str(), 
+        thread::get_id().c_str(),
+        count_);
+  }
+}
+
+} //namespace plain
 
 #endif //PLAIN_SYS_THREAD_H_
