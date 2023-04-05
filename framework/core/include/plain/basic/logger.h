@@ -43,34 +43,32 @@ using Buffer = FixedRing<char, 4096>;
    static LogLevel get_level();
 
  public:
-  Logger &operator<<(bool v) {
+  Logger& operator<<(bool v) {
     buffer_.write(v ? "1" : "0", 1);
     return *this;
   }
   
-  Logger &operator<<(short);
-  Logger &operator<<(unsigned short);
-  Logger &operator<<(int);
-  Logger &operator<<(unsigned int);
-  Logger &operator<<(long);
-  Logger &operator<<(unsigned long);
-  Logger &operator<<(long long);
-  Logger &operator<<(unsigned long long);
+  Logger& operator<<(int16_t);
+  Logger& operator<<(uint16_t);
+  Logger& operator<<(int32_t);
+  Logger& operator<<(uint32_t);
+  Logger& operator<<(int64_t);
+  Logger& operator<<(uint64_t);
   
-  Logger &operator<<(const void*);
+  Logger& operator<<(const void*);
   
-  Logger &operator<<(float v) {
+  Logger& operator<<(float v) {
     *this << static_cast<double>(v);
     return *this;
   }
-  Logger &operator<<(double);
+  Logger& operator<<(double);
   
-  Logger &operator<<(char v) {
+  Logger& operator<<(char v) {
     buffer_.write(&v, 1);
     return *this;
   }
   
-  Logger &operator<<(const char* str) {
+  Logger& operator<<(const char* str) {
     if (str) {
       buffer_.write(str, strlen(str));
     } else {
@@ -79,25 +77,15 @@ using Buffer = FixedRing<char, 4096>;
     return *this;
   }
   
-  Logger &operator<<(const unsigned char* str) {
+  Logger& operator<<(const unsigned char* str) {
     return operator<<(reinterpret_cast<const char*>(str));
   }
   
-  Logger &operator<<(const std::string& v) {
+  Logger& operator<<(const std::string& v) {
     buffer_.write(v.c_str(), v.size());
     return *this;
   }
-  
-  //Logger &operator<<(const StringPiece& v) {
-  //  buffer_.append(v.data(), v.size());
-  //  return *this;
-  //} 
-  
-  //Logger &operator<<(const Buffer& v) {
-  //  *this << v.toStringPiece();
-  //  return *this;
-  //}
-  
+ 
   void append(const char* data, std::size_t len) { buffer_.write(data, len); }
   const Buffer& buffer() const { return buffer_; }
   void reset_buffer() { buffer_.producer_clear(); }

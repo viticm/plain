@@ -26,11 +26,19 @@ concept power_of_two = requires() {
 
 template <typename T, bool fake_tso = false>
 class Ring : noncopyable {
+using cookie_func = std::function<void()>;
 
  public:
-   virtual ~Ring() = default;
-   Ring(Ring &&) = default;
-   Ring &operator=(Ring &&) = default;
+  Ring()
+    : cookie_{nullptr}, head_{0}, tail_{0}, size_{0},mask_{0},
+    buffer_{nullptr} {
+    set_cookie(cookie_start);
+  }
+  virtual ~Ring() {
+    set_cookie(cookie_end);
+  }
+  Ring(Ring &&) = default;
+  Ring &operator=(Ring &&) = default;
 
  public:
   bool can_insert() noexcept {
@@ -196,6 +204,15 @@ class Ring : noncopyable {
   virtual bool resize(size_t) { return false; }
 
  private:
+  void set_cookie(cookie_func func) {
+    cookie_ = func;
+  }
+
+ private:
+  static void cookie_start() {}
+  static void cookie_end() {}
+
+ private:
   constexpr static std::memory_order index_acquire_barrier = fake_tso 
     ? std::memory_order_relaxed
     : std::memory_order_acquire;
@@ -204,11 +221,12 @@ class Ring : noncopyable {
     : std::memory_order_release;
 
  private:
-  T *buffer_                     = nullptr;
-  std::atomic<std::size_t> head_ = 0;
-  std::atomic<std::size_t> tail_ = 0;
-  std::atomic<std::size_t> size_ = 0;
-  std::atomic<std::size_t> mask_ = 0;
+  cookie_func cookie_;
+  std::atomic<std::size_t> head_;
+  std::atomic<std::size_t> tail_;
+  std::atomic<std::size_t> size_;
+  std::atomic<std::size_t> mask_;
+  T *buffer_;
 
 };
 
