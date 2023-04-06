@@ -40,7 +40,6 @@
 #include <random>
 #include <atomic>
 #include <mutex>
-#include <thread>
 #include <tuple>
 #include <regex>
 #include <type_traits>

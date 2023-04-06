@@ -12,7 +12,6 @@
 #define PLAIN_BASIC_LOGGER_H_
 
 #include "plain/basic/config.h"
-#include "plain/basic/ring.h"
 
 namespace plain {
 
@@ -29,24 +28,36 @@ enum class LogLevel {
 
 class PLAIN_API Logger /*: public Singleton<Logger>*/ {
 
-using Buffer = FixedRing<char, 4096>;
+using output_func_t = std::function<void(const char *, std::size_t)>;
+using flush_func_t = std::function<void()>;
 
  public:
    Logger();
    ~Logger();
  
  public:
-   // Set log level.
-   static void set_level(LogLevel level);
+  // Set log level.
+  static void set_level(LogLevel level) {
+    level_ = level;
+  }
  
-   // Get log level.
-   static LogLevel get_level();
+  // Get log level.
+  static LogLevel get_level() {
+    return level_;
+  }
+
+  // Set output function.
+  static void set_output(output_func_t func) {
+    output_func_ = func;
+  }
+
+  // Set flush function.
+  static void set_flush(flush_func_t func) {
+    flush_func_ = func;
+  }
 
  public:
-  Logger& operator<<(bool v) {
-    buffer_.write(v ? "1" : "0", 1);
-    return *this;
-  }
+  Logger& operator<<(bool v);
   
   Logger& operator<<(int16_t);
   Logger& operator<<(uint16_t);
@@ -63,32 +74,17 @@ using Buffer = FixedRing<char, 4096>;
   }
   Logger& operator<<(double);
   
-  Logger& operator<<(char v) {
-    buffer_.write(&v, 1);
-    return *this;
-  }
+  Logger& operator<<(char v);
   
-  Logger& operator<<(const char* str) {
-    if (str) {
-      buffer_.write(str, strlen(str));
-    } else {
-      buffer_.write("(null)", 6);
-    }
-    return *this;
-  }
-  
+  Logger& operator<<(const char* str); 
   Logger& operator<<(const unsigned char* str) {
     return operator<<(reinterpret_cast<const char*>(str));
   }
   
-  Logger& operator<<(const std::string& v) {
-    buffer_.write(v.c_str(), v.size());
-    return *this;
-  }
- 
-  void append(const char* data, std::size_t len) { buffer_.write(data, len); }
-  const Buffer& buffer() const { return buffer_; }
-  void reset_buffer() { buffer_.producer_clear(); }
+  Logger& operator<<(const std::string& v);
+
+  void append(const char* data, std::size_t len);
+  void reset_buffer();
   
  private:
   void static_check();
@@ -99,9 +95,12 @@ using Buffer = FixedRing<char, 4096>;
  private:
   static LogLevel level_;
   static const int kMaxNumericSize = 48;
+  static output_func_t output_func_;
+  static flush_func_t flush_func_;
 
  private:
-  Buffer buffer_;
+  struct Impl;
+  std::unique_ptr<Impl> impl_;
 
 };
 

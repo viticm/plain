@@ -26,7 +26,7 @@ concept power_of_two = requires() {
 
 template <typename T, bool fake_tso = false>
 class Ring : noncopyable {
-using cookie_func = std::function<void()>;
+using cookie_func_t = std::function<void()>;
 
  public:
   Ring()
@@ -169,7 +169,7 @@ using cookie_func = std::function<void()>;
   }
 
   // Gets the first element in the buffer on consumed side.
-  T* peek(std::size_t count) {
+  T* peek(std::size_t count = 0) {
     std::size_t avail = read_avail();
 		if (avail < count) {
 			return nullptr;
@@ -204,7 +204,7 @@ using cookie_func = std::function<void()>;
   virtual bool resize(size_t) { return false; }
 
  private:
-  void set_cookie(cookie_func func) {
+  void set_cookie(cookie_func_t func) {
     cookie_ = func;
   }
 
@@ -221,7 +221,7 @@ using cookie_func = std::function<void()>;
     : std::memory_order_release;
 
  private:
-  cookie_func cookie_;
+  cookie_func_t cookie_;
   std::atomic<std::size_t> head_;
   std::atomic<std::size_t> tail_;
   std::atomic<std::size_t> size_;
@@ -252,14 +252,14 @@ class DynamicRing : public Ring<T, fake_tso> {
  public:
    DynamicRing() {
      buffer_.reserve(SIZE);
-     set_buffer(&buffer_[0], SIZE);
+     set_buffer(buffer_.data(), SIZE);
    }
    virtual ~DynamicRing() = default;
 
  private:
   bool resize(std::size_t size) override {
     buffer_.resize(size);
-    this->set_buffer(&buffer_[0], size);
+    this->set_buffer(buffer_.data(), size);
     return true;
   }
 

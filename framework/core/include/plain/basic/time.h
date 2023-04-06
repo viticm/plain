@@ -35,7 +35,7 @@ class PLAIN_API Time : public Singleton<Time> {
    static std::string format();
    
    // Get format string like{Y-m-d H:M:S[.ms]}
-   static std::string format(bool show_microseconds = true);
+   static std::string format(bool show_microseconds);
 
    // Get current nanoseconds.
    static uint64_t nanoseconds();

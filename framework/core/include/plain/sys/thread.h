@@ -12,6 +12,7 @@
 #ifndef PLAIN_SYS_THREAD_H_
 #define PLAIN_SYS_THREAD_H_
 
+#include <thread>
 #include "plain/sys/config.h"
 #include "plain/basic/io.h"
 #include "plain/basic/global.h"
@@ -202,12 +203,13 @@ inline ThreadCollect::ThreadCollect() {
 
 inline ThreadCollect::~ThreadCollect() {
   --count_;
+  auto count = count_.load(std::memory_order_relaxed);
   if (GLOBALS["app.debug"] == true) {
     plain::io_cdebug(
         "[%s] thread(%s) collect wait exit: %d", 
         GLOBALS["app.name"].c_str(), 
         thread::get_id().c_str(),
-        count_);
+        count);
   }
 }
 
