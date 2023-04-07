@@ -15,8 +15,8 @@
 
 namespace plain {
 
-PLAIN_API std::string base64_encode(unsigned char const * , unsigned int len);
-PLAIN_API std::string base64_decode(std::string const &s);
+PLAIN_API std::string base64_encode(unsigned char const* , unsigned int len);
+PLAIN_API std::string base64_decode(std::string const& s);
 
 } // namespace plain
 

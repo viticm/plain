@@ -125,14 +125,14 @@ inline variable_struct::variable_struct(const variable_t& object) {
   type = object.type;
 }
   
-inline variable_struct::variable_struct(const variable_t *object) {
+inline variable_struct::variable_struct(const variable_t* object) {
   if (object) {
     data = object->data;
     type = object->type;
   }
 }
 
-inline variable_struct::variable_struct(const std::string &value) {
+inline variable_struct::variable_struct(const std::string& value) {
   type = String;
   data = value;
 }

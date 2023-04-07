@@ -19,8 +19,8 @@ class ThreadCollect;
 class ThreadPool;
 
 enum {
-  kThreadStatusStop = 0,
-  kThreadStatusRun,
+  kThreadStatusStopped,
+  kThreadStatusRunning,
 };
 
 } //namespace plain

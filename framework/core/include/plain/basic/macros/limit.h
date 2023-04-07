@@ -17,12 +17,6 @@
 #define IP_SIZE 24
 #endif
 
-#ifndef FD_SETSIZE 
-#define FD_SETSIZE 4906
-#endif
-
-#define LOGTYPE_MAX 100
-
 #if OS_WIN
 #define HANDLE_INVALID ((VOID*)0)
 #elif OS_UNIX
@@ -33,16 +27,6 @@
 #define ID_INVALID_EX (-2)
 #define INDEX_INVALID (-1)
 #define TAB_PARAM_ID_INVALID (-9999)
-
-#ifndef UCHAR_MAX
-#define UCHAR_MIN (0)
-#define UCHAR_MAX (0xFF)
-#endif
-
-#ifndef BYTE_MAX
-#define BYTE_MIN UCHAR_MIN
-#define BYTE_MAX UCHAR_MAX
-#endif
 
 #ifndef LF
 #if OS_WIN

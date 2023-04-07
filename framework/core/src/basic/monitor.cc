@@ -17,5 +17,6 @@ monitor::~monitor() {
   if (time_ > 0 && static_cast<uint32_t>(diff_time) > time_) {
     //SLOW_WARNINGLOG(
     //    "monitor", "[monitor] %s cost %.3f", name_.c_str(), diff_time);
+    LOG_WARN << name_ << " cost " << diff_time;
   }
 }

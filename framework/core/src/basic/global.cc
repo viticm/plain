@@ -16,7 +16,7 @@ class InitGlobal {
 };
 
 void InitGlobal::init() {
-  auto& g = get_globals();
+  auto&& g = get_globals();
   g["log.print"] = true;
 }
 

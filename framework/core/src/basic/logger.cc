@@ -7,13 +7,15 @@
 #include "plain/basic/time.h"
 #include "plain/basic/traits.h"
 #include "plain/basic/global.h"
+#include "plain/basic/constants.h"
 #include "plain/sys/assert.h"
 #include "plain/sys/thread.h"
 
 // PLAIN_SINGLETON_DECL(plain::Logger);
 
 using namespace plain;
-using Buffer = FixedRing<char, 4096>;
+using namespace plain::detail::consts;
+using Buffer = FixedRing<char, kSmallBufferSize>;
 
 LogLevel init_log_level() {
   if (::getenv("PLAIN_LOG_TRACE"))

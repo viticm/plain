@@ -24,11 +24,9 @@
 #include <string>
 #include <vector>
 #include <queue>
-#include <condition_variable>
 #include <future>
 #include <functional>
 #include <stdexcept>
-#include <list>
 #include <memory>
 /* } C++ */
 
