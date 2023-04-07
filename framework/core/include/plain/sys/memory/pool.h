@@ -1,54 +1,49 @@
 /**
  * PLAIN FREAMEWORK ( https://github.com/viticm/plain )
- * $Id fast_pool.h
+ * $Id pool.h
  * @link https://github.com/viticm/plain for the canonical source repository
- * @copyright Copyright (c) 2022 viticm( viticm.ti@gmail.com )
+ * @copyright Copyright (c) 2023 viticm( viticm.ti@gmail.com )
  * @license
  * @user viticm( viticm.ti@gmail.com )
- * @date 2022/02/12 10:08
+ * @date 2023/04/06 21:39
  * @uses The memory pool with thread safe.
  *       @refer: https://github.com/DimaBond174/FastMemPool
  */
 
-#ifndef PF_SYS_MEMORY_FAST_POOL_H_
-#define PF_SYS_MEMORY_FAST_POOL_H_
+#ifndef PLAIN_SYS_MEMORY_FAST_POOL_H_
+#define PLAIN_SYS_MEMORY_FAST_POOL_H_
 
-#include "pf/sys/memory/config.h"
+#include "plain/sys/memory/config.h"
 
-#undef max
-#undef min
-
-#ifndef PF_FP_LEAF_SIZE_BYTES
-#define PF_FP_LEAF_SIZE_BYTES  65535
+#ifndef PLAIN_FP_LEAF_SIZE_BYTES
+#define PLAIN_FP_LEAF_SIZE_BYTES  65535
 #endif
 
-#ifndef PF_FP_LEAF_COUNT
-#define PF_FP_LEAF_COUNT  16
+#ifndef PLAIN_FP_LEAF_COUNT
+#define PLAIN_FP_LEAF_COUNT  16
 #endif
 
-#ifndef PF_FP_AVERAGE_ALLOCATION
-#define PF_FP_AVERAGE_ALLOCATION  655
+#ifndef PLAIN_FP_AVERAGE_ALLOCATION
+#define PLAIN_FP_AVERAGE_ALLOCATION  655
 #endif
 
-#ifndef PF_FP_RAISZE_EXEPTIONS
-#define PF_FP_RAISZE_EXEPTIONS  true
+#ifndef PLAIN_FP_RAISZE_EXEPTIONS
+#define PLAIN_FP_RAISZE_EXEPTIONS  true
 #endif
 
-#ifndef PF_FP_DO_OS_MALLOC
-#define PF_FP_DO_OS_MALLOC  true
+#ifndef PLAIN_FP_DO_OS_MALLOC
+#define PLAIN_FP_DO_OS_MALLOC  true
 #endif
 
-namespace pf_sys {
-
-namespace memory {
+namespace plain::memory {
 
 template <
-  int32_t kLeafSizeBytes = PF_FP_LEAF_SIZE_BYTES,
-  int32_t kLeafCount = PF_FP_LEAF_COUNT,
-  int32_t kAverageAllocation = PF_FP_AVERAGE_ALLOCATION,
-  bool kDoOSMalloc = PF_FP_DO_OS_MALLOC,
-  bool kRaiseExeptions = PF_FP_RAISZE_EXEPTIONS>
-class FastPool {
+  int32_t kLeafSizeBytes = PLAIN_FP_LEAF_SIZE_BYTES,
+  int32_t kLeafCount = PLAIN_FP_LEAF_COUNT,
+  int32_t kAverageAllocation = PLAIN_FP_AVERAGE_ALLOCATION,
+  bool kDoOSMalloc = PLAIN_FP_DO_OS_MALLOC,
+  bool kRaiseExeptions = PLAIN_FP_RAISZE_EXEPTIONS>
+class Pool {
 public:
   /**
    * @brief malloc
@@ -56,7 +51,7 @@ public:
    * @param allocation_size  -  volume to allocate
    * @return - allocation ptr
    */
-  void *malloc(std::size_t allocation_size) {
+  void* malloc(std::size_t allocation_size) {
     // Allocation will include a header with service information:
     const int32_t real_size = static_cast<int32_t>(
         allocation_size + sizeof(AllocHeader));
@@ -66,7 +61,7 @@ public:
     // Selected leaf identifier:
     int32_t leaf_id = start_leaf;
     // Resulting allocation:
-    char *re = nullptr;
+    char* re = nullptr;
 
     /*
       Exit the loop at the end of the loop when we meet start_leaf again.
@@ -113,7 +108,7 @@ public:
     if (do_os_malloc) { // Now the escalation to OS malloc will occur:
       if (kDoOSMalloc) {
         re = static_cast<char*>(::malloc(real_size));
-#if defined(PF_FP_AUTO_DEALLOCATE)
+#if defined(PLAIN_FP_AUTO_DEALLOCATE)
    #if not defined(Debug)
         if (re) {
           std::lock_guard<std::mutex> lg(mut_set_alloc_info_);
@@ -124,7 +119,7 @@ public:
       } else {
         if (kRaiseExeptions) {
           throw std::range_error(
-              "FastPool::malloc: need do_os_malloc, but it disabled");
+              "Pool::malloc: need do_os_malloc, but it disabled");
         }
       }
     }
@@ -149,9 +144,9 @@ public:
    * @brief free  -  function to release allocation instead of "free"
    * @param ptr  -  allocation pointer obtained earlier via fmaloc
    */
-  void free(void *ptr) {
+  void free(void* ptr) {
     // Rewind back to get the AllocHeader:
-    char *to_free = static_cast<char *>(ptr) - sizeof(AllocHeader);
+    char* to_free = static_cast<char* >(ptr) - sizeof(AllocHeader);
     AllocHeader *head = reinterpret_cast<AllocHeader *>(to_free);
     if (0 <= head->size && head->size < kLeafSizeBytes
         && 0 <= head->leaf_id && head->leaf_id < kLeafCount
@@ -173,14 +168,14 @@ public:
       }
 
       // Cleanup so that unique TAG_my_alloc will be keep unique in RAM:
-      memset((char *)head, 0, sizeof(AllocHeader));
+      memset((char* )head, 0, sizeof(AllocHeader));
     } else if ((uint64_t)kTagOSMalloc == head->tag_this
         && kOSMallocID == head->leaf_id
         && head->size > 0) {
       // ok, to OS malloc
       // Cleanup so that unique TAG_my_alloc will be keep unique in RAM:
-      memset((char *)head,  0,  sizeof(AllocHeader));
-#if defined(PF_FP_AUTO_DEALLOCATE)
+      memset((char* )head,  0,  sizeof(AllocHeader));
+#if defined(PLAIN_FP_AUTO_DEALLOCATE)
    #if !_DEBUG
         {
           std::lock_guard<std::mutex> lg(mut_set_alloc_info_);
@@ -193,7 +188,7 @@ public:
       // this is someone else's allocation, Exception
       if (kRaiseExeptions) {
         throw std::range_error(
-            "FastPool::free: this is someone else's allocation");
+            "Pool::free: this is someone else's allocation");
       }
     }
     return;
@@ -202,86 +197,86 @@ public:
   /**
    * @brief check_access - checking the accessibility of the target memory area
    * @param base_alloc_ptr - the assumed address of the base
-   * allocation from FastPool
+   * allocation from Pool
    * @param target_ptr - start of target memory area
    * @param target_size - the size of the structure to access
    * @return - true if the target memory area belongs to the base
-   * allocation from FastPool
+   * allocation from Pool
    * Advantages: allows you to determine whether you have climbed
    * into another OWN allocation,
    * while the OS swears only if it climbed out of process RAM
    */
   bool check_access(
-      void *base_alloc_ptr, void *target_ptr, std::size_t target_size) {
+      void* base_alloc_ptr, void* target_ptr, std::size_t target_size) {
     bool re = false;
     AllocHeader *head = reinterpret_cast<AllocHeader *>(
-        static_cast<char *>(base_alloc_ptr)  -  sizeof(AllocHeader));
+        static_cast<char* >(base_alloc_ptr)  -  sizeof(AllocHeader));
     if (0 <= head->size && head->size < kLeafSizeBytes
          && 0 <= head->leaf_id && head->leaf_id < kLeafCount
          && ((uint64_t)this) == (head->tag_this - head->leaf_id)) {
-      // ok, this is FastPool allocation
-      char *start = static_cast<char *>(base_alloc_ptr);
-      char *end = start  +  head->size;
-      char *buf = leaf_array_[head->leaf_id].buf;
+      // ok, this is Pool allocation
+      char* start = static_cast<char* >(base_alloc_ptr);
+      char* end = start  +  head->size;
+      char* buf = leaf_array_[head->leaf_id].buf;
       if (buf && buf <= start && (buf + kLeafSizeBytes) >= end){
         // Let's check whether it has gone beyond the allocation limits:
-        char *target_start = static_cast<char *>(target_ptr);
-        char *target_end = target_start + target_size;
+        char* target_start = static_cast<char* >(target_ptr);
+        char* target_end = target_start + target_size;
         if (start <= target_start && target_end <= end) {
           re = true;
         }  else  {
           if (kRaiseExeptions) {
-            throw std::range_error("FastPool::check_access: out of allocation");
+            throw std::range_error("Pool::check_access: out of allocation");
           }
         } // elseif (start  >  target_start
       }  else {
         if (kRaiseExeptions) {
-          throw std::range_error("FastPool::check_access: out of Leaf");
+          throw std::range_error("Pool::check_access: out of Leaf");
         }
       } // elseif (!buf
     } else if (kTagOSMalloc == head->tag_this
          && kOSMallocID == head->leaf_id
          && head->size > 0) {
       // Let's check whether it has gone beyond the allocation limits:
-      char *start = static_cast<char *>(base_alloc_ptr);
-      char *end = start + head->size;
-      char *target_start = static_cast<char *>(target_ptr);
-      char *target_end = target_start + target_size;
+      char* start = static_cast<char* >(base_alloc_ptr);
+      char* end = start + head->size;
+      char* target_start = static_cast<char* >(target_ptr);
+      char* target_end = target_start + target_size;
       if  (start <= target_start && target_end <= end) {
         re = true;
       }  else  {
         if (kRaiseExeptions) {
           throw std::range_error(
-              "FastPool::check_access: out of OS malloc allocation");
+              "Pool::check_access: out of OS malloc allocation");
         }
       } // elseif  (start  >  target_start
 
     } else {
       if (kRaiseExeptions) {
         throw std::range_error(
-            "FastPool::check_access: not  FastPool's allocation");
+            "Pool::check_access: not  Pool's allocation");
       }
     }
     return  re;
   } // check_access
 
   /**
-   * @brief FastPool - construct
+   * @brief Pool - construct
    */
-  FastPool() noexcept {
-    void *buf_array[kLeafCount];
+  Pool() noexcept {
+    void* buf_array[kLeafCount];
     for (int32_t i = 0; i < kLeafCount; ++i) {
       buf_array[i] = ::malloc(kLeafSizeBytes);
     }
     std::sort(
         std::begin(buf_array),
         std::end(buf_array),
-        [](const void *lh, const void *rh) {
+        [](const void* lh, const void* rh) {
           return (uint64_t)(lh) < (uint64_t)(rh);});
     // uint64_t last = 0;
     for (int32_t i = 0; i < kLeafCount; ++i) {
       if (buf_array[i]) {
-        leaf_array_[i].buf = static_cast<char *>(buf_array[i]);
+        leaf_array_[i].buf = static_cast<char* >(buf_array[i]);
         leaf_array_[i].available.store(
             kLeafSizeBytes, std::memory_order_relaxed);
         leaf_array_[i].deallocated.store(0, std::memory_order_relaxed);
@@ -294,7 +289,7 @@ public:
     }
     std::atomic_thread_fence(std::memory_order_release);
     return;
-  }  // FastPool
+  }  // Pool
 
   /**
    * @brief instance - Singleton implementation,
@@ -304,16 +299,16 @@ public:
     of this method from all
     translation units .. provided the template parameters are the same
    */
-  static FastPool *instance() {
-    static FastPool obj;
+  static Pool* instance() {
+    static Pool obj;
     return &obj;
   }
 
-  ~FastPool() {
+  ~Pool() {
     for (int32_t i = 0; i < kLeafCount; ++i) {
       if (leaf_array_[i].buf) ::free(leaf_array_[i].buf);
     }
-#if defined(PF_FP_AUTO_DEALLOCATE)
+#if defined(PLAIN_FP_AUTO_DEALLOCATE)
     #if _DEBUG
     {
       std::lock_guard<std::mutex> lg(mut_map_alloc_info_);
@@ -336,11 +331,11 @@ public:
     return;
   }
 
-  FastPool &operator = (const FastPool &) = delete;
-  FastPool (const FastPool &) = delete;
+  Pool& operator = (const Pool& ) = delete;
+  Pool (const Pool& ) = delete;
 
-  FastPool &operator = (FastPool &&) = delete;
-  FastPool (FastPool &&) = delete;
+  Pool& operator = (Pool&&) = delete;
+  Pool (Pool&&) = delete;
 
 #if _DEBUG
   /**
@@ -353,16 +348,16 @@ public:
    * @param allocation_size
    * @return
    */
-  void *mallocd(const char *filename,
+  void* mallocd(const char* filename,
                 uint32_t line,
-                const char *function_name,
+                const char* function_name,
                 std::size_t allocation_size) {
-    void *re = malloc(allocation_size);
+    void* re = malloc(allocation_size);
     if (re) {
       std::lock_guard<std::mutex>  lg(mut_map_alloc_info_);
       auto it = map_alloc_info_.try_emplace(re,  AllocInfo());
       if (it.first->second.allocated)  {
-        std::string err("FastPool::mallocd: already allocated by ");
+        std::string err("Pool::mallocd: already allocated by ");
         err.append(it.first->second.who);
         throw std::range_error(err);
       } else {
@@ -386,21 +381,21 @@ public:
    * @param function_name
    * @param ptr
    */
-  void freed(const char *filename,
+  void freed(const char* filename,
              uint32_t line,
-             const char *function_name,
-             void *ptr) {
+             const char* function_name,
+             void* ptr) {
     if (ptr) {
       {
         std::lock_guard<std::mutex> lg(mut_map_alloc_info_);
         auto it = map_alloc_info_.find(ptr);
         if (map_alloc_info_.end() == it) {
           throw std::range_error(
-              "FastPool::freed: this pointer has never been allocated");
+              "Pool::freed: this pointer has never been allocated");
         }
         if (!it->second.allocated) {
           std::string err(
-              "FastPool::freed: this pointer has already been freed from: ");
+              "Pool::freed: this pointer has already been freed from: ");
           err.append(it->second.who);
           throw std::range_error(err);
         }
@@ -416,11 +411,11 @@ public:
     return;
   } // freed
 
-  bool check_accessd(const char *filename,
+  bool check_accessd(const char* filename,
                      uint32_t line,
-                     const char *function_name,
-                     void *base_alloc_ptr,
-                     void *target_ptr,
+                     const char* function_name,
+                     void* base_alloc_ptr,
+                     void* target_ptr,
                      std::size_t target_size) {
     bool re = false;
     try {
@@ -430,7 +425,7 @@ public:
     }
 
     if (!re) {
-      std::string who("FastPool::check_accessd buffer overflow at ");
+      std::string who("Pool::check_accessd buffer overflow at ");
       who.append(filename).append(", at ")
           .append(std::to_string(line)).append("  line, in ").append(function_name);
       if (kRaiseExeptions) {
@@ -443,7 +438,7 @@ public:
 #endif
 private:
   struct leaf_t {
-    char *buf;
+    char* buf;
     // available == offset
     std::atomic<int32_t> available{ kLeafSizeBytes };
     // control of deallocations:
@@ -487,7 +482,7 @@ private:
                       // in which method
     bool allocated{ false };  // true - allocated, false - deallocated
   };
-  std::map<void *, AllocInfo> map_alloc_info_;
+  std::map<void* , AllocInfo> map_alloc_info_;
   std::mutex mut_map_alloc_info_;
 
   // Just for easy viewing in debug:
@@ -497,147 +492,145 @@ private:
   bool do_os_malloc_{ kDoOSMalloc };
   bool raise_exeptions_{ kRaiseExeptions };
 #else
-  #if defined(PF_FP_AUTO_DEALLOCATE)
-  std::set<void *> set_alloc_info_;
+  #if defined(PLAIN_FP_AUTO_DEALLOCATE)
+  std::set<void* > set_alloc_info_;
   std::mutex mut_set_alloc_info_;
   #endif
 #endif
 };
 
 /**
-   * @brief PF_MALLOC
+   * @brief PLAIN_MALLOC
    * Allocation function instead of malloc
-   * @param fast_pool  -  an instance of FastPool in which we allocate
+   * @param fast_pool  -  an instance of Pool in which we allocate
    * @param allocation_size  -  volume to allocate
    * @return - allocation ptr
 */
 #if _DEBUG
-#define PF_MALLOC(fast_pool, allocation_size) \
+#define PLAIN_MALLOC(fast_pool, allocation_size) \
    (fast_pool)->mallocd(__FILE__, __LINE__, __FUNCTION__, allocation_size)
 #else
-#define PF_MALLOC(fast_pool, allocation_size) \
+#define PLAIN_MALLOC(fast_pool, allocation_size) \
    (fast_pool)->malloc(allocation_size)
 #endif
 
 /**
- * @brief PF_FREE  -  function to release allocation instead of "free"
- * @param fast_pool  - an instance of FastPool in which we allocate
+ * @brief PLAIN_FREE  -  function to release allocation instead of "free"
+ * @param fast_pool  - an instance of Pool in which we allocate
  * @param ptr  -  allocation pointer obtained earlier via fmaloc
  */
 #if _DEBUG
-#define PF_FREE(fast_pool, ptr) \
+#define PLAIN_FREE(fast_pool, ptr) \
    (fast_pool)->freed(__FILE__, __LINE__, __FUNCTION__, ptr)
 #else
-#define PF_FREE(fast_pool, ptr) \
+#define PLAIN_FREE(fast_pool, ptr) \
    (fast_pool)->free(ptr)
 #endif
 
 /**
-   * @brief PF_CHECK_ACCESS  -  checking the accessibility of the
+   * @brief PLAIN_CHECK_ACCESS  -  checking the accessibility of the
    * target memory area
-   * @param fast_pool - an instance of FastPool in which we allocate
+   * @param fast_pool - an instance of Pool in which we allocate
    * @param base_alloc_ptr - the assumed address of the base allocation
-   * from FastPool
+   * from Pool
    * @param target_ptr - start of target memory area
    * @param target_size - the size of the structure to access
    * @return - true if the target memory area belongs to the base
-   * allocation from FastPool
+   * allocation from Pool
    * Advantages: allows you to determine whether you have climbed into
    * another OWN allocation,
    * while the OS swears only if it climbed out of process RAM
  */
 #if _DEBUG
-#define PF_CHECK_ACCESS(fast_pool, base_alloc_ptr, target_ptr, target_size) \
+#define PLAIN_CHECK_ACCESS(fast_pool, base_alloc_ptr, target_ptr, target_size) \
    (fast_pool)->check_accessd(__FILE__, __LINE__, __FUNCTION__, \
        base_alloc_ptr, target_ptr, target_size)
 #else
-#define PF_CHECK_ACCESS(fast_pool, base_alloc_ptr, target_ptr, target_size) \
+#define PLAIN_CHECK_ACCESS(fast_pool, base_alloc_ptr, target_ptr, target_size) \
    (fast_pool)->check_access(base_alloc_ptr, target_ptr, target_size)
 #endif
 
-struct FastPoolNull {
+struct PoolNull {
   // Null object
 };
 
 /**
- * FastPoolAllocator
+ * PoolAllocator
  * == std::allocator<T> template
- * Default works with SingleTone FastPool<>::instance()
- * FastPool can be injected as template method or allocation strategy:
+ * Default works with SingleTone Pool<>::instance()
+ * Pool can be injected as template method or allocation strategy:
 
  // inject template (Template method):
- FastPoolAllocator<std::string, FastPool<111, 11> > myAllocator;
+ PoolAllocator<std::string, Pool<111, 11> > myAllocator;
 
  // inject instance (Strategy):
-  using MyAllocatorType = FastPool<333, 33>;
+  using MyAllocatorType = Pool<333, 33>;
   MyAllocatorType  fastMemPool;  // instance of
-  FastPoolAllocator<std::string, MyAllocatorType > myAllocator(&fastMemPool);
+  PoolAllocator<std::string, MyAllocatorType > myAllocator(&fastMemPool);
  */
-template<class T, class FAllocator = FastPoolNull >
-struct FastPoolAllocator : public std::allocator<T>  {
+template<class T, class FAllocator = PoolNull >
+struct PoolAllocator : public std::allocator<T>  {
   typedef T value_type;
   using MyAllocatorType = FAllocator;
   MyAllocatorType *allocator_{nullptr};
-  FastPoolAllocator() = default;
-  FastPoolAllocator(MyAllocatorType *in_allocator) : allocator_(in_allocator) {
+  PoolAllocator() = default;
+  PoolAllocator(MyAllocatorType *in_allocator) : allocator_(in_allocator) {
 
   }
-  template <class U> constexpr FastPoolAllocator(const FastPoolAllocator<U> &)
+  template <class U> constexpr PoolAllocator(const PoolAllocator<U> &)
   noexcept {}
 
-  T *allocate(std::size_t n) {
+  T* allocate(std::size_t n) {
     if (n > std::numeric_limits<std::size_t>::max() / sizeof (T))
       throw std::bad_alloc();
-    if (std::is_same<FAllocator, FastPoolNull>::value) {
-      if (auto p = static_cast<T *>(
-            PF_MALLOC(FastPool<>::instance(), (n * sizeof (T)))))
+    if (std::is_same<FAllocator, PoolNull>::value) {
+      if (auto p = static_cast<T* >(
+            PLAIN_MALLOC(Pool<>::instance(), (n * sizeof (T)))))
         return p;
     }  else {
       if (allocator_) {
-        if (auto p = static_cast<T *>(PF_MALLOC(allocator_, (n * sizeof (T)))))
+        if (auto p = static_cast<T* >(PLAIN_MALLOC(allocator_, (n * sizeof (T)))))
           return p;
       } else {
-        if (auto p = static_cast<T *>(
-              PF_MALLOC(FAllocator::instance(), (n * sizeof (T)))))
+        if (auto p = static_cast<T* >(
+              PLAIN_MALLOC(FAllocator::instance(), (n * sizeof (T)))))
         return p;
       }
     }
     throw std::bad_alloc();
   } // alloc
 
-  void deallocate(T *p, std::size_t) noexcept {
-    if (std::is_same<FAllocator, FastPoolNull>::value) {
-      PF_FREE(FastPool<>::instance(),  p);
+  void deallocate(T* p, std::size_t) noexcept {
+    if (std::is_same<FAllocator, PoolNull>::value) {
+      PLAIN_FREE(Pool<>::instance(),  p);
     } else {
       if (allocator_) {
-        PF_FREE(allocator_,  p);
+        PLAIN_FREE(allocator_,  p);
       } else {
-        PF_FREE(FAllocator::instance(),  p);
+        PLAIN_FREE(FAllocator::instance(),  p);
       }
     }
     return;
   }
 
   template <typename _Up, typename... _Args>
-  void construct(_Up *__p, _Args &&... __args)
-  { ::new((void *)__p) _Up(std::forward<_Args>(__args)...); }
+  void construct(_Up* __p, _Args &&... __args)
+  { ::new((void* )__p) _Up(std::forward<_Args>(__args)...); }
 
   template<typename _Up>
-  void destroy(_Up *__p) { __p->~_Up(); }
+  void destroy(_Up* __p) { __p->~_Up(); }
 };
 
 template <class T, class U>
-bool operator == (const FastPoolAllocator<T> &, const FastPoolAllocator<U> &) {
+bool operator == (const PoolAllocator<T>&, const PoolAllocator<U>&) {
   return true;
 }
 
 template<class T, class U>
-bool operator != (const FastPoolAllocator<T> &, const FastPoolAllocator<U> &) {
+bool operator != (const PoolAllocator<T>&, const PoolAllocator<U>&) {
   return false;
 }
 
-} // namespace memory
+} // namespace plain::memory
 
-} // namespace pf_sys
-
-#endif // PF_SYS_MEMORY_FAST_POOL_H_
+#endif // PLAIN_SYS_MEMORY_FAST_POOL_H_

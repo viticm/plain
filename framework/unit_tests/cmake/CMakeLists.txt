@@ -19,7 +19,7 @@ endif()
 set(GOOGLETEST_VERSION 1.11.0)
 
 # Plain framework crt.
-if (pf_build_shared AND MSVC)
+if (plain_build_shared AND MSVC)
   option(BUILD_SHARED_LIBS "plainframework build shared" ON)
 endif()
 
@@ -49,20 +49,19 @@ if(NOT MSVC)
 endif()
 
 if (MSVC)
-  set(COMMON_LIBS "pf_core;gtest;${CMAKE_THREAD_LIBS_INIT}")
+  set(COMMON_LIBS "plain;gtest;${CMAKE_THREAD_LIBS_INIT}")
 else()
-  set(COMMON_LIBS "pf_core;gtest;${CMAKE_THREAD_LIBS_INIT}")
+  set(COMMON_LIBS "plain;gtest;${CMAKE_THREAD_LIBS_INIT}")
 endif()
 
 # Plain Framework flags.
-set(cxx_base_flags "${cxx_base_flags} -DPF_OPEN_EPOLL")
-if (MSVC AND pf_build_shared)
-  set(cxx_base_flags "${cxx_base_flags} -DPF_BUILD_AS_DLL")
+set(cxx_base_flags "${cxx_base_flags} -DPLAIN_OPEN_EPOLL")
+if (MSVC AND plain_build_shared)
+  set(cxx_base_flags "${cxx_base_flags} -DPLAIN_BUILD_AS_DLL")
 endif()
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 23)
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-  # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 endif()
 
 # Generate a rule to build a unit test executable ${test_name} with
@@ -94,7 +93,7 @@ file(GLOB_RECURSE CORE_TEST_SOURCES "../core_test/*.cc")
 test_executables(core "${CORE_TEST_SOURCES}")
 
 # Copy gtest libraries.
-if (MSVC AND pf_build_shared AND BUILD_SHARED_LIBS)
+if (MSVC AND plain_build_shared AND BUILD_SHARED_LIBS)
   if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
     add_custom_command(TARGET core_tests
       POST_BUILD

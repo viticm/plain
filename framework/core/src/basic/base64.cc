@@ -31,7 +31,8 @@
 
 #include "plain/basic/base64.h"
 
-using namespace plain;
+
+namespace plain {
 
 static const std::string base64_chars = 
              "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -121,3 +122,5 @@ std::string base64_decode(std::string const& encoded_string) {
 
   return ret;
 }
+
+} // namespace plain

@@ -53,11 +53,4 @@ enum class AppStatus {
 #define PLAIN_COPYRIGHT	PLAIN_RELEASE "  Copyright (C) 2023 by viticm "
 #define PLAIN_AUTHORS	"viticm<viticm.ti@gmail.com>"
 
-// The function name.
-#ifndef OS_UNIX
-#define PLAIN_FUNCTION __FUNCSIG__
-#else
-#define PLAIN_FUNCTION __PRETTY_FUNCTION__
-#endif
-
 #endif //PLAIN_BASIC_MACROS_OTHER_H_

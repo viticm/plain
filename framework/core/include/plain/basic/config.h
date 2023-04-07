@@ -14,12 +14,6 @@
 //STD Headers.
 /* C { */
 #include <cinttypes>
-#include <cstdlib>
-#include <cstdio>
-#include <ctime>
-#include <cmath>
-#include <cstdarg>
-#include <climits>
 #include <cstring>
 /* } C */
 
@@ -35,15 +29,7 @@
 #include <functional>
 #include <stdexcept>
 #include <list>
-#include <map>
 #include <memory>
-#include <random>
-#include <atomic>
-#include <mutex>
-#include <tuple>
-#include <regex>
-#include <type_traits>
-#include <unordered_map>
 /* } C++ */
 
 /* platform { */
@@ -55,16 +41,6 @@
 #include <tchar.h>
 #include <direct.h>
 #include <io.h>
-#elif OS_UNIX
-#include <sys/types.h>
-#include <pthread.h>
-#include <execinfo.h>
-#include <signal.h>
-#include <exception>
-#include <setjmp.h>
-#include <sys/stat.h>
-#include <sys/resource.h>
-#include <unistd.h>
 #endif
 /* } platform */
 

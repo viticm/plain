@@ -1,4 +1,7 @@
 #include "plain/sys/utility.h"
+#if OS_UNIX
+#include <sys/resource.h>
+#endif
 #include "plain/basic/utility.h"
 
 namespace plain {

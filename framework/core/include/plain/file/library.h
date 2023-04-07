@@ -2,7 +2,7 @@
  * PLAIN FRAMEWORK ( https://github.com/viticm/plain )
  * $Id library.h
  * @link https://github.com/viticm/plain for the canonical source repository
- * @copyright Copyright (c) 2014- viticm( viticm.ti@gmail.com )
+ * @copyright Copyright (c) 2023- viticm( viticm.ti@gmail.com )
  * @license
  * @user viticm<viticm.ti@gmail.com>
  * @date 2023/04/01 22:38
@@ -13,6 +13,7 @@
 #define PLAIN_FILE_LIBRARY_H_
 
 #include "plain/file/config.h"
+#include <unordered_map>
 #include "plain/basic/singleton.h"
 #include "plain/basic/type/variable.h"
 
@@ -111,10 +112,10 @@ class PLAIN_API LibraryManager : public Singleton< LibraryManager > {
    std::vector<std::string> searchpaths_;
 
    /* The names map. */
-   std::map<std::string, std::vector<std::string> > namesmap_;
+   std::unordered_map<std::string, std::vector<std::string>> namesmap_;
 
    /* The library object pointer map. */
-   std::map<std::string, std::unique_ptr<Library> > librarymap_;
+   std::unordered_map<std::string, std::unique_ptr<Library>> librarymap_;
 
 };
 

@@ -1,4 +1,5 @@
 #include "plain/file/tab.h"
+#include <unordered_map>
 #include "plain/basic/utility.h"
 #include "plain/sys/assert.h"
 
@@ -235,7 +236,7 @@ bool Tab::open_from_memory_text(const char* memory,
   int32_t record_number = 0;
   int32_t field_number = static_cast<int32_t>(_field_type.size());
   std::vector<std::pair<std::string, int32_t> > string_buffer;
-  std::map<std::string, int32_t> map_string_buffer;
+  std::unordered_map<std::string, int32_t> map_string_buffer;
   _memory = get_line_from_memory(line, sizeof(line) - 1, _memory, end);
   //第二行为列名（相当于数据库的字段名），应尽量使用英文
   explode(line, fieldnames_, "\t", true, true);
@@ -294,8 +295,7 @@ bool Tab::open_from_memory_text(const char* memory,
             convert_str = nullptr;
           }
 #endif
-          std::map<std::string, int32_t>::iterator it = 
-            map_string_buffer.find(result[i]);
+          auto it = map_string_buffer.find(result[i]);
           if (it == map_string_buffer.end()) {
             string_buffer.push_back(
                 std::make_pair(result[i], string_buffer_size));

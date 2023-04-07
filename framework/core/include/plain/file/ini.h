@@ -2,7 +2,7 @@
  * PLAIN FRAMEWORK ( https://github.com/viticm/plain )
  * $Id ini.h
  * @link https://github.com/viticm/plain1 for the canonical source repository
- * @copyright Copyright (c) 2014- viticm( viticm@126.com/viticm.ti@gmail.com )
+ * @copyright Copyright (c) 2023- viticm( viticm@126.com/viticm.ti@gmail.com )
  * @license
  * @user viticm<viticm@126.com/viticm.ti@gmail.com>
  * @date 2023/04/01 21:05
@@ -12,6 +12,7 @@
 #define PLAIN_FILE_INI_H_
 
 #include "plain/file/config.h"
+#include <unordered_map>
 #include "plain/basic/type/config.h"
 
 #define INI_VALUE_MAX 1024
@@ -27,8 +28,8 @@ class PLAIN_API Ini {
    ~Ini();
 
  public:
-   typedef std::map<std::string, int32_t> valueset_t;
-   typedef std::map<std::string, valueset_t *> sectionset_t;
+   typedef std::unordered_map<std::string, int32_t> valueset_t;
+   typedef std::unordered_map<std::string, valueset_t *> sectionset_t;
 
  public:
    bool open(const char *filename);

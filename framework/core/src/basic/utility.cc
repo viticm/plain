@@ -1,4 +1,9 @@
 #include "plain/basic/utility.h"
+#include <random>
+#if OS_UNIX
+#include <sys/stat.h>
+#include <sys/resource.h>
+#endif
 #include "plain/basic/base64.h"
 #include "plain/sys/assert.h"
 

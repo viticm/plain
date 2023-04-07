@@ -2,7 +2,7 @@
  * PLAIN FRAMEWORK ( https://github.com/viticm/plainframework )
  * $Id factory.h
  * @link https://github.com/viticm/plainframework for the canonical source repository
- * @copyright Copyright (c) 2014- viticm( viticm.ti@gmail.com )
+ * @copyright Copyright (c) 2023- viticm( viticm.ti@gmail.com )
  * @license
  * @user viticm<viticm.ti@gmail.com>
  * @date 2023/04/01 16:50
@@ -13,6 +13,7 @@
 #define PLAIN_SCRIPT_FACTORY_H_
 
 #include "plain/script/config.h"
+#include <unordered_map>
 
 namespace plain::script {
 
@@ -39,7 +40,7 @@ class PLAIN_API Factory {
    eid_t neweid();
 
  private:
-   std::map<eid_t, std::unique_ptr<Interface>> envs_;
+   std::unordered_map<eid_t, std::unique_ptr<Interface>> envs_;
    eid_t last_del_eid_;
    std::mutex mutex_;
 

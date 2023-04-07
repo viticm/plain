@@ -2,7 +2,7 @@
  * PLAIN FRAMEWORK ( https://github.com/viticm/plainframework )
  * $Id variable.h
  * @link https://github.com/viticm/plainframework for the canonical source repository
- * @copyright Copyright (c) 2014- viticm( viticm.ti@gmail.com )
+ * @copyright Copyright (c) 2023- viticm( viticm.ti@gmail.com )
  * @license
  * @user viticm<viticm.ti@gmail.com>
  * @date 2023/03/31 18:08
@@ -47,15 +47,27 @@ struct PLAIN_API variable_struct {
 
   variable_t& operator+=(const variable_t& object) noexcept;
   variable_t* operator+=(const variable_t* object) noexcept;
+  variable_t &operator+=(const std::string& value);
+  template <typename T>
+  variable_t &operator+=(T value);
+
 
   variable_t& operator-=(const variable_t& object) noexcept;
   variable_t* operator-=(const variable_t* object) noexcept;
+  template <typename T>
+  variable_t &operator -= (T value);
 
   variable_t& operator*=(const variable_t& object) noexcept;
   variable_t* operator*=(const variable_t* object) noexcept;
+  variable_t &operator*=(const std::string& value);
+  template <typename T>
+  variable_t &operator *= (T value);
 
   variable_t& operator/=(const variable_t& object) noexcept;
   variable_t* operator/=(const variable_t* object) noexcept;
+  variable_t &operator/=(const std::string& value);
+  template <typename T>
+  variable_t &operator /= (T value);
 
   variable_t& operator++() noexcept;
   variable_t& operator--() noexcept;
@@ -79,7 +91,10 @@ struct PLAIN_API variable_struct {
     return lhs.data < rhs.data;
   }
 
-  // FIXME: implemention the c++20 operator <==>
+  friend auto operator<=>(
+      const variable_t& lhs, const variable_t& rhs) noexcept {
+    return lhs.data <=> rhs.data;
+  }
 
   operator const std::string();
   operator const char*();
@@ -188,11 +203,26 @@ inline variable_t* variable_struct::operator=(const variable_t *object) {
   return this;
 }
 
-
 inline variable_t*
 variable_struct::operator+=(const variable_t* object) noexcept {
   if (object) *this += *object;
   return this;
+
+}
+template <typename T>
+inline variable_t &variable_struct::operator+=(T value) {
+  std::unique_lock<std::mutex> auto_lock(mutex);
+  auto last = _get<T>();
+  last += value;
+  data = std::to_string(last);
+  return *this;
+}
+
+inline variable_t &variable_struct::operator+=(const std::string &value) {
+  std::unique_lock<std::mutex> auto_lock(mutex);
+  type = Variable::String;
+  data += value;
+  return *this;
 }
 
 inline variable_t*
@@ -208,9 +238,36 @@ variable_struct::operator*=(const variable_t *object) noexcept {
 }
   
 inline variable_t*
-variable_struct::operator/=(const variable_t *object) noexcept {
+variable_struct::operator/=(const variable_t* object) noexcept {
   if (object) *this /= *object;
   return this;
+}
+  
+template <typename T>
+inline variable_t &variable_struct::operator -= (T value) {
+  std::unique_lock<std::mutex> auto_lock(mutex);
+  auto last = _get<T>();
+  last -= value;
+  data = std::to_string(last);
+  return *this;
+}
+  
+template <typename T>
+inline variable_t &variable_struct::operator *= (T value) {
+  std::unique_lock<std::mutex> auto_lock(mutex);
+  auto last = _get<T>();
+  last *= value;
+  data = std::to_string(last);
+  return *this;
+}
+
+template <typename T>
+inline variable_t &variable_struct::operator /= (T value) {
+  std::unique_lock<std::mutex> auto_lock(mutex);
+  auto last = _get<T>();
+  last /= value;
+  data = std::to_string(last);
+  return *this;
 }
 
 inline variable_t& variable_struct::operator++() noexcept {
@@ -246,7 +303,8 @@ inline variable_struct::operator T() {
   return this->get<T>();
 }
 
-std::ostream& operator<<(std::ostream& os, const variable_t& object);
+// This will implicit convert all to variable use std::cout.
+// std::ostream& operator<<(std::ostream& os, const variable_t& object);
 
 } //namespace plain
 

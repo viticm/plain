@@ -2,7 +2,7 @@
  * PLAIN FRAMEWORK ( https://github.com/viticm/plain )
  * $Id config.h
  * @link https://github.com/viticm/plain for the canonical source repository
- * @copyright Copyright (c) 2014- viticm( viticm.ti@gmail.com )
+ * @copyright Copyright (c) 2023- viticm( viticm.ti@gmail.com )
  * @license
  * @user viticm<viticm.it@gmail.com>
  * @date 2023/04/01 21:05

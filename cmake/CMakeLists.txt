@@ -51,7 +51,7 @@ endif()
 # Options that control the build configuration.
 # To configure PlainFramework flags per build target, see the
 # plainframework_configure_flags() function.
-option(plainframework_build_tests "Build PlainFramework unit tests." OFF)
+option(plainframework_build_tests "Build PlainFramework unit tests." ON)
 
 # Build plain framework plugins.
 option(plainframework_build_plugins "Build PlainFramework plugins" ON)

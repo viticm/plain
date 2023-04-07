@@ -1,11 +1,11 @@
 /**
- * PLAIN FRAMEWORK ( https://github.com/viticm/plainframework )
+ * PLAIN FRAMEWORK ( https://github.com/viticm/plain )
  * $Id sharemap.h
- * @link https://github.com/viticm/plainframework1 for the canonical source repository
- * @copyright Copyright (c) 2014- viticm( viticm@126.com/viticm.ti@gmail.com )
+ * @link https://github.com/viticm/plain for the canonical source repository
+ * @copyright Copyright (c) 2023- viticm( viticm@126.com/viticm.ti@gmail.com )
  * @license
  * @user viticm<viticm@126.com/viticm.ti@gmail.com>
- * @date 2017/05/17 12:07
+ * @date 2023/04/06 22:08
  * @uses share memory hash map
  *       map implement:
  *         memory struct: [header|buckets|nodes] -> in map pool
@@ -28,20 +28,15 @@
  *           bucketindex -> is the number from hash(see function bucketindex)
  *
  */
-#ifndef PF_SYS_MEMORY_SHAREMAP_H_
-#define PF_SYS_MEMORY_SHAREMAP_H_
+#ifndef PLAIN_SYS_MEMORY_SHAREMAP_H_
+#define PLAIN_SYS_MEMORY_SHAREMAP_H_
 
-#include "pf/sys/memory/config.h"
-#include "pf/sys/memory/share.h"
+#include "plain/sys/memory/config.h"
+#include "plain/sys/memory/share.h"
 
-namespace pf_sys {
+namespace plain::memory::share {
 
-namespace memory {
-
-namespace share {
-
-
-struct PF_API _map_node_struct {
+struct PLAIN_API _map_node_struct {
   uint32_t hash;
   int32_t prev; //Prev index.
   int32_t next; //Node index.
@@ -49,7 +44,7 @@ struct PF_API _map_node_struct {
   void clear();
 };
 
-struct PF_API map_bucket_struct {
+struct PLAIN_API map_bucket_struct {
   int32_t cur;
   map_bucket_struct();
   void clear();
@@ -60,7 +55,7 @@ using map_bucket_t = struct map_bucket_struct;
 using map_node_t = data_template<_map_node_t>;
 
 //Map 正向迭代器
-class PF_API map_iterator {
+class PLAIN_API map_iterator {
 
  public:
    
@@ -166,7 +161,7 @@ class PF_API map_iterator {
 };
 
 //Map 反向迭代器
-class PF_API map_reverse_iterator {
+class PLAIN_API map_reverse_iterator {
 
  public:
    
@@ -289,7 +284,7 @@ inline bool operator !=
   return !(x == y);
 }
 
-class PF_API MapPool : public UnitPool<map_node_t> {
+class PLAIN_API MapPool : public UnitPool<map_node_t> {
 
  public:
    MapPool();
@@ -310,7 +305,7 @@ class PF_API MapPool : public UnitPool<map_node_t> {
 
 };
 
-class PF_API Map {
+class PLAIN_API Map {
 
  public:
    Map();
@@ -396,10 +391,7 @@ class PF_API Map {
 
 };
 
-} //namespace share
 
-} //namespace memory
+} //namespace plain::memory::share
 
-} //namespace memory
-
-#endif //PF_SYS_MEMORY_SHAREMAP_H_
+#endif //PLAIN_SYS_MEMORY_SHAREMAP_H_

@@ -264,7 +264,8 @@ class DynamicRing : public Ring<T, fake_tso> {
   }
 
  private:
-  std::vector<T> buffer_;
+  std::vector<T> buffer_; // FIXME: C++20: std::vector is constexpr
+                          // 是否可以将FixedRing和DynamicRing做一个整合？
 
 };
 

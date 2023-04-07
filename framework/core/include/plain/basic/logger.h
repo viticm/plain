@@ -12,6 +12,7 @@
 #define PLAIN_BASIC_LOGGER_H_
 
 #include "plain/basic/config.h"
+#include <source_location>
 
 namespace plain {
 
@@ -32,8 +33,12 @@ using output_func_t = std::function<void(const char *, std::size_t)>;
 using flush_func_t = std::function<void()>;
 
  public:
-   Logger();
-   ~Logger();
+  
+  explicit Logger(LogLevel level = LogLevel::Info,
+      const std::source_location& location = std::source_location::current());
+  explicit Logger(bool abort,
+      const std::source_location& location = std::source_location::current());
+  ~Logger();
  
  public:
   // Set log level.
@@ -105,5 +110,16 @@ using flush_func_t = std::function<void()>;
 };
 
 } // namespace plain
+
+#define LOG_TRACE if (plain::Logger::get_level() <= plain::LogLevel::Trace) \
+  plain::Logger(plain::LogLevel::Trace)
+#define LOG_DEBUG if (plain::Logger::get_level() <= plain::LogLevel::Trace) \
+  plain::Logger(plain::LogLevel::Debug)
+#define LOG_INFO if (plain::Logger::get_level() <= plain::LogLevel::Info) \
+  plain::Logger()
+#define LOG_WARN plain::Logger(plain::LogLevel::Warn)
+#define LOG_ERROR plain::Logger(plain::LogLevel::Error)
+#define LOG_SYSERR plain::Logger(false)
+#define LOG_SYSFATAL plain::Logger(true)
 
 #endif // PLAIN_BASIC_LOGGER_H_
