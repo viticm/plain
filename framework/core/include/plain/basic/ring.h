@@ -15,14 +15,9 @@
 #define PLAIN_BASIC_RING_H_
 
 #include "plain/basic/config.h"
-#include "plain/basic/noncopyable.h"
+#include "plain/basic/concepts.h"
 
 namespace plain {
-
-template <std::size_t N>
-concept power_of_two = requires() {
-  requires not(0 == N) and not(N & (N - 1));
-};
 
 template <typename T, bool fake_tso = false>
 class Ring : noncopyable {

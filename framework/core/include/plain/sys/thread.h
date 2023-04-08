@@ -20,16 +20,18 @@
 
 namespace plain {
 
+using thread_t = std::jthread;
+
 class PLAIN_API ThreadPool {
  public:
   ThreadPool(size_t);
-  template<class F, class... Args>
+  template<typename F, typename... Args>
   auto enqueue(F&& f, Args&&... args) 
-  -> std::future<typename std::result_of<F(Args...)>::type>;
+  -> std::future<typename std::result_of_t<F(Args...)>>;
   ~ThreadPool();
  private:
   // need to keep track of threads so we can join them
-  std::vector<std::thread> workers_;
+  std::vector<thread_t> workers_;
   // the task queue
   std::queue<std::function<void()>> tasks_;
   // synchronization
@@ -38,8 +40,7 @@ class PLAIN_API ThreadPool {
   bool stop_;
 };
  
-
-// 用于需要回收的线程数量统计，只要线程任务没有完成，主线程就会等待
+// A tiny thread watch cllect count implemention.
 class PLAIN_API ThreadCollect {
 
  public:
@@ -64,14 +65,14 @@ inline const std::string get_id() {
   return std::string(ss.str());
 }
 
-inline const std::string get_id(const std::thread& thread) {
+inline const std::string get_id(const thread_t& thread) {
   std::stringstream ss;
   ss << thread.get_id();
   return std::string(ss.str());
 }
 
 //用下面的方法的线程可以启动与停止
-inline const std::string status_key(std::thread& thread) {
+inline const std::string status_key(thread_t& thread) {
   std::string _status_key{"thread.status."};
   _status_key += get_id(thread);
   return _status_key;
@@ -84,69 +85,70 @@ inline const std::string status_key() {
 }
 
 template<typename _Callable, typename... _Args>
-inline void start(std::thread& thread, _Callable &&__f, _Args...__args) {
-  thread = std::move(std::thread(
-        std::forward<_Callable>(__f), 
-        std::forward<_Args>(__args)...));
+inline void start(thread_t& thread, _Callable &&__f, _Args...__args) {
+  thread = std::move(thread_t(
+        std::forward<_Callable>(__f), std::forward<_Args>(__args)...));
   const std::string _status_key = status_key(thread);
-  GLOBALS[_status_key] = kThreadStatusRunning;
+  GLOBALS[_status_key] = ThreadStatus::Running;
 }
 
-inline void start(std::thread& thread) {
+inline void start(thread_t& thread) {
   const std::string _status_key = status_key(thread);
-  GLOBALS[_status_key] = kThreadStatusRunning;
+  GLOBALS[_status_key] = ThreadStatus::Running;
 }
 
 inline void start() {
   const std::string _status_key = status_key();
-  GLOBALS[_status_key] = kThreadStatusRunning;
+  GLOBALS[_status_key] = ThreadStatus::Running;
 }
 
 inline void stop() {
   const std::string _status_key = status_key();
-  GLOBALS[_status_key] = kThreadStatusStopped;
+  GLOBALS[_status_key] = ThreadStatus::Stopped;
 }
 
-inline void stop(std::thread& thread) {
+inline void stop(thread_t& thread) {
   const std::string _status_key = status_key(thread);
-  if (GLOBALS[_status_key] == kThreadStatusRunning) 
-    GLOBALS[_status_key] = kThreadStatusStopped;
+  if (GLOBALS[_status_key] == ThreadStatus::Running) 
+    GLOBALS[_status_key] = ThreadStatus::Stopped;
 }
 
-inline uint8_t status(std::thread& thread) {
+inline variable_t status(thread_t& thread) {
   const std::string _status_key = status_key(thread);
-  return GLOBALS[_status_key].get<uint8_t>();
+  return GLOBALS[_status_key];
 }
 
-inline bool is_running(std::thread& thread) {
-  return kThreadStatusRunning == status(thread);
+inline bool is_running(thread_t& thread) {
+  return ThreadStatus::Running == status(thread);
 }
 
-inline bool is_stopping(std::thread& thread) {
-  return kThreadStatusStopped == status(thread);
+inline bool is_stopping(thread_t& thread) {
+  return ThreadStatus::Stopped == status(thread);
 }
 
-inline uint8_t status() {
+inline variable_t status() {
   const std::string _status_key = status_key();
-  return GLOBALS[_status_key].get<uint8_t>();
+  return GLOBALS[_status_key];
 }
 
 inline bool is_running() {
-  return kThreadStatusRunning == status();
+  return ThreadStatus::Running == status();
 }
 
 inline bool is_stopping() {
-  return kThreadStatusStopped == status();
+  return ThreadStatus::Stopped == status();
 }
 
 // FIXME: optimize the Kernel::newthread and this.
-template <class F, class... Args>
-std::thread create(const std::string_view& name, F&& f, Args&&... args) {
-  using return_type = typename std::result_of<F(Args...)>::type;
+// With endless loop excute F(F return false exit).
+template <typename F, typename... Args>
+requires std::predicate<F, Args...>
+thread_t create(const std::string_view& name, F&& f, Args&&... args) {
+  using return_type = typename std::result_of_t<F(Args...)>;
   auto task = std::make_shared< std::packaged_task<return_type()> >(
     std::bind(std::forward<F>(f), std::forward<Args>(args)...)
   );
-  auto r = std::thread([task, name](){ 
+  auto r = thread_t([task, name](){ 
     start();
     ThreadCollect tc;
     std::future<return_type> task_res = task->get_future();
@@ -154,9 +156,7 @@ std::thread create(const std::string_view& name, F&& f, Args&&... args) {
       if (is_stopping()) break;
       (*task)(); 
       (*task).reset(); //Remeber it, the packaged_task reset then can call again.
-      // FIXME: std::is_same not work.
-      if (std::is_same<return_type, bool>::value && !task_res.get())
-        thread::stop();
+      if (!task_res.get()) stop();
     }
 
     if (true == GLOBALS["app.debug"]) {
@@ -165,7 +165,34 @@ std::thread create(const std::string_view& name, F&& f, Args&&... args) {
     }
   });
 
-  // Log(this log also can enable with app.debug).
+  if (true == GLOBALS["app.debug"]) {
+    std::stringstream id_str;
+    id_str << r.get_id();
+    LOG_DEBUG << name.data() << " starting with " << id_str.str();
+  }
+  return r;
+}
+
+// FIXME: this function with the F is return void(future merge up function).
+// Without loop excute the F once.
+template <typename F, typename... Args>
+thread_t create(const std::string_view& name, F&& f, Args&&... args) {
+  using return_type = typename std::result_of_t<F(Args...)>;
+  auto task = std::make_shared< std::packaged_task<return_type()> >(
+    std::bind(std::forward<F>(f), std::forward<Args>(args)...)
+  );
+  auto r = thread_t([task, name](){ 
+    start();
+    ThreadCollect tc;
+    std::future<return_type> task_res = task->get_future();
+    (*task)(); 
+    // task_res.get();
+    stop();
+    if (true == GLOBALS["app.debug"]) {
+      auto id_str = get_id();
+      LOG_DEBUG << name.data() << " stopping with " << id_str;
+    }
+  });
 
   if (true == GLOBALS["app.debug"]) {
     std::stringstream id_str;

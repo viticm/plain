@@ -10,11 +10,15 @@
  *       Base on string, also can do string convert to diffrent type.
  *       Abstract data type(ADT).
  *       Refer: php/lua or more script codes.
+ *
+ *      FIXME: change the std::to_string to std::to_chars.
 */
 #ifndef PLAIN_BASIC_TYPE_VARIABLE_H_
 #define PLAIN_BASIC_TYPE_VARIABLE_H_
 
 #include "plain/basic/type/config.h"
+#include "plain/basic/concepts.h"
+#include "plain/basic/traits.h"
 
 namespace plain {
 
@@ -35,6 +39,9 @@ struct PLAIN_API variable_struct {
   variable_struct(const char* value);
   template <typename T>
   variable_struct(T value);
+  variable_struct(enums auto value) {
+    data = std::to_string(to_underlying_t(value));
+  }
   
   template <typename T>
   T get() const; 
@@ -117,6 +124,7 @@ Variable std_convert_type(T) {
   if (is_same(uint64_t, T)) return Uint64;
   if (is_same(float, T)) return Float;
   if (is_same(double, T)) return Double;
+  if (std::is_enum_v<T>) return Int32;
   return String; //Default is string.
 }
 

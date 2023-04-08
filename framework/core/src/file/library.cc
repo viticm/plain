@@ -1,4 +1,5 @@
 #include "plain/file/library.h"
+#include <filesystem>
 #include "plain/basic/logger.h"
 #include "plain/basic/utility.h"
 #include "plain/basic/global.h"
@@ -65,8 +66,8 @@ void Library::set_filename(const std::string& _filename) {
 }
 
 bool Library::load(bool tryprefix, bool seeglb) {
-  std::string temp = path_ + filename_;
-  auto fileexists = exists(temp);
+  std::filesystem::path path{path_ + filename_};
+  auto fileexists = std::filesystem::exists(path);
   if (fileexists) {
 #if OS_WIN
     UNUSED(seeglb);
@@ -80,7 +81,8 @@ bool Library::load(bool tryprefix, bool seeglb) {
     if (is_null(handle_)) 
       errorstr_ = GetLastErrorString(GetLastError());
 #else
-    handle_ = dlopen(temp.c_str(), RTLD_NOW | (seeglb ? RTLD_GLOBAL : RTLD_LOCAL));
+    handle_ = dlopen(
+        path.c_str(), RTLD_NOW | (seeglb ? RTLD_GLOBAL : RTLD_LOCAL));
     if (is_null(handle_)) errorstr_ = dlerror();
 #endif
   }

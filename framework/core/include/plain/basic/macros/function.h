@@ -1,11 +1,11 @@
 /**
- * PLAIN FRAMEWORK ( https://github.com/viticm/plainframework )
+ * PLAIN FRAMEWORK ( https://github.com/viticm/plain )
  * $Id function.h
- * @link https://github.com/viticm/plainframework for the canonical source repository
+ * @link https://github.com/viticm/plain for the canonical source repository
  * @copyright Copyright (c) 2023- viticm( viticm.ti@gmail.com )
  * @license
  * @user viticm<viticm.ti@gmail.com>
- * @date 2016/05/04 22:43
+ * @date 2023/04/08 21:05
  * @uses The base define function macros.
 */
 #ifndef PLAIN_BASIC_MACROS_FUNCTION_H_

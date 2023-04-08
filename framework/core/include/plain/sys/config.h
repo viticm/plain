@@ -18,9 +18,9 @@ namespace plain {
 class ThreadCollect;
 class ThreadPool;
 
-enum {
-  kThreadStatusStopped,
-  kThreadStatusRunning,
+enum class ThreadStatus {
+  Stopped,
+  Running,
 };
 
 } //namespace plain
