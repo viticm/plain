@@ -220,4 +220,14 @@ bool daemon() {
   return result;
 }
 
+std::string hostname() {
+  char buf[256]{0};
+  if (0 == ::gethostname(buf, sizeof buf)) {
+    buf[sizeof(buf) - 1] = '\0';
+    return buf;
+  } else {
+    return "unknownhost";
+  }
+}
+
 } // namespace plain::process

@@ -40,7 +40,7 @@
 
 enum class AppStatus {
   Running = 0,
-  Stop,
+  Stopped,
 };
 
 #define PLAIN_VERSION_MAJOR	"1"

@@ -6,7 +6,8 @@
  * @license
  * @user viticm( viticm.ti@gmail.com )
  * @date 2023/04/07 18:29
- * @uses The async logger implemantion class.
+ * @uses The async logger implementation class.
+ *       Refer: Imlement as the muduo network.
  */
 
 #ifndef PLAIN_BASIC_ASYNC_LOGGER_H_

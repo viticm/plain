@@ -33,6 +33,7 @@ PLAIN_API float get_cpu_usage(int32_t id);
 PLAIN_API uint64_t get_virtualmemory_usage(int32_t id);
 PLAIN_API uint64_t get_physicalmemory_usage(int32_t id);
 PLAIN_API bool daemon();
+PLAIN_API std::string hostname();
 
 inline void print_curinfo() {
   io_cdebug("cpu: %.1f%% VSZ: %dk RSS: %dk",

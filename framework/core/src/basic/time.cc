@@ -13,7 +13,7 @@ Time::Time() :
 
 Time::~Time() = default;
 
-uint32_t Time::timestamp() {
+time_t Time::timestamp() {
   auto now = std::chrono::system_clock::now();
   auto now_s = std::chrono::time_point_cast<std::chrono::seconds>(now);
   auto value = now_s.time_since_epoch();
@@ -31,7 +31,13 @@ std::string Time::format() {
   auto now = std::chrono::system_clock::now();
   auto tm = std::chrono::system_clock::to_time_t(now);
   std::ostringstream os;
-  os << std::put_time(std::localtime(&tm), "%F %T");
+  os << std::put_time(std::localtime(&tm), "%FT%T");
+  return os.str();
+}
+
+std::string Time::format(time_t timestamp) {
+  std::ostringstream os;
+  os << std::put_time(std::localtime(&timestamp), "%FT%T");
   return os.str();
 }
 
@@ -41,7 +47,7 @@ std::string Time::format(bool show_microseconds) {
   auto value = now_ms.time_since_epoch();
   auto tm = std::chrono::system_clock::to_time_t(now);
   std::ostringstream os;
-  os << std::put_time(std::localtime(&tm), "%F %T");
+  os << std::put_time(std::localtime(&tm), "%FT%T");
   if (show_microseconds) {
     os << "." << std::setfill('0') << std::setw(3);
     os << (value % 1000);

@@ -13,6 +13,7 @@
 
 #include "plain/basic/config.h"
 #include <source_location>
+#include <string_view>
 
 namespace plain {
 
@@ -29,7 +30,7 @@ enum class LogLevel {
 
 class PLAIN_API Logger /*: public Singleton<Logger>*/ {
 
-using output_func_t = std::function<void(const char *, std::size_t)>;
+using output_func_t = std::function<void(const std::string_view&)>;
 using flush_func_t = std::function<void()>;
 
  public:
@@ -88,7 +89,7 @@ using flush_func_t = std::function<void()>;
   
   Logger& operator<<(const std::string& v);
 
-  void append(const char* data, std::size_t len);
+  void append(std::string_view& log);
   void reset_buffer();
   
  private:

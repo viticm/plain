@@ -2,7 +2,6 @@
 #include <charconv>
 #include <cstdlib>
 #include <cassert>
-#include <string_view>
 #include "plain/basic/ring.h"
 #include "plain/basic/time.h"
 #include "plain/basic/traits.h"
@@ -28,11 +27,11 @@ LogLevel init_log_level() {
 
 LogLevel Logger::level_ = init_log_level();
 
-void default_output(const char* msg, std::size_t len) {
+void default_output(const std::string_view& log) {
   // FIXME: use complie variable change the globals.
   if (true == GLOBALS["log.print"]) return;
-  auto n = fwrite(msg, 1, len, stdout);
-  assert(n == len);
+  auto n = fwrite(log.data(), 1, log.size(), stdout);
+  assert(n == log.size());
 }
 
 void default_flush() {
@@ -77,7 +76,7 @@ struct Logger::Impl {
       int32_t save_errno = 0);
   void finish();
   void format_time();
-  uint32_t time_;
+  time_t time_;
   LogLevel level_;
   // FIXME: use std::source_location replace the filename and line.
   std::string_view filename_;
@@ -161,7 +160,7 @@ Logger::~Logger() {
   impl_->finish();
   auto size = impl_->buffer_.read_avail();
   if (size > 0)
-    output_func_(impl_->buffer_.peek(), size);
+    output_func_({impl_->buffer_.peek(), size});
   if (impl_->level_ == LogLevel::Fatal) {
     flush_func_();
     std::abort();
@@ -260,8 +259,8 @@ Logger& Logger::operator<<(const std::string& v) {
   return *this;
 }
 
-void Logger::append(const char* data, std::size_t len) {
-  impl_->buffer_.write(data, len); 
+void Logger::append(std::string_view& log) {
+  impl_->buffer_.write(log.data(), log.size()); 
 }
 
 /*

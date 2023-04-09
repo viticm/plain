@@ -148,6 +148,8 @@ PLAIN_API void complementpath(char* filepath, size_t size, char delimiter = '/')
 
 PLAIN_API uint64_t touint64(uint32_t high, uint32_t low);
 
+PLAIN_API char* strerror_pl(int32_t saved_errno);
+
 } // namespace plain
 
 #endif // PLAIN_BASIC_UTILITY_H_

@@ -9,6 +9,8 @@
 
 namespace plain {
 
+char g_error_buff[512]{0};
+
 /*
  This function form muduo.
  Format a number with 5 characters, including SI units.
@@ -999,6 +1001,14 @@ void complementpath(char* filepath, size_t size, char delimiter) {
   uint32_t length = static_cast<uint32_t>(strlen(filepath));
   if (size <= length) return;
   filepath[length] = delimiter == filepath[length - 1] ? '\0' : delimiter;
+}
+
+char* strerror_pl(int32_t saved_errno) {
+#if OS_UNIX
+  return strerror_r(saved_errno, g_error_buff, sizeof g_error_buff);
+#else
+  return strerror_s(saved_errno, g_error_buff, sizeof g_error_buff);
+#endif
 }
 
 } // namespace plain

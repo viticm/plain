@@ -29,10 +29,13 @@ class PLAIN_API Time : public Singleton<Time> {
    uint64_t tickcount() const noexcept;
    
    // Get unix timestamp.
-   static uint32_t timestamp();
+   static time_t timestamp();
    
    // Get format string like{Y-m-d H:M:S}
    static std::string format();
+
+   // Get format string like{Y-m-d H:M:S} from a timestamp
+   static std::string format(time_t timestamp);
    
    // Get format string like{Y-m-d H:M:S[.ms]}
    static std::string format(bool show_microseconds);

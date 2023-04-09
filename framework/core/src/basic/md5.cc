@@ -6,7 +6,7 @@
    based on:
  
    md5.h and md5.c
-   reference implemantion of RFC 1321
+   reference implementation of RFC 1321
  
    Copyright (C) 1991-2, RSA Data Security, Inc. Created 1991. All
 rights reserved.

@@ -1,4 +1,5 @@
 #include "plain/basic/global.h"
+#include <filesystem>
 
 namespace plain {
 
@@ -15,9 +16,22 @@ class InitGlobal {
 
 };
 
+#define SET(key,value) g.emplace(key, value)
+
 void InitGlobal::init() {
   auto&& g = get_globals();
-  g.emplace("log.print", true);
+
+  // App settings.
+  SET("app.name", "unknown");
+  SET("app.debug", false);
+  SET("app.status", AppStatus::Stopped);
+  auto current_directory{std::filesystem::current_path()};
+  SET("app.basepath", current_directory.c_str());
+  
+  // Logs settings.
+  SET("log.print", false);
+  auto log_directory = current_directory.string() + "/log";
+  SET("log.directory", log_directory);
 }
 
 InitGlobal g_init_global; // Auto init globals.
