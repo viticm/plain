@@ -22,7 +22,7 @@ class PLAIN_API AsyncLogger : noncopyable {
 
  public:
   AsyncLogger(const std::string &name,
-              off_t roll_size,
+              std::size_t roll_size,
               int32_t flush_interval = 3);
   ~AsyncLogger();
 

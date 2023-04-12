@@ -32,7 +32,7 @@ std::string get_filename(const std::string& name) {
 // FIXME: this construct can flat few parameters.
 struct File {
   File(const std::string& name,
-       off_t roll_size,
+       std::size_t roll_size,
        bool thread_safe = true,
        time_t flush_interval = 3,
        uint32_t check_every_N = 1024);
@@ -43,7 +43,7 @@ struct File {
   bool roll();
   static const int32_t kRollPerSeconds_ = 24 * 60 * 60;
   const std::string name_;
-  const off_t roll_size_;
+  const std::size_t roll_size_;
   std::unique_ptr<std::mutex> mutex_;
   const time_t flush_interval_;
   const uint32_t check_every_N_;
@@ -55,7 +55,7 @@ struct File {
 };
 
 File::File(const std::string& name,
-           off_t roll_size,
+           std::size_t roll_size,
            bool thread_safe,
            time_t flush_interval,
            uint32_t check_every_N)
@@ -123,14 +123,14 @@ bool File::roll() {
 }
 
 struct AsyncLogger::Impl {
-  Impl(const std::string& name, off_t roll_size, int32_t flush_interval);
+  Impl(const std::string& name, std::size_t roll_size, int32_t flush_interval);
   ~Impl();
   void start();
   void stop();
   void append(const std::string_view& log);
   void thread_handle();
   const std::string name_;
-  const off_t roll_size_;
+  const std::size_t roll_size_;
   const int32_t flush_interval_;
   std::mutex mutex_;
   std::atomic<bool> running_;
@@ -143,7 +143,7 @@ struct AsyncLogger::Impl {
 };
 
 AsyncLogger::Impl::Impl(const std::string &name,
-                        off_t roll_size,
+                        std::size_t roll_size,
                         int32_t flush_interval)
   : name_{name}, roll_size_{roll_size}, flush_interval_{flush_interval},
     mutex_{}, running_{false}, latch_{1}, cond_{},
@@ -249,7 +249,7 @@ void AsyncLogger::Impl::thread_handle() {
 }
 
 AsyncLogger::AsyncLogger(const std::string &name, 
-                         off_t roll_size,
+                         std::size_t roll_size,
                          int32_t flush_interval)
   : impl_{std::make_unique<Impl>(name, roll_size, flush_interval)} {
   auto log_directory = GLOBALS["log.directory"].data;

@@ -59,6 +59,8 @@ class PLAIN_API ThreadCollect {
 
 namespace thread {
 
+void set_name(const std::string_view& name) noexcept;
+
 inline const std::string get_id() {
   std::stringstream ss;
   ss << std::this_thread::get_id();
@@ -149,6 +151,7 @@ thread_t create(const std::string_view& name, F&& f, Args&&... args) {
     std::bind(std::forward<F>(f), std::forward<Args>(args)...)
   );
   auto r = thread_t([task, name](){ 
+    set_name(name);
     start();
     ThreadCollect tc;
     std::future<return_type> task_res = task->get_future();
@@ -182,6 +185,7 @@ thread_t create(const std::string_view& name, F&& f, Args&&... args) {
     std::bind(std::forward<F>(f), std::forward<Args>(args)...)
   );
   auto r = thread_t([task, name](){ 
+    set_name(name);
     start();
     ThreadCollect tc;
     std::future<return_type> task_res = task->get_future();

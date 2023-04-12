@@ -236,8 +236,6 @@ void set_nonblocking_ex([[maybe_unused]] int32_t fd, [[maybe_unused]] bool on) {
     flag &= ~O_NONBLOCK;
   fcntlarg_ex(fd, F_SETFL, flag);
 #elif OS_WIN
-  UNUSED(fd);
-  UNUSED(on);
   //do nothing
 #endif
 }

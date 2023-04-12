@@ -1,7 +1,22 @@
 #include "plain/sys/thread.h"
 #include "plain/basic/logger.h"
 
-using namespace plain;
+namespace plain {
+
+namespace thread {
+
+void set_name(const std::string_view& name) noexcept {
+#if OS_WIN
+  const std::wstring utf16_name(name.begin(), name.end());
+  ::SetThreadDescription(::GetCurrentThread(), utf16_name.data());
+#elif OS_UNIX
+  ::pthread_setname_np(::pthread_self(), name.data());
+#elif OS_MAC
+  ::pthread_setname_np(name.data());
+#endif
+}
+
+} // namespace thread
 
 std::atomic<int32_t> ThreadCollect::count_{0};
 
@@ -60,3 +75,5 @@ ThreadPool::~ThreadPool() {
   for (auto& worker : workers_)
     worker.join();
 }
+
+} // namespace plain
