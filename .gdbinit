@@ -3,3 +3,5 @@
 set print pretty on
 # set logging file log.txt
 # set logging on
+# set history filename ~/.gdb_history
+# set history save on
