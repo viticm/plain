@@ -27,7 +27,7 @@ LogLevel init_log_level() {
 
 LogLevel Logger::level_ = init_log_level();
 
-void default_output(const std::string_view& log) {
+void default_output(const std::string_view &log) {
   // FIXME: use complie variable change the globals.
   if (true == GLOBALS["log.print"]) return;
   auto n = fwrite(log.data(), 1, log.size(), stdout);
@@ -45,7 +45,7 @@ static_assert(sizeof kDigitsHex == 17, "wrong number of kDigitsHex");
 // FIXME: change it with std::to_chars
 std::size_t convert_hex(char buf[], uintptr_t value) {
   uintptr_t i = value;
-  char* p = buf;
+  char *p = buf;
 
   do {
     int32_t lsd = static_cast<int32_t>(i % 16);
@@ -62,7 +62,7 @@ std::size_t convert_hex(char buf[], uintptr_t value) {
 Logger::output_func_t Logger::output_func_{default_output};
 Logger::flush_func_t Logger::flush_func_{default_flush};
 
-const char* LogLevelName[to_underlying_t(LogLevel::Nums)] = {
+const char *LogLevelName[to_underlying_t(LogLevel::Nums)] = {
   "TRACE ",
   "DEBUG ",
   "INFO  ",
@@ -72,7 +72,7 @@ const char* LogLevelName[to_underlying_t(LogLevel::Nums)] = {
 };
 
 struct Logger::Impl {
-  Impl(LogLevel level, const char* filename, uint32_t line,
+  Impl(LogLevel level, const char *filename, uint32_t line,
       int32_t save_errno = 0);
   void finish();
   void format_time();
@@ -85,7 +85,7 @@ struct Logger::Impl {
 };
 
 Logger::Impl::Impl(
-    LogLevel level, const char* filename, uint32_t line, int32_t save_errno)
+    LogLevel level, const char *filename, uint32_t line, int32_t save_errno)
   : time_{Time::timestamp()}, level_{level}, filename_{filename}, line_{line} {
   format_time();
   // FIXME: use the complie time char[n] to cache tid.
@@ -245,7 +245,7 @@ Logger& Logger::operator<<(char v) {
   return *this;
 }
 
-Logger& Logger::operator<<(const char* str) {
+Logger& Logger::operator<<(const char *str) {
   if (str) {
     impl_->buffer_.write(str, strlen(str));
   } else {
@@ -254,12 +254,12 @@ Logger& Logger::operator<<(const char* str) {
   return *this;
 }
 
-Logger& Logger::operator<<(const std::string& v) {
+Logger& Logger::operator<<(const std::string &v) {
   impl_->buffer_.write(v.c_str(), v.size());
   return *this;
 }
 
-void Logger::append(std::string_view& log) {
+void Logger::append(std::string_view &log) {
   impl_->buffer_.write(log.data(), log.size()); 
 }
 

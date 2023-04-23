@@ -39,7 +39,7 @@
 /// Define: RLUTIL_STRING_T
 /// Define/typedef this to your preference to override rlutil's string type.
 ///
-/// Defaults to std::string with C++ and char* with C.
+/// Defaults to std::string with C++ and char *with C.
 #if 0
 #define RLUTIL_STRING_T char*
 #endif
@@ -168,7 +168,7 @@ namespace rlutil {
 	#define RLUTIL_PRINT(st) do { std::cout << st; } while(false)
 #else // __cplusplus
 	#ifndef RLUTIL_STRING_T
-		typedef const char* RLUTIL_STRING_T;
+		typedef const char *RLUTIL_STRING_T;
 	#endif // RLUTIL_STRING_T
 
 	#define RLUTIL_PRINT(st) printf("%s", st)
@@ -600,7 +600,7 @@ RLUTIL_INLINE void locate(int x, int y) {
 /// Function: setString
 /// Prints the supplied string without advancing the cursor
 #ifdef __cplusplus
-RLUTIL_INLINE void setString(const RLUTIL_STRING_T & str_) {
+RLUTIL_INLINE void setString(const RLUTIL_STRING_T &str_) {
 	const char * const str = str_.data();
 #else // __cplusplus
 RLUTIL_INLINE void setString(RLUTIL_STRING_T str) {
@@ -734,7 +734,7 @@ RLUTIL_INLINE int tcols(void) {
 /// In C++, it either takes no arguments
 /// or a template-type-argument-deduced
 /// argument.
-/// In C, it takes a const char* representing
+/// In C, it takes a const char *representing
 /// the message to be displayed, or NULL
 /// for no message.
 #ifdef __cplusplus
@@ -742,7 +742,7 @@ RLUTIL_INLINE void anykey() {
 	getch();
 }
 
-template <class T> void anykey(const T& msg) {
+template <class T> void anykey(const T &msg) {
 	RLUTIL_PRINT(msg);
 #else
 RLUTIL_INLINE void anykey(RLUTIL_STRING_T msg) {

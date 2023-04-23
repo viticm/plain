@@ -59,7 +59,7 @@ class PLAIN_API ThreadCollect {
 
 namespace thread {
 
-void set_name(const std::string_view& name) noexcept;
+void set_name(const std::string_view &name) noexcept;
 
 inline const std::string get_id() {
   std::stringstream ss;
@@ -145,7 +145,7 @@ inline bool is_stopping() {
 // With endless loop excute F(F return false exit).
 template <typename F, typename... Args>
 requires std::predicate<F, Args...>
-thread_t create(const std::string_view& name, F&& f, Args&&... args) {
+thread_t create(const std::string_view &name, F&& f, Args&&... args) {
   using return_type = typename std::result_of_t<F(Args...)>;
   auto task = std::make_shared< std::packaged_task<return_type()> >(
     std::bind(std::forward<F>(f), std::forward<Args>(args)...)
@@ -179,7 +179,7 @@ thread_t create(const std::string_view& name, F&& f, Args&&... args) {
 // FIXME: this function with the F is return void(future merge up function).
 // Without loop excute the F once.
 template <typename F, typename... Args>
-thread_t create(const std::string_view& name, F&& f, Args&&... args) {
+thread_t create(const std::string_view &name, F&& f, Args&&... args) {
   using return_type = typename std::result_of_t<F(Args...)>;
   auto task = std::make_shared< std::packaged_task<return_type()> >(
     std::bind(std::forward<F>(f), std::forward<Args>(args)...)

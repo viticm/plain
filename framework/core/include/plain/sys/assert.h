@@ -6,7 +6,7 @@
  * @license
  * @user viticm( viticm.ti@gmail.com )
  * @date 2023/04/01 16:46
- * @uses your description
+ * @uses The assert apis.
  */
 
 #ifndef PLAIN_SYS_ASSERT_H_

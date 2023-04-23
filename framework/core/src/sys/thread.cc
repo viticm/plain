@@ -5,7 +5,7 @@ namespace plain {
 
 namespace thread {
 
-void set_name(const std::string_view& name) noexcept {
+void set_name(const std::string_view &name) noexcept {
 #if OS_WIN
   const std::wstring utf16_name(name.begin(), name.end());
   ::SetThreadDescription(::GetCurrentThread(), utf16_name.data());

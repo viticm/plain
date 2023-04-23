@@ -20,18 +20,18 @@ namespace plain {
 class PLAIN_API FileAppend : noncopyable {
 
  public:
-  explicit FileAppend(const std::string_view& filename);
+  explicit FileAppend(const std::string_view &filename);
   ~FileAppend();
 
  public:
-  void append(const std::string_view& log);
+  void append(const std::string_view &log);
 
   void flush();
 
   off_t written_bytes() const { return written_bytes_; }
 
  private:
-  std::size_t write(const std::string_view& log);
+  std::size_t write(const std::string_view &log);
 
  private:
   FILE* fp_;

@@ -73,7 +73,7 @@ char get_base64char(int32_t index) {
   return '=';
 }
 
-void encrypt(const char* in, char* out, int32_t out_length) {
+void encrypt(const char *in, char *out, int32_t out_length) {
   int32_t insize = static_cast<int>(strlen(in));
   if (insize <= 0) return;
   int32_t middle = 0 == insize % 2 ? insize / 2 : (insize + 1) / 2;
@@ -102,14 +102,14 @@ void encrypt(const char* in, char* out, int32_t out_length) {
   safe_delete_array(temp);
 }
 
-void decrypt(const char* in, char* out, int32_t out_length) {
+void decrypt(const char *in, char *out, int32_t out_length) {
   int32_t insize = static_cast<int>(strlen(in));
   if (insize <= 0) return;
-  char* temp = new char[insize - insize / 3 + 10]; //enough buffer size.
+  char *temp = new char[insize - insize / 3 + 10]; //enough buffer size.
   std::string str = base64_decode(in);
   int32_t length = static_cast<int32_t>(strlen(temp));
   int32_t right_length = length - 2 - 3 - 1;
-  char* _temp = new char[right_length + 1];
+  char *_temp = new char[right_length + 1];
   int32_t middle = //用正确的长度算出中间值
     0 == right_length % 2 ? right_length / 2 : (right_length + 1) / 2;
   int32_t i, j;
@@ -126,7 +126,7 @@ void decrypt(const char* in, char* out, int32_t out_length) {
   safe_delete_array(_temp);
 }
 
-uint32_t crc(const char* str) {
+uint32_t crc(const char *str) {
   if (nullptr == str|| 0 == str[0]) return 0;
   uint32_t crc32 = 0xFFFFFFFF;
   int32_t size = static_cast<int32_t>(strlen(str));
@@ -138,7 +138,7 @@ uint32_t crc(const char* str) {
   return 0;
 }
 
-char* safecopy(char* dest, const char* src, size_t size) {
+char *safecopy(char *dest, const char *src, size_t size) {
   Assert(dest && src);
   strncpy(dest, src, size);
   dest[size - 1] = '\0';
@@ -155,22 +155,22 @@ char* safecopy(char* dest, const char* src, size_t size) {
  * @param srclen want convert string length
  */
 #ifdef PLAIN_OPEN_ICONV
-int32_t charset_convert(const char* from, 
-                        const char* to, 
-                        char* save, 
+int32_t charset_convert(const char *from, 
+                        const char *to, 
+                        char *save, 
                         int32_t save_length, 
-                        const char* src, 
+                        const char *src, 
                         int32_t src_length) {
   int32_t status = 0;
   iconv_t cd;
-  const char* inbuf  = src;
-  char* outbuf     = save;
+  const char *inbuf  = src;
+  char *outbuf     = save;
   size_t outbufsize  = save_length;
   size_t savesize  = 0;
   size_t inbufsize   = src_length;
-  const char* inptr  = inbuf;
+  const char *inptr  = inbuf;
   size_t insize    = inbufsize;
-  char* outptr     = outbuf;
+  char *outptr     = outbuf;
   size_t outsize   = outbufsize;
 
   cd = iconv_open(to, from);
@@ -180,7 +180,7 @@ int32_t charset_convert(const char* from,
     goto done;
   }
   while (0 < insize) {
-    auto res = iconv(cd, (const char* *)&inptr, &insize, &outptr, &outsize);
+    auto res = iconv(cd, (const char **)&inptr, &insize, &outptr, &outsize);
     if (outptr != outbuf) {
       std::unique_ptr<char []> _outbuf(new char[outsize + 1]);
       memset(_outbuf.get(), 0, outsize + 1);
@@ -219,7 +219,7 @@ int32_t charset_convert(const char* from,
 }
 #else
 int32_t charset_convert(
-    const char* , const char* , char* , int32_t, const char* , int32_t) {
+    const char *, const char *, char *, int32_t, const char *, int32_t) {
 #if _DEBUG
   io_cwarn("pf_basic::charset_convert not work without iconv.");
 #endif
@@ -246,7 +246,7 @@ bool get_escapechar(char in, char& out) {
   return false;
 }
 
-bool getescape(const char* in, size_t insize, char* out, size_t outsize) {
+bool getescape(const char *in, size_t insize, char *out, size_t outsize) {
   size_t index1 = 0, index2 = 0;
   for ( ; index1 < insize && index2 < outsize; ++index1) {
     char _char;
@@ -263,21 +263,21 @@ bool getescape(const char* in, size_t insize, char* out, size_t outsize) {
   return true;
 }
 
-int64_t toint64(const char* str) {
-  char* endpointer = nullptr;
+int64_t toint64(const char *str) {
+  char *endpointer = nullptr;
   int64_t result = strtoint64(str, &endpointer, 10);
   return result;
 }
 
-uint64_t touint64(const char* str) {
-  char* endpointer = nullptr;
+uint64_t touint64(const char *str) {
+  char *endpointer = nullptr;
   int64_t result = strtouint64(str, &endpointer, 10);
   return result;
 }
 
-int32_t explode(const char* source,
+int32_t explode(const char *source,
                 std::vector<std::string>& result,
-                const char* key,
+                const char *key,
                 bool one_key,
                 bool ignore_empty) {
   result.clear();
@@ -311,7 +311,7 @@ int32_t explode(const char* source,
   return _result;
 }
 
-bool checkstr(const char* in, uint32_t size) {
+bool checkstr(const char *in, uint32_t size) {
   if (0 == size) return false;
   for (decltype(size) i = 0; i < size; ++i) {
     switch (in[i]) {
@@ -390,7 +390,7 @@ static char int2char(char i, uint64_t tickcount = 0) {
   return (char)0xFF;
 }
 
-inline void pg_swapchars(char* sz) {
+inline void pg_swapchars(char *sz) {
   char c{0};
 #define PG_SWAP(n1, n2) c = sz[n1]; sz[n1] = sz[n2]; sz[n2] = c
   PG_SWAP(0, 13);
@@ -402,10 +402,10 @@ inline void pg_swapchars(char* sz) {
   PG_SWAP(15, 18);
 }
 
-static bool pg_encrypt(char* key, 
+static bool pg_encrypt(char *key, 
                        int32_t keylength, 
-                       char* buffer, 
-                       const char* password, 
+                       char *buffer, 
+                       const char *password, 
                        int32_t str_length) {
   int32_t i{0}, c{0}, cc{0};
   for (i = 0; i < str_length; i++) {
@@ -431,10 +431,10 @@ static bool pg_encrypt(char* key,
   return true;
 }
 
-static void pg_decrypt(char* key, 
+static void pg_decrypt(char *key, 
                        int32_t keylength, 
-                       char* buffer, 
-                       const char* encrypted, 
+                       char *buffer, 
+                       const char *encrypted, 
                        int32_t length) {
   int32_t i{0}, c{0}, cc{0};
   for (i = 0; i < length; i++) {
@@ -447,7 +447,7 @@ static void pg_decrypt(char* key,
   buffer[i] = 0;
 }
 
-static bool pg_decrypt_password(char* password, const char* encrypted) {
+static bool pg_decrypt_password(char *password, const char *encrypted) {
   int32_t length = (int32_t)strlen(encrypted), pk_length{0}, i{0};
   char buffer[PG_RESULTLENSTD + 1]{0};
   if (length != PG_RESULTLENSTD)
@@ -471,7 +471,7 @@ static bool pg_decrypt_password(char* password, const char* encrypted) {
 }
 
 static bool pg_encrypt_password(
-    char* result, const char* password, uint64_t tickcount, int32_t &level) {
+    char *result, const char *password, uint64_t tickcount, int32_t &level) {
   ++level;
   if (level > 32) return false;
 
@@ -531,7 +531,7 @@ static bool pg_encrypt_password(
   return false;
 }
 
-bool encrypt(const std::string& in, std::string& out) {
+bool encrypt(const std::string &in, std::string &out) {
   auto tickcount{1}; // = TIME_MANAGER_POINTER->get_tickcount();
   char temp[PG_RESULTLENSTD + 1]{0};
   int32_t level = 0;
@@ -543,14 +543,14 @@ bool encrypt(const std::string& in, std::string& out) {
   return result;
 }
 
-bool decrypt(const std::string& in, std::string& out) {
+bool decrypt(const std::string &in, std::string &out) {
   char temp[PG_RESULTLENSTD + 1]{0};
   if (!pg_decrypt_password(temp, in.c_str())) return false;
   out = temp;
   return true;
 }
 
-bool encrypt_number(int32_t number, char _char, std::string& out) {
+bool encrypt_number(int32_t number, char _char, std::string &out) {
   std::string number_str = std::to_string(number);
   auto number_len = number_str.size();
   out = "";
@@ -562,7 +562,7 @@ bool encrypt_number(int32_t number, char _char, std::string& out) {
   return true;
 }
 
-bool decrypt_number(const std::string& in, char _char, int32_t &number) {
+bool decrypt_number(const std::string &in, char _char, int32_t &number) {
   auto number_len = in.size();
   number = 0;
   for (decltype(number_len) i = 0; i < number_len; ++i) {
@@ -575,8 +575,8 @@ bool decrypt_number(const std::string& in, char _char, int32_t &number) {
 //This encrypt not change any word in old string, just insert the number as rand
 //string in rand position.
 //The final string is: first_char + len + pos_len + pos_str + newstring.
-bool encrypt(const std::string& in, int32_t number, std::string& out) {
-  const char* chars{"abcdefghijklmABCDEFGHIJKLM"}; 
+bool encrypt(const std::string &in, int32_t number, std::string &out) {
+  const char *chars{"abcdefghijklmABCDEFGHIJKLM"}; 
   std::default_random_engine rand_engine(static_cast<uint32_t>(time(nullptr)));
   std::uniform_int_distribution<int32_t> dis(0, 25);
   auto rand_gen = std::bind(dis, rand_engine); rand_gen();
@@ -604,7 +604,7 @@ bool encrypt(const std::string& in, int32_t number, std::string& out) {
   return true;
 }
 
-bool decrypt(const std::string& in, int32_t &number, std::string& out) {
+bool decrypt(const std::string &in, int32_t &number, std::string &out) {
   if (in.size() <= 4) return false;
   char first_char = in[0];
   int32_t length = in[1] - first_char;
@@ -623,7 +623,7 @@ bool decrypt(const std::string& in, int32_t &number, std::string& out) {
   return true;
 }
 
-std::string& ltrim(std::string& str, const std::string& character_mask) {
+std::string &ltrim(std::string &str, const std::string &character_mask) {
   if (str.empty()) return str;
   for (size_t i = 0; i < character_mask.length(); ++i) {
     str.erase(0, str.find_first_not_of(character_mask[i]));
@@ -631,7 +631,7 @@ std::string& ltrim(std::string& str, const std::string& character_mask) {
   return str;
 }
 
-std::string& rtrim(std::string& str, const std::string& character_mask) {
+std::string &rtrim(std::string &str, const std::string &character_mask) {
   if (str.empty()) return str;
   for (size_t i = 0; i < character_mask.length(); ++i) {
     str.erase(str.find_last_not_of(character_mask[i]) + 1);
@@ -639,7 +639,7 @@ std::string& rtrim(std::string& str, const std::string& character_mask) {
   return str;
 }
 
-std::string& trim(std::string& str, const std::string& character_mask) {
+std::string &trim(std::string &str, const std::string &character_mask) {
   if (str.empty()) return str;
   for (size_t i = 0; i < character_mask.length(); ++i) {
     str.erase(0, str.find_first_not_of(character_mask[i]));
@@ -649,17 +649,17 @@ std::string& trim(std::string& str, const std::string& character_mask) {
 }
 
 bool contains(
-    const std::string& haystack, const std::vector<std::string> &needles) {
-  for (const std::string& needle : needles) {
+    const std::string &haystack, const std::vector<std::string> &needles) {
+  for (const std::string &needle : needles) {
     if (needle != "" && haystack.find(needle) != std::string::npos)
       return true;
   }
   return false;
 }
 
-std::string str_replace(const std::string& search , 
-                        const std::string& replace, 
-                        const std::string& subject, 
+std::string str_replace(const std::string &search , 
+                        const std::string &replace, 
+                        const std::string &subject, 
                         int32_t count) {
   std::string r{subject};
   int32_t replace_count{0};
@@ -675,11 +675,11 @@ std::string str_replace(const std::string& search ,
 }
 
 std::string str_replaces(const std::vector<std::string>& search , 
-                         const std::string& replace, 
-                         const std::string& subject, 
+                         const std::string &replace, 
+                         const std::string &subject, 
                          int32_t count) {
   std::string r{subject};
-  for (const std::string& item : search)
+  for (const std::string &item : search)
     r = str_replace(item, replace, subject, count);
   return r;
 }
@@ -690,7 +690,7 @@ std::string wstr2str(const std::wstring &str) {
   auto wText = str.c_str();
   DWORD dwNum =
     WideCharToMultiByte(CP_OEMCP, NULL, wText, -1, NULL, 0, NULL, FALSE);
-  char* psText = new char[dwNum];
+  char *psText = new char[dwNum];
   WideCharToMultiByte(CP_OEMCP, NULL, wText, -1, psText, dwNum, NULL, FALSE);
   r = psText;
   safe_delete_array(psText);
@@ -702,7 +702,7 @@ std::string wstr2str(const std::wstring &str) {
   return r;
 }
 
-std::wstring str2wstr(const std::string& str) {
+std::wstring str2wstr(const std::string &str) {
   std::wstring r;
 #if OS_WIN
   int32_t len = MultiByteToWideChar(CP_ACP, 0, (LPCSTR)str.c_str(), -1, NULL, 0);
@@ -806,7 +806,7 @@ char ascii_tovalue(char in) {
   return out;
 }
 
-bool binary_tostring(const char* in, uint32_t in_length, char* out) {
+bool binary_tostring(const char *in, uint32_t in_length, char *out) {
   if (0 == in_length) return false;
   uint32_t out_index = 0;
   uint32_t i;
@@ -819,9 +819,9 @@ bool binary_tostring(const char* in, uint32_t in_length, char* out) {
   return true;
 }
 
-bool string_tobinary(const char* in,
+bool string_tobinary(const char *in,
                      uint32_t in_length,
-                     char* out,
+                     char *out,
                      uint32_t out_limit,
                      uint32_t &out_length) {
   if (0 == in_length) return false;
@@ -838,12 +838,12 @@ bool string_tobinary(const char* in,
   return true;
 }
 
-void dirname(const char* filepath, char* save) {
+void dirname(const char *filepath, char *save) {
     if (nullptr == filepath || nullptr == save) return;
     char _filepath[FILENAME_MAX] = {0};
     safecopy(_filepath, filepath, sizeof(_filepath));
     uint32_t copysize = 0;
-    const char* find = nullptr;
+    const char *find = nullptr;
     path_tounix(_filepath, sizeof(_filepath));
     find = strrchr(_filepath, '/');
     if (find) copysize = static_cast<uint32_t>(find - _filepath);
@@ -858,7 +858,7 @@ void sleep(uint32_t million_seconds) {
 #endif
 }
 
-void get_sizestr(uint64_t size, char* buffer, uint32_t length, int8_t type) {
+void get_sizestr(uint64_t size, char *buffer, uint32_t length, int8_t type) {
   int8_t realtype = 0;
   if (0 == type) {
     snprintf(buffer, length, "%.2fbytes", size / 1.0);
@@ -908,19 +908,19 @@ void get_sizestr(uint64_t size, char* buffer, uint32_t length, int8_t type) {
   }
 }
 
-void path_tounix(char* buffer, uint16_t length) {
+void path_tounix(char *buffer, uint16_t length) {
   for (uint16_t i = 0; i < length; ++i) {
     if ('\\' == buffer[i]) buffer[i] = '/';
   }
 }
 
-void path_towindows(char* buffer, uint16_t length) {
+void path_towindows(char *buffer, uint16_t length) {
   for (uint16_t i = 0; i < length; ++i) {
     if ('/' == buffer[i]) buffer[i] = '\\';
   }
 }
 
-void get_module_filename(char* buffer, size_t size) {
+void get_module_filename(char *buffer, size_t size) {
   int32_t resultcode = 0;
 #if OS_WIN
 #ifdef _UNICODE
@@ -947,9 +947,9 @@ void disable_windowclose() {
 }
 
 #if OS_UNIX
-bool makedir(const char* path, uint16_t mode) {
+bool makedir(const char *path, uint16_t mode) {
 #elif OS_WIN
-bool makedir(const char* path, uint16_t) {
+bool makedir(const char *path, uint16_t) {
 #endif
   char _path[FILENAME_MAX] = {0};
   int32_t i = 0;
@@ -997,13 +997,13 @@ uint32_t get_lowsection(uint64_t value) {
   return result;
 }
 
-void complementpath(char* filepath, size_t size, char delimiter) {
+void complementpath(char *filepath, size_t size, char delimiter) {
   uint32_t length = static_cast<uint32_t>(strlen(filepath));
   if (size <= length) return;
   filepath[length] = delimiter == filepath[length - 1] ? '\0' : delimiter;
 }
 
-char* strerror_pl(int32_t saved_errno) {
+char *strerror_pl(int32_t saved_errno) {
 #if OS_UNIX
   return strerror_r(saved_errno, g_error_buff, sizeof g_error_buff);
 #else

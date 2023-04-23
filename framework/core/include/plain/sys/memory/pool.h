@@ -61,7 +61,7 @@ public:
     // Selected leaf identifier:
     int32_t leaf_id = start_leaf;
     // Resulting allocation:
-    char* re = nullptr;
+    char *re = nullptr;
 
     /*
       Exit the loop at the end of the loop when we meet start_leaf again.
@@ -146,7 +146,7 @@ public:
    */
   void free(void* ptr) {
     // Rewind back to get the AllocHeader:
-    char* to_free = static_cast<char* >(ptr) - sizeof(AllocHeader);
+    char *to_free = static_cast<char *>(ptr) - sizeof(AllocHeader);
     AllocHeader *head = reinterpret_cast<AllocHeader *>(to_free);
     if (0 <= head->size && head->size < kLeafSizeBytes
         && 0 <= head->leaf_id && head->leaf_id < kLeafCount
@@ -168,13 +168,13 @@ public:
       }
 
       // Cleanup so that unique TAG_my_alloc will be keep unique in RAM:
-      memset((char* )head, 0, sizeof(AllocHeader));
+      memset((char *)head, 0, sizeof(AllocHeader));
     } else if ((uint64_t)kTagOSMalloc == head->tag_this
         && kOSMallocID == head->leaf_id
         && head->size > 0) {
       // ok, to OS malloc
       // Cleanup so that unique TAG_my_alloc will be keep unique in RAM:
-      memset((char* )head,  0,  sizeof(AllocHeader));
+      memset((char *)head,  0,  sizeof(AllocHeader));
 #if defined(PLAIN_FP_AUTO_DEALLOCATE)
    #if !_DEBUG
         {
@@ -210,18 +210,18 @@ public:
       void* base_alloc_ptr, void* target_ptr, std::size_t target_size) {
     bool re = false;
     AllocHeader *head = reinterpret_cast<AllocHeader *>(
-        static_cast<char* >(base_alloc_ptr)  -  sizeof(AllocHeader));
+        static_cast<char *>(base_alloc_ptr)  -  sizeof(AllocHeader));
     if (0 <= head->size && head->size < kLeafSizeBytes
          && 0 <= head->leaf_id && head->leaf_id < kLeafCount
          && ((uint64_t)this) == (head->tag_this - head->leaf_id)) {
       // ok, this is Pool allocation
-      char* start = static_cast<char* >(base_alloc_ptr);
-      char* end = start  +  head->size;
-      char* buf = leaf_array_[head->leaf_id].buf;
+      char *start = static_cast<char *>(base_alloc_ptr);
+      char *end = start  +  head->size;
+      char *buf = leaf_array_[head->leaf_id].buf;
       if (buf && buf <= start && (buf + kLeafSizeBytes) >= end){
         // Let's check whether it has gone beyond the allocation limits:
-        char* target_start = static_cast<char* >(target_ptr);
-        char* target_end = target_start + target_size;
+        char *target_start = static_cast<char *>(target_ptr);
+        char *target_end = target_start + target_size;
         if (start <= target_start && target_end <= end) {
           re = true;
         }  else  {
@@ -238,10 +238,10 @@ public:
          && kOSMallocID == head->leaf_id
          && head->size > 0) {
       // Let's check whether it has gone beyond the allocation limits:
-      char* start = static_cast<char* >(base_alloc_ptr);
-      char* end = start + head->size;
-      char* target_start = static_cast<char* >(target_ptr);
-      char* target_end = target_start + target_size;
+      char *start = static_cast<char *>(base_alloc_ptr);
+      char *end = start + head->size;
+      char *target_start = static_cast<char *>(target_ptr);
+      char *target_end = target_start + target_size;
       if  (start <= target_start && target_end <= end) {
         re = true;
       }  else  {
@@ -276,7 +276,7 @@ public:
     // uint64_t last = 0;
     for (int32_t i = 0; i < kLeafCount; ++i) {
       if (buf_array[i]) {
-        leaf_array_[i].buf = static_cast<char* >(buf_array[i]);
+        leaf_array_[i].buf = static_cast<char *>(buf_array[i]);
         leaf_array_[i].available.store(
             kLeafSizeBytes, std::memory_order_relaxed);
         leaf_array_[i].deallocated.store(0, std::memory_order_relaxed);
@@ -348,9 +348,9 @@ public:
    * @param allocation_size
    * @return
    */
-  void* mallocd(const char* filename,
+  void* mallocd(const char *filename,
                 uint32_t line,
-                const char* function_name,
+                const char *function_name,
                 std::size_t allocation_size) {
     void* re = malloc(allocation_size);
     if (re) {
@@ -381,9 +381,9 @@ public:
    * @param function_name
    * @param ptr
    */
-  void freed(const char* filename,
+  void freed(const char *filename,
              uint32_t line,
-             const char* function_name,
+             const char *function_name,
              void* ptr) {
     if (ptr) {
       {
@@ -411,9 +411,9 @@ public:
     return;
   } // freed
 
-  bool check_accessd(const char* filename,
+  bool check_accessd(const char *filename,
                      uint32_t line,
-                     const char* function_name,
+                     const char *function_name,
                      void* base_alloc_ptr,
                      void* target_ptr,
                      std::size_t target_size) {
@@ -438,7 +438,7 @@ public:
 #endif
 private:
   struct leaf_t {
-    char* buf;
+    char *buf;
     // available == offset
     std::atomic<int32_t> available{ kLeafSizeBytes };
     // control of deallocations:
@@ -580,19 +580,19 @@ struct PoolAllocator : public std::allocator<T>  {
   template <class U> constexpr PoolAllocator(const PoolAllocator<U> &)
   noexcept {}
 
-  T* allocate(std::size_t n) {
+  T *allocate(std::size_t n) {
     if (n > std::numeric_limits<std::size_t>::max() / sizeof (T))
       throw std::bad_alloc();
     if (std::is_same<FAllocator, PoolNull>::value) {
-      if (auto p = static_cast<T* >(
+      if (auto p = static_cast<T *>(
             PLAIN_MALLOC(Pool<>::instance(), (n * sizeof (T)))))
         return p;
     }  else {
       if (allocator_) {
-        if (auto p = static_cast<T* >(PLAIN_MALLOC(allocator_, (n * sizeof (T)))))
+        if (auto p = static_cast<T *>(PLAIN_MALLOC(allocator_, (n * sizeof (T)))))
           return p;
       } else {
-        if (auto p = static_cast<T* >(
+        if (auto p = static_cast<T *>(
               PLAIN_MALLOC(FAllocator::instance(), (n * sizeof (T)))))
         return p;
       }
@@ -600,7 +600,7 @@ struct PoolAllocator : public std::allocator<T>  {
     throw std::bad_alloc();
   } // alloc
 
-  void deallocate(T* p, std::size_t) noexcept {
+  void deallocate(T *p, std::size_t) noexcept {
     if (std::is_same<FAllocator, PoolNull>::value) {
       PLAIN_FREE(Pool<>::instance(),  p);
     } else {

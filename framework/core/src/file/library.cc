@@ -19,7 +19,7 @@ typedef void (__stdcall *function_open)(plain::Kernel*, void*);
 
 static inline std::string GetLastErrorString(DWORD nErrorCode) {
   using namespace plain_basic::string;
-  WCHAR* msg = 0; //Qt: wchar_t
+  WCHAR *msg = 0; //Qt: wchar_t
   // Ask Windows to prepare a standard message for a GetLastError() code:
   FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | 
                 FORMAT_MESSAGE_FROM_SYSTEM | 
@@ -45,7 +45,7 @@ static inline std::string GetLastErrorString(DWORD nErrorCode) {
 #include <dlfcn.h>
 #endif
 
-void Library::set_filename(const std::string& _filename) {
+void Library::set_filename(const std::string &_filename) {
   filename_ = _filename;
   if (_filename.size() < strlen(LIBRARY_SUFFIX)) {
     filename_ += LIBRARY_SUFFIX;
@@ -143,7 +143,7 @@ bool Library::unload() {
   return is_null(handle_);
 }
    
-void* Library::resolve(const std::string& symbol, bool again) {
+void* Library::resolve(const std::string &symbol, bool again) {
   void* symbolhandle = nullptr;
 #if OS_WIN
   symbolhandle = cast(void *, GetProcAddress((HMODULE)handle_, symbol.c_str()));
@@ -191,7 +191,7 @@ LibraryManager::LibraryManager() {
 LibraryManager::~LibraryManager() = default;
 
 void LibraryManager::add_searchpaths(const std::vector<std::string> &paths) {
-  for (const std::string& path : paths) {
+  for (const std::string &path : paths) {
     if (std::find(searchpaths_.begin(), 
                   searchpaths_.end(), 
                   path) == searchpaths_.end())
@@ -200,22 +200,22 @@ void LibraryManager::add_searchpaths(const std::vector<std::string> &paths) {
 }
 
 void LibraryManager::remove_searchpaths(const std::vector<std::string> &paths) {
-  for (const std::string& path : paths) {
+  for (const std::string &path : paths) {
     searchpaths_.erase(
         std::remove(searchpaths_.begin(), searchpaths_.end(), path), 
         searchpaths_.end());
   }
 }
 
-void LibraryManager::remove_librarynames(const std::string& onlyname, 
+void LibraryManager::remove_librarynames(const std::string &onlyname, 
                                          const std::vector<std::string> &names) {
   std::vector<std::string> list = namesmap_[onlyname];
-  for (const std::string& name : names) {
+  for (const std::string &name : names) {
     list.erase(std::remove(list.begin(), list.end(), name), list.end());
   }
 }
    
-bool LibraryManager::load(const std::string& name, 
+bool LibraryManager::load(const std::string &name, 
                           bool seeglb,
                           const variable_array_t &params) {
   if (librarymap_[name]) {
@@ -225,10 +225,10 @@ bool LibraryManager::load(const std::string& name,
   std::vector<std::string> names = namesmap_[name];
   if (0 == names.size()) names.push_back(name);
   std::unique_ptr<Library> library(new Library());
-  for (const std::string& _name : names) {
+  for (const std::string &_name : names) {
     bool loaded{false};
     library->set_filename(_name);
-    for (const std::string& path : searchpaths_) {
+    for (const std::string &path : searchpaths_) {
       library->set_path(path);
       if (library->load(true, seeglb)) {
         loaded = true;
@@ -240,7 +240,7 @@ bool LibraryManager::load(const std::string& name,
     if (!loaded) {
       std::string debug_name = _name + "d";
       library->set_filename(debug_name);
-      for (const std::string& path : searchpaths_) {
+      for (const std::string &path : searchpaths_) {
 
         library->set_path(path);
         if (library->load(true, seeglb)) {
@@ -286,7 +286,7 @@ __extension__
   return true;
 }
 
-bool LibraryManager::unload(const std::string& name) {
+bool LibraryManager::unload(const std::string &name) {
   auto it = librarymap_.find(name);
   if (it == librarymap_.end()) {
     // SLOW_DEBUGLOG("library", "[library] load(%s) has unloaded", name.c_str());

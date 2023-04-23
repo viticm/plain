@@ -30,7 +30,7 @@ enum class LogLevel {
 
 class PLAIN_API Logger /*: public Singleton<Logger>*/ {
 
-using output_func_t = std::function<void(const std::string_view&)>;
+using output_func_t = std::function<void(const std::string_view &)>;
 using flush_func_t = std::function<void()>;
 
  public:
@@ -82,14 +82,14 @@ using flush_func_t = std::function<void()>;
   
   Logger& operator<<(char v);
   
-  Logger& operator<<(const char* str); 
-  Logger& operator<<(const unsigned char* str) {
+  Logger& operator<<(const char *str); 
+  Logger& operator<<(const unsigned char *str) {
     return operator<<(reinterpret_cast<const char*>(str));
   }
   
-  Logger& operator<<(const std::string& v);
+  Logger& operator<<(const std::string &v);
 
-  void append(std::string_view& log);
+  void append(std::string_view &log);
   void reset_buffer();
   
  private:

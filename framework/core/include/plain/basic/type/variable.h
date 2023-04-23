@@ -35,8 +35,8 @@ struct PLAIN_API variable_struct {
 
   variable_struct(const variable_t& object); 
   variable_struct(const variable_t* object);
-  variable_struct(const std::string& value);
-  variable_struct(const char* value);
+  variable_struct(const std::string &value);
+  variable_struct(const char *value);
   template <typename T>
   variable_struct(T value);
   variable_struct(enums auto value) {
@@ -47,14 +47,14 @@ struct PLAIN_API variable_struct {
   T get() const; 
   template <typename T>
   T _get() const; //Not safe in multi threads.
-  const char* c_str() const;
+  const char *c_str() const;
 
   variable_t& operator=(const variable_t& object);
   variable_t* operator=(const variable_t* object);
 
   variable_t& operator+=(const variable_t& object) noexcept;
   variable_t* operator+=(const variable_t* object) noexcept;
-  variable_t &operator+=(const std::string& value);
+  variable_t &operator+=(const std::string &value);
   template <typename T>
   variable_t &operator+=(T value);
 
@@ -66,13 +66,13 @@ struct PLAIN_API variable_struct {
 
   variable_t& operator*=(const variable_t& object) noexcept;
   variable_t* operator*=(const variable_t* object) noexcept;
-  variable_t &operator*=(const std::string& value);
+  variable_t &operator*=(const std::string &value);
   template <typename T>
   variable_t &operator *= (T value);
 
   variable_t& operator/=(const variable_t& object) noexcept;
   variable_t* operator/=(const variable_t* object) noexcept;
-  variable_t &operator/=(const std::string& value);
+  variable_t &operator/=(const std::string &value);
   template <typename T>
   variable_t &operator /= (T value);
 
@@ -140,12 +140,12 @@ inline variable_struct::variable_struct(const variable_t* object) {
   }
 }
 
-inline variable_struct::variable_struct(const std::string& value) {
+inline variable_struct::variable_struct(const std::string &value) {
   type = String;
   data = value;
 }
 
-inline variable_struct::variable_struct(const char* value) {
+inline variable_struct::variable_struct(const char *value) {
   if (value) {
     type = String;
     data = value;
@@ -166,7 +166,7 @@ inline T variable_struct::_get() const {
   } else if (is_same(double, T)) {
     result = static_cast<T>(atof(data.c_str()));
   } else {
-    char* endpointer = nullptr;
+    char *endpointer = nullptr;
     int64_t temp = strtoint64(data.c_str(), &endpointer, 10);
     result = static_cast<T>(temp);
   }
@@ -189,7 +189,7 @@ inline T variable_struct::get() const {
   return _get<T>();
 }
 
-inline const char* variable_struct::c_str() const {
+inline const char *variable_struct::c_str() const {
   return data.c_str();
 }
 

@@ -27,7 +27,7 @@ class PLAIN_API AsyncLogger : noncopyable {
   ~AsyncLogger();
 
  public:
-  void append(const std::string_view& log);
+  void append(const std::string_view &log);
   void start();
   void stop();
 

@@ -13,7 +13,7 @@ Ini::Ini() :
   memset(filename_, 0, FILENAME_MAX);
 }
 
-Ini::Ini(const char* filename) :
+Ini::Ini(const char *filename) :
   current_section_{nullptr},
   buffer_{nullptr},
   bufferlength_{0},
@@ -26,7 +26,7 @@ Ini::~Ini() {
   close();
 }
 
-bool Ini::open(const char* filename) {
+bool Ini::open(const char *filename) {
   buffer_ = new char[INI_VALUE_MAX];
   bufferlength_max_ += INI_VALUE_MAX; 
   strncpy(filename_, filename, FILENAME_MAX - 1);
@@ -40,14 +40,14 @@ bool Ini::open(const char* filename) {
   char buffer[512] = {0};
   while (fstream_.getline(buffer, 512)) {
     _trimstring(buffer);
-    char* section;
+    char *section;
     if(_parsesection(buffer, &section)) {
       current_section_ = new valueset_t;
       sectiondata_.insert(
           std::make_pair(std::string(section), current_section_));
       continue;
     }
-    char* key = nullptr, *value = nullptr;
+    char *key = nullptr, *value = nullptr;
     if (_parsekey(buffer, &key, &value)) {
       if(current_section_ == nullptr) {
         char msg[128] = {0};
@@ -84,7 +84,7 @@ Ini::sectionset_t *Ini::getdata() {
   return &sectiondata_;
 }
 
-int32_t Ini::getint32(const char* section, const char* key, int32_t _default) {
+int32_t Ini::getint32(const char *section, const char *key, int32_t _default) {
   int32_t result;
   if (_getint32(section, key, result)) return result;
   char msg[5120] = {0};
@@ -96,13 +96,13 @@ int32_t Ini::getint32(const char* section, const char* key, int32_t _default) {
   return _default;
 }
 
-bool Ini::getint32_ifexist(const char* section, 
-                           const char* key, 
+bool Ini::getint32_ifexist(const char *section, 
+                           const char *key, 
                            int32_t &result) {
   return _getint32(section, key, result);
 }
 
-float Ini::getfloat(const char* section, const char* key, float _default) {
+float Ini::getfloat(const char *section, const char *key, float _default) {
   float result;
   if (_getfloat(section, key, result)) return result;  
   char msg[5120] = {0};
@@ -116,17 +116,17 @@ float Ini::getfloat(const char* section, const char* key, float _default) {
   return _default;
 }
 
-bool Ini::getfloat_ifexist(const char* section, 
-                           const char* key, 
+bool Ini::getfloat_ifexist(const char *section, 
+                           const char *key, 
                            float &result) {
   return _getfloat(section, key, result);
 }
 
-bool Ini::getstring(const char* section, 
-                    const char* key, 
-                    char* str, 
+bool Ini::getstring(const char *section, 
+                    const char *key, 
+                    char *str, 
                     int32_t size, 
-                    const char* _default) {
+                    const char *_default) {
   if (_getstring(section, key, str, size)) return true;
   strncpy(str, _default, size);
   int32_t _size = static_cast<int32_t>(strlen(_default)) > size - 1 ? 
@@ -142,8 +142,8 @@ bool Ini::getstring(const char* section,
   return false;
 }
 
-void Ini::get(const char* section, 
-              const char* key, 
+void Ini::get(const char *section, 
+              const char *key, 
               plain::variable_t &variable) {
   sectionset_t::iterator it = sectiondata_.find(section);
   if(it == sectiondata_.end()) return;
@@ -152,19 +152,19 @@ void Ini::get(const char* section,
     valueset_t::iterator it2 = _section->find(std::string(key));
     if (it2 == _section->end()) return;
     int position = it2->second;
-    const char* value = get_bufferstring(position);
+    const char *value = get_bufferstring(position);
     variable = value;
   }
 }
 
-bool Ini::getstring_ifexist(const char* section, 
-                            const char* key, 
-                            char* str, 
+bool Ini::getstring_ifexist(const char *section, 
+                            const char *key, 
+                            char *str, 
                             int32_t size) {
   return _getstring(section, key, str, size);
 }
 
-bool Ini::_getint32(const char* section, const char* key, int32_t &result) {
+bool Ini::_getint32(const char *section, const char *key, int32_t &result) {
   sectionset_t::iterator it = sectiondata_.find(section);
   if (it == sectiondata_.end()) return false;
   valueset_t *_section = it->second;
@@ -173,14 +173,14 @@ bool Ini::_getint32(const char* section, const char* key, int32_t &result) {
     if(it2 == _section->end())
       return false;
     int position = it2->second;
-    char* value = get_bufferstring(position);
+    char *value = get_bufferstring(position);
     result = atoi(value);
     return true;
   }
   return false;
 }
 
-bool Ini::_getfloat(const char* section, const char* key, float &result) {
+bool Ini::_getfloat(const char *section, const char *key, float &result) {
   sectionset_t::iterator it = sectiondata_.find(section);
   if (it == sectiondata_.end()) return false;
   valueset_t *_section = it->second;
@@ -188,20 +188,20 @@ bool Ini::_getfloat(const char* section, const char* key, float &result) {
     valueset_t::iterator it2 = _section->find(std::string(key));
     if (it2 == _section->end()) return false;
     int position = it2->second;
-    char* value = get_bufferstring(position);
+    char *value = get_bufferstring(position);
     result = (float)atof(value);
     return true;
   }
   return false;
 }
  
-const char* Ini::getstring(int32_t position) {
+const char *Ini::getstring(int32_t position) {
   return get_bufferstring(position);
 }
 
-bool Ini::_getstring(const char* section, 
-                   const char* key, 
-                   char* str, 
+bool Ini::_getstring(const char *section, 
+                   const char *key, 
+                   char *str, 
                    int32_t size) {
   sectionset_t::iterator it = sectiondata_.find(section);
   if(it == sectiondata_.end()) return false;
@@ -210,7 +210,7 @@ bool Ini::_getstring(const char* section,
     valueset_t::iterator it2 = _section->find(std::string(key));
     if (it2 == _section->end()) return false;
     int position = it2->second;
-    char* value = get_bufferstring(position);
+    char *value = get_bufferstring(position);
     size_t valuelength = strlen(value);
     safecopy(str, value, valuelength + 1);
     size_t _size = 
@@ -221,7 +221,7 @@ bool Ini::_getstring(const char* section,
   return false;
 }
 
-void Ini::_trimstring(char* buffer) {
+void Ini::_trimstring(char *buffer) {
   auto size = strlen(buffer);
   if (0 == size) return;
   if ('\r' == buffer[size - 1] || 
@@ -244,9 +244,9 @@ void Ini::_trimstring(char* buffer) {
   }
 }
 
-bool Ini::_parsesection(char* buffer, char* *_section) {
+bool Ini::_parsesection(char *buffer, char **_section) {
   if (buffer[0] != '[') return false;
-  char* size = strchr(buffer, ']');
+  char *size = strchr(buffer, ']');
   if (size != nullptr) {
     size[0] = 0;
     *_section = buffer + 1;
@@ -255,8 +255,8 @@ bool Ini::_parsesection(char* buffer, char* *_section) {
   return false;
 }
 
-bool Ini::_parsekey(char* buffer, char* *key, char* *value) {
-  char* size = strchr(buffer, '=');
+bool Ini::_parsekey(char *buffer, char **key, char **value) {
+  char *size = strchr(buffer, '=');
   if (size != nullptr) {
     size[0] = 0;
     *key = buffer;
@@ -272,12 +272,12 @@ void Ini::_buffer_resize() {
   if (is_null(buffer_)) Assert(false);
 }
 
-char* Ini::get_bufferstring(int32_t position) {
+char *Ini::get_bufferstring(int32_t position) {
   if (position >= bufferlength_) return nullptr;
   return buffer_ + position;
 }
 
-int32_t Ini::_add_bufferstring(char* str) {
+int32_t Ini::_add_bufferstring(char *str) {
   int32_t position = 0;
   size_t size = strlen(str);
   if (bufferlength_ + static_cast<int32_t>(size + 1) >= bufferlength_max_) 

@@ -18,7 +18,7 @@ using BufferVector = std::vector<std::unique_ptr<Buffer>>;
 using BufferPtr = BufferVector::value_type;
 
 // FIXME: move this to utility 
-std::string get_filename(const std::string& name) {
+std::string get_filename(const std::string &name) {
   std::string r;
   auto log_directory = GLOBALS["log.directory"].data;
   r.reserve(log_directory.length() + 1 + name.length() + 64);
@@ -31,14 +31,14 @@ std::string get_filename(const std::string& name) {
 // Logger IO file.
 // FIXME: this construct can flat few parameters.
 struct File {
-  File(const std::string& name,
+  File(const std::string &name,
        std::size_t roll_size,
        bool thread_safe = true,
        time_t flush_interval = 3,
        uint32_t check_every_N = 1024);
   ~File() = default;
-  void append(const std::string_view& log);
-  void append_unlocked(const std::string_view& log);
+  void append(const std::string_view &log);
+  void append_unlocked(const std::string_view &log);
   void flush();
   bool roll();
   static const int32_t kRollPerSeconds_ = 24 * 60 * 60;
@@ -54,7 +54,7 @@ struct File {
   time_t last_flush_;
 };
 
-File::File(const std::string& name,
+File::File(const std::string &name,
            std::size_t roll_size,
            bool thread_safe,
            time_t flush_interval,
@@ -68,7 +68,7 @@ File::File(const std::string& name,
   roll();
 }
 
-void File::append(const std::string_view& log) {
+void File::append(const std::string_view &log) {
   if (mutex_) {
     std::unique_lock<std::mutex> auto_lock{*mutex_};
     append_unlocked(log);
@@ -77,7 +77,7 @@ void File::append(const std::string_view& log) {
   }
 }
 
-void File::append_unlocked(const std::string_view& log) {
+void File::append_unlocked(const std::string_view &log) {
   file_->append(log);
 
   if (file_->written_bytes() > roll_size_) {
@@ -123,11 +123,11 @@ bool File::roll() {
 }
 
 struct AsyncLogger::Impl {
-  Impl(const std::string& name, std::size_t roll_size, int32_t flush_interval);
+  Impl(const std::string &name, std::size_t roll_size, int32_t flush_interval);
   ~Impl();
   void start();
   void stop();
-  void append(const std::string_view& log);
+  void append(const std::string_view &log);
   void thread_handle();
   const std::string name_;
   const std::size_t roll_size_;
@@ -173,7 +173,7 @@ void AsyncLogger::Impl::stop() {
   thread_.join();
 }
 
-void AsyncLogger::Impl::append(const std::string_view& log) {
+void AsyncLogger::Impl::append(const std::string_view &log) {
   std::unique_lock<std::mutex> auto_lock{mutex_};
   if (current_buffer_->write_avail() > log.size()) {
     current_buffer_->write(log.data(), log.size());
@@ -268,6 +268,6 @@ void AsyncLogger::stop() {
   impl_->stop();
 }
 
-void AsyncLogger::append(const std::string_view& log) {
+void AsyncLogger::append(const std::string_view &log) {
   impl_->append(log);
 }

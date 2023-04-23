@@ -24,14 +24,14 @@ int32_t getid() {
   return id;
 }
 
-void get_filename(char* filename, size_t size) {
+void get_filename(char *filename, size_t size) {
   get_module_filename(filename, size);
   auto havelength = strlen(filename);
   auto _size = size - havelength;
   if (_size > 0) snprintf(filename + havelength, _size, "%s", ".pid");
 }
 
-int32_t getid(const char* filename) {
+int32_t getid(const char *filename) {
   FILE *fp = fopen(filename, "r");
   if (nullptr == fp) return ID_INVALID;
   int32_t id;
@@ -40,7 +40,7 @@ int32_t getid(const char* filename) {
   return id;
 }
 
-bool writeid(const char* filename) {
+bool writeid(const char *filename) {
   int32_t id = getid();
   FILE *fp = fopen(filename, "w");
   if (nullptr == fp) return false;
@@ -51,7 +51,7 @@ bool writeid(const char* filename) {
   return true;
 }
 
-bool waitexit(const char* filename) {
+bool waitexit(const char *filename) {
   using namespace plain;
   if (nullptr == filename || 0 == strlen(filename)) {
     io_cerr("[sys] (process::waitexit) error, can't find pid file");
@@ -173,7 +173,7 @@ uint64_t get_virtualmemory_usage(int32_t id) {
            "ps aux | awk '{if ($2 == %d) print $5}'",
            id);
   if (0 == exec(command, temp, sizeof(temp))) {
-    char* endpointer = nullptr;
+    char *endpointer = nullptr;
     result = strtouint64(temp, &endpointer, 10);
     result *= 1024;
   }
@@ -197,7 +197,7 @@ uint64_t get_physicalmemory_usage(int32_t id) {
            "ps aux | awk '{if ($2 == %d) print $6}'",
            id);
   if (0 == exec(command, temp, sizeof(temp))) {
-    char* endpointer = nullptr;
+    char *endpointer = nullptr;
     result = strtouint64(temp, &endpointer, 10);
     result *= 1024;
   }

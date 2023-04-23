@@ -7,7 +7,7 @@
  * @user viticm<viticm.ti@gmail.com>
  * @date 2023/04/01 17:22
  * @uses Like the <sstream>, 
- *       but this class will read/write by string buffer(char* ) directly.
+ *       but this class will read/write by string buffer(char *) directly.
  *       * This use network(big) endian stream.
 */
 #ifndef PLAIN_BASIC_STRINGSTREAM_H_
@@ -22,18 +22,18 @@ namespace plain {
 class stringstream {
 
  public:
-   stringstream(char* str, size_t size) :
+   stringstream(char *str, size_t size) :
      str_{str}, size_{size}, cur_{0} {}
    ~stringstream() {}
 
  public:
-   void read(char* var, size_t size) {
+   void read(char *var, size_t size) {
      Assert(str_ != nullptr && size_ > 0);
      if (size + cur_ > size_) return;
      memcpy(var, str_ + cur_, size);
      cur_ += size;
    }
-   void write(const char* var, size_t size) {
+   void write(const char *var, size_t size) {
      Assert(str_ != nullptr && size_ > 0);
      if (size + cur_ > size_) return;
      memcpy(str_ + cur_, var, size);
@@ -62,35 +62,35 @@ class stringstream {
 
  public:
    template <typename T>
-   stringstream &operator>>(T& var) {
-     read((char* )&var, sizeof(var));
+   stringstream &operator>>(T &var) {
+     read((char *)&var, sizeof(var));
      var = ntoh(var);
      return *this;
    }
 
    stringstream &operator>>(int8_t& var) {
-     read((char* )&var, sizeof(var));
+     read((char *)&var, sizeof(var));
      return *this;
    }
 
    stringstream &operator>>(uint8_t& var) {
-     read((char* )&var, sizeof(var));
+     read((char *)&var, sizeof(var));
      return *this;
    }
 
-   stringstream &operator>>(std::string& var) {
+   stringstream &operator>>(std::string &var) {
      char temp[SSTREAM_STRING_SIZE_MAX]{0};
      int32_t size{0};
-     read((char* )&size, sizeof(size));
+     read((char *)&size, sizeof(size));
      size = ntoh(size);
      if (size > 0) read(temp, size);
      var = temp;
      return *this;
    }
 
-   stringstream &operator>>(char* var) {
+   stringstream &operator>>(char *var) {
      int32_t size{0};
-     read((char* )&size, sizeof(size));
+     read((char *)&size, sizeof(size));
      size = ntoh(size);
      if (size > 0) read(var, size);
      return *this;
@@ -99,38 +99,38 @@ class stringstream {
  public:
    template <typename T>
    stringstream &operator<<(T var) {
-     write((char* )&(var = hton(var)), sizeof(var));
+     write((char *)&(var = hton(var)), sizeof(var));
      return *this;
    }
 
    stringstream &operator<<(int8_t var) {
-     write((char* )&var, sizeof(var));
+     write((char *)&var, sizeof(var));
      return *this;
    }
 
    stringstream &operator<<(uint8_t var) {
-     write((char* )&var, sizeof(var));
+     write((char *)&var, sizeof(var));
      return *this;
    }
 
    stringstream &operator<<(const std::string var) {
      auto size = (int32_t)var.size();
      auto temp = hton(size);
-     write((char* )&temp, sizeof(int32_t));
+     write((char *)&temp, sizeof(int32_t));
      write(var.c_str(), size);
      return *this;
    }
 
-   stringstream &operator<<(const char* var) {
+   stringstream &operator<<(const char *var) {
      auto size = (int32_t)strlen(var);
      auto temp = hton(size);
-     write((char* )&temp, sizeof(int32_t));
+     write((char *)&temp, sizeof(int32_t));
      write(var, size);
      return *this;
    }
 
  private:
-   char* str_;
+   char *str_;
    size_t size_;
    size_t cur_;
 

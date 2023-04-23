@@ -21,7 +21,7 @@ Tab::~Tab() {
   }
 }
 
-bool Tab::open_from_txt(const char* filename) {
+bool Tab::open_from_txt(const char *filename) {
   Assert(filename);
   FILE *fp = fopen(filename, "rb");
   if (nullptr == fp) return false;
@@ -29,7 +29,7 @@ bool Tab::open_from_txt(const char* filename) {
   int32_t filesize = ftell(fp);
   fseek(fp, 0, SEEK_SET);
   //read in memory
-  char* memory = new char[filesize + 1];
+  char *memory = new char[filesize + 1];
   memset(memory, 0, filesize + 1); //use memset to memory pointer
   fread(memory, 1, filesize, fp);
   fclose(fp);
@@ -39,9 +39,9 @@ bool Tab::open_from_txt(const char* filename) {
   return result;
 }
 
-bool Tab::open_from_memory(const char* memory, 
-                                const char* end, 
-                                const char* filename) {
+bool Tab::open_from_memory(const char *memory, 
+                                const char *end, 
+                                const char *filename) {
   bool result = true;
   if (end - memory >= static_cast<int32_t>(sizeof(file_head_t)) && 
       *((uint32_t*)memory) == FILE_DATABASE_INDENTIFY) {
@@ -58,14 +58,14 @@ const Tab::field_data* Tab::search_index_equal(int32_t index) const {
   return it_find->second;
 }
 
-const char* Tab::get_fieldname(int32_t index) {
-  const char* name = nullptr;
+const char *Tab::get_fieldname(int32_t index) {
+  const char *name = nullptr;
   Assert(index >= 0 && index <= field_number_);
   name = fieldnames_[index].c_str();
   return name;
 }
 
-int32_t Tab::get_fieldindex(const char* name) {
+int32_t Tab::get_fieldindex(const char *name) {
   int32_t result = -1;
   uint32_t i;
   for (i = 0; i < fieldnames_.size(); ++i) {
@@ -142,7 +142,7 @@ int32_t Tab::get_record_number() const {
   return record_number_;
 }
 
-void Tab::create_index(int32_t column, const char* filename) {
+void Tab::create_index(int32_t column, const char *filename) {
   if (column < 0 || column > field_number_ || index_column_ == column) return;
   hash_index_.clear();
   int32_t i;
@@ -168,11 +168,11 @@ void Tab::create_index(int32_t column, const char* filename) {
   }
 }
 
-const char* Tab::get_line_from_memory(char* str, 
+const char *Tab::get_line_from_memory(char *str, 
                                            int32_t size, 
-                                           const char* memory, 
-                                           const char* end) {
-  register const char* _memory = memory;
+                                           const char *memory, 
+                                           const char *end) {
+  register const char *_memory = memory;
   if (_memory >= end || 0 == *_memory) return nullptr;
   while (_memory < end &&
          _memory - memory + 1 < size &&
@@ -206,12 +206,12 @@ bool Tab::field_equal(field_type_enum type,
   return result;
 }
 
-bool Tab::open_from_memory_text(const char* memory, 
-                                const char* end, 
-                                const char* filename) {
+bool Tab::open_from_memory_text(const char *memory, 
+                                const char *end, 
+                                const char *filename) {
   char line[(1024 * 10) + 1]; //long string
   memset(line, '\0', sizeof(line));
-  register const char* _memory = memory;
+  register const char *_memory = memory;
   _memory = get_line_from_memory(line, sizeof(line) - 1, _memory, end);
   if (!_memory) return false;
   std::vector<std::string> result;
@@ -273,11 +273,11 @@ bool Tab::open_from_memory_text(const char* memory,
         }
         case kTypeString: {
 #ifdef FILE_DATABASE_CONVERT_GBK_TO_UTF8
-          const char* value = result[i].c_str();
+          const char *value = result[i].c_str();
           //convert charset
           //utf8 -> gbk 1.5multiple length
           int32_t convert_strlength = static_cast<int32_t>(strlen(value) * 2);
-          char* convert_str = new char[convert_strlength];
+          char *convert_str = new char[convert_strlength];
           memset(convert_str, 0, convert_strlength);
           int32_t convert_result = 
             charset_convert("GBK",
@@ -327,7 +327,7 @@ bool Tab::open_from_memory_text(const char* memory,
   //unsigned char blank = '\0';
   string_buffer_[0] = '\0';
   
-  register char* temp = string_buffer_ + 1;
+  register char *temp = string_buffer_ + 1;
   for (i = 0; i < static_cast<int32_t>(string_buffer.size()); ++i) {
     memcpy(temp, 
            string_buffer[i].first.c_str(), 
@@ -349,10 +349,10 @@ bool Tab::open_from_memory_text(const char* memory,
   return true;
 }
 
-bool Tab::open_from_memory_binary(const char* memory, 
-                             const char* end, 
-                             const char* filename) {
-  register const char* _memory = memory;
+bool Tab::open_from_memory_binary(const char *memory, 
+                             const char *end, 
+                             const char *filename) {
+  register const char *_memory = memory;
   file_head_t file_head;
   memcpy(&file_head, _memory, sizeof(file_head_t));
   if (file_head.identify != FILE_DATABASE_INDENTIFY) return false;
@@ -425,7 +425,7 @@ bool Tab::open_from_memory_binary(const char* memory,
   return true;
 }
 
-bool Tab::save_tobinary(const char* filename) {
+bool Tab::save_tobinary(const char *filename) {
     file_head_t filehead;
     filehead.field_number = field_number_;
     filehead.record_number = record_number_;
@@ -443,7 +443,7 @@ bool Tab::save_tobinary(const char* filename) {
     return true;
 }
 
-bool Tab::save_totext(const char* filename) {
+bool Tab::save_totext(const char *filename) {
   FILE *fp = fopen(filename, "wb");
   if (nullptr == fp) return false;
 
@@ -515,7 +515,7 @@ bool Tab::save_totext(const char* filename) {
 }
 
 const Tab::field_data *Tab::get_fielddata(int32_t line, 
-                                          const char* name) {
+                                          const char *name) {
   const field_data *_field_data = nullptr;
   int32_t column = get_fieldindex(name);
   _field_data = search_position(line, column);

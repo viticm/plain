@@ -56,7 +56,7 @@ using cookie_func_t = std::function<void()>;
     }
     return true;
   }
-  bool insert(const T* data) {
+  bool insert(const T *data) {
     std::size_t tmp_head{head_.load(std::memory_order_relaxed)};
 
     if (!can_insert()) {
@@ -69,10 +69,10 @@ using cookie_func_t = std::function<void()>;
     return true;
   }
 
-  bool remove(T& data) {
+  bool remove(T &data) {
     return remove(&data);
   }
-  bool remove(T* data) {
+  bool remove(T *data) {
     std::size_t tmp_tail = tail_.load(std::memory_order_relaxed);
     if (tmp_tail == head_.load(index_acquire_barrier)) {
       return false;
@@ -93,7 +93,7 @@ using cookie_func_t = std::function<void()>;
     return count;
 	}
 
-  std::size_t write(const T* buffer, std::size_t count) noexcept {
+  std::size_t write(const T *buffer, std::size_t count) noexcept {
     std::size_t available{0};
 	  std::size_t tmp_head{head_.load(std::memory_order_relaxed)};
     std::size_t to_write{count};
@@ -117,7 +117,7 @@ using cookie_func_t = std::function<void()>;
 
 		return to_write;
   }
-  std::size_t read(T* buffer, std::size_t count) noexcept {
+  std::size_t read(T *buffer, std::size_t count) noexcept {
     std::size_t available{0};
     std::size_t tmp_tail{tail_.load(std::memory_order_relaxed)};
     std::size_t to_read {count};
@@ -164,7 +164,7 @@ using cookie_func_t = std::function<void()>;
   }
 
   // Gets the first element in the buffer on consumed side.
-  T* peek(std::size_t count = 0) {
+  T *peek(std::size_t count = 0) {
     std::size_t avail = read_avail();
 		if (avail < count) {
 			return nullptr;
@@ -174,7 +174,7 @@ using cookie_func_t = std::function<void()>;
     }
   }
 
-  T* at(std::size_t index) {
+  T *at(std::size_t index) {
     std::size_t tmp_tail{tail_.load(std::memory_order_relaxed)};
 
     if ((head_.load(index_acquire_barrier) - tmp_tail) <= index)
@@ -183,7 +183,7 @@ using cookie_func_t = std::function<void()>;
       return &buffer_[(tmp_tail + index) & mask_];
   }
 
-  T& operator[](size_t index) {
+  T &operator[](size_t index) {
 		return buffer_[(tail_.load(std::memory_order_relaxed) + index) & mask_];
 	}
   

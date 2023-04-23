@@ -425,7 +425,7 @@ bool UnitPool<T>::init(uint32_t _key, size_t _size, uint8_t type) {
   }
   size_ = _size;
   set_position(0);
-  objs_ = new T * [size_];
+  objs_ = new T *[size_];
   if (is_null(objs_)) return false;
   for (decltype(size_) i = 0; i < size_; ++i) {
     auto objsize = static_cast<uint32_t>(sizeof(T) + data_extend_size_);
