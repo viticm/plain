@@ -5,6 +5,7 @@ files=`find ./ -name "*.h" -o -name "*.cc"`
 for file in $files; do
   echo $file
   sed -i 's;char\* ;char \*;g' $file
+  sed -i 's;wchar_t\* ;wchar_t \*;g' $file
   sed -i 's;CHAR\* ;CHAR \*;g' $file
   sed -i 's;string\* ;string \*;g' $file
   sed -i 's;string\& ;string \&;g' $file
