@@ -143,17 +143,25 @@ void Logger::Impl::finish() {
   buffer_.write("\n", 1);
 }
 
-Logger::Logger(LogLevel level, const std::source_location& location)
+Logger::Logger(LogLevel level, const std::source_location &location)
   : impl_{std::make_unique<Impl>(
       level, location.file_name(), location.line())} {
   *this << location.function_name() << " ";
 }
 
-Logger::Logger(bool abort, const std::source_location& location)
+Logger::Logger(bool abort, const std::source_location &location)
   : impl_{std::make_unique<Impl>(
       abort ? LogLevel::Fatal : LogLevel::Error,
       location.file_name(), location.line(), errno)} {
   *this << location.function_name() << " ";
+}
+
+Logger::Logger(const std::string_view &trace,
+               const std::source_location &location)
+  : impl_{std::make_unique<Impl>(
+      LogLevel::Trace, location.file_name(), location.line())} {
+  *this << location.function_name() << " ";
+  *this << trace.data();
 }
 
 Logger::~Logger() {
@@ -185,42 +193,42 @@ void Logger::format_integer(T value) {
   }
 }
 
-Logger& Logger::operator<<(bool v) {
+Logger &Logger::operator<<(bool v) {
   impl_->buffer_.write(v ? "1" : "0", 1);
   return *this;
 }
 
-Logger& Logger::operator<<(int16_t v) {
+Logger &Logger::operator<<(int16_t v) {
   format_integer(v);
   return *this;
 }
 
-Logger& Logger::operator<<(uint16_t v) {
+Logger &Logger::operator<<(uint16_t v) {
   format_integer(v);
   return *this;
 }
 
-Logger& Logger::operator<<(int32_t v) {
+Logger &Logger::operator<<(int32_t v) {
   format_integer(v);
   return *this;
 }
 
-Logger& Logger::operator<<(uint32_t v) {
+Logger &Logger::operator<<(uint32_t v) {
   format_integer(v);
   return *this;
 }
 
-Logger& Logger::operator<<(int64_t v) {
+Logger &Logger::operator<<(int64_t v) {
   format_integer(v);
   return *this;
 }
 
-Logger& Logger::operator<<(uint64_t v) {
+Logger &Logger::operator<<(uint64_t v) {
   format_integer(v);
   return *this;
 }
 
-Logger& Logger::operator<<(const void* p) {
+Logger &Logger::operator<<(const void* p) {
   if (impl_->buffer_.write_avail() >= kMaxNumericSize) {
     char str[kMaxNumericSize]{0};
     auto v = reinterpret_cast<uintptr_t>(p);
@@ -231,7 +239,7 @@ Logger& Logger::operator<<(const void* p) {
   return *this;
 }
 
-Logger& Logger::operator<<(double v) {
+Logger &Logger::operator<<(double v) {
   if (impl_->buffer_.write_avail() >= kMaxNumericSize) {
     char str[kMaxNumericSize]{0};
     auto size = snprintf(str, kMaxNumericSize, "%.12g", v);
@@ -240,12 +248,12 @@ Logger& Logger::operator<<(double v) {
   return *this;
 }
 
-Logger& Logger::operator<<(char v) {
+Logger &Logger::operator<<(char v) {
   impl_->buffer_.write(&v, 1);
   return *this;
 }
 
-Logger& Logger::operator<<(const char *str) {
+Logger &Logger::operator<<(const char *str) {
   if (str) {
     impl_->buffer_.write(str, strlen(str));
   } else {
@@ -254,7 +262,7 @@ Logger& Logger::operator<<(const char *str) {
   return *this;
 }
 
-Logger& Logger::operator<<(const std::string &v) {
+Logger &Logger::operator<<(const std::string &v) {
   impl_->buffer_.write(v.c_str(), v.size());
   return *this;
 }

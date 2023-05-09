@@ -36,9 +36,11 @@ using flush_func_t = std::function<void()>;
  public:
   
   explicit Logger(LogLevel level = LogLevel::Info,
-      const std::source_location& location = std::source_location::current());
+    const std::source_location &location = std::source_location::current());
   explicit Logger(bool abort,
-      const std::source_location& location = std::source_location::current());
+    const std::source_location &location = std::source_location::current());
+  explicit Logger(const std::string_view &trace, 
+    const std::source_location &location = std::source_location::current());
   ~Logger();
  
  public:
@@ -114,7 +116,7 @@ using flush_func_t = std::function<void()>;
 
 #define LOG_TRACE if (plain::Logger::get_level() <= plain::LogLevel::Trace) \
   plain::Logger(plain::LogLevel::Trace)
-#define LOG_DEBUG if (plain::Logger::get_level() <= plain::LogLevel::Trace) \
+#define LOG_DEBUG if (plain::Logger::get_level() <= plain::LogLevel::Debug) \
   plain::Logger(plain::LogLevel::Debug)
 #define LOG_INFO if (plain::Logger::get_level() <= plain::LogLevel::Info) \
   plain::Logger()
