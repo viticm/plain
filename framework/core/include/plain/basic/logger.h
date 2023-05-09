@@ -12,6 +12,7 @@
 #define PLAIN_BASIC_LOGGER_H_
 
 #include "plain/basic/config.h"
+#include <format>
 #include <source_location>
 #include <string_view>
 
@@ -92,6 +93,12 @@ using flush_func_t = std::function<void()>;
   Logger& operator<<(const std::string &v);
 
   void append(std::string_view &log);
+  template<class... Args> 
+  void appendf(const std::string_view &format, Args... args) {
+    auto log = std::vformat(format, std::make_format_args(args...));
+    append(log);
+  }
+
   void reset_buffer();
   
  private:

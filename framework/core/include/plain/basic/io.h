@@ -15,6 +15,7 @@
 #define PLAIN_BASIC_IO_H_
 
 #include "plain/basic/config.h"
+#include <format>
 
 namespace plain {
 
@@ -39,14 +40,14 @@ inline void reset_consolecolor(uint16_t color) {
 #endif
 
 
-template<typename... TS> 
-void io_cerr(const char *format, TS... args) {
+template<class... Args> 
+void io_cerr(const std::string_view &format, Args... args) {
 #if OS_UNIX
   std::cout << "\033[0;31;1m";  
 #elif OS_WIN
   auto lastcolor = set_consolecolor(FOREGROUND_INTENSITY | FOREGROUND_RED);
 #endif
-  printf(format, args...);
+  std::cout << std::vformat(format, std::make_format_args(args...));
 #if OS_UNIX
   std::cout << "\033[0m";
 #endif
@@ -56,15 +57,15 @@ void io_cerr(const char *format, TS... args) {
 #endif
 }
 
-template<typename... TS> 
-void io_cwarn(const char *format, TS... args) {
+template<class... Args> 
+void io_cwarn(const std::string_view &format, Args... args) {
 #if OS_UNIX
   std::cout<<"\033[0;33;1m";  
 #elif OS_WIN
   auto lastcolor = 
     set_consolecolor(FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN);
 #endif
-  printf(format, args...);
+  std::cout << std::vformat(format, std::make_format_args(args...));
 #if OS_UNIX
   std::cout << "\033[0m";
 #endif
@@ -74,14 +75,14 @@ void io_cwarn(const char *format, TS... args) {
 #endif
 }
 
-template<typename... TS> 
-void io_cdebug(const char *format, TS... args) {
+template<class... Args> 
+void io_cdebug(const std::string_view &format, Args... args) {
 #if OS_UNIX
   std::cout << "\033[0;32;1m";  
 #elif OS_WIN
   auto lastcolor = set_consolecolor(FOREGROUND_INTENSITY | FOREGROUND_GREEN);
 #endif
-  printf(format, args...);
+  std::cout << std::vformat(format, std::make_format_args(args...));
 #if OS_UNIX
   std::cout << "\033[0m";
 #endif
