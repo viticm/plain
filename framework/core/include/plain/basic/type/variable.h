@@ -23,7 +23,7 @@
 namespace plain {
 
 template <typename T>
-Variable std_convert_type(T);
+Variable std_convert_type(T) noexcept;
 
 struct PLAIN_API variable_struct {
   using enum Variable;
@@ -33,10 +33,10 @@ struct PLAIN_API variable_struct {
   mutable std::mutex mutex;
   variable_struct() : type{Invalid}, data{""} {}
 
-  variable_struct(const variable_t& object); 
-  variable_struct(const variable_t* object);
+  variable_struct(const variable_t &object); 
   variable_struct(const std::string &value);
   variable_struct(const char *value);
+  variable_struct(variable_t &&object) = default;
   template <typename T>
   variable_struct(T value);
   variable_struct(enums auto value) {
@@ -46,60 +46,56 @@ struct PLAIN_API variable_struct {
   template <typename T>
   T get() const; 
   template <typename T>
-  T _get() const; //Not safe in multi threads.
+  T _get() const noexcept; //Not safe in multi threads.
   const char *c_str() const;
 
-  variable_t& operator=(const variable_t& object);
-  variable_t* operator=(const variable_t* object);
+  variable_t &operator=(const variable_t &object);
+  variable_t &operator=(variable_t &&object) = default;
 
-  variable_t& operator+=(const variable_t& object) noexcept;
-  variable_t* operator+=(const variable_t* object) noexcept;
+  variable_t &operator+=(const variable_t &object) noexcept;
   variable_t &operator+=(const std::string &value);
   template <typename T>
   variable_t &operator+=(T value);
 
 
-  variable_t& operator-=(const variable_t& object) noexcept;
-  variable_t* operator-=(const variable_t* object) noexcept;
+  variable_t &operator-=(const variable_t &object) noexcept;
   template <typename T>
   variable_t &operator -= (T value);
 
-  variable_t& operator*=(const variable_t& object) noexcept;
-  variable_t* operator*=(const variable_t* object) noexcept;
+  variable_t &operator*=(const variable_t &object) noexcept;
   variable_t &operator*=(const std::string &value);
   template <typename T>
   variable_t &operator *= (T value);
 
-  variable_t& operator/=(const variable_t& object) noexcept;
-  variable_t* operator/=(const variable_t* object) noexcept;
+  variable_t &operator/=(const variable_t &object) noexcept;
   variable_t &operator/=(const std::string &value);
   template <typename T>
   variable_t &operator /= (T value);
 
-  variable_t& operator++() noexcept;
-  variable_t& operator--() noexcept;
-  variable_t& operator++(int32_t) noexcept;
-  variable_t& operator--(int32_t) noexcept;
+  variable_t &operator++() noexcept;
+  variable_t &operator--() noexcept;
+  variable_t &operator++(int32_t) noexcept;
+  variable_t &operator--(int32_t) noexcept;
   
   friend bool operator==(
-      const variable_t& lhs, const variable_t& rhs) noexcept {
+      const variable_t &lhs, const variable_t &rhs) noexcept {
     return lhs.data == rhs.data;
   }
   
-  friend bool operator!=(const variable_t& lhs, const variable_t& rhs) noexcept {
+  friend bool operator!=(const variable_t &lhs, const variable_t &rhs) noexcept {
     return lhs.data != rhs.data;
   }
 
-  friend bool operator<(const variable_t& lhs, const variable_t& rhs) noexcept {
+  friend bool operator<(const variable_t &lhs, const variable_t &rhs) noexcept {
     return lhs.data < rhs.data;
   }
 
-  friend bool operator>(const variable_t& lhs, const variable_t& rhs) noexcept {
+  friend bool operator>(const variable_t &lhs, const variable_t &rhs) noexcept {
     return lhs.data < rhs.data;
   }
 
   friend auto operator<=>(
-      const variable_t& lhs, const variable_t& rhs) noexcept {
+      const variable_t &lhs, const variable_t &rhs) noexcept {
     return lhs.data <=> rhs.data;
   }
 
@@ -111,7 +107,7 @@ struct PLAIN_API variable_struct {
 }; //PLAIN变量，类似脚本变量
 
 template <typename T>
-Variable std_convert_type(T) {
+Variable std_convert_type(T) noexcept {
   using enum Variable;
   if (is_same(bool, T)) return Bool;
   if (is_same(int32_t, T)) return Int32;
@@ -128,18 +124,11 @@ Variable std_convert_type(T) {
   return String; //Default is string.
 }
 
-inline variable_struct::variable_struct(const variable_t& object) {
+inline variable_struct::variable_struct(const variable_t &object) {
   data = object.data;
   type = object.type;
 }
   
-inline variable_struct::variable_struct(const variable_t* object) {
-  if (object) {
-    data = object->data;
-    type = object->type;
-  }
-}
-
 inline variable_struct::variable_struct(const std::string &value) {
   type = String;
   data = value;
@@ -159,7 +148,7 @@ inline variable_struct::variable_struct(T value) {
 }
  
 template <typename T>
-inline T variable_struct::_get() const {
+inline T variable_struct::_get() const noexcept {
   T result{(T)0};
   if (is_same(float, T)) {
     result = static_cast<T>(atof(data.c_str()));
@@ -174,12 +163,12 @@ inline T variable_struct::_get() const {
 }
 
 template <>
-inline bool variable_struct::_get<bool>() const {
-  return data!="0" && data!="";
+inline bool variable_struct::_get<bool>() const noexcept {
+  return data != "0" && data !="";
 }
 
 template <>
-inline std::string variable_struct::_get<std::string>() const {
+inline std::string variable_struct::_get<std::string>() const noexcept {
   return data;
 }
   
@@ -193,7 +182,7 @@ inline const char *variable_struct::c_str() const {
   return data.c_str();
 }
 
-inline variable_t& variable_struct::operator=(const variable_t& object) {
+inline variable_t &variable_struct::operator=(const variable_t &object) {
   if (this == &object) return *this;
   std::unique_lock<std::mutex> auto_lock(mutex);
   type = object.type;
@@ -201,22 +190,6 @@ inline variable_t& variable_struct::operator=(const variable_t& object) {
   return *this;
 }
 
-inline variable_t* variable_struct::operator=(const variable_t *object) {
-  if (this == object) return this;
-  std::unique_lock<std::mutex> auto_lock(mutex);
-  if (object) {
-    type = object->type;
-    data = object->data;
-  }
-  return this;
-}
-
-inline variable_t*
-variable_struct::operator+=(const variable_t* object) noexcept {
-  if (object) *this += *object;
-  return this;
-
-}
 template <typename T>
 inline variable_t &variable_struct::operator+=(T value) {
   std::unique_lock<std::mutex> auto_lock(mutex);
@@ -233,24 +206,6 @@ inline variable_t &variable_struct::operator+=(const std::string &value) {
   return *this;
 }
 
-inline variable_t*
-variable_struct::operator-=(const variable_t* object) noexcept {
-  if (object) *this -= *object;
-  return this;
-}
-
-inline variable_t*
-variable_struct::operator*=(const variable_t *object) noexcept {
-  if (object) *this *= *object;
-  return this;
-}
-  
-inline variable_t*
-variable_struct::operator/=(const variable_t* object) noexcept {
-  if (object) *this /= *object;
-  return this;
-}
-  
 template <typename T>
 inline variable_t &variable_struct::operator -= (T value) {
   std::unique_lock<std::mutex> auto_lock(mutex);
@@ -278,22 +233,22 @@ inline variable_t &variable_struct::operator /= (T value) {
   return *this;
 }
 
-inline variable_t& variable_struct::operator++() noexcept {
+inline variable_t &variable_struct::operator++() noexcept {
   *this += 1;
   return *this;
 }
   
-inline variable_t& variable_struct::operator--() noexcept {
+inline variable_t &variable_struct::operator--() noexcept {
   *this -= 1;
   return *this;
 }
   
-inline variable_t& variable_struct::operator++(int32_t) noexcept {
+inline variable_t &variable_struct::operator++(int32_t) noexcept {
   *this += 1;
   return *this;
 }
   
-inline variable_t& variable_struct::operator--(int32_t) noexcept {
+inline variable_t &variable_struct::operator--(int32_t) noexcept {
   *this -= 1;
   return *this;
 }
@@ -311,8 +266,8 @@ inline variable_struct::operator T() {
   return this->get<T>();
 }
 
-// This will implicit convert all to variable use std::cout.
-// std::ostream& operator<<(std::ostream& os, const variable_t& object);
+// FIXME: This not implicit any type to variable_t when test(gcc 13.1).
+std::ostream &operator<<(std::ostream &os, const variable_t &object);
 
 } //namespace plain
 

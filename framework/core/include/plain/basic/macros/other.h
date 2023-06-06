@@ -11,7 +11,7 @@
 #ifndef PLAIN_BASIC_MACROS_OTHER_H_
 #define PLAIN_BASIC_MACROS_OTHER_H_
 
-#ifdef OS_WIN
+#if OS_WIN
 
 //why use it? for FD_* functions
 #pragma warning(disable: 4127)

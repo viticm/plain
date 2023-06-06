@@ -161,6 +161,7 @@ variable_struct::operator/=(const variable_t& object) noexcept {
 
 std::ostream& operator<<(std::ostream& os, const variable_t& object) {
   using enum Variable;
+  os << "plain::variable: ";
   switch (object.type) {
     case Int32:
       os << object.get<int32_t>();

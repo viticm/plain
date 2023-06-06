@@ -52,6 +52,7 @@ bool writeid(const char *filename) {
 }
 
 bool waitexit(const char *filename) {
+  using namespace std::chrono_literals;
   using namespace plain;
   if (nullptr == filename || 0 == strlen(filename)) {
     io_cerr("[sys] (process::waitexit) error, can't find pid file");
@@ -65,11 +66,11 @@ bool waitexit(const char *filename) {
   }
 #if OS_UNIX
   kill(id, 10);
-  std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+  std::this_thread::sleep_for(2s);
   kill(id, 10);
   int32_t result = kill(id, 0);
   while (result >= 0) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    std::this_thread::sleep_for(1s);
     result = kill(id, 0);
   }
   io_cerr("[sys] (process::waitexit) success, pid(%d), result(%d)", id, result);
