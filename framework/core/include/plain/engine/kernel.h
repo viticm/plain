@@ -62,8 +62,8 @@ class PLAIN_API Kernel : public Singleton<Kernel> {
           if (thread::is_stopping()) break;
           (*task)(); 
           (*task).reset(); //Remeber it, the packaged_task reset then can call again.
-          if (std::is_same<decltype(task_res), bool>::value && !task_res.get())
-            thread::stop();
+          using is_bool_result = std::is_same<return_type, bool>;
+          thread::check_running(is_bool_result{}, task_res);
         }
 
         //Log(this log also can enable with app.debug).

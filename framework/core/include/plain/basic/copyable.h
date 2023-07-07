@@ -17,8 +17,10 @@ namespace plain {
 class copyable {
 
  protected:
-   copyable() = default;
-   ~copyable() = default;
+   copyable() noexcept = default;
+   ~copyable() noexcept = default;
+   copyable(copyable &&) noexcept = default;
+   copyable &operator = (copyable &&) noexcept = default;
 
 };
 

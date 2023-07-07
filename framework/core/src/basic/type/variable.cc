@@ -2,8 +2,8 @@
 
 namespace plain {
 
-variable_t&
-variable_struct::operator+=(const variable_t& object) noexcept {
+variable_t &
+variable_struct::operator+=(const variable_t &object) noexcept {
   switch (type) {
     case Int32:
       *this += object.get<int32_t>();
@@ -42,8 +42,8 @@ variable_struct::operator+=(const variable_t& object) noexcept {
   return *this;
 }
 
-variable_t&
-variable_struct::operator-=(const variable_t& object) noexcept {
+variable_t &
+variable_struct::operator-=(const variable_t &object) noexcept {
   switch (type) {
     case Int32:
       *this -= object.get<int32_t>();
@@ -81,8 +81,8 @@ variable_struct::operator-=(const variable_t& object) noexcept {
   return *this;
 }
 
-variable_t& 
-variable_struct::operator*=(const variable_t& object) noexcept {
+variable_t & 
+variable_struct::operator*=(const variable_t &object) noexcept {
   switch (type) {
     case Int32:
       *this *= object.get<int32_t>();
@@ -120,8 +120,8 @@ variable_struct::operator*=(const variable_t& object) noexcept {
   return *this;
 }
 
-inline variable_t& 
-variable_struct::operator/=(const variable_t& object) noexcept {
+inline variable_t & 
+variable_struct::operator/=(const variable_t &object) noexcept {
   switch (type) {
     case Int32:
       *this /= object.get<int32_t>();
@@ -159,9 +159,9 @@ variable_struct::operator/=(const variable_t& object) noexcept {
   return *this;
 }
 
-std::ostream& operator<<(std::ostream& os, const variable_t& object) {
+std::ostream &operator<<(std::ostream &os, const variable_t &object) {
   using enum Variable;
-  os << "plain::variable: ";
+  // os << "plain::variable: ";
   switch (object.type) {
     case Int32:
       os << object.get<int32_t>();

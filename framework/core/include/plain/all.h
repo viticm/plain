@@ -1,11 +1,11 @@
 /**
- * PLAIN FRAMEWORK ( https://github.com/viticm/plainframework )
- * $Id plain.h
+ * PLAIN FRAMEWORK ( https://github.com/viticm/plain )
+ * $Id all.h
  * @link https://github.com/viticm/plainframework for the canonical source repository
  * @copyright Copyright (c) 2023- viticm( viticm.ti@gmail.com )
  * @license
  * @user viticm<viticm.ti@gmail.com>
- * @date 2017/07/13 11:23
+ * @date 2023/07/07 17:50
  * @uses The framework all inlcudes.
  *       This group defines just can define one.
  *             group1: PLAIN_OPEN_ICOP|PLAIN_OPEN_EPOLL
@@ -44,44 +44,6 @@
 #include "plain/console/output.h"
 #include "plain/console/parser.h"
 #include "plain/console/string_input.h"
-
-/* cache */
-#include "plain/cache/packet/db_query.h"
-#include "plain/cache/packet/db_result.h"
-#include "plain/cache/db_define.h"
-#include "plain/cache/db_store.h"
-#include "plain/cache/manager.h"
-#include "plain/cache/repository.h"
-#include "plain/cache/storeinterface.h"
-
-/* db */
-#include "plain/db/concerns/builds_queries.h"
-#include "plain/db/query/grammars/grammar.h"
-#include "plain/db/query/grammars/mysql_grammar.h"
-#include "plain/db/query/grammars/postgres_grammar.h"
-#include "plain/db/query/grammars/sqlite_grammar.h"
-#include "plain/db/query/grammars/sqlserver_grammar.h"
-#include "plain/db/query/builder.h"
-#include "plain/db/query/expression.h"
-#include "plain/db/query/join_clause.h"
-#include "plain/db/schema/blueprint.h"
-#include "plain/db/schema/grammars/change_column.h"
-#include "plain/db/schema/grammars/grammar.h"
-#include "plain/db/schema/grammars/mysql_grammar.h"
-#include "plain/db/schema/grammars/postgres_grammar.h"
-#include "plain/db/schema/grammars/rename_column.h"
-#include "plain/db/schema/grammars/sqlite_grammar.h"
-#include "plain/db/schema/grammars/sqlserver_grammar.h"
-#include "plain/db/schema/builder.h"
-#include "plain/db/schema/mysql_builder.h"
-#include "plain/db/schema/postgres_builder.h"
-#include "plain/db/connection.h"
-#include "plain/db/grammar.h"
-#include "plain/db/seeder.h"
-#include "plain/db/define.h"
-#include "plain/db/interface.h"
-#include "plain/db/factory.h"
-#include "plain/db/query.h"
 
 /* engine */
 #include "plain/engine/application.h"
@@ -134,13 +96,7 @@
 #include "plain/sys/assert.h"
 #include "plain/sys/process.h"
 #include "plain/sys/thread.h"
-#include "plain/sys/util.h"
-
-/* util */
-#include "plain/util/compressor/assistant.h"
-#include "plain/util/compressor/minimanager.h"
-#include "plain/util/bitflag.h"
-#include "plain/util/random.h"
+#include "plain/sys/utility.h"
 
 #endif //PLAIN_H_
 

@@ -66,7 +66,7 @@
 
 /* Move a pointer to the std::unique_ptr value. */
 #ifndef unique_move
-#define unique_move(t,o,n) {std::unique_ptr< t > p{o}; n = std::move(p);}
+#define unique_move(t,o,n) {std::unique_ptr<t> p{o}; n = std::move(p);}
 #endif
 
 /* C cast pointer function. */

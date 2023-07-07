@@ -12,6 +12,7 @@
  *       Refer: php/lua or more script codes.
  *
  *      FIXME: change the std::to_string to std::to_chars.
+ *             Replace this to std::any with c++17?
 */
 #ifndef PLAIN_BASIC_TYPE_VARIABLE_H_
 #define PLAIN_BASIC_TYPE_VARIABLE_H_

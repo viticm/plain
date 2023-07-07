@@ -36,7 +36,7 @@ PLAIN_API bool daemon();
 PLAIN_API std::string hostname();
 
 inline void print_curinfo() {
-  io_cdebug("cpu: %.1f%% VSZ: %dk RSS: %dk",
+  io_cdebug("cpu: {}% VSZ: {}k RSS: {}k",
       get_cpu_usage(getid()),
       get_virtualmemory_usage(getid()),
       get_physicalmemory_usage(getid()));

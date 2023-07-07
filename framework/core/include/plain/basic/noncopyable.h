@@ -21,8 +21,10 @@ class noncopyable {
    noncopyable &operator = (const noncopyable &) = delete;
 
  protected:
-   noncopyable() = default;
-   ~noncopyable() = default;
+   noncopyable() noexcept = default;
+   ~noncopyable() noexcept = default;
+   noncopyable(noncopyable &&) noexcept = default;
+   noncopyable &operator = (noncopyable &&) noexcept = default;
 
 };
 

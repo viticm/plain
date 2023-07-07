@@ -17,6 +17,7 @@
 #include "plain/basic/io.h"
 #include "plain/basic/logger.h"
 #include "plain/basic/global.h"
+#include "plain/sys/constants.h"
 
 namespace plain {
 
@@ -49,11 +50,11 @@ class PLAIN_API ThreadCollect {
 
  public:
   static int32_t count() {
-    return count_;
+    return count_.load(std::memory_order_relaxed);
   }
 
  private:
-  static std::atomic<int32_t> count_;
+  static std::atomic_int32_t count_;
 
 };
 
@@ -141,10 +142,20 @@ inline bool is_stopping() {
   return ThreadStatus::Stopped == status();
 }
 
+template <typename T>
+void check_running(std::true_type, std::future<T> &task_res) {
+  if (!task_res.get()) stop();
+}
+
+template <typename T>
+void check_running(std::false_type, std::future<T> &task_res) {
+  stop();
+}
+
 // FIXME: optimize the Kernel::newthread and this.
 // With endless loop excute F(F return false exit).
 template <typename F, typename... Args>
-requires std::predicate<F, Args...>
+// requires std::predicate<F, Args...>
 thread_t create(const std::string_view &name, F&& f, Args&&... args) {
   using return_type = typename std::result_of_t<F(Args...)>;
   auto task = std::make_shared< std::packaged_task<return_type()> >(
@@ -159,7 +170,8 @@ thread_t create(const std::string_view &name, F&& f, Args&&... args) {
       if (is_stopping()) break;
       (*task)(); 
       (*task).reset(); //Remeber it, the packaged_task reset then can call again.
-      if (!task_res.get()) stop();
+      using is_bool_result = std::is_same<bool, return_type>;
+      check_running(is_bool_result{}, task_res);
     }
 
     if (true == GLOBALS["app.debug"]) {
@@ -176,44 +188,19 @@ thread_t create(const std::string_view &name, F&& f, Args&&... args) {
   return r;
 }
 
-// FIXME: this function with the F is return void(future merge up function).
-// Without loop excute the F once.
-template <typename F, typename... Args>
-thread_t create(const std::string_view &name, F&& f, Args&&... args) {
-  using return_type = typename std::result_of_t<F(Args...)>;
-  auto task = std::make_shared< std::packaged_task<return_type()> >(
-    std::bind(std::forward<F>(f), std::forward<Args>(args)...)
-  );
-  auto r = thread_t([task, name](){ 
-    set_name(name);
-    start();
-    ThreadCollect tc;
-    std::future<return_type> task_res = task->get_future();
-    (*task)(); 
-    // task_res.get();
-    stop();
-    if (true == GLOBALS["app.debug"]) {
-      auto id_str = get_id();
-      LOG_DEBUG << name.data() << " stopping with " << id_str;
-    }
-  });
-
-  if (true == GLOBALS["app.debug"]) {
-    std::stringstream id_str;
-    id_str << r.get_id();
-    LOG_DEBUG << name.data() << " starting with " << id_str.str();
-  }
-  return r;
+inline size_t hardware_concurrency() noexcept {
+  const auto hc = std::thread::hardware_concurrency();
+  return hc != 0 ? hc : kSystemDefaultNumberOfCores;
 }
 
 } //namespace thread
 
 inline ThreadCollect::ThreadCollect() {
-  ++count_;
+  count_.fetch_add(1, std::memory_order_relaxed);
 }
 
 inline ThreadCollect::~ThreadCollect() {
-  --count_;
+  count_.fetch_sub(1, std::memory_order_relaxed);
   auto count = count_.load(std::memory_order_relaxed);
   if (true == GLOBALS["app.debug"]) {
     plain::io_cdebug("[%s] thread(%s) collect wait exit: %d", 
