@@ -16,11 +16,12 @@
 
 namespace plain {
 
-template <typename E>
-constexpr auto
-to_underlying_t(E enumerator) noexcept {
-  return static_cast<std::underlying_type_t<E>>(enumerator);
-}
+// Use std::to_underlying replace this.
+// template <typename E>
+// constexpr auto
+// to_underlying_t(E enumerator) noexcept {
+//   return static_cast<std::underlying_type_t<E>>(enumerator);
+// }
 
 } // namespace plain
 

@@ -18,8 +18,8 @@
 #define PLAIN_BASIC_TYPE_VARIABLE_H_
 
 #include "plain/basic/type/config.h"
+#include <utility>
 #include "plain/basic/concepts.h"
-#include "plain/basic/traits.h"
 
 namespace plain {
 
@@ -41,7 +41,7 @@ struct PLAIN_API variable_struct {
   template <typename T>
   variable_struct(T value);
   variable_struct(enums auto value) {
-    data = std::to_string(to_underlying_t(value));
+    data = std::to_string(std::to_underlying(value));
   }
   
   template <typename T>

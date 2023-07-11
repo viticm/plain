@@ -14,7 +14,7 @@
 
 #include "plain/sys/memory/config.h"
 #include <unordered_map>
-#include "plain/basic/traits.h"
+#include <utility>
 #include "plain/basic/time.h"
 #include "plain/basic/logger.h"
 #include "plain/basic/global.h"
@@ -254,13 +254,13 @@ struct group_item_header_struct {
 
   void clear() {
     pool_position = 0;
-    mutex.exchange(to_underlying_t(Flag::Free));
+    mutex.exchange(std::to_underlying(Flag::Free));
     version = 0;
     status = 0;
   }
 
   group_item_header_struct()
-    : pool_position{0}, mutex{to_underlying_t(Flag::Free)}, version{0},
+    : pool_position{0}, mutex{std::to_underlying(Flag::Free)}, version{0},
     status{0} {}
 };
 
@@ -410,7 +410,7 @@ bool UnitPool<T>::init(uint32_t _key, size_t _size, uint8_t type) {
                    header_extend_size_ + 
                    (sizeof(T) + data_extend_size_ ) * _size;
   result = ref_obj_pointer_->attach(_key, full_size, false);
-  if (to_underlying_t(Smpt::Default) == type && !result) {
+  if (std::to_underlying(Smpt::Default) == type && !result) {
     result = ref_obj_pointer_->create(_key, full_size);
     need_init = true;
   } else if (!result) {
@@ -456,7 +456,7 @@ T *UnitPool<T>::new_obj() {
   Assert(ref_obj_pointer_);
   header_t *header = ref_obj_pointer_->header();
   Assert(header);
-  unique_lock<header_t> auto_lock(*header, to_underlying_t(Flag::MixedWrite));
+  unique_lock<header_t> auto_lock(*header, std::to_underlying(Flag::MixedWrite));
   if (header->pool_position >= size_) return nullptr;
   T *obj = objs_[header->pool_position];
   obj->set_pool_id(static_cast<int32_t>(header->pool_position));
@@ -470,7 +470,7 @@ void UnitPool<T>::delete_obj(T *obj) {
   Assert(objs_ != nullptr && ref_obj_pointer_ != nullptr);
   header_t *header = ref_obj_pointer_->header();
   Assert(header);
-  unique_lock<header_t> auto_lock(*header, to_underlying_t(Flag::MixedWrite));
+  unique_lock<header_t> auto_lock(*header, std::to_underlying(Flag::MixedWrite));
   Assert(header->pool_position > 0);
   if (is_null(obj) || header->pool_position <= 0) return;
   auto delete_index = static_cast<uint32_t>(obj->get_pool_id());
@@ -495,7 +495,7 @@ template <typename T>
 inline int32_t UnitPool<T>::get_position() const { 
   if (is_null(ref_obj_pointer_)) return -1;
   header_t *header = ref_obj_pointer_->header();
-  unique_lock<header_t> auto_lock(*header, to_underlying_t(Flag::MixedRead));
+  unique_lock<header_t> auto_lock(*header, std::to_underlying(Flag::MixedRead));
   return header->pool_position;
 }
 
@@ -503,7 +503,7 @@ template <typename T>
 inline void UnitPool<T>::set_position(int32_t position) { 
   if (is_null(ref_obj_pointer_)) return;
   header_t *header = ref_obj_pointer_->header();
-  unique_lock<header_t> auto_lock(*header, to_underlying_t(Flag::MixedWrite));
+  unique_lock<header_t> auto_lock(*header, std::to_underlying(Flag::MixedWrite));
   header->pool_position = position;
 }
 
@@ -523,7 +523,7 @@ template <typename T>
 inline void UnitPool<T>::set_version(uint32_t version) {
   if (is_null(ref_obj_pointer_)) return;
   header_t *header = ref_obj_pointer_->header();
-  unique_lock<header_t> auto_lock(*header, to_underlying_t(Flag::MixedWrite));
+  unique_lock<header_t> auto_lock(*header, std::to_underlying(Flag::MixedWrite));
   header->version = version;
 }
 
@@ -531,7 +531,7 @@ template <typename T>
 inline uint32_t UnitPool<T>::get_version() const {
   if (is_null(ref_obj_pointer_)) return 0;
   header_t *header = ref_obj_pointer_->header();
-  unique_lock<header_t> auto_lock(*header, to_underlying_t(Flag::MixedWrite));
+  unique_lock<header_t> auto_lock(*header, std::to_underlying(Flag::MixedWrite));
   return header->version;
 }
 

@@ -8,7 +8,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.27.0)
 
 set(PROJECT_NAME PlainFramework)
 set(PLAIN_VERSION 2.0)
@@ -42,6 +42,10 @@ if (NOT has_output_path)
   set(has_output_path 1)
 
 endif()
+
+# C++ Standard
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 #For utf8 no boom.
 if (MSVC)

@@ -2,9 +2,9 @@
 #include <charconv>
 #include <cstdlib>
 #include <cassert>
+#include <utility>
 #include "plain/basic/ring.h"
 #include "plain/basic/time.h"
-#include "plain/basic/traits.h"
 #include "plain/basic/global.h"
 #include "plain/basic/constants.h"
 #include "plain/sys/assert.h"
@@ -62,7 +62,7 @@ std::size_t convert_hex(char buf[], uintptr_t value) {
 Logger::output_func_t Logger::output_func_{default_output};
 Logger::flush_func_t Logger::flush_func_{default_flush};
 
-const char *LogLevelName[to_underlying_t(LogLevel::Nums)] = {
+const char *LogLevelName[std::to_underlying(LogLevel::Nums)] = {
   "TRACE ",
   "DEBUG ",
   "INFO  ",
@@ -92,7 +92,7 @@ Logger::Impl::Impl(
   auto tid = thread::get_id();
   buffer_.write(tid.c_str(), tid.size());
   buffer_.write(" ", 1);
-  buffer_.write(LogLevelName[to_underlying_t(level)], 6);
+  buffer_.write(LogLevelName[std::to_underlying(level)], 6);
   if (save_errno != 0) {
     // buffer_.write("errmsg", 10);
     char errno_str[10]{0};
