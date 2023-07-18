@@ -80,7 +80,7 @@ void File::append(const std::string_view &log) {
 void File::append_unlocked(const std::string_view &log) {
   file_->append(log);
 
-  if (file_->written_bytes() > roll_size_) {
+  if (static_cast<std::size_t>(file_->written_bytes()) > roll_size_) {
     roll();
   } else {
     ++count_;
