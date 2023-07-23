@@ -17,6 +17,24 @@
 namespace plain::concurrency {
 namespace result::detail {
 
+template <class Derived, class T>
+struct return_value_struct {
+  template<class R>
+  void return_value(R &&value) {
+    auto self = static_cast<Derived *>(this);
+    self->set_result(std::forward<R>(value));
+  }
+};
+
+template <class Derived>
+struct return_value_struct<Derived, void> {
+  template<class R>
+  void return_value(R &&value) {
+    auto self = static_cast<Derived *>(this);
+    self->set_result();
+  }
+};
+
 } // namespace result::detail
 } // namespace plain::concurrency
 

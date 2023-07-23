@@ -9,8 +9,8 @@
  * @uses The exector config.
  */
 
-#ifndef PLAIN_CONCURRENCY_EXECTOR_CONFIG_H_
-#define PLAIN_CONCURRENCY_EXECTOR_CONFIG_H_
+#ifndef PLAIN_CONCURRENCY_EXECUTOR_CONFIG_H_
+#define PLAIN_CONCURRENCY_EXECUTOR_CONFIG_H_
 
 #include "plain/concurrency/config.h"
 
@@ -18,4 +18,4 @@ namespace plain::concurrency {
 
 } // namespace plain::concurrency
 
-#endif // PLAIN_CONCURRENCY_EXECTOR_CONFIG_H_
+#endif // PLAIN_CONCURRENCY_EXECUTOR_CONFIG_H_

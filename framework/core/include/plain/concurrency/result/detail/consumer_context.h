@@ -1,6 +1,6 @@
 /**
  * PLAIN FREAMEWORK ( https://github.com/viticm/plain )
- * $Id comsumer_context.h
+ * $Id consumer_context.h
  * @link https://github.com/viticm/plain for the canonical source repository
  * @copyright Copyright (c) 2023 viticm( viticm.ti@gmail.com )
  * @license
@@ -9,8 +9,8 @@
  * @uses The concurrency result comsumer context detail.
  */
 
-#ifndef PLAIN_CONCURRENCY_RESULT_DETAIL_COMSUMER_CONTEXT_H_
-#define PLAIN_CONCURRENCY_RESULT_DETAIL_COMSUMER_CONTEXT_H_
+#ifndef PLAIN_CONCURRENCY_RESULT_DETAIL_CONSUMER_CONTEXT_H_
+#define PLAIN_CONCURRENCY_RESULT_DETAIL_CONSUMER_CONTEXT_H_
 
 #include "plain/concurrency/result/detail/config.h"
 #include <semaphore>
@@ -26,7 +26,7 @@ class PLAIN_API AwaitViaFunctor {
   AwaitViaFunctor(AwaitViaFunctor &&rhs) noexcept;
   ~AwaitViaFunctor() noexcept;
 
-  void operator()();
+  void operator()() noexcept;
 
  private:
   coroutine_handle<void> caller_handle_;
@@ -47,7 +47,7 @@ class PLAIN_API WhenAnyContext {
   bool resume_inline(StateBasic &completed_result) noexcept;
 
  private:
-  std::atomic<StateBasic *> status_;
+  std::atomic<const StateBasic *> status_;
   coroutine_handle<void> coroutine_handle_;
   static const StateBasic *kProcessing;
   static const StateBasic *kDoneProcessing;
@@ -80,8 +80,8 @@ class PLAIN_API ConsumerContext {
     std::shared_ptr<WhenAnyContext> when_any_ctx;
     std::weak_ptr<SharedStateBasic> shared_ctx;
 
-    storage() noexcept = default;
-    ~storage() noexcept = default;
+    storage() noexcept {}
+    ~storage() noexcept {}
   };
 
  private:
@@ -93,4 +93,4 @@ class PLAIN_API ConsumerContext {
 } // namespace result::detail
 } // namespace plain::concurrency
 
-#endif // PLAIN_CONCURRENCY_RESULT_DETAIL_COMSUMER_CONTEXT_H_
+#endif // PLAIN_CONCURRENCY_RESULT_DETAIL_CONSUMER_CONTEXT_H_

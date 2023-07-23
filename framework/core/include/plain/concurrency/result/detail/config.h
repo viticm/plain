@@ -48,6 +48,9 @@ class SharedState;
 template <typename T>
 class LazyState;
 
+template <typename T>
+class ProducerContext;
+
 struct WhenHelper;
 struct SharedHelper;
 

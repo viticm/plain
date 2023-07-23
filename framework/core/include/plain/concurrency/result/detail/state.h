@@ -13,6 +13,7 @@
 #define PLAIN_CONCURRENCY_RESULT_DETAIL_STATE_H_
 
 #include "plain/concurrency/result/detail/config.h"
+#include <cassert>
 #include <semaphore>
 
 namespace plain::concurrency {
@@ -23,7 +24,7 @@ class PLAIN_API StateBasic {
  public:
   void wait() noexcept;
   bool await(coroutine_handle<void> caller_handle) noexcept;
-  Status when_any(
+  ProcessStatus when_any(
     const std::shared_ptr<WhenAnyContext> &when_any_state) noexcept;
 
   void share(const std::shared_ptr<SharedStateBasic> &shared_state) noexcept;
@@ -74,8 +75,9 @@ class State : StateBasic {
 
     std::atomic_thread_fence(std::memory_order_release);
 
+    auto expected_status1 = ProcessStatus::Idle; // Reference.
     const auto idle1 = process_status_.compare_exchange_strong(
-      ProcessStatus::Idle, ProcessStatus::ConsumerSet,
+      expected_status1, ProcessStatus::ConsumerSet,
       std::memory_order_acq_rel, std::memory_order_acquire);
     if (!idle1) {
       assert_done();
@@ -88,8 +90,9 @@ class State : StateBasic {
       return producer_.status();
     }
     
+    auto expected_status2 = ProcessStatus::ConsumerSet;
     const auto idle2 = process_status_.compare_exchange_strong(
-      ProcessStatus::ConsumerSet, ProcessStatus::Idle,
+      expected_status2, ProcessStatus::Idle,
       std::memory_order_acq_rel, std::memory_order_acquire);
     if (!idle2) {
       assert_done();
@@ -102,7 +105,7 @@ class State : StateBasic {
   template <typename Clock, typename Duration = typename Clock::duration>
   ResultStatus wait_until(
     const std::chrono::time_point<Clock, Duration>& timeout_time) {
-    const auto now = clock::now();
+    const auto now = Clock::now();
     if (timeout_time <= now) {
       return status();
     }
@@ -210,7 +213,7 @@ class State : StateBasic {
 // deleter object functions.
 template <typename T>
 struct consumer_state_deleter {
-  void operator()(State<type> *state_ptr) const noexcept {
+  void operator()(State<T> *state_ptr) const noexcept {
     assert(state_ptr != nullptr);
     state_ptr->complete_consumer();
   }
@@ -218,7 +221,7 @@ struct consumer_state_deleter {
 
 template <typename T>
 struct joined_consumer_state_deleter {
-  void operator()(State<type> *state_ptr) const noexcept {
+  void operator()(State<T> *state_ptr) const noexcept {
     assert(state_ptr != nullptr);
     state_ptr->complete_joined_consumer();
   }
@@ -226,7 +229,7 @@ struct joined_consumer_state_deleter {
 
 template <typename T>
 struct producer_state_deleter {
-  void operator()(State<type> *state_ptr) const {
+  void operator()(State<T> *state_ptr) const {
     assert(state_ptr != nullptr);
     state_ptr->complete_producer();
   }

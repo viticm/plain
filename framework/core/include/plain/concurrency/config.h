@@ -28,6 +28,9 @@ class Generator;
 template <typename T>
 class LazyResult;
 
+template <typename T>
+class Result;
+
 enum class ResultStatus {
   Idle,
   Value,
