@@ -156,9 +156,9 @@ using cookie_func_t = std::function<void()>;
   }
 
   void producer_clear() noexcept {
-    comsumer_clear();
+    consumer_clear();
   }
-  void comsumer_clear() noexcept {
+  void consumer_clear() noexcept {
     tail_.store(
         head_.load(std::memory_order_relaxed), std::memory_order_relaxed);
   }

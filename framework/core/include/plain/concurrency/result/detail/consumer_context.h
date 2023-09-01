@@ -76,7 +76,6 @@ class PLAIN_API ConsumerContext {
  private:
   union storage {
     coroutine_handle<void> caller_handle;
-    std::shared_ptr<std::binary_semaphore> wait_for_ctx;
     std::shared_ptr<WhenAnyContext> when_any_ctx;
     std::weak_ptr<SharedStateBasic> shared_ctx;
 

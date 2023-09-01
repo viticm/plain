@@ -13,6 +13,8 @@
 #define PLAIN_CONCURRENCY_RESULT_DETAIL_STATE_H_
 
 #include "plain/concurrency/result/detail/config.h"
+#include "plain/concurrency/result/detail/consumer_context.h"
+#include "plain/concurrency/result/detail/producer_context.h"
 #include <cassert>
 #include <semaphore>
 
@@ -24,6 +26,7 @@ class PLAIN_API StateBasic {
  public:
   void wait() noexcept;
   bool await(coroutine_handle<void> caller_handle) noexcept;
+  ProcessStatus wait_for(std::chrono::milliseconds ms) noexcept;
   ProcessStatus when_any(
     const std::shared_ptr<WhenAnyContext> &when_any_state) noexcept;
 
@@ -65,46 +68,17 @@ class State : StateBasic {
   }
 
   template <typename Rep, typename Period = std::ratio<1>>
-  ResultStatus wait_for(std::chrono::duration<Rep, Period> duration) {
-    const auto state1 = process_status_.load(std::memory_order_acquire);
-    if (state1 == ProcessStatus::ProducerDone)
+  ResultStatus wait_for(std::chrono::duration<Rep, Period> duration) noexcept {
+    const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(duration);
+    const auto status = StateBasic::wait_for(ms);
+    if (status == ProcessStatus::ProducerDone)
       return producer_.status();
-
-    const auto wait_ctx = std::make_shared<std::binary_semaphore>(0);
-    consumer_.set_wait_for_context(wait_ctx);
-
-    std::atomic_thread_fence(std::memory_order_release);
-
-    auto expected_status1 = ProcessStatus::Idle; // Reference.
-    const auto idle1 = process_status_.compare_exchange_strong(
-      expected_status1, ProcessStatus::ConsumerSet,
-      std::memory_order_acq_rel, std::memory_order_acquire);
-    if (!idle1) {
-      assert_done();
-      return producer_.status();
-    }
-    
-    if (wait_ctx->try_acquire_for(duration + std::chrono::milliseconds(1))) {
-      const auto status = process_status_.load(std::memory_order_acquire);
-      UNUSED(status);
-      return producer_.status();
-    }
-    
-    auto expected_status2 = ProcessStatus::ConsumerSet;
-    const auto idle2 = process_status_.compare_exchange_strong(
-      expected_status2, ProcessStatus::Idle,
-      std::memory_order_acq_rel, std::memory_order_acquire);
-    if (!idle2) {
-      assert_done();
-      return producer_.status();
-    }
-    consumer_.clear();
     return ResultStatus::Idle;
   }
 
   template <typename Clock, typename Duration = typename Clock::duration>
   ResultStatus wait_until(
-    const std::chrono::time_point<Clock, Duration>& timeout_time) {
+    const std::chrono::time_point<Clock, Duration>& timeout_time) noexcept {
     const auto now = Clock::now();
     if (timeout_time <= now) {
       return status();

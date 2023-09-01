@@ -14,6 +14,7 @@
 
 #include "plain/concurrency/result/detail/config.h"
 #include <cassert>
+#include <exception>
 #include "plain/basic/logger.h"
 
 namespace plain::concurrency {
@@ -54,7 +55,7 @@ class GeneratorState {
   void log_if_exception() const noexcept {
     if (static_cast<bool>(exception_)) {
       try {
-        std::rethrow_exception(exception);
+        std::rethrow_exception(exception_);
       } catch (const std::exception &e) {
         LOG_ERROR << "exception: " << e.what();
       }

@@ -14,6 +14,7 @@
 
 #include "plain/concurrency/result/detail/config.h"
 #include <cassert>
+#include <utility>
 #include "plain/basic/logger.h"
 
 namespace plain::concurrency {
@@ -190,7 +191,7 @@ class ProducerContext<T &> {
     assert(status_ == ResultStatus::Idle);
     auto pointer = std::addressof(reference);
     assert(pointer != nullptr);
-    assert(reinterpret_cast<size_t>(pointer) % alignof(type) == 0);
+    assert(reinterpret_cast<size_t>(pointer) % alignof(T) == 0);
     storage_.pointer = pointer;
     status_ = ResultStatus::Value;
   }

@@ -18,7 +18,7 @@ namespace plain::concurrency {
 namespace result::detail {
 
 // The result process status.
-enum class ProcessStatus {
+enum class ProcessStatus : int32_t {
   Idle,
   ConsumerSet,
   ConsumerWaiting,
@@ -27,10 +27,9 @@ enum class ProcessStatus {
 };
 
 // The consumer status.
-enum class ConsumerStatus {
+enum class ConsumerStatus : int32_t {
   Idle,
   Await,
-  WaitFor,
   WhenAny,
   Shared
 };
@@ -39,6 +38,8 @@ class StateBasic;
 
 template <typename T>
 class State;
+
+class WhenAnyContext;
 
 class SharedStateBasic;
 
@@ -51,8 +52,10 @@ class LazyState;
 template <typename T>
 class ProducerContext;
 
-struct WhenHelper;
-struct SharedHelper;
+class ConsumerContext;
+
+class when_helper;
+struct shared_helper;
 
 } // namespace result::detail
 } // namespace plain::concurrency

@@ -16,6 +16,7 @@
 
 namespace plain::concurrency {
 
+
 } // namespace plain::concurrency
 
 #endif // PLAIN_CONCURRENCY_EXECUTOR_CONFIG_H_

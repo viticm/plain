@@ -125,9 +125,6 @@ void ConsumerContext::destroy() noexcept {
     case ConsumerStatus::Await:
       detail::destroy(storage_.caller_handle);
       break;
-    case ConsumerStatus::WaitFor:
-      detail::destroy(storage_.wait_for_ctx);
-      break;
     case ConsumerStatus::WhenAny:
       detail::destroy(storage_.when_any_ctx);
       break;
@@ -151,14 +148,6 @@ void ConsumerContext::set_await_handle(
 
   status_ = ConsumerStatus::Await;
   detail::build(storage_.caller_handle, caller_handle);
-}
-
-void ConsumerContext::set_wait_for_context(
-  const std::shared_ptr<std::binary_semaphore> &wait_ctx) noexcept {
-  assert(status_ == ConsumerStatus::Idle);
-
-  status_ = ConsumerStatus::WaitFor;
-  detail::build(storage_.wait_for_ctx, wait_ctx);
 }
 
 void ConsumerContext::set_when_any_context(
@@ -187,11 +176,6 @@ void ConsumerContext::resume_consumer(StateBasic &self) const {
       assert(static_cast<bool>(caller_handle));
       assert(!caller_handle.done());
       return caller_handle();
-    }
-    case ConsumerStatus::WaitFor: {
-      const auto wait_ctx = storage_.wait_for_ctx;
-      assert(static_cast<bool>(wait_ctx));
-      return wait_ctx->release();
     }
     case ConsumerStatus::WhenAny: {
       const auto when_any_ctx = storage_.when_any_ctx;
