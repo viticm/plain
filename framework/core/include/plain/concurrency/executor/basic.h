@@ -23,9 +23,9 @@ namespace executor {
 
 namespace detail {
 
-[[noreturn]] PLAIN_API void throw_runtime_shutdown_exception(
-  const std::string_view &executor_name);
-PLAIN_API std::string make_executor_worker_name(const std::string_view &name);
+[[noreturn]] PLAIN_API void 
+throw_runtime_shutdown_exception(std::string_view executor_name);
+PLAIN_API std::string make_executor_worker_name(std::string_view name);
 
 } // namespace detail
 
@@ -38,7 +38,7 @@ class PLAIN_API Basic {
  public:
   virtual void enqueue(Task task) = 0;
   virtual void enqueue(std::span<Task> tasks) = 0;
-  virtual int max_concurrency_level() const noexcept = 0;
+  virtual int32_t max_concurrency_level() const noexcept = 0;
   virtual bool shutdown_requested() const = 0;
   virtual void shutdown() = 0;
 

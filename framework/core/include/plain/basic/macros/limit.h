@@ -12,6 +12,7 @@
 #define PLAIN_BASIC_MACROS_LIMIT_H_
 
 #include "pf/basic/macros/platform.h"
+#include <new>
 
 #ifndef IP_SIZE
 #define IP_SIZE 24
@@ -38,6 +39,21 @@
 
 #ifndef SSTREAM_STRING_SIZE_MAX
 #define SSTREAM_STRING_SIZE_MAX (10240)
+#endif
+
+#if !OS_MAC && defined(__cpp_lib_hardware_interference_size)
+#if defined(__GNUC__) || defined(__GNUG__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Winterference-size"
+#endif
+constexpr inline std::size_t kCacheInlineAlignment = 
+  std::hardware_destructive_interference_size;
+#if defined(__GNUC__) || defined(__GNUG__)
+#pragma GCC diagnostic pop
+#endif
+
+#else
+constexpr inline std::size_t kCacheInlineAlignment = 64;
 #endif
 
 #endif //PLAIN_BASIC_MACROS_LIMIT_H_

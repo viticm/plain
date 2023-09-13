@@ -5,6 +5,25 @@ namespace plain {
 
 namespace thread {
 
+namespace detail {
+
+namespace {
+
+std::uintptr_t generate_thread_id() noexcept {
+  static std::atomic_uintptr_t s_id_seed = 1;
+  return s_id_seed.fetch_add(1, std::memory_order_relaxed);
+}
+
+struct thread_per_thread_data {
+  const std::uintptr_t id = generate_thread_id();
+};
+
+thread_local thread_per_thread_data s_tl_thread_per_data;
+
+}
+
+} // namespace detail
+
 void set_name(const std::string_view &name) noexcept {
 #if OS_WIN
   const std::wstring utf16_name(name.begin(), name.end());
@@ -14,6 +33,10 @@ void set_name(const std::string_view &name) noexcept {
 #elif OS_MAC
   ::pthread_setname_np(name.data());
 #endif
+}
+
+std::uintptr_t get_current_virtual_id() noexcept {
+  return detail::s_tl_thread_per_data.id;
 }
 
 } // namespace thread

@@ -17,11 +17,11 @@
 
 namespace plain::concurrency {
 
-namespace exector {
+namespace executor {
 
 class Basic;
 
-} // namespace exector
+} // namespace executor
 
 struct executor_tag {
 
@@ -37,7 +37,7 @@ template <typename T>
 concept is_result_generator_type = !std::is_same_v<T, void>;
 
 template <typename T>
-concept is_base_of_executor = std::is_base_of_v<exector::Basic, T>;
+concept is_base_of_executor = std::is_base_of_v<executor::Basic, T>;
 
 template <typename T>
 using coroutine_handle = std::coroutine_handle<T>;

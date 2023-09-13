@@ -6,7 +6,7 @@
  * @license
  * @user viticm( viticm.ti@gmail.com )
  * @date 2023/07/16 10:36
- * @uses The exector config.
+ * @uses The executor config.
  */
 
 #ifndef PLAIN_CONCURRENCY_EXECUTOR_CONFIG_H_

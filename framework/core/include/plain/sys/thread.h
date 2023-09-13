@@ -62,6 +62,8 @@ namespace thread {
 
 void set_name(const std::string_view &name) noexcept;
 
+std::uintptr_t get_current_virtual_id() noexcept;
+
 inline const std::string get_id() {
   std::stringstream ss;
   ss << std::this_thread::get_id();

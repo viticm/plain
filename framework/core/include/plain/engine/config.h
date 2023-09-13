@@ -17,6 +17,8 @@
 namespace plain {
 
 class Kernel;
+class TimerQueue;
+class Timer;
 
 } // namespace plain
 

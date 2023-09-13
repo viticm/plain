@@ -38,7 +38,7 @@ auto &&bind_with_try_catch_impl(std::true_type, F &&function) {
 }
 
 template <typename F>
-auto &&bind_with_try_catch_impl(std::false_type, F &&function) {
+auto bind_with_try_catch_impl(std::false_type, F &&function) {
   return [function = std::forward<F>(function)]() mutable noexcept {
     try {
       function();
@@ -50,8 +50,8 @@ auto &&bind_with_try_catch_impl(std::false_type, F &&function) {
 
 template <typename F>
 auto bind_with_try_catch(F &&function) {
-  using is_noexcept = typename std::is_nothrow_invocable<F>::value;
-  return bind_with_try_catch(is_noexcept{}, function);
+  using is_noexcept = typename std::is_nothrow_invocable<F>::type;
+  return bind_with_try_catch_impl(is_noexcept{}, function);
 }
 
 template <typename F, typename ...Args>
