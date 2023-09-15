@@ -72,7 +72,6 @@ class PLAIN_API TimerQueue : public std::enable_shared_from_this<TimerQueue> {
  private:
   struct Impl;
   std::unique_ptr<Impl> impl_;
-  std::mutex lock_;
 
  private:
 
@@ -92,7 +91,7 @@ class PLAIN_API TimerQueue : public std::enable_shared_from_this<TimerQueue> {
       due_time, frequency, std::move(executor), weak_from_this(), is_oneshot,
       std::forward<T>(callable));
     {
-      std::unique_lock<decltype(lock_)> lock(lock_);
+      std::unique_lock<std::mutex> lock(get_lock());
       add_timer(lock, timer_state);
     }
     return timer_state;
@@ -101,6 +100,8 @@ class PLAIN_API TimerQueue : public std::enable_shared_from_this<TimerQueue> {
  private:
   void remove_internal_timer(
     std::shared_ptr<detail::TimerStateBasic> existing_timer);
+
+  std::mutex &get_lock();
 
 };
 

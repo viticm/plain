@@ -42,7 +42,7 @@ class LazyStateBasic {
 };
 
 template <typename T>
-class LazyState {
+class LazyState : public LazyStateBasic {
 
  public:
   ResultStatus status() const noexcept {

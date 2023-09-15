@@ -31,7 +31,7 @@ class Task;
 
 template <typename T>
 concept is_result_type = 
-  !std::is_same_v<T, void> && std::is_nothrow_move_constructible_v<T>;
+  std::is_same_v<T, void> || std::is_nothrow_move_constructible_v<T>;
 
 template <typename T>
 concept is_result_generator_type = !std::is_same_v<T, void>;

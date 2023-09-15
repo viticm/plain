@@ -15,6 +15,7 @@
 #include "plain/concurrency/result/config.h"
 #include <cassert>
 #include <utility>
+#include "plain/concurrency/result/promise.h"
 #include "plain/concurrency/result/detail/lazy_state.h"
 #include "plain/concurrency/result/lazy_awaitable.h"
 
@@ -51,7 +52,7 @@ class LazyResult {
   }
 
   auto operator co_await() noexcept {
-    return LazyResult<T>{std::exchange(state_, {})};
+    return result::LazyAwaitable<T>{std::exchange(state_, {})};
   }
 
  public:

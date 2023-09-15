@@ -54,6 +54,10 @@ class TimerStateBasic : public std::enable_shared_from_this<TimerStateBasic> {
     return due_time_;
   }
 
+  time_point get_deadline() const noexcept {
+    return deadline_;
+  }
+
   bool is_oneshot() const noexcept {
     return is_oneshot_;
   }
