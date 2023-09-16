@@ -20,6 +20,11 @@ namespace plain::concurrency {
 namespace executor {
 
 class Basic;
+class Inline;
+class ThreadPool;
+class Thread;
+class WorkerThread;
+class Manual;
 
 } // namespace executor
 

@@ -15,6 +15,7 @@
 #include "plain/engine/config.h"
 #include "plain/basic/singleton.h"
 #include "plain/basic/logger.h"
+#include "plain/concurrency/config.h"
 #include "plain/sys/thread.h"
 
 namespace plain {
@@ -23,6 +24,35 @@ class PLAIN_API Kernel : public Singleton<Kernel> {
 
  public:
   void start();
+
+ public:
+  Kernel();
+  Kernel(const engine_option &option);
+  ~Kernel() noexcept;
+
+ public:
+  std::shared_ptr<TimerQueue> timer_queue() const noexcept;
+  
+  std::shared_ptr<concurrency::executor::Inline>
+  inline_executor() const noexcept;
+  
+  std::shared_ptr<concurrency::executor::ThreadPool>
+  thread_pool_executor() const noexcept;
+  
+  std::shared_ptr<concurrency::executor::ThreadPool>
+  background_executor() const noexcept;
+
+  std::shared_ptr<concurrency::executor::Thread>
+  thread_executor() const noexcept;
+
+  std::shared_ptr<concurrency::executor::WorkerThread>
+  make_worker_thread_executor();
+
+  std::shared_ptr<concurrency::executor::Manual>
+  make_manual_executor();
+
+ public:
+  static std::tuple<unsigned int, unsigned int, unsigned int> version() noexcept;
 
  public:
   template<class F, class... Args>
@@ -85,6 +115,10 @@ class PLAIN_API Kernel : public Singleton<Kernel> {
   std::mutex mutex_;
   std::queue<std::function<void()>> tasks_;
   std::vector<std::thread> thread_workers_;
+
+ private:
+  struct Impl;
+  std::unique_ptr<Impl> impl_;
 
 };
 

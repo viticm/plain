@@ -26,8 +26,8 @@ WorkerThread final : public Derivable<WorkerThread> {
 
  public:
   WorkerThread(
-    const std::function<void(std::string_view)> &started_callback,
-    const std::function<void(std::string_view)> &terminated_callback);
+    const std::function<void(std::string_view)> &started_callback = {},
+    const std::function<void(std::string_view)> &terminated_callback = {});
 
  public:
   void enqueue(Task task) override;
