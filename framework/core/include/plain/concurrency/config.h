@@ -28,9 +28,7 @@ class Manual;
 
 } // namespace executor
 
-struct executor_tag {
-
-};
+struct executor_tag {};
 
 class Task;
 

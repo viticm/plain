@@ -60,7 +60,7 @@ class ResumeOnAwaitable : public suspend_always {
 
 template <typename T>
 auto resume_on(std::shared_ptr<T> executor) noexcept {
-  static_assert(std::is_base_of_v<Executor, executor>,
+  static_assert(std::is_base_of_v<executor::Basic, executor>,
                 "resume_on given executor does not derive from Executor");
   if (!executor) {
     LOG_ERROR << "resume_on error executor is nullptr";

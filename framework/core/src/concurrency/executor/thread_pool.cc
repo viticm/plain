@@ -177,10 +177,11 @@ ThreadPoolWorker::ThreadPoolWorker(
   atomic_abort_{false}, parent_pool_{parent_pool}, index_{index},
   pool_size_{pool_size}, max_idle_time_{max_idle_time},
   worker_name_{detail::make_executor_worker_name(parent_pool.name_)},
-  semaphore_{0}, idle_{false}, abort_{false}, task_found_or_abort_{false},
+  semaphore_{0}, idle_{true}, abort_{false}, task_found_or_abort_{false},
   started_callback_{started_callback},
   terminated_callback_{terminated_callback} {
   idle_worker_list_.reserve(pool_size);
+
 }
 
 ThreadPoolWorker::ThreadPoolWorker(ThreadPoolWorker &&rhs) noexcept :
@@ -372,9 +373,11 @@ void ThreadPoolWorker::ensure_worker_active(
   auto stale_worker = std::move(thread_);
   thread_ = thread_t([this]{
     thread::set_name(worker_name_);
-    started_callback_(worker_name_);
+    if (static_cast<bool>(started_callback_))
+      started_callback_(worker_name_);
     work_loop();
-    terminated_callback_(worker_name_);
+    if (static_cast<bool>(terminated_callback_))
+      terminated_callback_(worker_name_);
   });
   idle_ = false;
   lock.unlock();
@@ -498,7 +501,12 @@ ThreadPool::ThreadPool(
   const std::function<void(std::string_view)> &terminated_callback) :
   Derivable<ThreadPool>{name}, round_robin_cursor_{0}, idle_workers_{size},
   abort_{false} {
-
+  workers_.reserve(size);
+  for (size_t i = 0; i < size; ++i) {
+    workers_.emplace_back(
+      *this, i, size, max_idle_time, started_callback, terminated_callback);
+    idle_workers_.set_idle(i);
+  }
 }
 
 ThreadPool::~ThreadPool() = default;

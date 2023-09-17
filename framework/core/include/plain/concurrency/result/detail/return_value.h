@@ -17,19 +17,18 @@
 namespace plain::concurrency {
 namespace result::detail {
 
-template <class Derived, class T>
+template <typename Derived, typename T>
 struct return_value_struct {
-  template<class R>
+  template<typename R>
   void return_value(R &&value) {
     auto self = static_cast<Derived *>(this);
     self->set_result(std::forward<R>(value));
   }
 };
 
-template <class Derived>
+template <typename Derived>
 struct return_value_struct<Derived, void> {
-  template<class R>
-  void return_value(R &&value) {
+  void return_void() noexcept {
     auto self = static_cast<Derived *>(this);
     self->set_result();
   }

@@ -26,9 +26,11 @@ void WorkerThread::make_os_worker_thread() {
   thread_ = thread_t([this]{
     auto name = detail::make_executor_worker_name(name_);
     thread::set_name(name);
-    started_callback_(name);
+    if (static_cast<bool>(started_callback_))
+      started_callback_(name);
     work_loop();
-    terminated_callback_(name);
+    if (static_cast<bool>(terminated_callback_))
+      terminated_callback_(name);
   });
 }
 

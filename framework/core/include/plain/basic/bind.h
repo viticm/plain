@@ -51,7 +51,7 @@ auto bind_with_try_catch_impl(std::false_type, F &&function) {
 template <typename F>
 auto bind_with_try_catch(F &&function) {
   using is_noexcept = typename std::is_nothrow_invocable<F>::type;
-  return bind_with_try_catch_impl(is_noexcept{}, function);
+  return bind_with_try_catch_impl(is_noexcept{}, std::forward<F>(function));
 }
 
 template <typename F, typename ...Args>

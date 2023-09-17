@@ -13,6 +13,7 @@
 #define PLAIN_CONCURRENCY_RESULT_DETAIL_STATE_H_
 
 #include "plain/concurrency/result/detail/config.h"
+#include "plain/sys/atomic_wait.h"
 #include "plain/concurrency/result/detail/consumer_context.h"
 #include "plain/concurrency/result/detail/producer_context.h"
 #include <cassert>
@@ -45,7 +46,7 @@ class PLAIN_API StateBasic {
 };
 
 template <typename T>
-class State : StateBasic {
+class State : public StateBasic {
 
  public:
   template <typename ...Args>
@@ -108,10 +109,12 @@ class State : StateBasic {
   }
 
   void complete_producer(coroutine_handle<void> done_handle = {}) {
-    const auto state_before = this->process_status_.exchange(
+    using plain::sys::detail::atomic_notify_all;
+    done_handle_ = done_handle;
+    const auto status = this->process_status_.exchange(
       ProcessStatus::ProducerDone, std::memory_order_acq_rel);
-    assert(state_before != ProcessStatus::ProducerDone);
-    switch (state_before) {
+    assert(status != ProcessStatus::ProducerDone);
+    switch (status) {
       case ProcessStatus::ConsumerSet: {
         return consumer_.resume_consumer(*this);
       }
@@ -119,7 +122,7 @@ class State : StateBasic {
         return;
       }
       case ProcessStatus::ConsumerWaiting: {
-        return process_status_.notify_one();
+        return atomic_notify_all(process_status_);
       }
       case ProcessStatus::ConsumerDone: {
         return delete_self(this);

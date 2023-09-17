@@ -31,8 +31,8 @@ class Derivable : public Basic {
   }
 
   template <typename CT, typename ...Args>
-  void submit(CT &&callable, Args &&...args) {
-    do_submit<T>(std::forward<CT>(callable), std::forward<Args>(args)...);
+  auto submit(CT &&callable, Args &&...args) {
+    return do_submit<T>(std::forward<CT>(callable), std::forward<Args>(args)...);
   }
 
   template <typename CT>

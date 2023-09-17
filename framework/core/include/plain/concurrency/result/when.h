@@ -53,7 +53,7 @@ class WhenHelper {
   }
 
   template <typename Iter>
-  static void throw_if_empty_range(const char* err, Iter begin, Iter end) {
+  static void assert_if_empty_range(const char* err, Iter begin, Iter end) {
     for (; begin != end; ++begin) assert(static_cast<bool>(*begin));
   }
 
@@ -155,11 +155,11 @@ class WhenHelper {
 #ifndef NDEBUG
 #ifndef plian_concurrency_when_helper_assert_if_empty_tuple
 #define plian_concurrency_when_helper_assert_if_empty_tuple \
-  WhenHelper::assert_if_empty_tuple
+  detail::WhenHelper::assert_if_empty_tuple
 #endif
 #ifndef plian_concurrency_when_helper_assert_if_empty_range
 #define plian_concurrency_when_helper_assert_if_empty_range \
-  WhenHelper::assert_if_empty_range
+  detail::WhenHelper::assert_if_empty_range
 #endif
 #else
 #define plian_concurrency_when_helper_assert_if_empty_tuple

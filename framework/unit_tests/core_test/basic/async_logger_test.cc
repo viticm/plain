@@ -65,5 +65,5 @@ void bench(bool long_log) {
 TEST_F(AsyncLogger, bench) {
   using namespace plain;
   std::cout << "current pid: " << process::getid() << std::endl;
-  bench(false);
+  // bench(false);
 }

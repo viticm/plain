@@ -50,7 +50,7 @@ class PLAIN_API Basic {
   }
 
   template <typename T, typename ...Args>
-  void submit(T &&callable, Args &&...args) {
+  auto submit(T &&callable, Args &&...args) {
     return do_submit<Basic>(
       std::forward<T>(callable), std::forward<Args>(args)...);
   }
@@ -78,11 +78,12 @@ class PLAIN_API Basic {
   }
 
   template <typename ET, typename CT, typename ...Args>
-  void do_submit(CT &&callable, Args &&...args) {
+  auto do_submit(CT &&callable, Args &&...args) {
     static_assert(std::is_invocable_v<CT, Args ...>, "Not invoke with args");
     using return_type = typename std::invoke_result_t<CT, Args ...>;
     return submit_bridge<return_type>(
-      *static_cast<ET *>(this), std::forward<CT>(callable),
+      {}, *static_cast<ET *>(this),
+      std::forward<CT>(callable),
       std::forward<Args>(args)...);
   }
 

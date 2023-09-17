@@ -32,12 +32,25 @@ class Result : noncopyable {
   Result() noexcept = default;
   Result(Result &&) noexcept = default;
   Result(result::detail::consumer_state_ptr_t<T> state) noexcept :
-    state_(std::move(state)) {}
-  Result(result::detail::State<T> *state) noexcept : state_(state) {}
+    state_(std::move(state)) {
+  }
+  Result(result::detail::State<T> *state) noexcept : state_(state) {
+  }
 
  public:
   explicit operator bool() const noexcept {
     return static_cast<bool> (state_);
+  }
+
+  Result &operator=(Result &&rhs) noexcept {
+    if (this != &rhs)
+      state_ = std::move(rhs.state_);
+    return *this;
+  }
+  
+  auto operator co_await() noexcept {
+    assert(static_cast<bool>(state_));
+    return result::Awaitable<T>{std::move(state_)};
   }
 
  public:
@@ -64,17 +77,16 @@ class Result : noncopyable {
     return state_->wait_until(timeout_time);
   }
 
-  T get() const noexcept {
-    assert(static_cast<bool> (state_));
+  T get() {
+    assert(static_cast<bool>(state_));
     state_->wait();
-    T r{};
-    try {
-      result::detail::joined_consumer_state_ptr_t<T> state(state_->release());
-      r = state->get();
-    } catch (const std::exception &e) {
-      LOG_ERROR << "Result::get error: " << e.what();    
-    }
-    return r;
+    result::detail::joined_consumer_state_ptr_t<T> state(state_.release());
+    return state->get();
+  }
+
+  auto resolve() noexcept {
+    assert(static_cast<bool> (state_));
+    return result::ResolveAwaitable{std::move(state_)};
   }
 
  private:
@@ -85,6 +97,7 @@ class Result : noncopyable {
 namespace result {
 
 } // namespace result
+
 } // namespace plain::concurrency
 
 #endif // PLAIN_CONCURRENCY_RESULT_BASIC_H_

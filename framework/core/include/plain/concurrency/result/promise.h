@@ -24,10 +24,10 @@ namespace detail {
 
 template <typename T>
 requires is_base_of_executor<T>
-class InitialyRescheduledPromise {
+class initialy_rescheduled_promise {
 
  public:
-  class SchedulingAwaiter : public suspend_always {
+  class initial_scheduling_awaiter : public suspend_always {
    
    public:
     template <typename PT>
@@ -42,7 +42,7 @@ class InitialyRescheduledPromise {
 
     void await_resume() const {
       if (interrupted_)
-        throw std::exception("associated task was interrupted abnormally");
+        throw std::runtime_error("associated task was interrupted abnormally");
     }
 
    private:
@@ -52,34 +52,32 @@ class InitialyRescheduledPromise {
 
  public:
   template <typename ...Args>
-  InitialyRescheduledPromise(executor_tag, T *executor_ptr, Args &&...)
+  initialy_rescheduled_promise(executor_tag, T *executor_ptr, Args &&...)
     : initial_executor_{to_ref(executor_ptr)} {
 
   }
 
   template <typename ...Args>
-  InitialyRescheduledPromise(executor_tag, T &executor, Args &&...) noexcept
+  initialy_rescheduled_promise(executor_tag, T &executor, Args &&...) noexcept
     : initial_executor_{executor} {
-
   }
 
   template <typename ...Args>
-  InitialyRescheduledPromise(
+  initialy_rescheduled_promise(
     executor_tag, std::shared_ptr<T> executor, Args &&...args)
-    : InitialyRescheduledPromise(
+    : initialy_rescheduled_promise(
       executor_tag{}, executor.get(), std::forward<Args>(args)...) {
 
   }
   
   template <typename CT, typename ...Args>
-  InitialyRescheduledPromise(
+  initialy_rescheduled_promise(
     CT &&, executor_tag, std::shared_ptr<T> executor, Args &&...args) noexcept
-    : InitialyRescheduledPromise(
+    : initialy_rescheduled_promise(
       executor_tag{}, *executor, std::forward<Args>(args)...) {
-
   }
 
-  SchedulingAwaiter initial_suspend() const noexcept {
+  initial_scheduling_awaiter initial_suspend() const noexcept {
     return {};
   }
 
@@ -136,7 +134,7 @@ class coroutine_promise : public return_value_struct<coroutine_promise<T>, T> {
   }
 
   void unhandled_exception() noexcept {
-    this->state_->set_exception(std::current_exception());
+    this->state_.set_exception(std::current_exception());
   }
 
   Result<T> get_return_object() noexcept {
@@ -169,14 +167,14 @@ struct initialy_resumed_result_promise : public initialy_resumed_promise,
 
 template <typename T>
 struct initialy_rescheduled_null_result_promise :
-  public InitialyRescheduledPromise<T>, public null_promise {
-  using InitialyRescheduledPromise<T>::InitialyRescheduledPromise;
+  public initialy_rescheduled_promise<T>, public null_promise {
+  using initialy_rescheduled_promise<T>::initialy_rescheduled_promise;
 };
 
 template <typename RT, typename ET>
 struct initialy_rescheduled_result_promise :
-  public InitialyRescheduledPromise<ET>, public coroutine_promise<RT> {
-  using InitialyRescheduledPromise<ET>::InitialyRescheduledPromise;
+  public initialy_rescheduled_promise<ET>, public coroutine_promise<RT> {
+  using initialy_rescheduled_promise<ET>::initialy_rescheduled_promise;
 };
 
 } // namespace detail

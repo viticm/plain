@@ -51,15 +51,9 @@ class Awaitable : public detail::AwaitableBasic<T> {
     return this->state_->await(handle);
   }
 
-  T await_resume() noexcept {
-    T r{};
-    detail::joined_consumer_state_ptr_t<T> state(this->state_->release());
-    try {
-      r = state->get();
-    } catch (const std::exception &e) {
-      LOG_ERROR << "await_resume error: " << e.what();
-    }
-    return r;
+  T await_resume() {
+    detail::joined_consumer_state_ptr_t<T> state(this->state_.release());
+    return state->get();
   }
 
 };

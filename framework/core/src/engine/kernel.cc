@@ -78,6 +78,11 @@ Kernel::Kernel() : Kernel(plain::engine_option{}) {
 
 Kernel::Kernel(const engine_option &option) : impl_{std::make_unique<Impl>()} {
   using namespace plain::concurrency;
+
+  impl_->timer_queue = std::make_shared<TimerQueue>(
+    option.max_timer_queue_waiting_time,
+    option.thread_started_callback, option.thread_terminated_callback);
+
   impl_->inline_executor = std::make_shared<executor::Inline>();
   impl_->registered_executors.register_executor(impl_->inline_executor);
 
@@ -129,7 +134,6 @@ std::shared_ptr<plain::concurrency::executor::ThreadPool>
 Kernel::background_executor() const noexcept {
   return impl_->background_executor;
 }
-
   
 std::shared_ptr<plain::concurrency::executor::Thread>
 Kernel::thread_executor() const noexcept {
