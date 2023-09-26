@@ -28,6 +28,6 @@ bool SharedStateBasic::await(SharedAwaitContext &awaiter) noexcept {
 }
 
 void SharedStateBasic::wait() noexcept {
-  if (status() == ResultStatus::Idle)
-    status_.wait(ResultStatus::Idle, std::memory_order_acquire);
+  sys::detail::atomic_wait(
+    status_, ResultStatus::Idle, std::memory_order_acquire);
 }

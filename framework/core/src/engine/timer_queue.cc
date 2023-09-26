@@ -174,9 +174,11 @@ plain::thread_t TimerQueue::Impl::ensure_worker_thread(
     auto name = 
       concurrency::executor::detail::make_executor_worker_name("timer queue");
     thread::set_name(name);
-    started_callback(name);
+    if (static_cast<bool>(started_callback))
+      started_callback(name);
     work_loop();
-    terminated_callback(name);
+    if (static_cast<bool>(terminated_callback))
+      terminated_callback(name);
   });
   idle = false;
   return old_worker;
@@ -218,7 +220,7 @@ plain::concurrency::LazyResult<void> TimerQueue::Impl::make_delay_object_impl(
 
     void await_resume() const {
       if (interrupted_)
-        throw std::runtime_error("associated task was interrupted abnormally");
+        throw std::runtime_error("associated task was interrupted abnormally.");
     }
 
    private:
@@ -259,7 +261,7 @@ void TimerQueue::Impl::work_loop() {
     auto _request_queue = std::move(request_queue);
     _lock.unlock();
 
-    next_deadline = internal_state.process_timers(request_queue);
+    next_deadline = internal_state.process_timers(_request_queue);
     const auto now = clock_type::now();
     if (next_deadline <= now)
        continue;
@@ -276,7 +278,8 @@ TimerQueue::TimerQueue(
 }
 
 TimerQueue::~TimerQueue() noexcept {
-
+  shutdown();
+  assert(!impl_->worker.joinable());
 }
 
 void TimerQueue::remove_internal_timer(
@@ -320,7 +323,7 @@ plain::concurrency::LazyResult<void> TimerQueue::make_delay_object(
   std::chrono::milliseconds due_time,
   std::shared_ptr<concurrency::executor::Basic> executor) {
   if (!static_cast<bool>(executor))
-    throw std::runtime_error("executor is null");
+    throw std::invalid_argument("make_delay_object - executor is null.");
   return impl_->make_delay_object_impl(
     due_time, shared_from_this(), std::move(executor));
 }
@@ -331,7 +334,7 @@ void TimerQueue::add_timer(
   assert(lock.owns_lock());
 
   if (impl_->abort)
-    throw std::runtime_error("timer queue has been shut down");
+    throw std::runtime_error("add_timer - has been shut down.");
 
   auto old_thread = impl_->ensure_worker_thread(lock);
   impl_->add_internal_timer(lock, new_timer);

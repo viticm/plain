@@ -132,7 +132,8 @@ class ProducerContext<void> {
 
   void get_ref() const {
     assert(status_ != ResultStatus::Idle);
-    if (static_cast<bool>(storage_.exception)) {
+    if (status_ == ResultStatus::Exception) {
+      assert(static_cast<bool>(storage_.exception));
       std::rethrow_exception(storage_.exception);
     }
   }
@@ -196,7 +197,7 @@ class ProducerContext<T &> {
     status_ = ResultStatus::Value;
   }
 
-  void build_exception(std::exception_ptr &exception) {
+  void build_exception(const std::exception_ptr &exception) {
     assert(status_ == ResultStatus::Idle);
     new (std::addressof(storage_.exception)) std::exception_ptr(exception);
     status_ = ResultStatus::Exception;
@@ -210,7 +211,7 @@ class ProducerContext<T &> {
     return get_ref();
   }
 
-  T &get_ref() {
+  T &get_ref() const {
     assert(status_ != ResultStatus::Idle);
     if (status_ == ResultStatus::Value) {
       assert(storage_.pointer != nullptr);

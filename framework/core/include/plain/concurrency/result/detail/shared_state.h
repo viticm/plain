@@ -83,7 +83,7 @@ class SharedState : public SharedStateBasic {
   ~SharedState() {
     assert(static_cast<bool>(state_));
     state_->try_rewind_consumer();
-    state_->reset();
+    state_.reset();
   }
 
  public:

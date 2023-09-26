@@ -19,8 +19,9 @@ class copyable {
  protected:
    copyable() noexcept = default;
    ~copyable() noexcept = default;
+   copyable(const copyable &) noexcept = default;
    copyable(copyable &&) noexcept = default;
-   copyable &operator = (copyable &&) noexcept = default;
+   copyable &operator=(copyable &&) noexcept = default;
 
 };
 

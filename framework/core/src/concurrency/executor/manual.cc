@@ -123,6 +123,7 @@ size_t Manual::loop_impl(size_t max_count) {
     auto task = std::move(tasks_.front());
     tasks_.pop_front();
     lock.unlock();
+    task();
     ++executed;
   }
   if (shutdown_requested())

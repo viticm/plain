@@ -24,6 +24,9 @@ template <typename T>
 class Shared : copyable {
 
  public:
+  Shared() = default;
+  ~Shared() = default;
+
   Shared(std::shared_ptr<detail::SharedState<T>> state) noexcept
     : state_{std::move(state)} {
   }
@@ -41,51 +44,66 @@ class Shared : copyable {
     return *this;
   }
 
+  Shared &operator=(Shared &&rhs) noexcept {
+    if (this != &rhs && state_ != rhs.state_)
+      state_ = std::move(rhs.state_);
+    return *this;
+  }
+
+  Shared(const Shared &) noexcept = default;
+  Shared(Shared &&) noexcept = default;
+
   operator bool() const noexcept {
     return static_cast<bool>(state_.get());
   }
 
-  auto operator co_await() noexcept {
-    assert(static_cast<bool>(state_));
+  auto operator co_await() {
+    throw_if_empty("co_await - result is empty.");
     return SharedAwaitable<T>(state_);
   }
 
  public:
-  ResultStatus status() const noexcept {
-    assert(static_cast<bool>(state_));
+  ResultStatus status() const {
+    throw_if_empty("status - result is empty.");
     return state_->status();
   }
 
-  void wait() noexcept {
-    assert(static_cast<bool>(state_));
+  void wait() {
+    throw_if_empty("wait - result is empty.");
     state_->wait();
   }
 
   template <typename Rep, typename Period = std::ratio<1>>
   ResultStatus wait_for(std::chrono::duration<Rep, Period> duration) {
-    assert(static_cast<bool>(state_));
+    throw_if_empty("wait_for - result is empty.");
     return state_->wait_for(duration);
   }
   template <typename Clock, typename Duration = typename Clock::duration>
   ResultStatus wait_until(
       const std::chrono::time_point<Clock, Duration>& timeout_time) {
-    assert(static_cast<bool>(state_));
+    throw_if_empty("wait_until - result is empty.");
     return state_->wait_until(timeout_time);
   }
 
   std::add_lvalue_reference_t<T> get() {
-    assert(static_cast<bool>(state_));
+    throw_if_empty("get - result is empty.");
     state_->wait();
     return state_->get();
   }
 
-  auto resolve() noexcept {
-    assert(static_cast<bool>(state_));
+  auto resolve() {
+    throw_if_empty("resolve - result is empty.");
     return SharedResolveAwaitable<T>(state_);
   }
 
  private:
   std::shared_ptr<detail::SharedState<T>> state_;
+
+ private:
+  void throw_if_empty(const char *error_msg) const {
+    if (!static_cast<bool>(state_))
+      throw std::runtime_error(error_msg);
+  }
 
 };
 

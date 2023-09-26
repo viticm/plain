@@ -36,14 +36,14 @@ void Thread::enqueue_impl(std::unique_lock<std::mutex> &lock, Task &task) {
 void Thread::enqueue(Task task) {
   std::unique_lock<decltype(lock_)> lock{lock_};
   if (abort_)
-    detail::make_executor_worker_name(name_);
+    detail::throw_runtime_shutdown_exception(name_);
   enqueue_impl(lock, task);
 }
 
 void Thread::enqueue(std::span<Task> tasks) {
   std::unique_lock<decltype(lock_)> lock{lock_};
   if (abort_)
-    detail::make_executor_worker_name(name_);
+    detail::throw_runtime_shutdown_exception(name_);
   for (auto &task : tasks)
     enqueue_impl(lock, task);
 }

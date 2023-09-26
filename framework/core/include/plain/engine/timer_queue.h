@@ -42,26 +42,24 @@ class PLAIN_API TimerQueue : public std::enable_shared_from_this<TimerQueue> {
  public:
   template <typename T, typename ...Args>
   Timer make_timer(
-    size_t due_time, size_t frequency,
+    std::chrono::milliseconds due_time, std::chrono::milliseconds frequency,
     std::shared_ptr<concurrency::executor::Basic> executor,
     T &&callable, Args &&...args) {
-    assert(static_cast<bool>(executor));
     if (!static_cast<bool>(executor))
-      throw std::invalid_argument("executor is null");
+      throw std::invalid_argument("make_timer - executor is null.");
     return make_timer_impl(
-      due_time, frequency, std::move(executor), false,
+      due_time.count(), frequency.count(), std::move(executor), false,
       bind(std::forward<T>(callable), std::forward<Args>(args)...));
   }
 
   template <typename T, typename ...Args>
   Timer make_one_shot_timer(
-    size_t due_time, std::shared_ptr<concurrency::executor::Basic> executor,
+    std::chrono::milliseconds due_time, std::shared_ptr<concurrency::executor::Basic> executor,
     T &&callable, Args &&...args) {
-    assert(static_cast<bool>(executor));
     if (!static_cast<bool>(executor))
-      throw std::invalid_argument("executor is null");
+      throw std::invalid_argument("make_one_shot_timer - executor is null.");
     return make_timer_impl(
-      due_time, 0, std::move(executor), true,
+      due_time.count(), 0, std::move(executor), true,
       bind(std::forward<T>(callable), std::forward<Args>(args)...));
   }
 

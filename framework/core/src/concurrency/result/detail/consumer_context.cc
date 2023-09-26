@@ -60,7 +60,7 @@ const StateBasic *WhenAnyContext::kDoneProcessing = nullptr;
 WhenAnyContext::WhenAnyContext(coroutine_handle<void> handle) noexcept :
   status_(kProcessing), coroutine_handle_(handle) {
   assert(static_cast<bool>(coroutine_handle_));
-  assert(coroutine_handle_.done());
+  assert(!coroutine_handle_.done());
 }
 
 bool WhenAnyContext::any_result_finished() const noexcept {

@@ -33,7 +33,7 @@ struct executor_tag {};
 class Task;
 
 template <typename T>
-concept is_result_type = 
+concept is_result_type =
   std::is_same_v<T, void> || std::is_nothrow_move_constructible_v<T>;
 
 template <typename T>
@@ -72,6 +72,10 @@ template <typename T>
 struct WhenAny;
 
 struct null {};
+
+template <typename T>
+requires is_result_generator_type<T>
+class Generator;
 
 } // namespace result
 

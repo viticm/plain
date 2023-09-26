@@ -29,17 +29,18 @@ Result<T> make_ready(Args &&...args) {
   detail::producer_state_ptr_t<T> promise(new detail::State<T>());
   detail::consumer_state_ptr_t<T> state{promise.get()};
   promise->set_result(std::forward<Args>(args)...);
-  promise->reset();
+  promise.reset();
   return {std::move(state)};
 };
 
 template <typename T>
 Result<T> make_exceptional(std::exception_ptr exception) {
-  assert(static_cast<bool>(exception) && "make_exceptional exception null");
+  if (!static_cast<bool>(exception))
+    throw std::invalid_argument("make_exceptional exception null");
   detail::producer_state_ptr_t<T> promise(new detail::State<T>());
   detail::consumer_state_ptr_t<T> state{promise.get()};
   promise->set_exception(exception);
-  promise->reset();
+  promise.reset();
   return {std::move(state)};
 }
 

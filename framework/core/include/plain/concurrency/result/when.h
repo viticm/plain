@@ -48,13 +48,16 @@ class WhenHelper {
   }
 
   template <typename ...R>
-  static void assert_if_empty_tuple(const char* err, R &&...results) {
-    assert_if_empty_impl(err, std::forward<R>(results)...);
+  static void throw_if_empty_tuple(const char* err, R &&...results) {
+    throw_if_empty_impl(err, std::forward<R>(results)...);
   }
 
   template <typename Iter>
-  static void assert_if_empty_range(const char* err, Iter begin, Iter end) {
-    for (; begin != end; ++begin) assert(static_cast<bool>(*begin));
+  static void throw_if_empty_range(const char* err, Iter begin, Iter end) {
+    for (; begin != end; ++begin) {
+      if (!static_cast<bool>(*begin))
+        throw std::runtime_error(err);
+    }
   }
 
  private:
@@ -72,15 +75,17 @@ class WhenHelper {
     return *list[n];
   }
 
-  template <typename T, typename ...R>
-  static void assert_if_empty_impl(
-    const char *err, const Result<T> &result, R &&...results) {
-    assert(static_cast<bool>(result));
-    assert_if_empty(err, std::forward<R>(results)...);
+  static void throw_if_empty_impl([[maybe_unused]]const char *err) noexcept {
   }
 
-  static void assert_if_empty_impl([[maybe_unused]]const char *err) noexcept {
+  template <typename T, typename ...R>
+  static void throw_if_empty_impl(
+    const char *err, const Result<T> &result, R &&...results) {
+    if (!static_cast<bool>(result))
+      throw std::runtime_error(err);
+    throw_if_empty_impl(err, std::forward<R>(results)...);
   }
+
 
  public:
   class WhenAllAwaitable {
@@ -151,21 +156,6 @@ class WhenHelper {
 
 };
 
-// FIXME: This micro define for assert.
-#ifndef NDEBUG
-#ifndef plian_concurrency_when_helper_assert_if_empty_tuple
-#define plian_concurrency_when_helper_assert_if_empty_tuple \
-  detail::WhenHelper::assert_if_empty_tuple
-#endif
-#ifndef plian_concurrency_when_helper_assert_if_empty_range
-#define plian_concurrency_when_helper_assert_if_empty_range \
-  detail::WhenHelper::assert_if_empty_range
-#endif
-#else
-#define plian_concurrency_when_helper_assert_if_empty_tuple
-#define plian_concurrency_when_helper_assert_if_empty_range
-#endif
-
 template <typename ET, typename CT>
 LazyResult<CT> when_all_impl(
   std::shared_ptr<ET> resume_executor, CT collection) {
@@ -214,7 +204,7 @@ struct WhenAny {
 template <typename T>
 LazyResult<std::tuple<>> when_all(std::shared_ptr<T> resume_executor) {
   if (!static_cast<bool>(resume_executor)) {
-    return {};
+    throw std::invalid_argument("when_all - given resume_executor is null.");
   }
   auto make_lazy_result = []() -> LazyResult<std::tuple<>> {
     co_return std::tuple<>{};
@@ -225,7 +215,11 @@ LazyResult<std::tuple<>> when_all(std::shared_ptr<T> resume_executor) {
 template <typename T, typename ...R>
 LazyResult<std::tuple<typename std::decay<R>::type...>>
 when_all(std::shared_ptr<T> resume_executor, R &&...results) {
-  assert(static_cast<bool>(resume_executor));
+  detail::WhenHelper::throw_if_empty_tuple(
+    "when_all - one of the result objects is empty.",
+    std::forward<R>(results)...);
+  if (!static_cast<bool>(resume_executor))
+    throw std::invalid_argument("when_all - given resume_executor is null.");
   return detail::when_all_impl(
     resume_executor, std::make_tuple(std::forward<R>(results)...));
 }
@@ -233,7 +227,10 @@ when_all(std::shared_ptr<T> resume_executor, R &&...results) {
 template <typename E, typename Iter>
 LazyResult<std::vector<typename std::iterator_traits<Iter>::value_type>>
 when_all(std::shared_ptr<E> resume_executor, Iter begin, Iter end) {
-  assert(static_cast<bool>(resume_executor));
+  detail::WhenHelper::throw_if_empty_range(
+    "when_all - one of the result objects is empty.", begin, end);
+  if (!static_cast<bool>(resume_executor))
+    throw std::invalid_argument("when_all - given resume_executor is null.");
   using type = typename std::iterator_traits<Iter>::value_type;
   return detail::when_all_impl(
     resume_executor,
@@ -246,9 +243,11 @@ LazyResult<WhenAny<std::tuple<R ...>>>
 when_any(std::shared_ptr<E> resume_executor, R &&...results) {
   static_assert(sizeof...(R) != 0,
     "the function must accept at least one result object.");
-  plian_concurrency_when_helper_assert_if_empty_tuple(
+  detail::WhenHelper::throw_if_empty_tuple(
+    "when_any - the function must accept at least one result object.",
     std::forward<R>(results)...);
-  assert(static_cast<bool>(resume_executor));
+  if (!static_cast<bool>(resume_executor))
+    throw std::invalid_argument("when_any - given resume_executor is null.");
   return detail::when_any_impl(
     resume_executor, std::make_tuple(std::forward<R>(results)...));
 }
@@ -257,9 +256,12 @@ template <typename E, typename Iter>
 LazyResult<
 WhenAny<std::vector<typename std::iterator_traits<Iter>::value_type>>>
 when_any(std::shared_ptr<E> resume_executor, Iter begin, Iter end) {
-  plian_concurrency_when_helper_assert_if_empty_range(begin, end);
-  assert(begin != end);
-  assert(static_cast<bool>(resume_executor));
+  detail::WhenHelper::throw_if_empty_range(
+    "when_any - one of the result objects is empty.", begin, end);
+  if (begin == end)
+    throw std::invalid_argument("when_any - given range contains no elements.");
+  if (!static_cast<bool>(resume_executor))
+    throw std::invalid_argument("when_any - given resume_executor is null.");
   using type = typename std::iterator_traits<Iter>::value_type;
   return detail::when_any_impl(resume_executor,
     std::vector<type>{

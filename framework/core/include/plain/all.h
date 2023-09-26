@@ -39,12 +39,6 @@
 #include "plain/engine/kernel.h"
 
 /* concurrency */
-#include "plain/concurrency/executor/basic.h"
-#include "plain/concurrency/executor/inline.h"
-#include "plain/concurrency/executor/manual.h"
-#include "plain/concurrency/executor/thread.h"
-#include "plain/concurrency/executor/thread_pool.h"
-#include "plain/concurrency/executor/worker_thread.h"
 #include "plain/concurrency/result/awaitable.h"
 #include "plain/concurrency/result/basic.h"
 #include "plain/concurrency/result/lazy.h"
@@ -55,6 +49,14 @@
 #include "plain/concurrency/result/shared.h"
 #include "plain/concurrency/result/shared_awaitable.h"
 #include "plain/concurrency/result/when.h"
+#include "plain/concurrency/result/generator.h"
+#include "plain/concurrency/result/make.h"
+#include "plain/concurrency/executor/basic.h"
+#include "plain/concurrency/executor/inline.h"
+#include "plain/concurrency/executor/manual.h"
+#include "plain/concurrency/executor/thread.h"
+#include "plain/concurrency/executor/thread_pool.h"
+#include "plain/concurrency/executor/worker_thread.h"
 
 /* file */
 #include "plain/file/api.h"

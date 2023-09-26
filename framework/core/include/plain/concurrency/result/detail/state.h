@@ -88,7 +88,7 @@ class State : public StateBasic {
     return wait_for(diff);
   }
 
-  T get() noexcept {
+  T get() {
     assert_done();
     return producer_.get();
   }
@@ -99,7 +99,7 @@ class State : public StateBasic {
   }
   
   template <typename F>
-  void form_callable(F &&func) noexcept {
+  void from_callable(F &&func) noexcept {
     using is_void = std::is_same<T, void>;
     try {
       from_callable(is_void {}, std::forward<F>(func));
@@ -134,18 +134,13 @@ class State : public StateBasic {
   }
 
   void complete_consumer() noexcept {
-    const auto state = this->process_status_.load(std::memory_order_acquire);
-    if (state == ProcessStatus::ProducerDone) {
-      return delete_self(this);
-    }
-
-    const auto state1 = this->process_status_.exchange(
+    const auto status = process_status_.exchange(
       ProcessStatus::ConsumerDone, std::memory_order_acq_rel);
-    assert(state1 != ProcessStatus::ConsumerSet);
-    if (state1 == ProcessStatus::ProducerDone) {
+    assert(status != ProcessStatus::ConsumerSet);
+    if (status == ProcessStatus::ProducerDone) {
       return delete_self(this);
     }
-    assert(state1 == ProcessStatus::Idle);
+    assert(status == ProcessStatus::Idle);
   }
 
   void complete_joined_consumer() noexcept {

@@ -42,23 +42,23 @@ void Timer::throw_if_empty(const char *error_message) const {
 }
 
 std::chrono::milliseconds Timer::get_due_time() const {
-  throw_if_empty("timer is empty");
+  throw_if_empty("get_due_time - timer is empty.");
   return std::chrono::milliseconds(state_->get_due_time());
 }
 
 std::chrono::milliseconds Timer::get_frequency() const {
-  throw_if_empty("timer is empty");
+  throw_if_empty("get_frequency - timer is empty.");
   return std::chrono::milliseconds(state_->get_frequency());
 }
 
 std::shared_ptr<plain::concurrency::executor::Basic> 
 Timer::get_executor() const {
-  throw_if_empty("timer is empty");
+  throw_if_empty("get_executor - timer is empty.");
   return state_->get_executor();
 }
 
 std::weak_ptr<plain::TimerQueue> Timer::get_timer_queue() const {
-  throw_if_empty("timer is empty");
+  throw_if_empty("get_timer_queue - timer is empty.");
   return state_->get_timer_queue();
 }
 

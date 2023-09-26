@@ -54,7 +54,7 @@ class ProducerContext;
 
 class ConsumerContext;
 
-class when_helper;
+class WhenHelper;
 struct shared_helper;
 
 } // namespace result::detail

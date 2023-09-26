@@ -37,7 +37,7 @@ class PLAIN_API Inline : public Basic {
   }
 
   int32_t max_concurrency_level() const noexcept override {
-    return 1;
+    return 0;
   }
 
   void shutdown() override {

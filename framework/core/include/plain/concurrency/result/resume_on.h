@@ -27,7 +27,7 @@ template <typename T>
 class ResumeOnAwaitable : public suspend_always {
 
  public:
-  ResumeOnAwaitable(T *executor) noexcept : executor_{executor} {
+  ResumeOnAwaitable(T &executor) noexcept : executor_{executor} {
   }
 
   ResumeOnAwaitable(const ResumeOnAwaitable &) = delete;
@@ -38,7 +38,6 @@ class ResumeOnAwaitable : public suspend_always {
 
  public:
   void await_suspend(coroutine_handle<void> handle) noexcept {
-    assert(static_cast<bool>(executor_));
     try {
       executor_.post(AwaitViaFunctor{handle, &interrupted_});
     } catch(...) {
@@ -46,12 +45,14 @@ class ResumeOnAwaitable : public suspend_always {
     }
   }
 
-  void await_resume() const noexcept {
-    assert(!interrupted_);
+  void await_resume() const {
+    if (interrupted_)
+      throw std::runtime_error(
+        "await_resume - associated task was interrupted abnormally");
   }
 
  private:
-  T *executor_;
+  T &executor_;
   bool interrupted_{false};
 
 };
@@ -59,18 +60,18 @@ class ResumeOnAwaitable : public suspend_always {
 } // namespace detail
 
 template <typename T>
-auto resume_on(std::shared_ptr<T> executor) noexcept {
-  static_assert(std::is_base_of_v<executor::Basic, executor>,
+auto resume_on(std::shared_ptr<T> executor) {
+  static_assert(std::is_base_of_v<executor::Basic, T>,
                 "resume_on given executor does not derive from Executor");
   if (!executor) {
-    LOG_ERROR << "resume_on error executor is nullptr";
+    throw std::invalid_argument("resume_on - given executor is null.");
   }
-  return detail::ResumeOnAwaitable{executor->get()};
+  return detail::ResumeOnAwaitable{*executor.get()};
 }
 
 template <typename T>
 auto resume_on(T &executor) noexcept {
-  return detail::ResumeOnAwaitable{&executor};
+  return detail::ResumeOnAwaitable{executor};
 }
 
 } // namespace result

@@ -46,14 +46,8 @@ class LazyAwaitable {
     return state_.promise().await(handle);
   }
 
-  T await_resume() noexcept {
-    T r{};
-    try {
-      r = state_.promise().get();
-    } catch(const std::exception &e) {
-      LOG_ERROR << "LazyAwaitable::await_resume exception: " << e.what();
-    }
-    return r;
+  T await_resume() {
+    return state_.promise().get();
   }
 
  private:

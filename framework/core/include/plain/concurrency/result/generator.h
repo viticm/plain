@@ -51,17 +51,18 @@ class Generator {
   }
 
  public:
-  iterator begin() noexcept {
-    assert(static_cast<bool>(coroutine_handle_));
+  iterator begin() {
+    if (!static_cast<bool>(coroutine_handle_))
+      throw std::runtime_error("begin - generator is empty.");
     assert(!coroutine_handle_.done());
     coroutine_handle_.resume();
     if (coroutine_handle_.done()) {
-      coroutine_handle_.promise().log_if_exception();
+      coroutine_handle_.promise().throw_if_exception();
     }
     return iterator{coroutine_handle_};
   }
 
-  iterator end() noexcept {
+  static detail::GeneratorEndIterator end() noexcept {
     return {};
   }
 

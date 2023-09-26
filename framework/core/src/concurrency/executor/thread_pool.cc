@@ -246,7 +246,7 @@ void ThreadPoolWorker::balance_work() {
 
   assert(std::all_of(
     private_queue_.begin() + begin, private_queue_.end(), [](auto &task) {
-    return !static_cast<bool>(task);
+    return static_cast<bool>(task);
   }));
 
   private_queue_.erase(private_queue_.begin(), private_queue_.begin() + begin);

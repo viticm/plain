@@ -29,7 +29,7 @@ class GeneratorState {
  public:
   Generator<T> get_return_object() noexcept {
     return Generator<T> {
-      coroutine_handle<Generator<T>>::from_promise(*this)};
+      coroutine_handle<GeneratorState<T>>::from_promise(*this)};
   }
 
   suspend_always initial_suspend() const noexcept {
@@ -45,6 +45,11 @@ class GeneratorState {
     return {};
   }
 
+  suspend_always yield_value(value_type &&ref) noexcept {
+    value_ = std::addressof(ref);
+    return {};
+  }
+
   void return_void() const noexcept {}
   T &value() const noexcept {
     assert(value_ != nullptr);
@@ -52,18 +57,18 @@ class GeneratorState {
     return *value_;
   }
 
-  void log_if_exception() const noexcept {
+  void unhandled_exception() noexcept {
+    exception_ = std::current_exception();
+  }
+
+  void throw_if_exception() const {
     if (static_cast<bool>(exception_)) {
-      try {
-        std::rethrow_exception(exception_);
-      } catch (const std::exception &e) {
-        LOG_ERROR << "exception: " << e.what();
-      }
+      std::rethrow_exception(exception_);
     }
   }
 
  private:
-  T *value_{nullptr};
+  value_type *value_{nullptr};
   std::exception_ptr exception_;
 
 };
@@ -86,17 +91,17 @@ class GeneratorIterator {
     assert(static_cast<bool>(coroutine_handle_));
   }
 
-  GeneratorIterator &operator++() noexcept {
+  GeneratorIterator &operator++() {
     assert(static_cast<bool>(coroutine_handle_));
-    assert(coroutine_handle_.done());
+    assert(!coroutine_handle_.done());
     coroutine_handle_.resume();
     if (coroutine_handle_.done()) {
-      coroutine_handle_.promise().log_if_exception();
+      coroutine_handle_.promise().throw_if_exception();
     }
     return *this;
   }
 
-  void operator++(int) noexcept {
+  void operator++(int) {
     (void)operator++();
   }
 
@@ -130,7 +135,7 @@ class GeneratorIterator {
     return !(lhs == rhs);
   }
 
-  friend bool operator==(
+  friend bool operator!=(
     GeneratorEndIterator end_it, const GeneratorIterator &it) noexcept {
     return it != end_it;
   }

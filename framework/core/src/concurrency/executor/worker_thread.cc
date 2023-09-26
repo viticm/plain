@@ -55,6 +55,7 @@ void WorkerThread::wait_for_task(std::unique_lock<std::mutex> &lock) {
     lock.unlock();
 
     semaphore_.acquire();
+    lock.lock();
 
     if (!public_queue_.empty() || abort_)
       break;

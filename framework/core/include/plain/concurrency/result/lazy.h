@@ -51,23 +51,24 @@ class LazyResult {
     return static_cast<bool>(state_);
   }
 
-  auto operator co_await() noexcept {
+  auto operator co_await() {
+    throw_if_empty("co_await - result is empty.");
     return result::LazyAwaitable<T>{std::exchange(state_, {})};
   }
 
  public:
-  ResultStatus status() const noexcept {
-    assert(static_cast<bool>(state_));
+  ResultStatus status() const { //noexcept {
+    throw_if_empty("status - result is empty.");
     return state_.promise().status();
   }
 
-  auto resolve() noexcept {
-    assert(static_cast<bool>(state_));
+  auto resolve() { //noexcept {
+    throw_if_empty("resolve - result is empty.");
     return result::LazyResolveAwaitable<T>{std::exchange(state_, {})};
   }
 
-  Result<T> run() noexcept {
-    assert(static_cast<bool>(state_));
+  Result<T> run() { //noexcept {
+    throw_if_empty("run - result is empty.");
     return run_impl();
   }
 
@@ -75,6 +76,11 @@ class LazyResult {
   Result<T> run_impl() {
     LazyResult self(std::move(*this));
     co_return co_await self;
+  }
+
+  void throw_if_empty(const char *error_msg) const {
+    if (!static_cast<bool>(state_))
+      throw std::runtime_error(error_msg);
   }
 
  private:

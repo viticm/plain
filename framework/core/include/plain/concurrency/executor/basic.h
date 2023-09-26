@@ -56,7 +56,7 @@ class PLAIN_API Basic {
   }
 
   template <typename T>
-  void bluk_post(std::span<T> callables) {
+  void bulk_post(std::span<T> callables) {
     return do_bulk_post<Basic>(callables);
   }
 
@@ -137,6 +137,11 @@ class PLAIN_API Basic {
       } catch(...) {
         // do nothing
       }
+    }
+
+    void await_resume() const {
+      if (interrupted_)
+        throw std::runtime_error("broken task");
     }
   };
 
