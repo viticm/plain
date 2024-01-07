@@ -83,10 +83,14 @@ private:
   static inline uint4 H(uint4 x, uint4 y, uint4 z);
   static inline uint4 I(uint4 x, uint4 y, uint4 z);
   static inline uint4 rotate_left(uint4 x, int n);
-  static inline void FF(uint4 &a, uint4 b, uint4 c, uint4 d, uint4 x, uint4 s, uint4 ac);
-  static inline void GG(uint4 &a, uint4 b, uint4 c, uint4 d, uint4 x, uint4 s, uint4 ac);
-  static inline void HH(uint4 &a, uint4 b, uint4 c, uint4 d, uint4 x, uint4 s, uint4 ac);
-  static inline void II(uint4 &a, uint4 b, uint4 c, uint4 d, uint4 x, uint4 s, uint4 ac);
+  static inline void FF(
+    uint4 &a, uint4 b, uint4 c, uint4 d, uint4 x, uint4 s, uint4 ac);
+  static inline void GG(
+    uint4 &a, uint4 b, uint4 c, uint4 d, uint4 x, uint4 s, uint4 ac);
+  static inline void HH(
+    uint4 &a, uint4 b, uint4 c, uint4 d, uint4 x, uint4 s, uint4 ac);
+  static inline void II(
+    uint4 &a, uint4 b, uint4 c, uint4 d, uint4 x, uint4 s, uint4 ac);
 };
 
 PLAIN_API std::string md5(const std::string &str);

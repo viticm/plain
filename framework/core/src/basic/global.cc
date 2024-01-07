@@ -1,5 +1,6 @@
 #include "plain/basic/global.h"
 #include <filesystem>
+#include "plain/engine/config.h"
 
 namespace plain {
 

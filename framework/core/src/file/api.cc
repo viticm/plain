@@ -14,11 +14,11 @@
 
 namespace plain {
 
-int32_t openex(const char *filename, int32_t flag) {
+int32_t open(const char *filename, int32_t flag) {
 #if OS_UNIX
-  int32_t fd = open(filename, flag);
+  int32_t fd = ::open(filename, flag);
 #elif OS_WIN
-  int32_t fd = _open(filename, flag);
+  int32_t fd = ::_open(filename, flag);
 #endif
   if (fd < 0) {
 #if OS_UNIX
@@ -50,11 +50,12 @@ int32_t openex(const char *filename, int32_t flag) {
   return fd;
 }
 
-int32_t openmode_ex(const char * filename, int32_t flag, int32_t mode) {
+int32_t openmode(const char * filename, int32_t flag, int32_t mode) {
+  int32_t fd{-1};
 #if OS_UNIX
-  int32_t fd = open(filename, flag, mode);
+  fd = ::open(filename, flag, mode);
 #elif OS_WIN
-  int32_t fd = _open(filename, flag, mode);
+  fd = ::_open(filename, flag, mode);
 #endif
 
   if (fd < 0) {
@@ -87,11 +88,11 @@ int32_t openmode_ex(const char * filename, int32_t flag, int32_t mode) {
   return fd;
 }
 
-uint32_t readex(int32_t fd, void *buffer, uint32_t length) {
+uint32_t read(int32_t fd, void *buffer, uint32_t length) {
 #if OS_UNIX
-  int32_t result = read(fd, buffer, length);
+  int32_t result = ::read(fd, buffer, length);
 #elif OS_WIN
-  int32_t result = _read (fd, buffer, length);
+  int32_t result = ::_read (fd, buffer, length);
 #endif
   if (result < 0) {
 
@@ -119,11 +120,11 @@ uint32_t readex(int32_t fd, void *buffer, uint32_t length) {
   return result;
 }
 
-uint32_t writeex(int32_t fd, const void *buffer, uint32_t length) {
+uint32_t write(int32_t fd, const void *buffer, uint32_t length) {
 #if OS_UNIX
-  int32_t result = write(fd, buffer, length);
+  int32_t result = ::write(fd, buffer, length);
 #elif OS_WIN
-  int32_t result = _write(fd, buffer, length);
+  int32_t result = ::_write(fd, buffer, length);
 #endif
 
   if (result < 0) {
@@ -151,10 +152,10 @@ uint32_t writeex(int32_t fd, const void *buffer, uint32_t length) {
 }
 
 
-void closeex(int32_t fd) {
+void close(int32_t fd) {
  
 #if OS_UNIX
-  close(fd);
+  ::close(fd);
   switch ( errno ) {
     case EBADF : 
     default : {
@@ -162,13 +163,13 @@ void closeex(int32_t fd) {
     }
   }
 #elif OS_WIN
-  _close(fd);
+  ::_close(fd);
 #endif
 }
 
-int32_t fcntlex([[maybe_unused]] int32_t fd, [[maybe_unused]] int32_t cmd) {
+int32_t fcntl([[maybe_unused]] int32_t fd, [[maybe_unused]] int32_t cmd) {
 #if OS_UNIX
-  int32_t result = fcntl(fd, cmd);
+  int32_t result = ::fcntl(fd, cmd);
   if (result < 0) {
     switch (errno) {
       case EINTR : 
@@ -189,12 +190,12 @@ int32_t fcntlex([[maybe_unused]] int32_t fd, [[maybe_unused]] int32_t cmd) {
 #endif
 }
 
-int32_t fcntlarg_ex(
+int32_t fcntlarg(
     [[maybe_unused]] int32_t fd,
     [[maybe_unused]] int32_t cmd,
     [[maybe_unused]] int32_t arg) {
 #if OS_UNIX
-  int32_t result = fcntl(fd, cmd, arg);
+  int32_t result = ::fcntl(fd, cmd, arg);
   if (result < 0) {
     switch (errno) {
       case EINTR : 
@@ -216,78 +217,69 @@ int32_t fcntlarg_ex(
 #endif
 }
 
-bool get_nonblocking_ex([[maybe_unused]] int32_t fd) {
+bool get_nonblocking([[maybe_unused]] int32_t fd) {
 #if OS_UNIX
-  int32_t flag = fcntlarg_ex(fd, F_GETFL, 0);
+  int32_t flag = fcntlarg(fd, F_GETFL, 0);
   return flag | O_NONBLOCK;
 #elif OS_WIN
   return false;
 #endif
 }
 
-void set_nonblocking_ex([[maybe_unused]] int32_t fd, [[maybe_unused]] bool on) {
+bool set_nonblocking([[maybe_unused]] int32_t fd, [[maybe_unused]] bool on) {
+  bool r{false};
 #if OS_UNIX
-  int32_t flag = fcntlarg_ex(fd, F_GETFL, 0);
+  int32_t flag = fcntlarg(fd, F_GETFL, 0);
   if (on)
     // make nonblocking fd
     flag |= O_NONBLOCK;
   else
     // make blocking fd
     flag &= ~O_NONBLOCK;
-  fcntlarg_ex(fd, F_SETFL, flag);
+  auto e = fcntlarg(fd, F_SETFL, flag);
+  r = e >= 0;
 #elif OS_WIN
-  //do nothing
+  unsigned long mode = on ? 1 : 0;
+  auto e = ::ioctlsocket(handle_, FIONBIO, &mode);
+  r = e >= 0;
 #endif
+  return r;
 }
 
-void ioctlex(
+int32_t ioctl(
     [[maybe_unused]] int32_t fd,
     [[maybe_unused]] int32_t request,
     [[maybe_unused]] void *argp) {
+  int32_t r{-1};
 #if OS_UNIX
-  if (ioctl(fd,request,argp) < 0) {
-    switch (errno) {
-      case EBADF : 
-      case ENOTTY : 
-      case EINVAL : 
-      default :
-      {
-        break;
-      }
-    }
-  }
-#endif
-}
-
-void setnonblocking_ex([[maybe_unused]] int32_t fd, [[maybe_unused]] bool on) {
-#if OS_UNIX
-  uint64_t arg = (true == on ? 1 : 0 );
-  ioctlex(fd, FIONBIO, &arg);
+  r = ::ioctl(fd, request, argp);
 #elif OS_WIN
-  //do nothing
+  r = ::ioctlex(fd, request, argp);
 #endif
+  return r;
 }
 
-
-uint32_t availableex([[maybe_unused]] int32_t fd) {
+uint32_t available([[maybe_unused]] int32_t fd) {
 #if OS_UNIX
-  uint32_t arg = 0;
-  ioctlex(fd, FIONREAD, &arg);
-  std::cout << "availableex: " << arg << std::endl;
+  uint32_t arg{0};
+  ::ioctl(fd, FIONREAD, &arg);
   return arg;
 #elif OS_WIN
-  return 0;
+  uint64_t arg{0};
+  ::ioctlex(fd, FIONREAD, &arg);
+  return static_cast<uint32_t>(arg);
 #endif
 }
 
-int32_t dupex(int32_t fd) {
+int32_t dup(int32_t fd) {
+  int32_t r{-1};
 #if OS_UNIX
-  int32_t newfd = dup(fd);
+  r = ::dup(fd);
 #elif OS_WIN
-  int32_t newfd = _dup(fd);
+  r = ::_dup(fd);
 #endif
 
-  if (newfd < 0) {
+  if (r < 0) {
 #if OS_UNIX
     switch (errno) {
       case EBADF : 
@@ -300,12 +292,12 @@ int32_t dupex(int32_t fd) {
     //do nothing
 #endif
   }
-  return newfd;
+  return r;
 }
 
-int64_t lseekex(int32_t fd, uint64_t offset, int32_t whence) {
+int64_t lseek(int32_t fd, uint64_t offset, int32_t whence) {
 #if OS_UNIX
-  int64_t result = lseek(fd, offset, whence);
+  int64_t result = ::lseek(fd, offset, whence);
   if (result < 0) {
     switch (errno) {
       case EBADF : 
@@ -317,19 +309,19 @@ int64_t lseekex(int32_t fd, uint64_t offset, int32_t whence) {
     }
   }
 #elif OS_WIN
-  uint64_t result = _lseek(fd, (long)offset, whence);
+  uint64_t result = ::_lseek(fd, (long)offset, whence);
   if ( result < 0 ) {
   }
 #endif
   return result;
 }
 
-int64_t tellex([[maybe_unused]] int32_t fd) {
+int64_t tell([[maybe_unused]] int32_t fd) {
   int64_t result = 0;
 #if OS_UNIX
   //do nothing
 #elif OS_WIN
-  result = _tell(fd);
+  result = ::_tell(fd);
   if (result < 0) {
   }
 #endif

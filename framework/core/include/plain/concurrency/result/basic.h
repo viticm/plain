@@ -218,10 +218,6 @@ class ResultPromise {
   }
 };
 
-namespace result {
-
-} // namespace result
-
 } // namespace plain::concurrency
 
 #endif // PLAIN_CONCURRENCY_RESULT_BASIC_H_

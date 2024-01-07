@@ -116,10 +116,10 @@ ntoh(T n, iter_t dest) noexcept {
   // compilation
   using iterator_value_type = std::remove_cvref_t<
     typename std::iterator_traits<iter_t>::value_type>;
-  struct dest {
+  struct dest_t {
     alignas(value_type) iterator_value_type value[sizeof(value_type)];
   };
-  auto tmp = std::bit_cast<dest>(v);
+  auto tmp = std::bit_cast<dest_t>(v);
 
   std::copy_n(std::begin(tmp.value), sizeof(value_type), dest);
 #else

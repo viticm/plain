@@ -1,0 +1,254 @@
+#include "plain/net/connection/epoll.h"
+#if OS_UNIX
+#include <sys/epoll.h>
+#include <poll.h>
+#include <signal.h>
+#endif
+#include <cassert>
+#include "plain/basic/logger.h"
+#include "plain/basic/utility.h"
+#include "plain/concurrency/executor/basic.h"
+#include "plain/file/api.h"
+#include "plain/net/connection/detail/coroutine.h"
+#include "plain/net/connection/basic.h"
+#include "plain/net/socket/basic.h"
+
+namespace plain::net::connection {
+
+namespace {
+
+#if OS_UNIX
+
+static constexpr size_t kOnceAcccpetCount{64};
+
+struct data_struct {
+  int32_t fd{socket::kInvalidSocket};
+  int32_t max_count{std::numeric_limits<int32_t>::max()};
+  std::atomic_int32_t result_event_count{0};
+  int32_t event_index{0};
+  struct epoll_event *events{nullptr};
+};
+using data_t = data_struct;
+
+int32_t poll_create(data_t &d, int32_t max_count) {
+  int32_t fd = epoll_create(max_count);
+  if (fd != -1) {
+    d.fd = fd;
+    d.max_count = max_count;
+    d.events = new epoll_event[max_count];
+    assert(d.events);
+    signal(SIGPIPE, SIG_IGN);
+  } else {
+    perror("poll_create failed");
+  }
+  return fd;
+}
+
+int32_t poll_add(data_t &d, int32_t fd, int32_t mask, id_t conn_id) {
+  struct epoll_event _epoll_event;
+  memset(&_epoll_event, 0, sizeof(_epoll_event));
+  _epoll_event.events = mask;
+  _epoll_event.data.u64 =
+    touint64(static_cast<uint32_t>(fd), static_cast<uint32_t>(conn_id));
+  int32_t r = epoll_ctl(d.fd, EPOLL_CTL_ADD, fd, &_epoll_event);
+  return r;
+}
+
+/*
+int32_t poll_mod(data_t &d, int32_t fd, int32_t mask) {
+  struct epoll_event _epoll_event;
+  memset(&_epoll_event, 0, sizeof(_epoll_event));
+  _epoll_event.events = mask;
+  _epoll_event.data.fd = fd;
+  int32_t r = epoll_ctl(d.fd, EPOLL_CTL_MOD, fd, &_epoll_event);
+  return r;
+}
+*/
+
+int32_t poll_delete(data_t &d, int32_t fd) {
+  struct epoll_event _epoll_event;
+  memset(&_epoll_event, 0, sizeof(_epoll_event));
+  _epoll_event.events = EPOLLIN | EPOLLET;
+  _epoll_event.data.fd = fd;
+  int32_t r = epoll_ctl(d.fd, EPOLL_CTL_DEL, fd, &_epoll_event);
+  return r;
+}
+
+int32_t poll_wait(data_t &d, int32_t timeout) {
+  assert(d.events);
+  assert(d.max_count > 0);
+  d.result_event_count = epoll_wait(d.fd, d.events, d.max_count, timeout);
+  d.event_index = 0;
+  return d.result_event_count;
+}
+
+int32_t poll_destory(data_t &d) {
+  if (d.fd == -1) return 0;
+  plain::close(d.fd);
+  safe_delete_array(d.events);
+  return 0;
+}
+
+/*
+int32_t poll_event(data_t &d, int32_t *fd, int32_t *events) {
+  int32_t r{0};
+  if (d.event_index < d.result_event_count) {
+    struct epoll_event &_epoll_event = d.events[d.event_index++];
+    *events = _epoll_event.events;
+    *fd = _epoll_event.data.fd;
+  } else {
+    r = -1;
+  }
+  return r;
+}
+*/
+
+#endif
+
+}
+
+struct Epoll::Impl : std::enable_shared_from_this<Impl> {
+#if OS_UNIX
+  data_t data;
+  std::condition_variable cv;
+  std::mutex mutex;
+  bool running{false};
+#endif
+};
+
+Epoll::Epoll(const setting_t &setting) :
+  Manager(setting), impl_{std::make_shared<Impl>()} {
+}
+  
+Epoll::Epoll(
+  std::unique_ptr<concurrency::executor::Basic> &&executor,
+  const setting_t &setting) :
+  Manager(std::forward<decltype(executor)>(executor), setting),
+  impl_{std::make_shared<Impl>()} {
+}
+
+Epoll::~Epoll() {
+#if OS_UNIX
+  poll_destory(impl_->data);
+#endif
+}
+  
+bool Epoll::work() noexcept {
+#if OS_UNIX
+  auto fd = poll_create(impl_->data, setting_.max_count);
+  if (fd <= 0) {
+    LOG_ERROR << "create error max_count: "
+      << setting_.max_count << " fd: " << fd;
+    return false;
+  }
+  auto _listen_fd = listen_fd();
+  if (_listen_fd != socket::kInvalidSocket) {
+    auto r = poll_add(impl_->data, _listen_fd, EPOLLIN, socket::kInvalidSocket);
+    if (r < 0) {
+      LOG_ERROR << "add error result: " << r;
+      return false;
+    }
+  }
+  impl_->running = true;
+  work_recurrence();
+#endif
+  return true;
+}
+
+void Epoll::off() noexcept {
+#if OS_UNIX
+  impl_->running = false;
+#endif
+}
+
+bool Epoll::sock_add(
+  [[maybe_unused]] socket::id_t sock_id,
+  [[maybe_unused]] connection::id_t conn_id) noexcept {
+  assert(sock_id != socket::kInvalidSocket);
+  assert(conn_id != connection::kInvalidId);
+#if OS_UNIX
+  if (poll_add(impl_->data, sock_id, EPOLLIN | EPOLLET, conn_id) != 0) {
+    LOG_ERROR << "sock_add error: " << strerror(errno);
+  } else {
+    return true;
+  }
+#endif
+  return false;
+}
+  
+bool Epoll::sock_remove([[maybe_unused]] socket::id_t sock_id) noexcept {
+  assert(sock_id >= 0);
+  assert(sock_id != socket::kInvalidSocket);
+#if OS_UNIX
+  if (poll_delete(impl_->data, sock_id) != 0) {
+    LOG_ERROR << "sock_remove error: " << strerror(errno);
+  } else {
+    return true;
+  }
+#endif
+  return false;
+}
+
+detail::Task Epoll::work_recurrence() noexcept {
+#if OS_UNIX
+  auto func = [self = impl_](
+    concurrency::coroutine_handle<detail::Task::promise_type> handle) {
+    if (self->data.fd == socket::kInvalidSocket) return false;
+    std::unique_lock<std::mutex> lock{self->mutex};
+    self->cv.wait(lock, [self] {
+      poll_wait(self->data, 0);
+      return self->data.result_event_count != 0 || !self->running;
+    });
+    return true;
+  };
+  co_await detail::Awaitable{func};
+  if (impl_->data.result_event_count < 0) {
+    LOG_ERROR << "work_recurrence error: " << impl_->data.result_event_count;
+  } else {
+    handle_input();
+  }
+  if (impl_->running) work_recurrence();
+#else
+  return {};
+#endif
+}
+
+void Epoll::handle_input() noexcept {
+#if OS_UNIX
+  if (!impl_->running) return;
+  size_t accept_count{0};
+  auto &d = impl_->data;
+  auto _listen_fd = listen_fd();
+  for (int32_t i = 0; i < d.result_event_count; ++i) {
+    if (!impl_->running) break;
+    auto sock_id = static_cast<socket::id_t>(
+      get_highsection(d.events[i].data.u64));
+    auto conn_id = static_cast<connection::id_t>(
+      get_lowsection(d.events[i].data.u64));
+    if (sock_id != socket::kInvalidSocket &&
+        sock_id == _listen_fd && accept_count < kOnceAcccpetCount) {
+      ++accept_count;
+      this->accept();
+    } else if (d.events[i].events & EPOLLIN) {
+      auto conn = get_conn(conn_id);
+      if (!conn) {
+        LOG_ERROR << "can't find connection: " << conn_id;
+        continue;
+      }
+      if (sock_id == socket::kInvalidSocket) {
+        LOG_ERROR << "can't find socket: " << conn_id;
+        remove(conn_id);
+        continue;
+      }
+      if (conn->socket()->error()) {
+        LOG_ERROR << "socket error: " << conn_id;
+        remove(conn_id);
+        continue;
+      }
+      conn->enqueue_work();
+    }
+  }
+#endif
+}
+
+}

@@ -1011,4 +1011,30 @@ char *strerror_pl(int32_t saved_errno) {
 #endif
 }
 
+std::string get_error_str(int32_t errno) {
+  char buf[1024];
+  buf[0] = '\0';
+#if OS_WIN
+  FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+    NULL, errno, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), buf, sizeof(buf),
+    NULL);
+#else
+
+#ifdef _GNU_SOURCE
+
+#if !defined(__GLIBC__)
+  int e = strerror_r(errno, buf, sizeof(buf));
+  auto s = strerror(e);
+  return s ? std::string(s) : std::string{};
+#else
+  auto s = strerror_r(errno, buf, sizeof(buf));
+  return s ? std::string(s) : std::string{};
+#endif
+
+#endif // _GNU_SOURCE
+
+#endif
+  return buf;
+}
+
 } // namespace plain

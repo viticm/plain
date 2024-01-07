@@ -62,8 +62,8 @@ ThreadPool final : public Derivable<ThreadPool> {
   ThreadPool(
     std::string_view pool_name,
     size_t pool_size, std::chrono::milliseconds max_idle_time,
-    const std::function<void(std::string_view name)>& started_callback = {},
-    const std::function<void(std::string_view name)>& terminated_callback = {});
+    const std::function<void(std::string_view name)> &started_callback = {},
+    const std::function<void(std::string_view name)> &terminated_callback = {});
   ~ThreadPool() override;
 
  public:

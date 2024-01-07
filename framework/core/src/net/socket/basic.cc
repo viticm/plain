@@ -1,0 +1,218 @@
+#include "plain/net/socket/basic.h"
+#include "plain/net/socket/api.h"
+
+using plain::net::socket::Basic;
+
+struct Basic::Impl {
+  id_t id{kInvalidSocket};
+};
+
+Basic::Basic(id_t id) : impl_{std::make_unique<Impl>()} {
+  impl_->id = id;
+}
+
+Basic::~Basic() {
+  close();
+}
+
+Basic::Basic(Basic &&object) noexcept = default;
+
+bool Basic::create() {
+  impl_->id = create(AF_INET, SOCK_STREAM, 0);
+  return valid();
+}
+
+bool Basic::create(int32_t domain, int32_t type, int32_t protocol) {
+  impl_->id = socket::create(domain, type, protocol);
+  return valid();
+}
+
+bool Basic::close() noexcept {
+  if (impl_->id == kInvalidSocket) return true;
+  return socket::close(release());
+}
+
+plain::net::socket::id_t Basic::release() noexcept {
+  auto r = impl_->id;
+  impl_->id = kInvalidSocket;
+  return r;
+}
+
+Basic Basic::clone() noexcept {
+  id_t id{kInvalidSocket};
+#if OS_WIN
+  WSAPROTOCOL_INFOW prot_info;
+  if (::WSADuplicateSocketW(impl_->id, ::GetCurrentProcessId(), &prot_info) == 0)
+    id = ::WSASocketW(
+      AF_INET, SOCK_STREAM, 0, &protInfo, 0, WSA_FLAG_OVERLAPPED);
+#elif OS_UNIX
+  id = dup(impl_->id);
+#endif
+  return Basic{id};
+}
+
+bool Basic::valid() const noexcept {
+  return impl_->id != kInvalidSocket && !error();
+}
+
+bool Basic::error() const noexcept {
+  if (impl_->id == kInvalidSocket) return true;
+  int32_t value{0};
+  uint32_t length{static_cast<uint32_t>(sizeof(value))};
+  getsockoptb(impl_->id, SOL_SOCKET, SO_ERROR, &value, &length);
+  return value != 0;
+}
+
+int32_t Basic::send(const bytes_t &bytes, uint32_t flag) {
+  if (!valid()) return 0;
+  return socket::send(impl_->id, bytes.data(), bytes.size(), flag);
+}
+  
+int32_t Basic::recv(bytes_t &bytes, uint32_t flag) {
+  if (!valid()) return 0;
+  return socket::recv(impl_->id, bytes.data(), bytes.capacity(), flag);
+}
+  
+size_t Basic::avail() const noexcept {
+  if (!valid()) return 0;
+  return socket::available(impl_->id);
+}
+
+plain::net::Address Basic::address() const {
+  auto store = sockaddr_storage{};
+  int32_t len = sizeof(store);
+  auto e = getsockname(impl_->id, reinterpret_cast<sockaddr *>(&store), &len);
+  if (e == kInvalidSocket)
+    return Address{};
+  Address::value_type value;
+  value.reserve(len);
+  value.insert(
+    0, reinterpret_cast<Address::value_type::value_type *>(&store), len);
+  return Address{value};
+}
+
+plain::net::Address Basic::peer_address() const {
+  auto store = sockaddr_storage{};
+  int32_t len = sizeof(store);
+  auto e = getpeername(impl_->id, reinterpret_cast<sockaddr *>(&store), &len);
+  if (e == kInvalidSocket)
+    return Address{};
+  Address::value_type value;
+  value.reserve(len);
+  value.insert(
+    0, reinterpret_cast<Address::value_type::value_type *>(&store), len);
+  return Address{value};
+}
+
+bool Basic::get_option(int32_t level, int32_t name, void *val, uint32_t *len) {
+  return getsockoptb(impl_->id, level, name, val, len);
+}
+
+plain::net::socket::id_t Basic::id() const noexcept {
+  return impl_->id;
+}
+
+bool Basic::set_id(id_t id) noexcept {
+  if (!close()) return false;
+  impl_->id = id;
+  return true;
+}
+
+bool Basic::set_recv_size(uint32_t size) const {
+  auto r = setsockopt(impl_->id, SOL_SOCKET, SO_RCVBUF, &size, sizeof(size));
+  return r;
+}
+
+uint32_t Basic::get_recv_size() const {
+  uint32_t value{0};
+  uint32_t length{sizeof(value)};
+  getsockoptb(impl_->id, SOL_SOCKET, SO_RCVBUF, &value, &length);
+  return value;
+}
+
+bool Basic::set_send_size(uint32_t size) const {
+  auto r = setsockopt(impl_->id, SOL_SOCKET, SO_SNDBUF, &size, sizeof(size));
+  return r;
+}
+
+uint32_t Basic::get_send_size() const {
+  uint32_t value{0};
+  uint32_t length{sizeof(value)};
+  getsockoptb(impl_->id, SOL_SOCKET, SO_SNDBUF, &value, &length);
+  return value;
+}
+
+bool Basic::shutdown(int32_t how) noexcept {
+  if (!valid()) return false;
+  return socket::shutdown(impl_->id, how);
+}
+  
+bool Basic::set_nonblocking(bool on) noexcept {
+  if (!valid()) return false;
+  return socket::set_nonblocking(impl_->id, on);
+}
+  
+bool Basic::is_nonblocking() const noexcept {
+  if (!valid()) return false;
+  return socket::get_nonblocking(impl_->id);
+}
+  
+bool Basic::bind(const Address &addr) {
+  if (!valid()) return false;
+  auto d = addr.data();
+  auto ptr = reinterpret_cast<sockaddr *>(d.data());
+  return socket::bind(impl_->id, ptr, d.size());
+}
+  
+bool Basic::bind() {
+  if (!valid()) return false;
+  return socket::bind(impl_->id, nullptr, 0);
+}
+  
+uint32_t Basic::get_linger() const noexcept {
+  if (!valid()) return 0;
+  uint32_t result{0};
+  struct linger getlinger;
+  uint32_t length = sizeof(getlinger);
+  getsockoptb(impl_->id, SOL_SOCKET, SO_LINGER, &getlinger, &length);
+  result = getlinger.l_linger;
+  return result;
+}
+  
+bool Basic::set_linger(uint32_t lingertime) noexcept {
+  struct linger setlinger;
+  setlinger.l_onoff = lingertime > 0 ? 1 : 0;
+  setlinger.l_linger = static_cast<uint16_t>(lingertime);
+  auto r = socket::setsockopt(
+    impl_->id, SOL_SOCKET, SO_LINGER, &setlinger, sizeof(setlinger));
+  return r;
+}
+  
+bool Basic::set_reuse_addr(bool on) const noexcept {
+  bool r{true};
+  int32_t option = true == on ? 1 : 0;
+  r = setsockopt(impl_->id, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
+  return r;
+}
+  
+bool Basic::listen(uint32_t backlog) {
+  if (!valid()) return false;
+  return socket::listen(impl_->id, backlog);
+}
+  
+int32_t Basic::accept(Address &addr) {
+  int32_t r{kInvalidSocket};
+  if (!valid()) return r;
+  auto d = addr.data();
+  uint32_t len{static_cast<uint32_t>(d.size())};
+  auto ptr = reinterpret_cast<sockaddr *>(d.data());
+  r = socket::accept(impl_->id, ptr, &len);
+  return r;
+}
+  
+int32_t Basic::accept() {
+  int32_t r{kInvalidSocket};
+  if (!valid()) return r;
+  r = socket::accept(impl_->id, nullptr, 0);
+  return r;
+}

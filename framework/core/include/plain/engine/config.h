@@ -16,6 +16,11 @@
 
 namespace plain {
 
+enum class AppStatus {
+  Running = 0,
+  Stopped,
+};
+
 class Kernel;
 class TimerQueue;
 class Timer;

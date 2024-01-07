@@ -16,6 +16,7 @@
 #include <span>
 #include "plain/basic/bind.h"
 #include "plain/concurrency/result/basic.h"
+#include "plain/concurrency/result/promise.h"
 #include "plain/concurrency/task.h"
 
 namespace plain::concurrency {

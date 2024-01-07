@@ -38,11 +38,6 @@
 #define __stdcall
 #endif
 
-enum class AppStatus {
-  Running = 0,
-  Stopped,
-};
-
 #define PLAIN_VERSION_MAJOR	"2"
 #define PLAIN_VERSION_MINOR	"0"
 #define PLAIN_VERSION_NUM		0

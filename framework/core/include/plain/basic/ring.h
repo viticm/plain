@@ -117,7 +117,8 @@ using cookie_func_t = std::function<void()>;
 
 		return to_write;
   }
-  std::size_t read(T *buffer, std::size_t count) noexcept {
+  std::size_t
+  read(T *buffer, std::size_t count, bool read_only = false) noexcept {
     std::size_t available{0};
     std::size_t tmp_tail{tail_.load(std::memory_order_relaxed)};
     std::size_t to_read {count};
@@ -132,7 +133,8 @@ using cookie_func_t = std::function<void()>;
 			buffer[i] = buffer_[tmp_tail++ & mask_];
 
 		std::atomic_signal_fence(std::memory_order_release);
-		tail_.store(tmp_tail, index_release_barrier);
+    // read only not set the tail_.
+		if (!read_only) tail_.store(tmp_tail, index_release_barrier);
 
 		return to_read;
   }
@@ -153,6 +155,10 @@ using cookie_func_t = std::function<void()>;
   }
   bool empty() const noexcept {
     return 0 == read_avail();
+  }
+
+  std::size_t size() const noexcept {
+    return size_;
   }
 
   void producer_clear() noexcept {
@@ -247,7 +253,7 @@ class DynamicRing : public Ring<T, fake_tso> {
  public:
    DynamicRing() {
      buffer_.reserve(SIZE);
-     set_buffer(buffer_.data(), SIZE);
+     this->set_buffer(buffer_.data(), SIZE);
    }
    virtual ~DynamicRing() = default;
 

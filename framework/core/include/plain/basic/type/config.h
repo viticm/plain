@@ -23,23 +23,7 @@ using variable_t = variable_struct;
 using variable_array_t = std::vector<variable_t>;
 using variable_map_t = std::unordered_map<std::string, variable_t>;
 using closure_t = std::function<void()>;
-
-enum class Variable {
-  Invalid = -1,
-  Bool,
-  Int32,
-  Uint32,
-  Int16,
-  Uint16,
-  Int8,
-  Uint8,
-  Int64,
-  Uint64,
-  Float,
-  Double,
-  String,
-  Number,
-}; //变量的类型
+using bytes_t = std::basic_string<std::byte>;
 
 } //namespace plain
 

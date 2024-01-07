@@ -1,0 +1,66 @@
+/**
+ * PLAIN FREAMEWORK ( https://github.com/viticm/plain )
+ * $Id config.h
+ * @link https://github.com/viticm/plain for the canonical source repository
+ * @copyright Copyright (c) 2023 viticm( viticm.ti@gmail.com )
+ * @license
+ * @user viticm( viticm.ti@gmail.com )
+ * @date 2023/09/28 11:28
+ * @uses The net config file.
+ *       Mode Iocp use https://github.com/piscisaureus/wepoll to implemention.
+ */
+
+#ifndef PLAIN_NET_CONFIG_H_
+#define PLAIN_NET_CONFIG_H_
+
+#include "plain/basic/config.h"
+
+namespace plain::net {
+
+enum class Mode {
+  Select = 0,
+  Epoll = 1,
+  IoUring = 2,
+  Iocp = 3
+};
+
+class Address;
+class Connector;
+class Listener;
+class Protocol;
+
+namespace socket {
+
+class Basic;
+class Listener;
+
+}
+
+namespace connection {
+
+class Basic;
+
+class Manager;
+class Select;
+class Epoll;
+class IoUring;
+class Iocp;
+
+} // namespace connection
+
+namespace stream {
+
+class Codec;
+class Basic;
+
+} // namespace stream
+
+namespace packet {
+
+class Basic;
+
+} // namespace packet
+
+} // namespace plain::net
+
+#endif // PLAIN_NET_CONFIG_H_

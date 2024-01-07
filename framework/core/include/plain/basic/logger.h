@@ -66,31 +66,32 @@ using flush_func_t = std::function<void()>;
   }
 
  public:
-  Logger& operator<<(bool v);
+  Logger &operator<<(bool v);
   
-  Logger& operator<<(int16_t);
-  Logger& operator<<(uint16_t);
-  Logger& operator<<(int32_t);
-  Logger& operator<<(uint32_t);
-  Logger& operator<<(int64_t);
-  Logger& operator<<(uint64_t);
+  Logger &operator<<(int16_t);
+  Logger &operator<<(uint16_t);
+  Logger &operator<<(int32_t);
+  Logger &operator<<(uint32_t);
+  Logger &operator<<(int64_t);
+  Logger &operator<<(uint64_t);
   
-  Logger& operator<<(const void*);
+  Logger &operator<<(const void*);
   
-  Logger& operator<<(float v) {
+  Logger &operator<<(float v) {
     *this << static_cast<double>(v);
     return *this;
   }
-  Logger& operator<<(double);
+  Logger &operator<<(double);
   
-  Logger& operator<<(char v);
+  Logger &operator<<(char v);
   
-  Logger& operator<<(const char *str); 
-  Logger& operator<<(const unsigned char *str) {
+  Logger &operator<<(const char *str); 
+  Logger &operator<<(const unsigned char *str) {
     return operator<<(reinterpret_cast<const char*>(str));
   }
   
-  Logger& operator<<(const std::string &v);
+  Logger &operator<<(const std::string &v);
+  Logger &operator<<(const Error &e);
 
   void append(std::string_view &log);
   template<class... Args> 
@@ -109,7 +110,7 @@ using flush_func_t = std::function<void()>;
 
  private:
   static LogLevel level_;
-  static const int kMaxNumericSize = 48;
+  static const int32_t kMaxNumericSize{48};
   static output_func_t output_func_;
   static flush_func_t flush_func_;
 

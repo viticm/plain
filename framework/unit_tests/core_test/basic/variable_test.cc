@@ -32,6 +32,10 @@ void variable_all() {
   uint32_t g = 1;
   int64_t h = 100000;
   std::cout << a << std::endl;
+  ++a;
+  std::cout << a << std::endl;
+  a++;
+  std::cout << a << std::endl;
   std::cout << 1 << std::endl;
   std::cout << g << std::endl;
   std::cout << h << std::endl;

@@ -5,270 +5,202 @@
  * @copyright Copyright (c) 2023- viticm( viticm.ti@gmail.com )
  * @license
  * @user viticm<viticm.ti@gmail.com>
- * @date 2023/03/31 18:08
+ * @date 2023/10/16 16:37
  * @uses Base module the variable type(like script variables).
  *       Base on string, also can do string convert to diffrent type.
  *       Abstract data type(ADT).
  *       Refer: php/lua or more script codes.
  *
- *      FIXME: change the std::to_string to std::to_chars.
- *             Replace this to std::any with c++17?
+ *      FIXME: optimize the operator to safe.
 */
 #ifndef PLAIN_BASIC_TYPE_VARIABLE_H_
 #define PLAIN_BASIC_TYPE_VARIABLE_H_
 
 #include "plain/basic/type/config.h"
 #include <utility>
+#include <variant>
 #include "plain/basic/concepts.h"
 
 namespace plain {
 
-template <typename T>
-Variable std_convert_type(T) noexcept;
-
 struct PLAIN_API variable_struct {
-  using enum Variable;
-  Variable type;
-  std::string data;
-  // FIXME: remove mutex to lock free.
+  using value_type = std::variant<
+    bool, int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t, int64_t,
+    uint64_t, float, double, std::string>;
   mutable std::mutex mutex;
-  variable_struct() : type{Invalid}, data{""} {}
+  value_type value;
+  variable_struct() {}
 
-  variable_struct(const variable_t &object); 
-  variable_struct(const std::string &value);
-  variable_struct(const char *value);
-  variable_struct(variable_t &&object) = default;
+  variable_struct(const variable_t &object) {
+    value = object.value;
+  } 
+  variable_struct(variable_t &&object) {
+    std::swap(value, object.value);
+  }
   template <typename T>
-  variable_struct(T value);
-  variable_struct(enums auto value) {
-    data = std::to_string(std::to_underlying(value));
+  requires(!std::is_same_v<T, value_type> and !std::is_enum_v<T>)
+  variable_struct(T _value) {
+    value = _value;
+  }
+  variable_struct(enums auto _value) {
+    value = std::to_underlying(_value);
   }
   
   template <typename T>
-  T get() const; 
+  T get() const {
+    std::unique_lock<std::mutex> auto_lock(mutex);
+    return std::get<T>(value);
+  } 
   template <typename T>
-  T _get() const noexcept; //Not safe in multi threads.
-  const char *c_str() const;
+  T _get() const {
+    return std::get<T>(value);
+  } //Not safe in multi threads.
 
-  variable_t &operator=(const variable_t &object);
-  variable_t &operator=(variable_t &&object) = default;
+  const char *c_str() {
+    return std::get<std::string>(value).c_str();
+  }
 
-  variable_t &operator+=(const variable_t &object) noexcept;
-  variable_t &operator+=(const std::string &value);
+  int64_t to_int64() const noexcept {
+    int64_t r{0};
+    std::visit([&r](auto &&val) {
+      using type = std::decay_t<decltype(val)>;
+      if constexpr (std::is_same_v<type, std::string>) {
+        char *endpointer = nullptr;
+        r = strtoint64(val.c_str(), &endpointer, 10);
+      } else {
+        r = static_cast<int64_t>(val);
+      }
+    }, value);
+    return r;
+  }
+
+  double to_double() const noexcept {
+    double r{0.0};
+    std::visit([&r](auto &&val) {
+      using type = std::decay_t<decltype(val)>;
+      if constexpr (std::is_same_v<type, std::string>) {
+        r = static_cast<double>(atof(val.c_str()));
+      } else {
+        r = static_cast<double>(val);
+      }
+    }, value);
+    return r;
+  }
+
+  variable_t &operator=(const variable_t &object) = default;
+  variable_t &operator=(variable_t &&object) {
+    std::swap(object.value, value);
+    return *this;
+  }
+
+  variable_t &operator+=(const variable_t &object) noexcept {
+    std::unique_lock<std::mutex> auto_lock(mutex);
+    value = object.to_int64() + to_double();
+    return *this;
+  }
   template <typename T>
-  variable_t &operator+=(T value);
+  variable_t &operator+=(T _value) {
+    std::unique_lock<std::mutex> auto_lock(mutex);
+    value = _value + to_double();
+    return *this;
+  }
 
-
-  variable_t &operator-=(const variable_t &object) noexcept;
+  variable_t &operator-=(const variable_t &object) noexcept {
+    std::unique_lock<std::mutex> auto_lock(mutex);
+    value = to_double() - object.to_int64();
+    return *this;
+  }
   template <typename T>
-  variable_t &operator -= (T value);
+  variable_t &operator -= (T _value) {
+    std::unique_lock<std::mutex> auto_lock(mutex);
+    value = to_double() - _value;
+    return *this;
+  }
 
-  variable_t &operator*=(const variable_t &object) noexcept;
-  variable_t &operator*=(const std::string &value);
+  variable_t &operator*=(const variable_t &object) noexcept {
+    std::unique_lock<std::mutex> auto_lock(mutex);
+    value = to_double() * object.to_int64();
+    return *this;
+  }
+  
   template <typename T>
-  variable_t &operator *= (T value);
+  variable_t &operator *= (T _value) {
+    std::unique_lock<std::mutex> auto_lock(mutex);
+    value = to_double() * _value;
+    return *this;
+  }
 
-  variable_t &operator/=(const variable_t &object) noexcept;
-  variable_t &operator/=(const std::string &value);
+  variable_t &operator/=(const variable_t &object) {
+    std::unique_lock<std::mutex> auto_lock(mutex);
+    value = to_double() / object.to_int64();
+    return *this;
+  }
   template <typename T>
-  variable_t &operator /= (T value);
+  variable_t &operator /= (T _value) {
+    std::unique_lock<std::mutex> auto_lock(mutex);
+    value = to_double() / _value;
+    return *this;
+  }
 
-  variable_t &operator++() noexcept;
-  variable_t &operator--() noexcept;
-  variable_t &operator++(int32_t) noexcept;
-  variable_t &operator--(int32_t) noexcept;
+  variable_t &operator++() noexcept {
+    std::unique_lock<std::mutex> auto_lock(mutex);
+    value = to_int64() + 1;
+    return *this;
+  }
+  variable_t &operator--() noexcept {
+    std::unique_lock<std::mutex> auto_lock(mutex);
+    value = to_int64() - 1;
+    return *this;
+  }
+  variable_t &operator++(int32_t) noexcept {
+    std::unique_lock<std::mutex> auto_lock(mutex);
+    value = to_int64() + 1;
+    return *this;
+  }
+  variable_t &operator--(int32_t) noexcept {
+    std::unique_lock<std::mutex> auto_lock(mutex);
+    value = to_int64() + 1;
+    return *this;
+  }
   
   friend bool operator==(
       const variable_t &lhs, const variable_t &rhs) noexcept {
-    return lhs.data == rhs.data;
+    return lhs.value == rhs.value;
   }
   
   friend bool operator!=(const variable_t &lhs, const variable_t &rhs) noexcept {
-    return lhs.data != rhs.data;
+    return lhs.value != rhs.value;
   }
 
   friend bool operator<(const variable_t &lhs, const variable_t &rhs) noexcept {
-    return lhs.data < rhs.data;
+    return lhs.value < rhs.value;
   }
 
   friend bool operator>(const variable_t &lhs, const variable_t &rhs) noexcept {
-    return lhs.data < rhs.data;
+    return lhs.value < rhs.value;
   }
 
   friend auto operator<=>(
       const variable_t &lhs, const variable_t &rhs) noexcept {
-    return lhs.data <=> rhs.data;
+    return lhs.value <=> rhs.value;
   }
 
-  operator const std::string();
-  operator const char*();
+  operator const char*() {
+    std::unique_lock<std::mutex> auto_lock(mutex);
+    return std::get<std::string>(value).c_str();
+  }
   template <typename T>
-  operator T();
+  operator T() {
+    std::unique_lock<std::mutex> auto_lock(mutex);
+    return std::get<T>(value);
+  }
 
 }; //PLAIN变量，类似脚本变量
 
-template <typename T>
-Variable std_convert_type(T) noexcept {
-  using enum Variable;
-  if (is_same(bool, T)) return Bool;
-  if (is_same(int32_t, T)) return Int32;
-  if (is_same(uint32_t, T)) return Uint32;
-  if (is_same(int16_t, T)) return Int16;
-  if (is_same(uint16_t, T)) return Uint16;
-  if (is_same(int8_t, T)) return Int8;
-  if (is_same(uint8_t, T)) return Uint8;
-  if (is_same(int64_t, T)) return Int64;
-  if (is_same(uint64_t, T)) return Uint64;
-  if (is_same(float, T)) return Float;
-  if (is_same(double, T)) return Double;
-  if (std::is_enum_v<T>) return Int32;
-  return String; //Default is string.
-}
-
-inline variable_struct::variable_struct(const variable_t &object) {
-  data = object.data;
-  type = object.type;
-}
-  
-inline variable_struct::variable_struct(const std::string &value) {
-  type = String;
-  data = value;
-}
-
-inline variable_struct::variable_struct(const char *value) {
-  if (value) {
-    type = String;
-    data = value;
-  }
-}
-  
-template <typename T>
-inline variable_struct::variable_struct(T value) {
-  type = std_convert_type(value);
-  data = std::to_string(value);
-}
- 
-template <typename T>
-inline T variable_struct::_get() const noexcept {
-  T result{(T)0};
-  if (is_same(float, T)) {
-    result = static_cast<T>(atof(data.c_str()));
-  } else if (is_same(double, T)) {
-    result = static_cast<T>(atof(data.c_str()));
-  } else {
-    char *endpointer = nullptr;
-    int64_t temp = strtoint64(data.c_str(), &endpointer, 10);
-    result = static_cast<T>(temp);
-  }
-  return result;
-}
-
-template <>
-inline bool variable_struct::_get<bool>() const noexcept {
-  return data != "0" && data !="";
-}
-
-template <>
-inline std::string variable_struct::_get<std::string>() const noexcept {
-  return data;
-}
-  
-template <typename T>
-inline T variable_struct::get() const {
-  std::unique_lock<std::mutex> auto_lock(mutex);
-  return _get<T>();
-}
-
-inline const char *variable_struct::c_str() const {
-  return data.c_str();
-}
-
-inline variable_t &variable_struct::operator=(const variable_t &object) {
-  if (this == &object) return *this;
-  std::unique_lock<std::mutex> auto_lock(mutex);
-  type = object.type;
-  data = object.data;
-  return *this;
-}
-
-template <typename T>
-inline variable_t &variable_struct::operator+=(T value) {
-  std::unique_lock<std::mutex> auto_lock(mutex);
-  auto last = _get<T>();
-  last += value;
-  data = std::to_string(last);
-  return *this;
-}
-
-inline variable_t &variable_struct::operator+=(const std::string &value) {
-  std::unique_lock<std::mutex> auto_lock(mutex);
-  type = Variable::String;
-  data += value;
-  return *this;
-}
-
-template <typename T>
-inline variable_t &variable_struct::operator -= (T value) {
-  std::unique_lock<std::mutex> auto_lock(mutex);
-  auto last = _get<T>();
-  last -= value;
-  data = std::to_string(last);
-  return *this;
-}
-  
-template <typename T>
-inline variable_t &variable_struct::operator *= (T value) {
-  std::unique_lock<std::mutex> auto_lock(mutex);
-  auto last = _get<T>();
-  last *= value;
-  data = std::to_string(last);
-  return *this;
-}
-
-template <typename T>
-inline variable_t &variable_struct::operator /= (T value) {
-  std::unique_lock<std::mutex> auto_lock(mutex);
-  auto last = _get<T>();
-  last /= value;
-  data = std::to_string(last);
-  return *this;
-}
-
-inline variable_t &variable_struct::operator++() noexcept {
-  *this += 1;
-  return *this;
-}
-  
-inline variable_t &variable_struct::operator--() noexcept {
-  *this -= 1;
-  return *this;
-}
-  
-inline variable_t &variable_struct::operator++(int32_t) noexcept {
-  *this += 1;
-  return *this;
-}
-  
-inline variable_t &variable_struct::operator--(int32_t) noexcept {
-  *this -= 1;
-  return *this;
-}
-
-inline variable_struct::operator const std::string() {
-  return data;
-}
-  
-inline variable_struct::operator const char*() {
-  return data.c_str();
-}
-  
-template <typename T>
-inline variable_struct::operator T() {
-  return this->get<T>();
-}
-
 // FIXME: This not implicit any type to variable_t when test(gcc 13.1).
-std::ostream &operator<<(std::ostream &os, const variable_t &object);
+std::ostream &operator<<(std::ostream &os, const variable_t &object) noexcept;
+
+std::ostream &operator<<(std::ostream &os, const bytes_t &bytes) noexcept;
 
 } //namespace plain
 

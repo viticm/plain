@@ -173,8 +173,8 @@ void* Library::resolve(const std::string &symbol, bool again) {
 LibraryManager::LibraryManager() {
   add_searchpaths({
       "./",
-      GLOBALS["app.basepath"].data,
-      GLOBALS["app.basepath"].data + "plugins/",
+      GLOBALS["app.basepath"].get<std::string>(),
+      GLOBALS["app.basepath"].get<std::string>() + "plugins/",
   });
 #if OS_UNIX
   add_searchpaths({

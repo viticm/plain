@@ -20,7 +20,7 @@ using BufferPtr = BufferVector::value_type;
 // FIXME: move this to utility 
 std::string get_filename(const std::string &name) {
   std::string r;
-  auto log_directory = GLOBALS["log.directory"].data;
+  auto log_directory = GLOBALS["log.directory"].get<std::string>();
   r.reserve(log_directory.length() + 1 + name.length() + 64);
   r = log_directory + "/" + name;
   r += "." + Time::format() + "." + process::hostname();
@@ -252,7 +252,7 @@ AsyncLogger::AsyncLogger(const std::string &name,
                          std::size_t roll_size,
                          int32_t flush_interval)
   : impl_{std::make_unique<Impl>(name, roll_size, flush_interval)} {
-  auto log_directory = GLOBALS["log.directory"].data;
+  auto log_directory = GLOBALS["log.directory"].get<std::string>();
   if (!std::filesystem::exists(log_directory)) {
     assert(std::filesystem::create_directory(log_directory));
   }

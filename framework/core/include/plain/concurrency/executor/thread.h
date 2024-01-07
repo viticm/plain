@@ -28,8 +28,8 @@ Thread final : public Derivable<Thread> {
 
  public:
   Thread(
-    const std::function<void(std::string_view name)>& started_callback = {},
-    const std::function<void(std::string_view name)>& terminated_callback = {});
+    const std::function<void(std::string_view name)> &started_callback = {},
+    const std::function<void(std::string_view name)> &terminated_callback = {});
   ~Thread();
 
  public:

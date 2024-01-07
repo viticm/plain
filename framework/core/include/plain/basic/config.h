@@ -50,4 +50,8 @@
 #include "plain/basic/noncopyable.h"
 /* } PLAIN useful */
 
+namespace plain {
+class Error;
+};
+
 #endif //PLAIN_BASIC_CONFIG_H_

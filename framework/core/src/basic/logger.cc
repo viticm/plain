@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <cassert>
 #include <utility>
+#include "plain/basic/error.h"
 #include "plain/basic/ring.h"
 #include "plain/basic/time.h"
 #include "plain/basic/global.h"
@@ -263,6 +264,12 @@ Logger &Logger::operator<<(const char *str) {
 }
 
 Logger &Logger::operator<<(const std::string &v) {
+  impl_->buffer_.write(v.c_str(), v.size());
+  return *this;
+}
+
+Logger &Logger::operator<<(const Error &e) {
+  auto v = e.to_string();
   impl_->buffer_.write(v.c_str(), v.size());
   return *this;
 }
