@@ -192,9 +192,55 @@ bool bind(id_t id, const struct sockaddr *addr, uint32_t addrlength) {
   return r;
 }
 
-bool connect(id_t id, const struct sockaddr *addr, uint32_t addrlength) {
+bool connect(
+  id_t id, const struct sockaddr *addr, uint32_t addrlength,
+  const std::chrono::milliseconds &timeout) {
+  auto nonblocking = get_nonblocking(id);
+  if (!nonblocking && !set_nonblocking(id, true)) {
+    set_error();
+    return false;
+  }
   auto e = ::connect(id, addr, addrlength);
+#if OS_WIN
+  const auto connect_errno = WSAGetLastError();
+#elif OS_UNIX
+  const auto connect_errno = errno;
+#else
+  const auto connect_errno = 0;
+#endif
   bool r = e != kSocketError;
+  if (!nonblocking && !set_nonblocking(id, false)) {
+    set_error();
+    return false;
+  }
+  if (r) return r;
+#if OS_WIN
+  if (connect_errno != WSAEINPROGRESS) {
+    set_error();
+    return false;
+  }
+#elif OS_UNIX
+  if (connect_errno != EINPROGRESS) {
+    set_error();
+    return false;
+  }
+#endif
+  auto read_fds = fd_set{};
+  FD_ZERO(&read_fds);
+  FD_SET(id, &read_fds);
+  auto write_fds = fd_set{};
+  FD_ZERO(&write_fds);
+  FD_SET(id, &write_fds);
+  if (timeout.count() > 0) {
+    timeval tv{
+      static_cast<decltype(tv.tv_sec)>(timeout.count() / 1000),
+      static_cast<decltype(tv.tv_usec)>(timeout.count() % 1000 * 1000)
+    };
+    e = socket::select(FD_SETSIZE, &read_fds, &write_fds, nullptr, &tv);
+  } else {
+    e = socket::select(FD_SETSIZE, &read_fds, &write_fds, nullptr, nullptr); 
+  }
+  r = e != kSocketError;
   if (!r) set_error();
   return r;
 }

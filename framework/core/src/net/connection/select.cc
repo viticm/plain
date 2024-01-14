@@ -81,7 +81,7 @@ Select::Select(
 Select::~Select() = default;
 
 bool Select::work() noexcept {
-  impl_->change_vaild_fd(listen_fd(), true);
+  impl_->change_vaild_fd(listen_fd_, true);
   impl_->running = true;
   work_recurrence();
   return true;
@@ -113,15 +113,14 @@ plain::net::connection::detail::Task Select::work_recurrence() noexcept {
   
 void Select::handle_io() noexcept {
   if (!impl_->running) return;
-  auto _listen_fd = listen_fd();
-  if (_listen_fd != socket::kInvalidSocket &&
-      FD_ISSET(_listen_fd, &impl_->read_fds.use)) {
+  if (listen_fd_ != socket::kInvalidSocket &&
+      FD_ISSET(listen_fd_, &impl_->read_fds.use)) {
     for (size_t i = 0; i < Impl::kOnceAcccpetCount; ++i) {
       if (!accept()) break;
     }
   }
   try {
-    foreach([this, listen_fd = _listen_fd](std::shared_ptr<Basic> conn){
+    foreach([this, listen_fd = listen_fd_](std::shared_ptr<Basic> conn){
       if (!impl_->running) return;
       auto id = conn->socket()->id();
       if (id == socket::kInvalidSocket || id == listen_fd) return;

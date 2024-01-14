@@ -2,7 +2,9 @@
 #include <set>
 #include "plain/concurrency/executor/basic.h"
 #include "plain/concurrency/executor/thread.h"
+#include "plain/net/socket/api.h"
 #include "plain/net/socket/basic.h"
+#include "plain/net/socket/listener.h"
 #include "plain/net/connection/basic.h"
 
 using plain::net::connection::Manager;
@@ -25,31 +27,35 @@ struct Manager::Impl {
   packet::dispatch_func dispatcher;
   std::unique_ptr<concurrency::executor::Basic> executor;
   detail::ConnectionInfo connection_info;
-  void init_connections(uint32_t count, std::shared_ptr<Manager> manager);
+  std::mutex mutex;
+  void init_connections(uint32_t count);
 };
 
-void Manager::Impl::init_connections(
-  uint32_t count, std::shared_ptr<Manager> manager) {
+void Manager::Impl::init_connections(uint32_t count) {
   connection_info.list.reserve(count);
   for (uint32_t i = 0; i < count; ++i) {
-    connection_info.list[i] = std::move(std::make_shared<Basic>());
-    connection_info.list[i]->init();
-    connection_info.list[i]->set_manager(manager);
+    auto ptr = std::make_shared<Basic>();
+    ptr->init();
+    connection_info.list.emplace_back(ptr);
+    //connection_info.list[i] = ptr;
+    //connection_info.list[i]->init();
   }
 }
 
 Manager::Manager(const setting_t &setting) : 
   setting_{setting}, impl_{std::make_unique<Impl>()} {
+  assert(setting.default_count <= setting.max_count);
   impl_->executor = std::move(std::make_unique<concurrency::executor::Thread>());
-  impl_->init_connections(setting.default_count, shared_from_this());
+  impl_->init_connections(setting.default_count);
 }
 
 Manager::Manager(
   std::unique_ptr<concurrency::executor::Basic> &&executor,
   const setting_t &setting) :
   setting_{setting}, impl_{std::make_unique<Impl>()} {
+  assert(setting.default_count <= setting.max_count);
   impl_->executor = std::move(executor);
-  impl_->init_connections(setting.default_count, shared_from_this());
+  impl_->init_connections(setting.default_count);
 }
 
 Manager::~Manager() = default;
@@ -93,6 +99,7 @@ Manager::get_conn(id_t id) const noexcept {
 }
 
 std::shared_ptr<plain::net::connection::Basic> Manager::new_conn() noexcept {
+  std::unique_lock<decltype(impl_->mutex)> auto_lock(impl_->mutex);
   if (is_full()) {
     return {};
   }
@@ -105,13 +112,13 @@ std::shared_ptr<plain::net::connection::Basic> Manager::new_conn() noexcept {
     id = ++(impl_->connection_info.max_id);
     if (static_cast<size_t>(id) > impl_->connection_info.list.size()) {
       impl_->connection_info.list.emplace_back(std::make_shared<Basic>());
-      (*impl_->connection_info.list.rbegin())->set_manager(shared_from_this());
     }
   }
   if (id == kInvalidId) return {};
-  auto &r = impl_->connection_info.list[id - 1];
+  auto r = impl_->connection_info.list[id - 1];
   if (!r) r = std::move(std::make_shared<Basic>());
   r->init();
+  r->set_manager(shared_from_this());
   return r;
 }
   
@@ -126,6 +133,7 @@ void Manager::remove(std::shared_ptr<Basic> conn) noexcept {
 }
   
 void Manager::remove(connection::id_t conn_id) noexcept {
+  std::unique_lock<decltype(impl_->mutex)> auto_lock(impl_->mutex);
   assert(conn_id != connection::kInvalidId);
   if (conn_id <= 0 || conn_id > impl_->connection_info.max_id)
     return;
@@ -149,4 +157,43 @@ void Manager::foreach(std::function<void(std::shared_ptr<Basic> conn)> func) {
   for (auto conn : impl_->connection_info.list) {
     if (conn && conn->valid()) func(conn);
   }
+}
+
+std::shared_ptr<plain::net::connection::Basic> Manager::accept() noexcept {
+  if (listen_fd_ == socket::kInvalidSocket || !listen_sock_)
+    return {};
+  auto conn = new_conn();
+  if (!conn) {
+    LOG_WARN << "accept new conn failed";
+    auto sock = std::make_shared<socket::Basic>();
+    listen_sock_->accept(sock);
+    sock->close();
+    return {};
+  }
+  if (!listen_sock_->accept(conn->socket())) {
+    remove(conn);
+    LOG_ERROR << "accept connection accept error: " << socket::get_last_error();
+    return {};
+  }
+  if (!conn->socket()->set_nonblocking()) {
+    remove(conn);
+    LOG_ERROR << "accept set_nonblocking error: " << socket::get_last_error();
+    return {};
+  }
+  if (conn->socket()->error()) {
+    remove(conn);
+    LOG_ERROR << "accept socket have error: " << socket::get_last_error();
+    return {};
+  }
+  if (!conn->socket()->set_linger(0)) {
+    remove(conn);
+    LOG_ERROR << "accept set_linger error: " << socket::get_last_error();
+    return {};
+  }
+  if (!sock_add(conn->socket()->id(), conn->id())) {
+    remove(conn);
+    LOG_ERROR << "accept sock_add error";
+    return {};
+  }
+  return conn;
 }

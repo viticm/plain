@@ -23,16 +23,6 @@ namespace connection {
 
 class PLAIN_API Manager : 
   noncopyable, public std::enable_shared_from_this<Manager> {
-  struct setting_struct {
-    setting_struct() {}
-    ~setting_struct() {}
-    uint32_t max_count{1024};
-    uint32_t default_count{32};
-    Mode mode{Mode::Select};
-  };
-
- public:
-  using setting_t = setting_struct;
 
  public:
   Manager(const setting_t &setting); // Default use thread executor.
@@ -58,15 +48,10 @@ class PLAIN_API Manager :
  protected:
   virtual bool work() noexcept = 0; // working
   virtual void off() noexcept = 0; // off work
-  virtual id_t listen_fd() const noexcept {
-    return socket::kInvalidSocket;
-  }
   virtual bool sock_add(
     socket::id_t sock_id, connection::id_t conn_id) noexcept = 0;
   virtual bool sock_remove(socket::id_t sock_id) noexcept = 0;
-  virtual std::shared_ptr<Basic> accept() noexcept { // listener only
-    return {};
-  }
+  std::shared_ptr<Basic> accept() noexcept;
 
  protected:
   std::shared_ptr<Basic> new_conn() noexcept;
@@ -76,11 +61,13 @@ class PLAIN_API Manager :
 
  protected:
   setting_t setting_;
+  socket::id_t listen_fd_{socket::kInvalidSocket};
+  std::shared_ptr<socket::Listener> listen_sock_;
 
  private:
   friend class Basic;
-  friend class Connector;
-  friend class Listener;
+  friend class net::Connector;
+  friend class net::Listener;
 
  private:
   struct Impl;

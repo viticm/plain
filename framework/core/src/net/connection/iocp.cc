@@ -138,9 +138,8 @@ bool Iocp::work() noexcept {
     LOG_ERROR << "create error max_count: " << setting_.max_count;
     return false;
   }
-  auto _listen_fd = listen_fd();
-  if (_listen_fd != socket::kInvalidSocket) {
-    auto r = poll_add(impl_->data, _listen_fd, EPOLLIN, socket::kInvalidSocket);
+  if (listen_fd_ != socket::kInvalidSocket) {
+    auto r = poll_add(impl_->data, listen_fd_, EPOLLIN, socket::kInvalidSocket);
     if (r < 0) {
       LOG_ERROR << "add error result: " << r;
       return false;
@@ -215,7 +214,6 @@ void Iocp::handle_input() noexcept {
   if (!impl_->running) return;
   size_t accept_count{0};
   auto &d = impl_->data;
-  auto _listen_fd = listen_fd();
   for (int32_t i = 0; i < d.result_event_count; ++i) {
     if (!impl_->running) break;
     auto sock_id = static_cast<socket::id_t>(
@@ -223,7 +221,7 @@ void Iocp::handle_input() noexcept {
     auto conn_id = static_cast<connection::id_t>(
       get_lowsection(d.events[i].data.u64));
     if (sock_id != socket::kInvalidSocket &&
-        sock_id == _listen_fd && accept_count < kOnceAcccpetCount) {
+        sock_id == listen_fd_ && accept_count < kOnceAcccpetCount) {
       ++accept_count;
       this->accept();
     } else if (d.events[i].events & EPOLLIN) {

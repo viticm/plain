@@ -34,7 +34,9 @@ PLAIN_API bool
 bind(id_t id, const struct sockaddr *addr, uint32_t addrlength);
 
 PLAIN_API bool
-connect(id_t id, const struct sockaddr *name, uint32_t namelength);
+connect(
+  id_t id, const struct sockaddr *name, uint32_t namelength,
+  const std::chrono::milliseconds &timeout = {});
 
 PLAIN_API bool listen(id_t id, uint32_t backlog);
 

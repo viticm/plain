@@ -2,13 +2,11 @@
  * PLAIN FRAMEWORK ( https://github.com/viticm/plain )
  * $Id all.h
  * @link https://github.com/viticm/plainframework for the canonical source repository
- * @copyright Copyright (c) 2023- viticm( viticm.ti@gmail.com )
+ * @copyright Copyright (c) 2024- viticm( viticm.ti@gmail.com )
  * @license
  * @user viticm<viticm.ti@gmail.com>
- * @date 2023/07/07 17:50
+ * @date 2024/01/10 19:30
  * @uses The framework all inlcudes.
- *       This group defines just can define one.
- *             group1: PLAIN_OPEN_ICOP|PLAIN_OPEN_EPOLL
  *
  * ------------------------------------------------------------------------------
  *  Licensing information can be found at the end of the file.
@@ -64,12 +62,30 @@
 #include "plain/file/tab.h"
 #include "plain/file/library.h"
 
+/* net */
+#include "plain/net/connection/basic.h"
+#include "plain/net/connection/epoll.h"
+#include "plain/net/connection/io_uring.h"
+#include "plain/net/connection/iocp.h"
+#include "plain/net/connection/manager.h"
+#include "plain/net/connection/select.h"
+#include "plain/net/packet/basic.h"
+#include "plain/net/socket/api.h"
+#include "plain/net/socket/basic.h"
+#include "plain/net/socket/listener.h"
+#include "plain/net/stream/basic.h"
+#include "plain/net/stream/codec.h"
+#include "plain/net/address.h"
+#include "plain/net/connector.h"
+#include "plain/net/listener.h"
+#include "plain/net/utility.h"
+
 #endif //PLAIN_H_
 
 /*
 MIT License
 
-Copyright (c) 2023 viticm
+Copyright (c) 2024 viticm
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

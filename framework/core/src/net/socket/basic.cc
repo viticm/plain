@@ -1,5 +1,7 @@
 #include "plain/net/socket/basic.h"
+#include "plain/basic/logger.h"
 #include "plain/net/socket/api.h"
+#include "plain/net/detail/socket.h"
 
 using plain::net::socket::Basic;
 
@@ -214,5 +216,38 @@ int32_t Basic::accept() {
   int32_t r{kInvalidSocket};
   if (!valid()) return r;
   r = socket::accept(impl_->id, nullptr, 0);
+  return r;
+}
+
+bool Basic::connect(
+  std::string_view address, const std::chrono::milliseconds &timeout) noexcept {
+  bool r{false};
+  try {
+    if (!valid() && !close() && !create())
+      return false;
+    Address addr{address, false};
+    auto ptr = detail::get_sa_pointer(addr.data());
+    auto len = static_cast<uint32_t>(addr.data().size());
+    r = socket::connect(impl_->id, ptr, len, timeout);
+  } catch(...) {
+    LOG_ERROR << "connect except";
+  }
+  return r;
+}
+
+bool Basic::connect(
+  std::string_view ip, uint16_t port,
+  const std::chrono::milliseconds &timeout) noexcept {
+  bool r{false};
+  try {
+    if (!valid() && !close() && !create())
+      return false;
+    Address addr{ip, port, false};
+    auto ptr = detail::get_sa_pointer(addr.data());
+    auto len = static_cast<uint32_t>(addr.data().size());
+    r = socket::connect(impl_->id, ptr, len, timeout);
+  } catch(...) {
+    LOG_ERROR << "connect except";
+  }
   return r;
 }

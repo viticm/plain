@@ -87,11 +87,13 @@ bool IoUring::work() noexcept {
     LOG_ERROR << "eventfd error: " << impl_->ring_fd;
     return false;
   }
+  /*
   int32_t error{0};
   if ((error = io_uring_queue_init(setting_.max_count, &impl_->ring, 0)) < 0) {
     LOG_ERROR << "io_uring_queue_init error: " << error;
     return false;
   }
+  */
 
   return true;
 }

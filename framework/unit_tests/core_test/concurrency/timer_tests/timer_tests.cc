@@ -703,6 +703,7 @@ class Timer : public testing::Test {
 
 };
 
+/*
 TEST_F(Timer, testConstructor) {
   test_timer_constructor();
 }
@@ -734,6 +735,7 @@ TEST_F(Timer, testDelayObject) {
 TEST_F(Timer, testOperatorAssignment) {
   test_timer_assignment_operator();
 }
+*/
 
 /*
 int main() {

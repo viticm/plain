@@ -54,7 +54,8 @@ class PLAIN_API TimerQueue : public std::enable_shared_from_this<TimerQueue> {
 
   template <typename T, typename ...Args>
   Timer make_one_shot_timer(
-    std::chrono::milliseconds due_time, std::shared_ptr<concurrency::executor::Basic> executor,
+    std::chrono::milliseconds due_time,
+    std::shared_ptr<concurrency::executor::Basic> executor,
     T &&callable, Args &&...args) {
     if (!static_cast<bool>(executor))
       throw std::invalid_argument("make_one_shot_timer - executor is null.");

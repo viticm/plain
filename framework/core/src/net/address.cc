@@ -3,7 +3,9 @@
 #include <iomanip>
 #include <cassert>
 #include <optional>
+#include <ranges>
 #include "plain/basic/type/variable.h"
+#include "plain/basic/utility.h"
 #include "plain/net/detail/socket.h"
 
 using plain::net::Address;
@@ -103,12 +105,126 @@ bool plain::net::is_valid_addr(const bytes_t &addr, bool verbose) noexcept {
   return true;
 }
 
+static bool is_ipv4(std::string_view address) noexcept {
+  if (address.find(':') == address.rfind(':')) return true;
+  return address.find('.') != std::string::npos;
+}
+
+/* std::tuple<ip_v4, ip, port> */
+static std::tuple<bool, std::string, uint16_t>
+parse_address(std::string_view address) noexcept {
+  if (address.empty())
+    return std::make_tuple(true, "", 0);
+  using std::operator ""sv;
+  if (is_ipv4(address)) {
+    size_t pos{std::string::npos};
+    if ((pos = address.find(":")) == std::string::npos) {
+      return std::make_tuple(true, std::string{address}, 0);
+    } else {
+      std::string ip;
+      uint16_t port{0};
+      size_t index{0};
+      for (auto str : std::views::split(address, ":"sv)) {
+        if (index++ == 0) {
+          ip = std::string_view{str};
+        } else {
+          port = static_cast<uint16_t>(
+            plain::toint64(std::string_view{str}.data()));
+          break;
+        }
+      }
+      return std::make_tuple(true, ip, port);
+    }
+  } else { // ip v6
+    size_t pos{std::string::npos};
+    if ((pos = address.find("]")) == std::string::npos) {
+      return std::make_tuple(false, std::string{address}, 0);
+    } else {
+      std::string ip;
+      uint16_t port{0};
+      size_t index{0};
+      for (auto str : std::views::split(address, "]:"sv)) {
+        if (index++ == 0) {
+          ip = std::string_view{str};
+          if (!ip.empty() && *ip.begin() == '[') ip.erase(ip.begin());
+        } else {
+          port = static_cast<uint16_t>(
+            plain::toint64(std::string_view{str}.data()));
+          break;
+        }
+      }
+      return std::make_tuple(false, ip, port);
+    }
+  }
+}
+
+static Address::value_type
+to_addr(bool ip_v4, std::string_view ip, uint16_t port, bool listen) {
+  Address::value_type r;
+  using value_t = Address::value_type::value_type;
+  if (ip_v4) {
+    sockaddr_in addr;
+    addr.sin_family = AF_INET;
+    r.reserve(sizeof addr);
+    if (ip.empty() || ip == "127.0.0.1" || ip == "0.0.0.0") {
+      if (listen)
+        addr.sin_addr.s_addr = htonl(INADDR_ANY);
+      else
+        addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    } else {
+      addr.sin_addr.s_addr = inet_addr(ip.data());
+    }
+    if (addr.sin_addr.s_addr == INADDR_NONE)
+      throw std::invalid_argument("ip invalid");
+    addr.sin_port = htons(port);
+    r.insert(0, reinterpret_cast<value_t *>(&addr), sizeof(addr));
+  } else {
+    sockaddr_in6 addr;
+    addr.sin6_family = AF_INET6;
+    addr.sin6_flowinfo = 0;
+    r.reserve(sizeof addr);
+    if (ip.empty() || ip == "::" || ip == "0:0:0:0:0:0:0:0") {
+      if (listen) {
+        addr.sin6_addr = in6addr_any;
+      } else {
+        auto cr = inet_pton(AF_INET6, "0:0:0:0:0:0:0:0/128", &addr.sin6_addr);
+        if (cr != 1)
+          throw std::invalid_argument("ip invalid");
+      }
+    } else {
+      auto cr = inet_pton(AF_INET6, ip.data(), &addr.sin6_addr);
+      if (cr != 1)
+        throw std::invalid_argument("ip invalid");
+    }
+    addr.sin6_port = htons(port);
+    r.insert(0, reinterpret_cast<value_t *>(&addr), sizeof(addr));
+  }
+  return r;
+}
+
+static Address::value_type to_addr(std::string_view str, bool listen) {
+  auto [ip_v4, ip, port] = parse_address(str);
+  return to_addr(ip_v4, ip, port, listen);
+}
+
 Address::Address(const value_type &value) : value_{value} {
   if (!is_valid_addr(value_))
     throw std::invalid_argument("Address value is invalid");
 }
 
 Address::Address(value_type &&value) : value_{std::move(value)} {
+  if (!is_valid_addr(value_))
+    throw std::invalid_argument("Address value is invalid");
+}
+  
+Address::Address(std::string_view value, bool listen) :
+  value_{to_addr(value, listen)} {
+  if (!is_valid_addr(value_))
+    throw std::invalid_argument("Address value is invalid");
+}
+
+Address::Address(std::string_view ip, uint16_t port, bool listen) :
+  value_{to_addr(is_ipv4(ip), ip, port, listen)} {
   if (!is_valid_addr(value_))
     throw std::invalid_argument("Address value is invalid");
 }

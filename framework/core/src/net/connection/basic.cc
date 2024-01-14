@@ -151,7 +151,11 @@ Basic::Basic() : impl_{std::make_unique<Impl>()} {
 
 }
 
+Basic::Basic(Basic &&object) noexcept = default;
+
 Basic::~Basic() = default;
+
+Basic &Basic::operator=(Basic &&object) noexcept = default;
 
 bool Basic::init() noexcept {
   if (!impl_->socket->close()) return false;

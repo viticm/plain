@@ -23,7 +23,11 @@ class PLAIN_API Basic {
 
  public:
   Basic();
+  Basic(Basic &&object) noexcept;
   ~Basic();
+
+ public:
+  Basic &operator=(Basic &&object) noexcept;
 
  public:
   bool init() noexcept;

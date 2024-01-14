@@ -26,6 +26,8 @@ class PLAIN_API Address {
   Address() noexcept = default;
   explicit Address(const value_type &value);
   explicit Address(value_type &&value);
+  Address(std::string_view value, bool listen = true);
+  Address(std::string_view ip, uint16_t port, bool listen = true);
   Address(const Address &value) = default;
   Address(Address &&value) = default;
   ~Address() noexcept = default;

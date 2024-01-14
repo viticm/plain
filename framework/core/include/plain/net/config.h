@@ -61,6 +61,18 @@ class Basic;
 
 } // namespace packet
 
+struct setting_struct {
+  setting_struct() = default;
+  ~setting_struct() = default;
+  uint32_t max_count{1024};
+  uint32_t default_count{32};
+  Mode mode{Mode::Select};
+  // ip_v4: x.x.x.x:port ip_v6: [x:x:x:...]:port
+  std::string address; // listener only
+};
+
+using setting_t = setting_struct;
+
 } // namespace plain::net
 
 #endif // PLAIN_NET_CONFIG_H_

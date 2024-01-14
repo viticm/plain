@@ -104,7 +104,6 @@ if (MSVC)
   set(WITH_LIBS "ws2_32")
 else()
   set(WITH_LIBS "dl")
-  set(core_flags "-DPLAIN_OPEN_EPOLL")
 endif()
 
 # This is the directory into which the executables are built.

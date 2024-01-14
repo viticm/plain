@@ -70,6 +70,12 @@ class PLAIN_API Basic : noncopyable {
   bool listen(uint32_t backlog);
   int32_t accept(Address &addr);
   int32_t accept();
+  bool connect(
+    std::string_view address,
+    const std::chrono::milliseconds &timeout = {}) noexcept;
+  bool connect(
+    std::string_view ip, uint16_t port,
+    const std::chrono::milliseconds &timeout = {}) noexcept;
 
  private:
   struct Impl;
