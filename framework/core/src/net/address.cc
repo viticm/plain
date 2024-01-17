@@ -177,17 +177,17 @@ to_addr(bool ip_v4, std::string_view ip, uint16_t port, bool listen) {
     if (addr.sin_addr.s_addr == INADDR_NONE)
       throw std::invalid_argument("ip invalid");
     addr.sin_port = htons(port);
-    r.insert(0, reinterpret_cast<value_t *>(&addr), sizeof(addr));
+    r.append(reinterpret_cast<value_t *>(&addr), sizeof(addr));
   } else {
     sockaddr_in6 addr;
     addr.sin6_family = AF_INET6;
     addr.sin6_flowinfo = 0;
     r.reserve(sizeof addr);
-    if (ip.empty() || ip == "::" || ip == "0:0:0:0:0:0:0:0") {
+    if (ip.empty() || ip == "::" || ip == "0:0:0:0:0:0:0:0" || ip == "::1") {
       if (listen) {
         addr.sin6_addr = in6addr_any;
       } else {
-        auto cr = inet_pton(AF_INET6, "0:0:0:0:0:0:0:0/128", &addr.sin6_addr);
+        auto cr = inet_pton(AF_INET6, "::1", &addr.sin6_addr);
         if (cr != 1)
           throw std::invalid_argument("ip invalid");
       }
@@ -197,7 +197,7 @@ to_addr(bool ip_v4, std::string_view ip, uint16_t port, bool listen) {
         throw std::invalid_argument("ip invalid");
     }
     addr.sin6_port = htons(port);
-    r.insert(0, reinterpret_cast<value_t *>(&addr), sizeof(addr));
+    r.append(reinterpret_cast<value_t *>(&addr), sizeof(addr));
   }
   return r;
 }
@@ -242,6 +242,7 @@ Address::operator bool() noexcept {
 
 Address::value_type Address::data() const noexcept {
   return value_;
+  // return detail::get_sa_data(value_);
 }
 
 int32_t Address::family() const noexcept {

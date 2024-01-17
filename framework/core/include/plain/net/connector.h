@@ -37,11 +37,13 @@ class PLAIN_API Connector {
   std::shared_ptr<connection::Basic>
   connect(
     std::string_view address,
-    const std::chrono::milliseconds &timeout = {}) noexcept;
+    const std::chrono::milliseconds 
+    &timeout = std::chrono::seconds(5)) noexcept;
   std::shared_ptr<connection::Basic>
   connect(
     std::string_view ip, uint16_t port,
-    const std::chrono::milliseconds &timeout = {}) noexcept;
+    const std::chrono::milliseconds
+    &timeout = std::chrono::seconds(5)) noexcept;
 
  public:
   void set_codec(const stream::codec_t &codec) noexcept;

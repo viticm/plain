@@ -13,6 +13,7 @@
 #define PLAIN_NET_CONNECTION_DETAIL_COROUTINE_H_
 
 #include "plain/net/connection/detail/config.h"
+#include "plain/sys/thread.h"
 #include "plain/concurrency/config.h"
 
 namespace plain::net {
@@ -46,13 +47,12 @@ struct Task {
   concurrency::coroutine_handle<Task::promise_type> handle_;
 };
 
-using await_func =
-  std::function<bool(concurrency::coroutine_handle<Task::promise_type>)>;
+using await_func = std::function<void()>;
 
 class AwaitableBasic : public concurrency::suspend_always {
 
  public:
-  AwaitableBasic(await_func func) noexcept {}
+  AwaitableBasic(await_func func) noexcept : await_{func} {}
   AwaitableBasic(const AwaitableBasic &) = delete;
   AwaitableBasic(AwaitableBasic &&) = delete;
 
@@ -70,7 +70,13 @@ class Awaitable : public AwaitableBasic {
  public:
   bool await_suspend(
     concurrency::coroutine_handle<Task::promise_type> handle) noexcept {
-    return static_cast<bool>(await_) && await_(handle);
+    if (static_cast<bool>(await_)) {
+      // std::future<bool> r = std::async(std::launch::async, await_, handle);
+      // return r.get();
+      thread_t([await = await_, handle] { await(); handle(); }).detach();
+      return true;
+    }
+    return false;
   }
 
 };

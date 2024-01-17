@@ -24,7 +24,7 @@ Listener::Listener(const setting_t &setting) {
 }
 
 Listener::~Listener() {
-
+  if (impl_->manager->running_) impl_->manager->stop();
 }
   
 bool Listener::start() {
@@ -36,7 +36,8 @@ bool Listener::start() {
 }
   
 void Listener::stop() {
-  impl_->manager->stop();
+  // Manager must stoped.
+  if (impl_->manager->running_) impl_->manager->stop();
 }
 
 void Listener::set_codec(const stream::codec_t &codec) noexcept {

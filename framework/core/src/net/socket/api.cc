@@ -10,9 +10,9 @@ namespace plain::net::socket {
 
 Error s_error;
 
-static void set_error() {
+static void set_error(int32_t e) {
+  s_error.set_code(e);
 #if OS_WIN
-  s_error.set_code(WSAGetLastError());
   switch (s_error.code()) {
       case WSANOTINITIALISED : {
         s_error.set_message("WSANOTINITIALISED");
@@ -50,7 +50,6 @@ static void set_error() {
         s_error.set_message("WSAEOPNOTSUPP");
         break;
       }
-      case WSAESHUTDOWN : {
         s_error.set_message("WSAESHUTDOWN");
         break;
       }
@@ -85,8 +84,7 @@ static void set_error() {
       }
     }
 #else
-  s_error.set_code(errno);
-  switch (errno) {
+  switch (s_error.code()) {
     case EWOULDBLOCK : {
       s_error.set_message("EWOULDBLOCK");
       break;
@@ -125,11 +123,25 @@ static void set_error() {
       s_error.set_message("EFAULT");
       break;
     }
+    case ETIMEDOUT: {
+      s_error.set_message("ETIMEDOUT");
+      break;
+    }
     default : {
       break;
     }
   }
 #endif
+}
+
+static void set_error() {
+  int32_t e{-1};
+#if OS_WIN
+  e = WSAGetLastError();
+#else
+  e = errno;
+#endif
+  set_error(e);
 }
 
 class Initializer : noncopyable {
@@ -185,7 +197,7 @@ id_t create(int32_t domain, int32_t type, int32_t protocol) {
   return id;
 }
 
-bool bind(id_t id, const struct sockaddr *addr, uint32_t addrlength) {
+bool bind(id_t id, const sockaddr *addr, uint32_t addrlength) {
   auto e = ::bind(id, addr, addrlength);
   bool r = e != kSocketError;
   if (!r) set_error();
@@ -193,7 +205,7 @@ bool bind(id_t id, const struct sockaddr *addr, uint32_t addrlength) {
 }
 
 bool connect(
-  id_t id, const struct sockaddr *addr, uint32_t addrlength,
+  id_t id, const sockaddr *addr, uint32_t addrlength,
   const std::chrono::milliseconds &timeout) {
   auto nonblocking = get_nonblocking(id);
   if (!nonblocking && !set_nonblocking(id, true)) {
@@ -209,11 +221,11 @@ bool connect(
   const auto connect_errno = 0;
 #endif
   bool r = e != kSocketError;
+  if (r) return r;
   if (!nonblocking && !set_nonblocking(id, false)) {
     set_error();
     return false;
   }
-  if (r) return r;
 #if OS_WIN
   if (connect_errno != WSAEINPROGRESS) {
     set_error();
@@ -237,11 +249,26 @@ bool connect(
       static_cast<decltype(tv.tv_usec)>(timeout.count() % 1000 * 1000)
     };
     e = socket::select(FD_SETSIZE, &read_fds, &write_fds, nullptr, &tv);
+    // zero return is mean timeout.
+    if (e == 0) {
+#if OS_WIN
+      e = WSAETIMEDOUT;
+#else
+      e = ETIMEDOUT;
+#endif
+    }
   } else {
     e = socket::select(FD_SETSIZE, &read_fds, &write_fds, nullptr, nullptr); 
   }
-  r = e != kSocketError;
-  if (!r) set_error();
+  r = (e >= 0);
+  if (!r) {
+    set_error(e);
+    return false;
+  }
+  uint32_t length{static_cast<uint32_t>(sizeof(e))};
+  getsockoptb(id, SOL_SOCKET, SO_ERROR, &e, &length);
+  r = (e == 0);
+  if (!r) set_error(e);
   return r;
 }
 
@@ -252,7 +279,7 @@ bool listen(id_t id, uint32_t backlog) {
   return r;
 }
 
-int32_t accept(id_t id, struct sockaddr *addr, uint32_t *addrlength) {
+int32_t accept(id_t id, sockaddr *addr, uint32_t *addrlength) {
   int32_t r{kSocketError};
 #if OS_UNIX
   r = ::accept(id, addr, addrlength);
@@ -340,7 +367,7 @@ int32_t send(id_t id, const void *buffer, uint32_t length, uint32_t flag) {
 
 int32_t sendto(
   id_t id, const void *buffer, int32_t length, uint32_t flag,
-  const struct sockaddr *to, int32_t tolength) {
+  const sockaddr *to, int32_t tolength) {
   int32_t r{kSocketError};
 #if OS_UNIX
   r = ::sendto(id, buffer, length, flag, to, tolength);
@@ -365,7 +392,7 @@ int32_t recv(id_t id, void *buffer, uint32_t length, uint32_t flag) {
 }
 
 int32_t recvfrom(
-  id_t id, void *buffer, int32_t length, uint32_t flag, struct sockaddr *from,
+  id_t id, void *buffer, int32_t length, uint32_t flag, sockaddr *from,
   uint32_t *fromlength) {
   int32_t r{kSocketError};
 #if OS_UNIX
@@ -405,9 +432,7 @@ bool ioctl(
 }
 
 bool get_nonblocking(id_t id) {
-  auto r = plain::get_nonblocking(id);
-  if (!r) set_error();
-  return r;
+  return plain::get_nonblocking(id);
 }
 
 bool set_nonblocking(id_t id, bool on) {
@@ -430,13 +455,13 @@ bool shutdown(id_t id, int32_t how) {
 
 int32_t select(
   id_t maxfdp, fd_set *readset, fd_set *writeset, fd_set *exceptset,
-  struct timeval *timeout) {
+  timeval *timeout) {
   auto r = ::select(maxfdp, readset, writeset, exceptset, timeout);
   if (r == kSocketError) set_error();
   return r;
 }
 
-int32_t getsockname(id_t id, struct sockaddr *name, int32_t *namelength) {
+int32_t getsockname(id_t id, sockaddr *name, int32_t *namelength) {
   int32_t r{0};
 #if OS_UNIX
   r = ::getsockname(id, name, reinterpret_cast<socklen_t *>(namelength));
@@ -447,7 +472,7 @@ int32_t getsockname(id_t id, struct sockaddr *name, int32_t *namelength) {
   return r;
 }
 
-int32_t getpeername(id_t id, struct sockaddr *name, int32_t *namelength) {
+int32_t getpeername(id_t id, sockaddr *name, int32_t *namelength) {
   int32_t r{0};
 #if OS_UNIX
   r = ::getpeername(id, name, reinterpret_cast<socklen_t *>(namelength));

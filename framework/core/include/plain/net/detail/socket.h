@@ -67,6 +67,8 @@ uint16_t get_sin_port(const bytes_t &addr) noexcept;
 
 uint16_t get_sin6_port(const bytes_t &addr) noexcept;
 
+bytes_t get_sa_data(const bytes_t &addr) noexcept;
+
 in_addr 
 get_sin_addr(const bytes_t &addr, const in_addr &sin_addr = {}) noexcept;
 

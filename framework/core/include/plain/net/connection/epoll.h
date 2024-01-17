@@ -29,6 +29,7 @@ class PLAIN_API Epoll : public Manager {
   virtual ~Epoll();
 
  protected:
+  bool prepare() noexcept override;
   bool work() noexcept override;
   void off() noexcept override;
   bool sock_add(
@@ -37,7 +38,7 @@ class PLAIN_API Epoll : public Manager {
 
  private:
   struct Impl;
-  std::shared_ptr<Impl> impl_;
+  std::unique_ptr<Impl> impl_;
 
  private:
   detail::Task work_recurrence() noexcept;

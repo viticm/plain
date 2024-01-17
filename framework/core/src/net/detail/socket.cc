@@ -137,6 +137,12 @@ size_t get_sa_size_maximum(int32_t family) noexcept {
   return 0;
 }
 
+bytes_t get_sa_data(const bytes_t &addr) noexcept {
+  assert(get_sa_family(addr) != 0);
+  assert(sa_data_offset <= addr.size());
+  return addr.substr(sa_data_offset);
+}
+
 uint16_t get_sin_port(const bytes_t &addr) noexcept {
   assert(get_sa_family(addr) == AF_INET);
   const auto *const sin {get_sin_pointer(addr)};

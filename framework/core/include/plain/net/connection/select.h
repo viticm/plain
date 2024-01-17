@@ -14,7 +14,6 @@
 
 #include "plain/net/connection/config.h"
 #include "plain/net/connection/manager.h"
-#include "plain/net/connection/detail/config.h"
 
 namespace plain::net {
 namespace connection {
@@ -34,13 +33,13 @@ class Select : public Manager {
   bool sock_add(
     socket::id_t sock_id, connection::id_t conn_id) noexcept override;
   bool sock_remove(socket::id_t sock_id) noexcept override;
+  bool prepare() noexcept override;
 
  private:
   struct Impl;
   std::shared_ptr<Impl> impl_;
 
  private:
-  detail::Task work_recurrence() noexcept;
   void handle_io() noexcept;
 
 };

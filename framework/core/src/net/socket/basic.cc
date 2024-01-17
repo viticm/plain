@@ -20,7 +20,7 @@ Basic::~Basic() {
 Basic::Basic(Basic &&object) noexcept = default;
 
 bool Basic::create() {
-  impl_->id = create(AF_INET, SOCK_STREAM, 0);
+  impl_->id = socket::create(AF_INET, SOCK_STREAM, 0);
   return valid();
 }
 
@@ -223,11 +223,13 @@ bool Basic::connect(
   std::string_view address, const std::chrono::milliseconds &timeout) noexcept {
   bool r{false};
   try {
-    if (!valid() && !close() && !create())
-      return false;
     Address addr{address, false};
-    auto ptr = detail::get_sa_pointer(addr.data());
-    auto len = static_cast<uint32_t>(addr.data().size());
+    if (!valid() && (!close() || !create(addr.family(), SOCK_STREAM, 0)))
+      return false;
+    const auto data{addr.data()};
+
+    auto ptr = detail::get_sa_pointer(data); // can't use data.data(), memory cut
+    auto len = static_cast<uint32_t>(data.size());
     r = socket::connect(impl_->id, ptr, len, timeout);
   } catch(...) {
     LOG_ERROR << "connect except";
@@ -240,11 +242,12 @@ bool Basic::connect(
   const std::chrono::milliseconds &timeout) noexcept {
   bool r{false};
   try {
-    if (!valid() && !close() && !create())
-      return false;
     Address addr{ip, port, false};
-    auto ptr = detail::get_sa_pointer(addr.data());
-    auto len = static_cast<uint32_t>(addr.data().size());
+    if (!valid() && (!close() || !create(addr.family(), SOCK_STREAM, 0)))
+      return false;
+    const auto data{addr.data()};
+    auto ptr = detail::get_sa_pointer(data); // can't use data.data(), memory cut
+    auto len = static_cast<uint32_t>(data.size());
     r = socket::connect(impl_->id, ptr, len, timeout);
   } catch(...) {
     LOG_ERROR << "connect except";

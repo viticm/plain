@@ -88,7 +88,18 @@ function(test_executables test_name source)
   # MESSAGE(${source})
 endfunction()
 
-file(GLOB_RECURSE CORE_TEST_SOURCES "../core_test/*.cc")
+# Enable this then just test the directories.
+set(TEST_DIRS "net")
+
+if (NOT TEST_DIRS)
+  file(GLOB_RECURSE CORE_TEST_SOURCES "../core_test/*.cc")
+else()
+  file(GLOB CORE_TEST_SOURCES "../core_test/*.cc")
+  foreach(dir ${TEST_DIRS})
+    file(GLOB_RECURSE CORE_TEST_OTHER_SOURCES "../core_test/${dir}/*.cc")
+    set(CORE_TEST_SOURCES ${CORE_TEST_SOURCES} ${CORE_TEST_OTHER_SOURCES})
+  endforeach()
+endif()
 
 test_executables(core "${CORE_TEST_SOURCES}")
 

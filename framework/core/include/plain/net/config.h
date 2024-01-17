@@ -69,6 +69,7 @@ struct setting_struct {
   Mode mode{Mode::Select};
   // ip_v4: x.x.x.x:port ip_v6: [x:x:x:...]:port
   std::string address; // listener only
+  std::string name;
 };
 
 using setting_t = setting_struct;

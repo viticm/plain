@@ -220,7 +220,7 @@ int32_t fcntlarg(
 bool get_nonblocking([[maybe_unused]] int32_t fd) {
 #if OS_UNIX
   int32_t flag = fcntlarg(fd, F_GETFL, 0);
-  return flag | O_NONBLOCK;
+  return flag & O_NONBLOCK;
 #elif OS_WIN
   return false;
 #endif

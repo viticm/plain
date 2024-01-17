@@ -9,7 +9,6 @@
 #include "plain/basic/utility.h"
 #include "plain/concurrency/executor/basic.h"
 #include "plain/file/api.h"
-#include "plain/net/connection/detail/coroutine.h"
 #include "plain/net/connection/basic.h"
 #include "plain/net/socket/basic.h"
 
@@ -112,19 +111,18 @@ struct Epoll::Impl : std::enable_shared_from_this<Impl> {
   data_t data;
   std::condition_variable cv;
   std::mutex mutex;
-  bool running{false};
 #endif
 };
 
 Epoll::Epoll(const setting_t &setting) :
-  Manager(setting), impl_{std::make_shared<Impl>()} {
+  Manager(setting), impl_{std::make_unique<Impl>()} {
 }
   
 Epoll::Epoll(
   std::unique_ptr<concurrency::executor::Basic> &&executor,
   const setting_t &setting) :
   Manager(std::forward<decltype(executor)>(executor), setting),
-  impl_{std::make_shared<Impl>()} {
+  impl_{std::make_unique<Impl>()} {
 }
 
 Epoll::~Epoll() {
@@ -133,8 +131,9 @@ Epoll::~Epoll() {
 #endif
 }
   
-bool Epoll::work() noexcept {
+bool Epoll::prepare() noexcept {
 #if OS_UNIX
+  if (running_) return true;
   auto fd = poll_create(impl_->data, setting_.max_count);
   if (fd <= 0) {
     LOG_ERROR << "create error max_count: "
@@ -148,15 +147,29 @@ bool Epoll::work() noexcept {
       return false;
     }
   }
-  impl_->running = true;
-  work_recurrence();
-#endif
   return true;
+#else
+  return false;
+#endif
+}
+
+bool Epoll::work() noexcept {
+#if OS_UNIX
+  poll_wait(impl_->data, 0);
+  if (impl_->data.result_event_count < 0) {
+    LOG_ERROR << "error: " << impl_->data.result_event_count;
+    return false;
+  }
+  handle_input();
+  return true;
+#else
+  return false;
+#endif
 }
 
 void Epoll::off() noexcept {
 #if OS_UNIX
-  impl_->running = false;
+
 #endif
 }
 
@@ -188,37 +201,13 @@ bool Epoll::sock_remove([[maybe_unused]] socket::id_t sock_id) noexcept {
   return false;
 }
 
-detail::Task Epoll::work_recurrence() noexcept {
-#if OS_UNIX
-  auto func = [self = impl_](
-    concurrency::coroutine_handle<detail::Task::promise_type> handle) {
-    if (self->data.fd == socket::kInvalidSocket) return false;
-    std::unique_lock<std::mutex> lock{self->mutex};
-    self->cv.wait(lock, [self] {
-      poll_wait(self->data, 0);
-      return self->data.result_event_count != 0 || !self->running;
-    });
-    return true;
-  };
-  co_await detail::Awaitable{func};
-  if (impl_->data.result_event_count < 0) {
-    LOG_ERROR << "work_recurrence error: " << impl_->data.result_event_count;
-  } else {
-    handle_input();
-  }
-  if (impl_->running) work_recurrence();
-#else
-  return {};
-#endif
-}
-
 void Epoll::handle_input() noexcept {
 #if OS_UNIX
-  if (!impl_->running) return;
+  if (running_) return;
   size_t accept_count{0};
   auto &d = impl_->data;
   for (int32_t i = 0; i < d.result_event_count; ++i) {
-    if (!impl_->running) break;
+    if (running_) break;
     auto sock_id = static_cast<socket::id_t>(
       get_highsection(d.events[i].data.u64));
     auto conn_id = static_cast<connection::id_t>(

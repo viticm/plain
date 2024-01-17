@@ -52,6 +52,7 @@ class PLAIN_API Manager :
     socket::id_t sock_id, connection::id_t conn_id) noexcept = 0;
   virtual bool sock_remove(socket::id_t sock_id) noexcept = 0;
   std::shared_ptr<Basic> accept() noexcept;
+  virtual bool prepare() noexcept { return true; }
 
  protected:
   std::shared_ptr<Basic> new_conn() noexcept;
@@ -63,6 +64,7 @@ class PLAIN_API Manager :
   setting_t setting_;
   socket::id_t listen_fd_{socket::kInvalidSocket};
   std::shared_ptr<socket::Listener> listen_sock_;
+  bool running_{false};
 
  private:
   friend class Basic;

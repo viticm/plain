@@ -36,8 +36,7 @@ struct Select::Impl {
   std::set<socket::id_t> valid_fds;
   std::condition_variable cv;
   std::mutex mutex;
-  bool running{false};
-  int32_t select_result{-1};
+  int32_t select_result{0};
 
   // flag: true add false remove
   void change_vaild_fd(socket::id_t id, bool flag) noexcept {
@@ -80,39 +79,31 @@ Select::Select(
 
 Select::~Select() = default;
 
-bool Select::work() noexcept {
-  impl_->change_vaild_fd(listen_fd_, true);
-  impl_->running = true;
-  work_recurrence();
+bool Select::prepare() noexcept {
+  if (running_) return true;
+  if (listen_fd_ != socket::kInvalidSocket)
+    impl_->change_vaild_fd(listen_fd_, true);
   return true;
 }
-  
-void Select::off() noexcept {
-  impl_->running = false;
-}
 
-plain::net::connection::detail::Task Select::work_recurrence() noexcept {
-  auto func = [self = impl_](
-    concurrency::coroutine_handle<detail::Task::promise_type> handle) {
-    if (self->max_fd == socket::kInvalidSocket) return false;
-    std::unique_lock<std::mutex> lock{self->mutex};
-    self->cv.wait(lock, [self] {
-      self->select();
-      return self->select_result != 0 || !self->running;
-    });
-    return true;
-  };
-  co_await detail::Awaitable{func};
+bool Select::work() noexcept {
+  impl_->select();
+  bool r{true};
   if (impl_->select_result < 0) {
-    LOG_ERROR << "work_recurrence error: " << impl_->select_result;
+    r = false;
+    LOG_ERROR << "error: " << impl_->select_result;
   } else {
     handle_io();
   }
-  if (impl_->running) work_recurrence();
+  return r;
 }
   
+void Select::off() noexcept {
+  impl_->cv.notify_all();
+}
+ 
 void Select::handle_io() noexcept {
-  if (!impl_->running) return;
+  if (running_) return;
   if (listen_fd_ != socket::kInvalidSocket &&
       FD_ISSET(listen_fd_, &impl_->read_fds.use)) {
     for (size_t i = 0; i < Impl::kOnceAcccpetCount; ++i) {
@@ -121,7 +112,7 @@ void Select::handle_io() noexcept {
   }
   try {
     foreach([this, listen_fd = listen_fd_](std::shared_ptr<Basic> conn){
-      if (!impl_->running) return;
+      if (!running_) return;
       auto id = conn->socket()->id();
       if (id == socket::kInvalidSocket || id == listen_fd) return;
       if (FD_ISSET(id, &impl_->except_fds.use)) {

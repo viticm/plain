@@ -27,7 +27,8 @@ Connector::Connector(const setting_t &setting) :
 }
 
 Connector::~Connector() {
-
+  // Manager must stoped.
+  if (impl_->manager->running_) impl_->manager->stop();
 }
   
 bool Connector::start() {
@@ -89,10 +90,10 @@ Connector::connect_impl(
   std::string_view addr_or_ip, uint16_t port,
   const std::chrono::milliseconds &timeout) noexcept {
   auto conn = impl_->manager->new_conn();
-  if (!conn) return {};
+  if (!conn || conn->id() == connection::kInvalidId) return {};
   auto success = port == 0 ?
-    conn->socket()->connect(addr_or_ip) :
-    conn->socket()->connect(addr_or_ip, port);
+    conn->socket()->connect(addr_or_ip, timeout) :
+    conn->socket()->connect(addr_or_ip, port, timeout);
   if (!success) {
     impl_->manager->remove(conn);
     LOG_ERROR << "connect failed: " << socket::get_last_error();

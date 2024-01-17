@@ -51,8 +51,27 @@ void plain::tests::test_net_connector_constructor() {
 
 void plain::tests::test_net_connector_func() {
   Connector connector1;
-  auto conn = connector1.connect("127.0.0.1", 80);
+  auto started = connector1.start();
+  ASSERT_TRUE(started);
+  auto conn = connector1.connect("127.0.0.1", 22);
   ASSERT_TRUE(static_cast<bool>(conn));
+  auto conn1 = connector1.connect("127.0.0.1:22");
+  ASSERT_TRUE(static_cast<bool>(conn1));
+  auto conn2 = connector1.connect("::1", 22);
+  ASSERT_TRUE(static_cast<bool>(conn2));
+  auto conn3 = connector1.connect("[::]:22");
+  ASSERT_TRUE(static_cast<bool>(conn3));
+
+  setting_t setting;
+  setting.mode = Mode::Epoll;
+  Connector connector2;
+  started = connector2.start();
+#if OS_WIN
+  ASSERT_FALSE(started);
+#elif OS_UNIX
+  ASSERT_TRUE(started);
+#endif
+  connector2.stop();
 }
 
 using namespace plain::tests;
