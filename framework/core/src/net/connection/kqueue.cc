@@ -1,8 +1,9 @@
-#include "plain/net/connection/epoll.h"
-#if OS_UNIX
-#include <sys/epoll.h>
-#include <poll.h>
-#include <signal.h>
+#include "plain/net/connection/kqueue.h"
+#if __has_include(<sys/event.h>)
+#include <sys/event.h>
+#include <netdb.h>
+#include <sys/types.h>
+#define ENABLE_KQUEUE
 #endif
 #include <cassert>
 #include "plain/basic/logger.h"
@@ -16,7 +17,7 @@ namespace plain::net::connection {
 
 namespace {
 
-#if OS_UNIX
+#if ENABLE_KQUEUE
 
 static constexpr size_t kOnceAcccpetCount{64};
 
@@ -25,16 +26,18 @@ struct data_struct {
   int32_t max_count{std::numeric_limits<int32_t>::max()};
   std::atomic_int32_t result_event_count{0};
   int32_t event_index{0};
-  struct epoll_event *events{nullptr};
+  struct kevent *events{nullptr};
+  std::vector<uint64_t> event_datas; // For events save conn and sock ids.
+  uint64_t listen_data{0};
 };
 using data_t = data_struct;
 
 int32_t poll_create(data_t &d, int32_t max_count) {
-  int32_t fd = epoll_create(max_count);
+  int32_t fd = kqueue();
   if (fd != -1) {
     d.fd = fd;
     d.max_count = max_count;
-    d.events = new epoll_event[max_count];
+    d.events = new kevent[max_count];
     assert(d.events);
     signal(SIGPIPE, SIG_IGN);
   } else {
@@ -43,14 +46,46 @@ int32_t poll_create(data_t &d, int32_t max_count) {
   return fd;
 }
 
-int32_t poll_add(data_t &d, int32_t fd, int32_t mask, id_t conn_id) {
-  struct epoll_event _epoll_event;
-  memset(&_epoll_event, 0, sizeof(_epoll_event));
-  _epoll_event.events = mask;
-  _epoll_event.data.u64 =
-    touint64(static_cast<uint32_t>(fd), static_cast<uint32_t>(conn_id));
-  int32_t r = epoll_ctl(d.fd, EPOLL_CTL_ADD, fd, &_epoll_event);
-  return r;
+int32_t poll_delete(data_t &d, int32_t fd) {
+  struct kevent event;
+  EV_SET(&event, fd, EVFILT_READ, EV_DELETE, 0, 0, nullptr);
+  kevent(d.fd, &event, 1, nullptr, 0, nullptr);
+  EV_SET(&event, fd, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
+  kevent(d.fd, &event, 1, nullptr, 0, nullptr);
+  return 0;
+}
+
+int32_t poll_add(data_t &d, int32_t fd, id_t conn_id) {
+  if (conn_id > d.event_datas.size() || d.fd == socket::kInvalidSocket) {
+    return -1;
+  }
+  struct kevent event;
+  std::memset(&event, 0, sizeof event);
+  auto ud = &d.listen_data;
+  if (conn_id > 0) {
+    size_t index = conn_id - 1;
+    ud = &d.event_datas[index];
+  }
+  *ud = touint64(static_cast<uint32_t>(fd), static_cast<uint32_t>(conn_id));
+  EV_SET(&event, fd, EVFILT_READ, EV_ADD, 0, 0, ud);
+  if (kevent(d.fd, &event, 1, nullptr, 0, nullptr) == -1 ||
+      event.flags & EV_ERROR) {
+    return -1;
+  }
+  EV_SET(&event, fd, EVFILT_WRITE, EV_ADD, 0, 0, ud);
+  if (kevent(d.fd, &event, 1, nullptr, 0, nullptr) == -1 ||
+      event.flags & EV_ERROR) {
+    EV_SET(&event, fd, EVFILT_READ, EV_DELETE, 0, 0, nullptr);
+    kevent(d.fd, &event, 1, nullptr, 0, nullptr);
+    return -1;
+  }
+  EV_SET(&event, fd, EVFILT_WRITE, EV_DISABLE, 0, 0, ud);
+  if (kevent(d.fd, &event, 1, nullptr, 0, nullptr) == -1 ||
+      event.flags & EV_ERROR) {
+    poll_delete(d, fd);
+    return -1;
+  }
+  return 0;
 }
 
 /*
@@ -64,19 +99,43 @@ int32_t poll_mod(data_t &d, int32_t fd, int32_t mask) {
 }
 */
 
-int32_t poll_delete(data_t &d, int32_t fd) {
-  struct epoll_event _epoll_event;
-  memset(&_epoll_event, 0, sizeof(_epoll_event));
-  _epoll_event.events = EPOLLIN | EPOLLET;
-  _epoll_event.data.fd = fd;
-  int32_t r = epoll_ctl(d.fd, EPOLL_CTL_DEL, fd, &_epoll_event);
-  return r;
+int32_t poll_enable(
+  data_t &d, int32_t fd, bool read_enable, bool write_enable) {
+  if (conn_id > d.event_datas.size() || conn_id <= 0 
+      || d.fd == socket::kInvalidSocket) {
+    return -1;
+  }
+  size_t index = conn_id - 1;
+  auto ud = &d.event_datas[index];
+  struct kevent event; 
+  EV_SET(
+    &event, fd, EVFILT_READ, read_enable ? EV_ENABLE : EV_DISABLE, 0, 0, ud);
+  if (kevent(d.fd, &event, 1, nullptr, 0, nullptr) == -1 ||
+      event.flags & EV_ERROR) {
+    return -1;
+  }
+  EV_SET(
+    &event, fd, EVFILT_WRITE, read_enable ? EV_ENABLE : EV_DISABLE, 0, 0, ud);
+  if (kevent(d.fd, &event, 1, nullptr, 0, nullptr) == -1 ||
+      event.flags & EV_ERROR) {
+    return -1;
+  }
+  return 0;
 }
 
 int32_t poll_wait(data_t &d, int32_t timeout) {
   assert(d.events);
   assert(d.max_count > 0);
-  d.result_event_count = epoll_wait(d.fd, d.events, d.max_count, timeout);
+  if (timeout >= 0) {
+    struct timespec ts{
+      static_cast<decltype(ts.tv_sec)>(timeout / 1000),
+      static_cast<decltype(ts.tv_usec)>(timeout % 1000 * 1000)
+    };
+    d.result_event_count = kevent(d.fd, nullptr, 0, d.events, d.max_count, &ts);
+  } else {
+    d.result_event_count =
+      kevent(d.fd, nullptr, 0, d.events, d.max_count, nullptr);
+  }
   d.event_index = 0;
   return d.result_event_count;
 }
@@ -86,7 +145,6 @@ int32_t poll_destory(data_t &d) {
   plain::close(d.fd);
   safe_delete_array(d.events);
   d.fd = -1;
-  d.events = nullptr;
   return 0;
 }
 
@@ -108,33 +166,34 @@ int32_t poll_event(data_t &d, int32_t *fd, int32_t *events) {
 
 }
 
-struct Epoll::Impl {
-#if OS_UNIX
+struct KQueue::Impl {
+#if ENABLE_KQUEUE
   data_t data;
   std::mutex mutex;
 #endif
 };
 
-Epoll::Epoll(const setting_t &setting) :
+KQueue::KQueue(const setting_t &setting) :
   Manager(setting), impl_{std::make_unique<Impl>()} {
 }
   
-Epoll::Epoll(
+KQueue::KQueue(
   std::unique_ptr<concurrency::executor::Basic> &&executor,
   const setting_t &setting) :
   Manager(std::forward<decltype(executor)>(executor), setting),
   impl_{std::make_unique<Impl>()} {
 }
 
-Epoll::~Epoll() {
-#if OS_UNIX
+KQueue::~KQueue() {
+#if ENABLE_KQUEUE
   poll_destory(impl_->data);
 #endif
 }
   
-bool Epoll::prepare() noexcept {
-#if OS_UNIX
+bool KQueue::prepare() noexcept {
+#if ENABLE_KQUEUE
   if (running_) return true;
+  impl_->data.event_datas = std::vector<uint64_t>(setting_.max_count, 0);
   auto fd = poll_create(impl_->data, setting_.max_count);
   if (fd <= 0) {
     LOG_ERROR << "create error max_count: "
@@ -154,9 +213,9 @@ bool Epoll::prepare() noexcept {
 #endif
 }
 
-bool Epoll::work() noexcept {
-#if OS_UNIX
-  poll_wait(impl_->data, -1);
+bool KQueue::work() noexcept {
+#if ENABLE_KQUEUE
+  poll_wait(impl_->data, 0);
   if (impl_->data.result_event_count < 0) {
     LOG_ERROR << "error: " << impl_->data.result_event_count;
     return false;
@@ -168,19 +227,20 @@ bool Epoll::work() noexcept {
 #endif
 }
 
-void Epoll::off() noexcept {
-#if OS_UNIX
-  poll_destory(impl_->data);
+void KQueue::off() noexcept {
+#if ENABLE_KQUEUE
+
 #endif
 }
 
-bool Epoll::sock_add(
+bool KQueue::sock_add(
   [[maybe_unused]] socket::id_t sock_id,
   [[maybe_unused]] connection::id_t conn_id) noexcept {
   assert(sock_id != socket::kInvalidSocket);
   assert(conn_id != connection::kInvalidId);
-#if OS_UNIX
-  if (poll_add(impl_->data, sock_id, EPOLLIN | EPOLLET, conn_id) != 0) {
+#if ENABLE_KQUEUE
+  if (poll_add(impl_->data, sock_id, conn_id) != 0 ||
+      poll_enable(impl_->data, sock_id, conn_id, true, true) != 0) {
     LOG_ERROR << "sock_add error: " << strerror(errno);
   } else {
     return true;
@@ -189,10 +249,10 @@ bool Epoll::sock_add(
   return false;
 }
   
-bool Epoll::sock_remove([[maybe_unused]] socket::id_t sock_id) noexcept {
+bool KQueue::sock_remove([[maybe_unused]] socket::id_t sock_id) noexcept {
   assert(sock_id >= 0);
   assert(sock_id != socket::kInvalidSocket);
-#if OS_UNIX
+#if ENABLE_KQUEUE
   if (poll_delete(impl_->data, sock_id) != 0) {
     LOG_ERROR << "sock_remove error: " << strerror(errno);
   } else {
@@ -202,22 +262,22 @@ bool Epoll::sock_remove([[maybe_unused]] socket::id_t sock_id) noexcept {
   return false;
 }
 
-void Epoll::handle_input() noexcept {
-#if OS_UNIX
+void KQueue::handle_input() noexcept {
+#if ENABLE_KQUEUE
   if (running_) return;
   size_t accept_count{0};
   auto &d = impl_->data;
   for (int32_t i = 0; i < d.result_event_count; ++i) {
     if (running_) break;
-    auto sock_id = static_cast<socket::id_t>(
-      get_highsection(d.events[i].data.u64));
-    auto conn_id = static_cast<connection::id_t>(
-      get_lowsection(d.events[i].data.u64));
+    uint64_t ud = d.events[i].ud ? *d.events[i].ud : 0;
+    auto sock_id = static_cast<socket::id_t>(get_highsection(ud);
+    auto conn_id = static_cast<connection::id_t>(get_lowsection(ud));
+    auto filter = d.events[i].filter;
     if (sock_id != socket::kInvalidSocket &&
         sock_id == listen_fd_ && accept_count < kOnceAcccpetCount) {
       ++accept_count;
       this->accept();
-    } else if (d.events[i].events & EPOLLIN) {
+    } else if (filter == EVFILT_READ) {
       auto conn = get_conn(conn_id);
       if (!conn) {
         LOG_ERROR << "can't find connection: " << conn_id;
@@ -234,6 +294,13 @@ void Epoll::handle_input() noexcept {
         continue;
       }
       conn->enqueue_work();
+    } else if (d.events[i].flags & EV_ERROR) {
+      auto conn = get_conn(conn_id);
+      if (conn) {
+        LOG_ERROR << "kevent error";
+        remove(conn_id);
+        continue;
+      }
     }
   }
 #endif

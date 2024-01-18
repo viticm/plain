@@ -58,6 +58,7 @@ class PLAIN_API Basic {
   friend class Select;
   friend class Iocp;
   friend class IoUring;
+  friend class KEvent;
 
  private:
   struct Impl;

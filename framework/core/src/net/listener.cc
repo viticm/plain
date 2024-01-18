@@ -18,7 +18,7 @@ Listener::Listener(
   assert(impl_->manager);
 }
   
-Listener::Listener(const setting_t &setting) {
+Listener::Listener(const setting_t &setting) : impl_{std::make_unique<Impl>()} {
   impl_->manager = make_manager(setting.mode, setting);
   assert(impl_->manager);
 }

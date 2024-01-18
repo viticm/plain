@@ -4,6 +4,7 @@
 #include "plain/net/connection/select.h"
 #include "plain/net/connection/iocp.h"
 #include "plain/net/connection/io_uring.h"
+#include "plain/net/connection/kqueue.h"
 
 namespace plain::net {
 
@@ -18,6 +19,8 @@ make_manager(Mode mode, const setting_t &setting) noexcept {
       return std::make_shared<connection::Iocp>(setting);
     case Mode::IoUring:
       return std::make_shared<connection::IoUring>(setting);
+    case Mode::KQueue:
+      return std::make_shared<connection::KQueue>(setting);
     default:
       return {};
   }
@@ -39,6 +42,9 @@ make_manager(
         std::forward<decltype(executor)>(executor), setting);
     case Mode::IoUring:
       return std::make_shared<connection::IoUring>(
+        std::forward<decltype(executor)>(executor), setting);
+    case Mode::KQueue:
+      return std::make_shared<connection::KQueue>(
         std::forward<decltype(executor)>(executor), setting);
     default:
       return {};

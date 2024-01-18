@@ -105,10 +105,9 @@ int32_t poll_event(data_t &d, int32_t *fd, int32_t *events) {
 
 }
 
-struct Iocp::Impl : std::enable_shared_from_this<Impl> {
+struct Iocp::Impl {
 #if OS_WIN
   data_t data;
-  std::condition_variable cv;
   std::mutex mutex;
 #endif
 };
@@ -138,7 +137,7 @@ bool Iocp::prepare() noexcept {
     return false;
   }
   if (listen_fd_ != socket::kInvalidSocket) {
-    auto r = poll_add(impl_->data, listen_fd_, EPOLLIN, socket::kInvalidSocket);
+    auto r = poll_add(impl_->data, listen_fd_, EPOLLIN, connection::kInvalidId);
     if (r < 0) {
       LOG_ERROR << "add error result: " << r;
       return false;
@@ -152,7 +151,7 @@ bool Iocp::prepare() noexcept {
 
 bool Iocp::work() noexcept {
 #if OS_WIN
-  poll_wait(self->data, 0);
+  poll_wait(self->data, -1);
   if (impl_->data.result_event_count < 0) {
     LOG_ERROR << "error: " << impl_->data.result_event_count;
     return false;
@@ -166,6 +165,7 @@ bool Iocp::work() noexcept {
 
 void Iocp::off() noexcept {
 #if OS_WIN
+  poll_destory(impl_->data);
 #endif
 }
 

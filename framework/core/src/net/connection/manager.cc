@@ -62,17 +62,23 @@ bool Manager::Impl::wait_work(std::shared_ptr<Manager> manager) noexcept {
   assert(manager);
   std::unique_lock<std::mutex> lock{manager->impl_->wait_mutex};
   if (manager->impl_->connection_info.size > 0) {
-    manager->impl_->cv.wait_for(lock, 100ms, [manager] {
-      return !manager->running_;
+    /*
+    auto old_size = manager->impl_->connection_info.size;
+    manager->impl_->cv.wait_for(lock, 10ms, [manager, old_size] {
+      return old_size != manager->impl_->connection_info.size ||
+        !manager->running_;
     });
+    */
   } else {
     manager->impl_->cv.wait(lock, [manager] {
       return manager->impl_->connection_info.size > 0 || !manager->running_;
     });
   }
   if (!manager->running_) return false;
+  std::cout << "start work" << std::endl;
   auto r = manager->work();
   enqueue_work(manager);
+  std::cout << "end work" << std::endl;
   lock.unlock();
   return r;
 }
@@ -219,7 +225,7 @@ std::shared_ptr<plain::net::connection::Basic> Manager::accept() noexcept {
     return {};
   auto conn = new_conn();
   if (!conn) {
-    LOG_WARN << "accept new conn failed";
+    LOG_WARN << "new conn failed";
     auto sock = std::make_shared<socket::Basic>();
     listen_sock_->accept(sock);
     sock->close();
@@ -227,27 +233,27 @@ std::shared_ptr<plain::net::connection::Basic> Manager::accept() noexcept {
   }
   if (!listen_sock_->accept(conn->socket())) {
     remove(conn);
-    LOG_ERROR << "accept connection accept error: " << socket::get_last_error();
+    LOG_ERROR << "connection accept error: " << socket::get_last_error();
     return {};
   }
   if (!conn->socket()->set_nonblocking()) {
     remove(conn);
-    LOG_ERROR << "accept set_nonblocking error: " << socket::get_last_error();
+    LOG_ERROR << "set_nonblocking error: " << socket::get_last_error();
     return {};
   }
   if (conn->socket()->error()) {
     remove(conn);
-    LOG_ERROR << "accept socket have error: " << socket::get_last_error();
+    LOG_ERROR << "socket have error: " << socket::get_last_error();
     return {};
   }
   if (!conn->socket()->set_linger(0)) {
     remove(conn);
-    LOG_ERROR << "accept set_linger error: " << socket::get_last_error();
+    LOG_ERROR << "set_linger error: " << socket::get_last_error();
     return {};
   }
   if (!sock_add(conn->socket()->id(), conn->id())) {
     remove(conn);
-    LOG_ERROR << "accept sock_add error";
+    LOG_ERROR << "sock_add error";
     return {};
   }
   conn->on_connect();

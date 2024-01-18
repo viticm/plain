@@ -22,20 +22,15 @@ struct Select::Impl {
     fd_set use;
   };
 
-  struct timeout_info_t {
-    timeval full;
-    timeval use;
-  };
-
   fd_info_t read_fds;
   fd_info_t write_fds;
   fd_info_t except_fds;
-  timeout_info_t timeout;
+  timeval timeout;
   int32_t fd_size{0};
   socket::id_t max_fd{socket::kInvalidSocket};
   std::set<socket::id_t> valid_fds;
-  std::condition_variable cv;
   std::mutex mutex;
+  int32_t select_timeout{10}; // The select timeout(ms).
   int32_t select_result{0};
 
   // flag: true add false remove
@@ -55,13 +50,16 @@ struct Select::Impl {
 
 void Select::Impl::select() noexcept {
   if (max_fd == socket::kInvalidSocket) return;
-  timeout.use.tv_sec = timeout.full.tv_sec;
-  timeout.use.tv_usec = timeout.full.tv_usec;
   read_fds.use = read_fds.full;
   write_fds.use = write_fds.full;
   except_fds.use = except_fds.full;
+  if (select_timeout >= 0) {
+    select_result = socket::select(
+      max_fd + 1, &read_fds.use, &write_fds.use, &except_fds.use, &timeout);
+  } else {
   select_result = socket::select(
-    max_fd + 1, &read_fds.use, &write_fds.use, &except_fds.use, &timeout.use);
+      max_fd + 1, &read_fds.use, &write_fds.use, &except_fds.use, nullptr);
+  }
 }
 
 Select::Select(const setting_t &setting) :
@@ -81,8 +79,13 @@ Select::~Select() = default;
 
 bool Select::prepare() noexcept {
   if (running_) return true;
-  if (listen_fd_ != socket::kInvalidSocket)
+  if (listen_fd_ != socket::kInvalidSocket) {
     impl_->change_vaild_fd(listen_fd_, true);
+    impl_->select_timeout = -1;
+  } else {
+    impl_->timeout.tv_sec = (impl_->select_timeout / 1000);
+    impl_->timeout.tv_usec = (impl_->select_timeout % 1000 * 1000);
+  }
   return true;
 }
 
@@ -99,7 +102,7 @@ bool Select::work() noexcept {
 }
   
 void Select::off() noexcept {
-  impl_->cv.notify_all();
+
 }
  
 void Select::handle_io() noexcept {

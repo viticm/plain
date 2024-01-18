@@ -21,7 +21,8 @@ enum class Mode {
   Select = 0,
   Epoll = 1,
   IoUring = 2,
-  Iocp = 3
+  Iocp = 3,
+  KQueue = 4,
 };
 
 class Address;

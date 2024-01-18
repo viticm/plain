@@ -1,16 +1,16 @@
 /**
  * PLAIN FREAMEWORK ( https://github.com/viticm/plain )
- * $Id epoll.h
+ * $Id kevent.h
  * @link https://github.com/viticm/plain for the canonical source repository
- * @copyright Copyright (c) 2023 viticm( viticm.ti@gmail.com )
+ * @copyright Copyright (c) 2024 viticm( viticm.ti@gmail.com )
  * @license
  * @user viticm( viticm.ti@gmail.com )
- * @date 2023/12/19 17:19
- * @uses The plain net connection epoll implemention.
+ * @date 2024/01/18 10:01
+ * @uses The connection manager with kqueue implemention.
  */
 
-#ifndef PLAIN_NET_CONNECTION_EPOLL_H_
-#define PLAIN_NET_CONNECTION_EPOLL_H_
+#ifndef PLAIN_NET_CONNECTION_KQUEUE_H_
+#define PLAIN_NET_CONNECTION_KQUEUE_H_
 
 #include "plain/net/connection/config.h"
 #include "plain/net/connection/manager.h"
@@ -18,14 +18,14 @@
 namespace plain::net {
 namespace connection {
 
-class PLAIN_API Epoll : public Manager {
+class PLAIN_API KQueue : public Manager {
 
  public:
-  Epoll(const setting_t &setting);
-  Epoll(
+  KQueue(const setting_t &setting);
+  KQueue(
     std::unique_ptr<concurrency::executor::Basic> &&executor,
     const setting_t &setting);
-  virtual ~Epoll();
+  virtual ~KQueue();
 
  protected:
   bool prepare() noexcept override;
@@ -47,4 +47,4 @@ class PLAIN_API Epoll : public Manager {
 } // namespace connection
 } // namespace plain::net
 
-#endif // PLAIN_NET_CONNECTION_EPOLL_H_
+#endif // PLAIN_NET_CONNECTION_KQUEUE_H_
