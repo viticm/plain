@@ -166,31 +166,31 @@ int32_t poll_event(data_t &d, int32_t *fd, int32_t *events) {
 
 }
 
-struct KQueue::Impl {
+struct Kqueue::Impl {
 #if ENABLE_KQUEUE
   data_t data;
   std::mutex mutex;
 #endif
 };
 
-KQueue::KQueue(const setting_t &setting) :
+Kqueue::Kqueue(const setting_t &setting) :
   Manager(setting), impl_{std::make_unique<Impl>()} {
 }
   
-KQueue::KQueue(
+Kqueue::Kqueue(
   std::unique_ptr<concurrency::executor::Basic> &&executor,
   const setting_t &setting) :
   Manager(std::forward<decltype(executor)>(executor), setting),
   impl_{std::make_unique<Impl>()} {
 }
 
-KQueue::~KQueue() {
+Kqueue::~Kqueue() {
 #if ENABLE_KQUEUE
   poll_destory(impl_->data);
 #endif
 }
   
-bool KQueue::prepare() noexcept {
+bool Kqueue::prepare() noexcept {
 #if ENABLE_KQUEUE
   if (running_) return true;
   impl_->data.event_datas = std::vector<uint64_t>(setting_.max_count, 0);
@@ -213,7 +213,7 @@ bool KQueue::prepare() noexcept {
 #endif
 }
 
-bool KQueue::work() noexcept {
+bool Kqueue::work() noexcept {
 #if ENABLE_KQUEUE
   poll_wait(impl_->data, 0);
   if (impl_->data.result_event_count < 0) {
@@ -227,13 +227,13 @@ bool KQueue::work() noexcept {
 #endif
 }
 
-void KQueue::off() noexcept {
+void Kqueue::off() noexcept {
 #if ENABLE_KQUEUE
 
 #endif
 }
 
-bool KQueue::sock_add(
+bool Kqueue::sock_add(
   [[maybe_unused]] socket::id_t sock_id,
   [[maybe_unused]] connection::id_t conn_id) noexcept {
   assert(sock_id != socket::kInvalidSocket);
@@ -249,7 +249,7 @@ bool KQueue::sock_add(
   return false;
 }
   
-bool KQueue::sock_remove([[maybe_unused]] socket::id_t sock_id) noexcept {
+bool Kqueue::sock_remove([[maybe_unused]] socket::id_t sock_id) noexcept {
   assert(sock_id >= 0);
   assert(sock_id != socket::kInvalidSocket);
 #if ENABLE_KQUEUE
@@ -262,7 +262,7 @@ bool KQueue::sock_remove([[maybe_unused]] socket::id_t sock_id) noexcept {
   return false;
 }
 
-void KQueue::handle_input() noexcept {
+void Kqueue::handle_input() noexcept {
 #if ENABLE_KQUEUE
   if (running_) return;
   size_t accept_count{0};

@@ -22,7 +22,7 @@ enum class Mode {
   Epoll = 1,
   IoUring = 2,
   Iocp = 3,
-  KQueue = 4,
+  Kqueue = 4,
 };
 
 class Address;

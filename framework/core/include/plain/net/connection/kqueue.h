@@ -18,14 +18,14 @@
 namespace plain::net {
 namespace connection {
 
-class PLAIN_API KQueue : public Manager {
+class PLAIN_API Kqueue : public Manager {
 
  public:
-  KQueue(const setting_t &setting);
-  KQueue(
+  Kqueue(const setting_t &setting);
+  Kqueue(
     std::unique_ptr<concurrency::executor::Basic> &&executor,
     const setting_t &setting);
-  virtual ~KQueue();
+  virtual ~Kqueue();
 
  protected:
   bool prepare() noexcept override;
