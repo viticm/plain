@@ -88,17 +88,6 @@ int32_t poll_add(data_t &d, int32_t fd, id_t conn_id) {
   return 0;
 }
 
-/*
-int32_t poll_mod(data_t &d, int32_t fd, int32_t mask) {
-  struct epoll_event _epoll_event;
-  memset(&_epoll_event, 0, sizeof(_epoll_event));
-  _epoll_event.events = mask;
-  _epoll_event.data.fd = fd;
-  int32_t r = epoll_ctl(d.fd, EPOLL_CTL_MOD, fd, &_epoll_event);
-  return r;
-}
-*/
-
 int32_t poll_enable(
   data_t &d, int32_t fd, bool read_enable, bool write_enable) {
   if (conn_id > d.event_datas.size() || conn_id <= 0 
@@ -147,20 +136,6 @@ int32_t poll_destory(data_t &d) {
   d.fd = -1;
   return 0;
 }
-
-/*
-int32_t poll_event(data_t &d, int32_t *fd, int32_t *events) {
-  int32_t r{0};
-  if (d.event_index < d.result_event_count) {
-    struct epoll_event &_epoll_event = d.events[d.event_index++];
-    *events = _epoll_event.events;
-    *fd = _epoll_event.data.fd;
-  } else {
-    r = -1;
-  }
-  return r;
-}
-*/
 
 #endif
 
@@ -229,7 +204,7 @@ bool Kqueue::work() noexcept {
 
 void Kqueue::off() noexcept {
 #if ENABLE_KQUEUE
-
+  poll_destory(impl_->data);
 #endif
 }
 

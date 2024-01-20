@@ -57,9 +57,10 @@ void Select::Impl::select() noexcept {
     select_result = socket::select(
       max_fd + 1, &read_fds.use, &write_fds.use, &except_fds.use, &timeout);
   } else {
-  select_result = socket::select(
+    select_result = socket::select(
       max_fd + 1, &read_fds.use, &write_fds.use, &except_fds.use, nullptr);
   }
+  // std::cout << "select: " << select_result << std::endl;
 }
 
 Select::Select(const setting_t &setting) :

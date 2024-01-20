@@ -32,11 +32,16 @@ struct Manager::Impl {
   std::mutex mutex;
   std::mutex wait_mutex;
   std::condition_variable cv;
+  thread_t worker; // The main worker.
+  detail::task_handle_t task_handle;
+  std::atomic_bool tasking{false};
+
   void init_connections(uint32_t count);
   static plain::net::connection::detail::Task
   work(std::shared_ptr<Manager> manager) noexcept;
   static void enqueue_work(std::shared_ptr<Manager> manager) noexcept;
   static bool wait_work(std::shared_ptr<Manager> manager) noexcept;
+  static void handle(std::shared_ptr<Manager> manager) noexcept;
 
 };
 
@@ -53,6 +58,7 @@ void Manager::Impl::init_connections(uint32_t count) {
 
 void Manager::Impl::enqueue_work(std::shared_ptr<Manager> manager) noexcept {
   assert(manager);
+  if (!manager->running_ || manager->impl_->tasking) return; // The work in executor wait resume.
   manager->get_executor().post([manager]() {
     work(manager);
   });
@@ -74,21 +80,55 @@ bool Manager::Impl::wait_work(std::shared_ptr<Manager> manager) noexcept {
       return manager->impl_->connection_info.size > 0 || !manager->running_;
     });
   }
+  manager->impl_->cv.wait(lock, [manager] {
+    return manager->impl_->tasking || !manager->running_;
+  });
+  if (manager->impl_->tasking) {
+    manager->impl_->cv.wait(lock, [manager] {
+      return static_cast<bool>(manager->impl_->task_handle); // || !manager->running_;
+    });
+  }
+  manager->impl_->handle(manager);
+  manager->impl_->cv.wait(lock, [manager] {
+    const auto tasking = manager->impl_->tasking.load(std::memory_order_relaxed);
+    return !tasking; // || !manager->running_;
+  });
+  //const auto tasking = manager->impl_->tasking.load(std::memory_order_relaxed);
+  //std::cout << "tasking:" << (tasking ? 1: 0) << ":" << manager << std::endl;
   if (!manager->running_) return false;
-  std::cout << "start work" << std::endl;
-  auto r = manager->work();
   enqueue_work(manager);
-  std::cout << "end work" << std::endl;
-  lock.unlock();
-  return r;
+  return true;
 }
 
 plain::net::connection::detail::Task
 Manager::Impl::work(std::shared_ptr<Manager> manager) noexcept {
-  auto func = [manager]() {
-    return wait_work(manager);
+  auto func = [manager](detail::task_handle_t handle) {
+    assert(!static_cast<bool>(manager->impl_->task_handle));
+    assert(handle);
+    if (!manager->running_) {
+      handle();
+    } else {
+      manager->impl_->task_handle = std::move(handle);
+      manager->impl_->cv.notify_one();
+    }
+    return true;
   };
+  //std::cout << "waiting...: " << manager << std::endl;
+  manager->impl_->tasking.store(true, std::memory_order_relaxed);
   co_await detail::Awaitable{func};
+  //std::cout << "working...: " << manager << std::endl;
+  auto r = manager->work();
+  if (!r) manager->stop();
+  manager->impl_->tasking.store(false, std::memory_order_relaxed);
+  manager->impl_->cv.notify_one();
+  //std::cout << "work end: " << manager << std::endl;
+}
+
+void Manager::Impl::handle(std::shared_ptr<Manager> manager) noexcept {
+  if (static_cast<bool>(manager->impl_->task_handle)) {
+    manager->impl_->task_handle();
+    manager->impl_->task_handle = detail::task_handle_t{};
+  }
 }
 
 Manager::Manager(const setting_t &setting) : 
@@ -112,7 +152,13 @@ Manager::~Manager() = default;
 bool Manager::start() {
   if (!prepare()) return false;
   running_ = true;
-  impl_->enqueue_work(shared_from_this());
+  Impl::enqueue_work(shared_from_this());
+  impl_->worker = std::move(thread_t([manager = shared_from_this()]{
+    for (;;) {
+      if (!Impl::wait_work(manager)) break;
+    }
+    //std::cout << "work exit: " << manager << std::endl;
+  }));
   return true;
 }
 
@@ -120,8 +166,8 @@ void Manager::stop() {
   running_ = false;
   off();
   impl_->cv.notify_one(); // Just one for wait work.
-  std::this_thread::sleep_for(10ms);
   impl_->executor->shutdown();
+  std::this_thread::sleep_for(10ms);
 }
   
 plain::concurrency::executor::Basic &Manager::get_executor() {

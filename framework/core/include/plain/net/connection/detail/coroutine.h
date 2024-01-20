@@ -47,7 +47,8 @@ struct Task {
   concurrency::coroutine_handle<Task::promise_type> handle_;
 };
 
-using await_func = std::function<void()>;
+using task_handle_t = concurrency::coroutine_handle<Task::promise_type>;
+using await_func = std::function<bool(task_handle_t)>;
 
 class AwaitableBasic : public concurrency::suspend_always {
 
@@ -68,15 +69,8 @@ class Awaitable : public AwaitableBasic {
   }
 
  public:
-  bool await_suspend(
-    concurrency::coroutine_handle<Task::promise_type> handle) noexcept {
-    if (static_cast<bool>(await_)) {
-      // std::future<bool> r = std::async(std::launch::async, await_, handle);
-      // return r.get();
-      thread_t([await = await_, handle] { await(); handle(); }).detach();
-      return true;
-    }
-    return false;
+  bool await_suspend(task_handle_t handle) noexcept {
+    return static_cast<bool>(await_) && await_(handle);
   }
 
 };
