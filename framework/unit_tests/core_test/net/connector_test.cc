@@ -50,6 +50,7 @@ void plain::tests::test_net_connector_constructor() {
 }
 
 void plain::tests::test_net_connector_func() {
+  using namespace std::chrono_literals;
   Connector connector1;
   auto started = connector1.start();
   ASSERT_TRUE(started);
@@ -64,13 +65,17 @@ void plain::tests::test_net_connector_func() {
 
   setting_t setting;
   setting.mode = Mode::Epoll;
-  Connector connector2;
+  Connector connector2(setting);
   started = connector2.start();
+  auto conn4 = connector2.connect("[::]:22");
+  ASSERT_TRUE(static_cast<bool>(conn4));
 #if OS_WIN
   ASSERT_FALSE(started);
 #elif OS_UNIX
   ASSERT_TRUE(started);
 #endif
+
+  // std::this_thread::sleep_for(100ms);
   connector2.stop();
 }
 

@@ -59,11 +59,13 @@ class PLAIN_API Manager :
   void remove(std::shared_ptr<Basic> conn) noexcept;
   void remove(connection::id_t conn_id) noexcept;
   void foreach(std::function<void(std::shared_ptr<Basic> conn)> func); // valid
+  void recv_ctrl_cmd() noexcept;
 
  protected:
   setting_t setting_;
   socket::id_t listen_fd_{socket::kInvalidSocket};
   std::shared_ptr<socket::Listener> listen_sock_;
+  socket::id_t ctrl_read_fd_{socket::kInvalidSocket};
   bool running_{false};
 
  private:

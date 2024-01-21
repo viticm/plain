@@ -121,7 +121,6 @@ bool Basic::Impl::process_exception() noexcept {
 }
 
 bool Basic::Impl::work() noexcept {
-  working.store(true, std::memory_order_relaxed);
   if (!process_input()) return false;
   if (!process_output()) return false;
   if (!process_command()) return false;
@@ -135,6 +134,7 @@ void Basic::Impl::enqueue_work() noexcept {
     return;
   auto m = manager.lock();
   if (!m) return;
+  working.store(true, std::memory_order_relaxed);
   m->get_executor().post([id = id, m = m] {
       auto conn = m->get_conn(id);
       if (!conn) return;
@@ -159,6 +159,7 @@ Basic &Basic::operator=(Basic &&object) noexcept = default;
 
 bool Basic::init() noexcept {
   if (!impl_->socket->close()) return false;
+  impl_->working.store(false, std::memory_order_relaxed);
   // if (!impl_->socket->create()) return false;
   return true;
 }

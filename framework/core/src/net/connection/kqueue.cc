@@ -239,11 +239,11 @@ bool Kqueue::sock_remove([[maybe_unused]] socket::id_t sock_id) noexcept {
 
 void Kqueue::handle_input() noexcept {
 #if ENABLE_KQUEUE
-  if (running_) return;
+  if (!running_) return;
   size_t accept_count{0};
   auto &d = impl_->data;
   for (int32_t i = 0; i < d.result_event_count; ++i) {
-    if (running_) break;
+    if (!running_) break;
     uint64_t ud = d.events[i].ud ? *d.events[i].ud : 0;
     auto sock_id = static_cast<socket::id_t>(get_highsection(ud);
     auto conn_id = static_cast<connection::id_t>(get_lowsection(ud));
@@ -252,6 +252,8 @@ void Kqueue::handle_input() noexcept {
         sock_id == listen_fd_ && accept_count < kOnceAcccpetCount) {
       ++accept_count;
       this->accept();
+    } else if (sock_id != socket::kInvalidSocket && sock_id == ctrl_read_fd_) {
+      recv_ctrl_cmd();
     } else if (filter == EVFILT_READ) {
       auto conn = get_conn(conn_id);
       if (!conn) {

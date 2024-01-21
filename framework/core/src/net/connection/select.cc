@@ -83,6 +83,8 @@ bool Select::prepare() noexcept {
   if (listen_fd_ != socket::kInvalidSocket) {
     impl_->change_vaild_fd(listen_fd_, true);
     impl_->select_timeout = -1;
+  } else if (ctrl_read_fd_ != socket::kInvalidSocket) {
+    impl_->select_timeout = -1;
   } else {
     impl_->timeout.tv_sec = (impl_->select_timeout / 1000);
     impl_->timeout.tv_usec = (impl_->select_timeout % 1000 * 1000);
@@ -107,17 +109,22 @@ void Select::off() noexcept {
 }
  
 void Select::handle_io() noexcept {
-  if (running_) return;
+  if (!running_) return;
   if (listen_fd_ != socket::kInvalidSocket &&
       FD_ISSET(listen_fd_, &impl_->read_fds.use)) {
     for (size_t i = 0; i < Impl::kOnceAcccpetCount; ++i) {
       if (!accept()) break;
     }
   }
+  if (ctrl_read_fd_ != socket::kInvalidSocket &&
+      FD_ISSET(ctrl_read_fd_, &impl_->read_fds.use)) {
+    recv_ctrl_cmd();
+  }
   try {
     foreach([this, listen_fd = listen_fd_](std::shared_ptr<Basic> conn){
       if (!running_) return;
       auto id = conn->socket()->id();
+      // std::cout << "handle_io: " << id << std::endl;
       if (id == socket::kInvalidSocket || id == listen_fd) return;
       if (FD_ISSET(id, &impl_->except_fds.use)) {
         LOG_ERROR << "connection has except: " << conn->id();
@@ -159,5 +166,6 @@ bool Select::sock_remove(socket::id_t sock_id) noexcept {
   FD_CLR(id, &impl_->except_fds.full);
   FD_CLR(id, &impl_->except_fds.use);
   impl_->change_vaild_fd(sock_id, false);
+  --impl_->fd_size;
   return true;
 }

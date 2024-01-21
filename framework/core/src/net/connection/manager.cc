@@ -1,5 +1,6 @@
 #include "plain/net/connection/manager.h"
 #include <set>
+#include <array>
 #include "plain/concurrency/executor/basic.h"
 #include "plain/concurrency/executor/thread.h"
 #include "plain/net/connection/detail/coroutine.h"
@@ -7,6 +8,8 @@
 #include "plain/net/socket/api.h"
 #include "plain/net/socket/basic.h"
 #include "plain/net/socket/listener.h"
+
+// #define PLAIN_NET_MANAGER_USE_COROUTINE
 
 using plain::net::connection::Manager;
 using namespace std::chrono_literals;
@@ -33,15 +36,21 @@ struct Manager::Impl {
   std::mutex wait_mutex;
   std::condition_variable cv;
   thread_t worker; // The main worker.
+  socket::id_t ctrl_write_fd{socket::kInvalidSocket};
+#ifdef PLAIN_NET_MANAGER_USE_COROUTINE
   detail::task_handle_t task_handle;
   std::atomic_bool tasking{false};
+#endif
 
   void init_connections(uint32_t count);
+#ifdef PLAIN_NET_MANAGER_USE_COROUTINE
   static plain::net::connection::detail::Task
   work(std::shared_ptr<Manager> manager) noexcept;
   static void enqueue_work(std::shared_ptr<Manager> manager) noexcept;
-  static bool wait_work(std::shared_ptr<Manager> manager) noexcept;
   static void handle(std::shared_ptr<Manager> manager) noexcept;
+#endif
+  static bool wait_work(std::shared_ptr<Manager> manager) noexcept;
+  bool send_ctrl_cmd(std::string_view cmd) noexcept;
 
 };
 
@@ -56,6 +65,7 @@ void Manager::Impl::init_connections(uint32_t count) {
   }
 }
 
+#ifdef PLAIN_NET_MANAGER_USE_COROUTINE
 void Manager::Impl::enqueue_work(std::shared_ptr<Manager> manager) noexcept {
   assert(manager);
   if (!manager->running_ || manager->impl_->tasking) return; // The work in executor wait resume.
@@ -63,10 +73,12 @@ void Manager::Impl::enqueue_work(std::shared_ptr<Manager> manager) noexcept {
     work(manager);
   });
 }
+#endif
 
 bool Manager::Impl::wait_work(std::shared_ptr<Manager> manager) noexcept {
   assert(manager);
   std::unique_lock<std::mutex> lock{manager->impl_->wait_mutex};
+#ifdef PLAIN_NET_MANAGER_USE_COROUTINE
   if (manager->impl_->connection_info.size > 0) {
     /*
     auto old_size = manager->impl_->connection_info.size;
@@ -98,8 +110,16 @@ bool Manager::Impl::wait_work(std::shared_ptr<Manager> manager) noexcept {
   if (!manager->running_) return false;
   enqueue_work(manager);
   return true;
+#else
+  manager->impl_->cv.wait(lock, [manager] {
+    return manager->impl_->connection_info.size > 0 || !manager->running_;
+  });
+  if (!manager->running_ || !manager->work()) return false;
+  return true;
+#endif
 }
 
+#ifdef PLAIN_NET_MANAGER_USE_COROUTINE
 plain::net::connection::detail::Task
 Manager::Impl::work(std::shared_ptr<Manager> manager) noexcept {
   auto func = [manager](detail::task_handle_t handle) {
@@ -108,6 +128,7 @@ Manager::Impl::work(std::shared_ptr<Manager> manager) noexcept {
     if (!manager->running_) {
       handle();
     } else {
+      // manager->impl_ will destroy ???
       manager->impl_->task_handle = std::move(handle);
       manager->impl_->cv.notify_one();
     }
@@ -130,6 +151,22 @@ void Manager::Impl::handle(std::shared_ptr<Manager> manager) noexcept {
     manager->impl_->task_handle = detail::task_handle_t{};
   }
 }
+#endif
+
+bool Manager::Impl::send_ctrl_cmd(std::string_view cmd) noexcept {
+  if (ctrl_write_fd == socket::kInvalidSocket)
+    return false;
+  auto r = socket::send(ctrl_write_fd, cmd.data(), cmd.size(), 0);
+  return r >= 0;
+}
+  
+void Manager::recv_ctrl_cmd() noexcept {
+  if (ctrl_read_fd_ == socket::kInvalidSocket)
+    return;
+  std::array<char, 256> buffer;
+  socket::recv(ctrl_read_fd_, buffer.data(), buffer.size(), 0);
+  std::cout << "recv_ctrl_cmd: " << buffer.data() << std::endl;
+}
 
 Manager::Manager(const setting_t &setting) : 
   setting_{setting}, impl_{std::make_unique<Impl>()} {
@@ -147,17 +184,33 @@ Manager::Manager(
   impl_->init_connections(setting.default_count);
 }
 
-Manager::~Manager() = default;
+Manager::~Manager() {
+  if (ctrl_read_fd_ != socket::kInvalidSocket)
+    close(ctrl_read_fd_);
+  if (impl_->ctrl_write_fd != socket::kInvalidSocket)
+    close(impl_->ctrl_write_fd);
+}
 
 bool Manager::start() {
   if (!prepare()) return false;
+  socket::id_t fds[2]{socket::kInvalidSocket};
+  if (socket::make_pair(fds)) {
+    ctrl_read_fd_ = fds[0];
+    impl_->ctrl_write_fd = fds[1];
+    if (!sock_add(ctrl_read_fd_, 0)) {
+      LOG_ERROR << "add ctrl read fd failed";
+      return false;
+    }
+  }
   running_ = true;
+#ifdef PLAIN_NET_MANAGER_USE_COROUTINE
   Impl::enqueue_work(shared_from_this());
+#endif
   impl_->worker = std::move(thread_t([manager = shared_from_this()]{
     for (;;) {
       if (!Impl::wait_work(manager)) break;
     }
-    //std::cout << "work exit: " << manager << std::endl;
+    std::cout << "work exit: " << manager << std::endl;
   }));
   return true;
 }
@@ -166,7 +219,11 @@ void Manager::stop() {
   running_ = false;
   off();
   impl_->cv.notify_one(); // Just one for wait work.
+  impl_->send_ctrl_cmd("k"); // Send stop.
   impl_->executor->shutdown();
+  // The will get "Resource deadlock avoided" except if not join(destroy join).
+  if (impl_->worker.joinable())
+    impl_->worker.join();
   std::this_thread::sleep_for(10ms);
 }
   
@@ -222,7 +279,7 @@ std::shared_ptr<plain::net::connection::Basic> Manager::new_conn() noexcept {
   r->set_id(id);
   r->init();
   r->set_manager(shared_from_this());
-  ++impl_->connection_info.size;
+  ++(impl_->connection_info.size);
   impl_->cv.notify_one(); // Just one for wait work.
   return r;
 }
@@ -250,7 +307,8 @@ void Manager::remove(connection::id_t conn_id) noexcept {
     conn->close();
   }
   impl_->connection_info.free_ids.emplace(conn_id);
-  --impl_->connection_info.size;
+  if (impl_->connection_info.size > 0)
+    --(impl_->connection_info.size);
 }
   
 void Manager::broadcast(std::shared_ptr<packet::Basic> packet) noexcept {

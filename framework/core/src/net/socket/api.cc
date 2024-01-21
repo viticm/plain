@@ -487,4 +487,13 @@ Error get_last_error() noexcept {
   return s_error;
 }
 
+bool make_pair(id_t fd_pair[2]) noexcept {
+#if OS_UNIX
+  auto r = socketpair(AF_UNIX, SOCK_SEQPACKET, 0, fd_pair);
+  return r == 0;
+#else
+  return false;
+#endif
+}
+
 } // namespace plain::net::socket

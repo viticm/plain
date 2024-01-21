@@ -212,6 +212,8 @@ void Iocp::handle_input() noexcept {
         sock_id == listen_fd_ && accept_count < kOnceAcccpetCount) {
       ++accept_count;
       this->accept();
+    } else if (sock_id != socket::kInvalidSocket && sock_id == ctrl_read_fd_) {
+      recv_ctrl_cmd();
     } else if (d.events[i].events & EPOLLIN) {
       auto conn = get_conn(conn_id);
       if (!conn) {

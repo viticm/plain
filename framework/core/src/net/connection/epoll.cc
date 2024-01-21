@@ -170,7 +170,7 @@ bool Epoll::work() noexcept {
 
 void Epoll::off() noexcept {
 #if OS_UNIX
-  poll_destory(impl_->data);
+  // poll_destory(impl_->data);
 #endif
 }
 
@@ -204,11 +204,11 @@ bool Epoll::sock_remove([[maybe_unused]] socket::id_t sock_id) noexcept {
 
 void Epoll::handle_input() noexcept {
 #if OS_UNIX
-  if (running_) return;
+  if (!running_) return;
   size_t accept_count{0};
   auto &d = impl_->data;
   for (int32_t i = 0; i < d.result_event_count; ++i) {
-    if (running_) break;
+    if (!running_) break;
     auto sock_id = static_cast<socket::id_t>(
       get_highsection(d.events[i].data.u64));
     auto conn_id = static_cast<connection::id_t>(
@@ -217,7 +217,11 @@ void Epoll::handle_input() noexcept {
         sock_id == listen_fd_ && accept_count < kOnceAcccpetCount) {
       ++accept_count;
       this->accept();
+    } else if (sock_id != socket::kInvalidSocket && sock_id == ctrl_read_fd_) {
+      recv_ctrl_cmd();
     } else if (d.events[i].events & EPOLLIN) {
+      if (conn_id == connection::kInvalidId)
+        continue;
       auto conn = get_conn(conn_id);
       if (!conn) {
         LOG_ERROR << "can't find connection: " << conn_id;

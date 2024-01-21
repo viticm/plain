@@ -97,6 +97,8 @@ getpeername(id_t id, sockaddr *name, int32_t *namelength);
 
 PLAIN_API Error get_last_error() noexcept;
 
+PLAIN_API bool make_pair(id_t fd_pair[2]) noexcept;
+
 } // namespace socket
 } // namespace plain::net
 
