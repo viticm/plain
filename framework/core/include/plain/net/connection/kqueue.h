@@ -18,7 +18,8 @@
 namespace plain::net {
 namespace connection {
 
-class PLAIN_API Kqueue : public Manager {
+class PLAIN_API alignas(kCacheInlineAlignment)
+Kqueue final : public Manager {
 
  public:
   Kqueue(const setting_t &setting);

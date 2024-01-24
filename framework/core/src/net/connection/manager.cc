@@ -2,13 +2,18 @@
 #include <set>
 #include <array>
 #include "plain/concurrency/executor/basic.h"
-#include "plain/concurrency/executor/thread.h"
+#include "plain/concurrency/executor/worker_thread.h"
 #include "plain/net/connection/detail/coroutine.h"
 #include "plain/net/connection/basic.h"
 #include "plain/net/socket/api.h"
 #include "plain/net/socket/basic.h"
 #include "plain/net/socket/listener.h"
 
+/* *
+ *  In this mode, will use coroutine wait manager work.
+ *  The work will in executor task.
+ *  The worker thread notice the executor task resume.
+ * */
 // #define PLAIN_NET_MANAGER_USE_COROUTINE
 
 using plain::net::connection::Manager;
@@ -37,20 +42,20 @@ struct Manager::Impl {
   std::condition_variable cv;
   thread_t worker; // The main worker.
   socket::id_t ctrl_write_fd{socket::kInvalidSocket};
+  bool running{false};
 #ifdef PLAIN_NET_MANAGER_USE_COROUTINE
   detail::task_handle_t task_handle;
   std::atomic_bool tasking{false};
 #endif
 
   void init_connections(uint32_t count);
+  static bool wait_work(std::shared_ptr<Manager> manager) noexcept;
 #ifdef PLAIN_NET_MANAGER_USE_COROUTINE
   static plain::net::connection::detail::Task
   work(std::shared_ptr<Manager> manager) noexcept;
   static void enqueue_work(std::shared_ptr<Manager> manager) noexcept;
   static void handle(std::shared_ptr<Manager> manager) noexcept;
 #endif
-  static bool wait_work(std::shared_ptr<Manager> manager) noexcept;
-  bool send_ctrl_cmd(std::string_view cmd) noexcept;
 
 };
 
@@ -68,7 +73,9 @@ void Manager::Impl::init_connections(uint32_t count) {
 #ifdef PLAIN_NET_MANAGER_USE_COROUTINE
 void Manager::Impl::enqueue_work(std::shared_ptr<Manager> manager) noexcept {
   assert(manager);
-  if (!manager->running_ || manager->impl_->tasking) return; // The work in executor wait resume.
+  // The work in executor wait resume.
+  if (!manager->running() || manager->impl_->tasking) return;
+  if (manager->get_executor().shutdown_requested()) return;
   manager->get_executor().post([manager]() {
     work(manager);
   });
@@ -84,37 +91,39 @@ bool Manager::Impl::wait_work(std::shared_ptr<Manager> manager) noexcept {
     auto old_size = manager->impl_->connection_info.size;
     manager->impl_->cv.wait_for(lock, 10ms, [manager, old_size] {
       return old_size != manager->impl_->connection_info.size ||
-        !manager->running_;
+        !manager->running();
     });
     */
   } else {
     manager->impl_->cv.wait(lock, [manager] {
-      return manager->impl_->connection_info.size > 0 || !manager->running_;
+      return manager->listen_fd_ != socket::kInvalidSocket ||
+        manager->impl_->connection_info.size > 0 || !manager->running();
     });
   }
   manager->impl_->cv.wait(lock, [manager] {
-    return manager->impl_->tasking || !manager->running_;
+    return manager->impl_->tasking || !manager->running();
   });
   if (manager->impl_->tasking) {
     manager->impl_->cv.wait(lock, [manager] {
-      return static_cast<bool>(manager->impl_->task_handle); // || !manager->running_;
+      return static_cast<bool>(manager->impl_->task_handle);
     });
   }
   manager->impl_->handle(manager);
   manager->impl_->cv.wait(lock, [manager] {
     const auto tasking = manager->impl_->tasking.load(std::memory_order_relaxed);
-    return !tasking; // || !manager->running_;
+    return !tasking; // || !manager->running();
   });
   //const auto tasking = manager->impl_->tasking.load(std::memory_order_relaxed);
   //std::cout << "tasking:" << (tasking ? 1: 0) << ":" << manager << std::endl;
-  if (!manager->running_) return false;
+  if (!manager->running()) return false;
   enqueue_work(manager);
   return true;
 #else
   manager->impl_->cv.wait(lock, [manager] {
-    return manager->impl_->connection_info.size > 0 || !manager->running_;
+    return manager->listen_fd_ != socket::kInvalidSocket ||
+      manager->impl_->connection_info.size > 0 || !manager->running();
   });
-  if (!manager->running_ || !manager->work()) return false;
+  if (!manager->running() || !manager->work()) return false;
   return true;
 #endif
 }
@@ -125,7 +134,7 @@ Manager::Impl::work(std::shared_ptr<Manager> manager) noexcept {
   auto func = [manager](detail::task_handle_t handle) {
     assert(!static_cast<bool>(manager->impl_->task_handle));
     assert(handle);
-    if (!manager->running_) {
+    if (!manager->running()) {
       handle();
     } else {
       // manager->impl_ will destroy ???
@@ -153,25 +162,11 @@ void Manager::Impl::handle(std::shared_ptr<Manager> manager) noexcept {
 }
 #endif
 
-bool Manager::Impl::send_ctrl_cmd(std::string_view cmd) noexcept {
-  if (ctrl_write_fd == socket::kInvalidSocket)
-    return false;
-  auto r = socket::send(ctrl_write_fd, cmd.data(), cmd.size(), 0);
-  return r >= 0;
-}
-  
-void Manager::recv_ctrl_cmd() noexcept {
-  if (ctrl_read_fd_ == socket::kInvalidSocket)
-    return;
-  std::array<char, 256> buffer;
-  socket::recv(ctrl_read_fd_, buffer.data(), buffer.size(), 0);
-  std::cout << "recv_ctrl_cmd: " << buffer.data() << std::endl;
-}
-
 Manager::Manager(const setting_t &setting) : 
   setting_{setting}, impl_{std::make_unique<Impl>()} {
   assert(setting.default_count <= setting.max_count);
-  impl_->executor = std::move(std::make_unique<concurrency::executor::Thread>());
+  impl_->executor = std::move(
+    std::make_unique<concurrency::executor::WorkerThread>());
   impl_->init_connections(setting.default_count);
 }
 
@@ -192,6 +187,7 @@ Manager::~Manager() {
 }
 
 bool Manager::start() {
+  if (impl_->running) return true;
   if (!prepare()) return false;
   socket::id_t fds[2]{socket::kInvalidSocket};
   if (socket::make_pair(fds)) {
@@ -202,7 +198,7 @@ bool Manager::start() {
       return false;
     }
   }
-  running_ = true;
+  impl_->running = true;
 #ifdef PLAIN_NET_MANAGER_USE_COROUTINE
   Impl::enqueue_work(shared_from_this());
 #endif
@@ -210,21 +206,31 @@ bool Manager::start() {
     for (;;) {
       if (!Impl::wait_work(manager)) break;
     }
-    std::cout << "work exit: " << manager << std::endl;
+    // std::cout << "work exit: " << manager << std::endl;
   }));
   return true;
 }
 
 void Manager::stop() {
-  running_ = false;
+  // std::cout << "stop: " << this << std::endl;
+  {
+    std::unique_lock<std::mutex> lock{impl_->mutex};
+    impl_->running = false;
+  }
   off();
   impl_->cv.notify_one(); // Just one for wait work.
-  impl_->send_ctrl_cmd("k"); // Send stop.
-  impl_->executor->shutdown();
+  send_ctrl_cmd("k"); // Send stop.
   // The will get "Resource deadlock avoided" except if not join(destroy join).
+  // Worker stop must be before the executor(connection work in executor and 
+  // if open coroutine mode manager wait work also).
   if (impl_->worker.joinable())
     impl_->worker.join();
-  std::this_thread::sleep_for(10ms);
+  std::this_thread::sleep_for(1ms);
+  impl_->executor->shutdown();
+}
+
+bool Manager::running() const noexcept {
+  return impl_->running;
 }
   
 plain::concurrency::executor::Basic &Manager::get_executor() {
@@ -239,7 +245,7 @@ const plain::net::stream::codec_t &Manager::codec() const noexcept {
   return impl_->codec;
 }
 
-void Manager::set_packet_dispatcher(packet::dispatch_func func) noexcept {
+void Manager::set_dispatcher(packet::dispatch_func func) noexcept {
   impl_->dispatcher = func;
 }
   
@@ -362,4 +368,34 @@ std::shared_ptr<plain::net::connection::Basic> Manager::accept() noexcept {
   }
   conn->on_connect();
   return conn;
+}
+
+bool Manager::send_ctrl_cmd(std::string_view cmd) noexcept {
+  if (impl_->ctrl_write_fd == socket::kInvalidSocket)
+    return false;
+  auto r = socket::send(impl_->ctrl_write_fd, cmd.data(), cmd.size(), 0);
+  return r >= 0;
+}
+  
+void Manager::recv_ctrl_cmd() noexcept {
+  if (ctrl_read_fd_ == socket::kInvalidSocket)
+    return;
+  std::array<char, 256> buffer;
+  socket::recv(ctrl_read_fd_, buffer.data(), buffer.size(), 0);
+  auto type = buffer[0];
+  switch (type) {
+    case 'w': // wakeup
+    case 'k': // stop
+      break;
+    default:
+      LOG_ERROR << "unknown cmd: " << buffer.data();
+      break;
+  }
+  // std::cout << "recv_ctrl_cmd: " << buffer.data() << std::endl;
+}
+
+void Manager::execute(std::function<void()> func) {
+  // This use with get_executor post functions(How can free?).
+  std::unique_lock<std::mutex> lock{impl_->mutex};
+  func();
 }

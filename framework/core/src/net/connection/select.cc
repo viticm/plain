@@ -79,7 +79,6 @@ Select::Select(
 Select::~Select() = default;
 
 bool Select::prepare() noexcept {
-  if (running_) return true;
   if (listen_fd_ != socket::kInvalidSocket) {
     impl_->change_vaild_fd(listen_fd_, true);
     impl_->select_timeout = -1;
@@ -109,7 +108,6 @@ void Select::off() noexcept {
 }
  
 void Select::handle_io() noexcept {
-  if (!running_) return;
   if (listen_fd_ != socket::kInvalidSocket &&
       FD_ISSET(listen_fd_, &impl_->read_fds.use)) {
     for (size_t i = 0; i < Impl::kOnceAcccpetCount; ++i) {
@@ -122,7 +120,6 @@ void Select::handle_io() noexcept {
   }
   try {
     foreach([this, listen_fd = listen_fd_](std::shared_ptr<Basic> conn){
-      if (!running_) return;
       auto id = conn->socket()->id();
       // std::cout << "handle_io: " << id << std::endl;
       if (id == socket::kInvalidSocket || id == listen_fd) return;

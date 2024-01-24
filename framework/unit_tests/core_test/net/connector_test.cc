@@ -28,7 +28,7 @@ class TConnector : public testing::Test {
 namespace plain::tests {
 
 void test_net_connector_constructor();
-void test_net_conncetor_operator();
+void test_net_connector_operator();
 void test_net_connector_func();
 
 }
@@ -65,6 +65,7 @@ void plain::tests::test_net_connector_func() {
 
   setting_t setting;
   setting.mode = Mode::Epoll;
+  setting.name = "connector2";
   Connector connector2(setting);
   started = connector2.start();
   auto conn4 = connector2.connect("[::]:22");
@@ -74,6 +75,21 @@ void plain::tests::test_net_connector_func() {
 #elif OS_UNIX
   ASSERT_TRUE(started);
 #endif
+
+  setting.mode = Mode::IoUring;
+  Connector connector3(setting);
+
+  setting.mode = Mode::Iocp;
+  Connector connector4(setting);
+  started = connector4.start();
+#if OS_WIN
+  ASSERT_TRUE(started);
+#else
+  ASSERT_FALSE(started);
+#endif
+
+  setting.mode = Mode::Kqueue;
+  Connector connector5(setting);
 
   // std::this_thread::sleep_for(100ms);
   connector2.stop();

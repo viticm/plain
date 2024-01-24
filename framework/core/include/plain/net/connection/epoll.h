@@ -18,7 +18,8 @@
 namespace plain::net {
 namespace connection {
 
-class PLAIN_API Epoll : public Manager {
+class PLAIN_API alignas(kCacheInlineAlignment)
+Epoll final : public Manager {
 
  public:
   Epoll(const setting_t &setting);

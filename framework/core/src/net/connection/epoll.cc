@@ -134,7 +134,7 @@ Epoll::~Epoll() {
   
 bool Epoll::prepare() noexcept {
 #if OS_UNIX
-  if (running_) return true;
+  if (running()) return true;
   auto fd = poll_create(impl_->data, setting_.max_count);
   if (fd <= 0) {
     LOG_ERROR << "create error max_count: "
@@ -204,11 +204,11 @@ bool Epoll::sock_remove([[maybe_unused]] socket::id_t sock_id) noexcept {
 
 void Epoll::handle_input() noexcept {
 #if OS_UNIX
-  if (!running_) return;
+  if (!running()) return;
   size_t accept_count{0};
   auto &d = impl_->data;
   for (int32_t i = 0; i < d.result_event_count; ++i) {
-    if (!running_) break;
+    if (!running()) break;
     auto sock_id = static_cast<socket::id_t>(
       get_highsection(d.events[i].data.u64));
     auto conn_id = static_cast<connection::id_t>(

@@ -24,10 +24,11 @@ Listener::Listener(const setting_t &setting) : impl_{std::make_unique<Impl>()} {
 }
 
 Listener::~Listener() {
-  if (impl_->manager->running_) impl_->manager->stop();
+  if (impl_->manager->running()) impl_->manager->stop();
 }
   
 bool Listener::start() {
+  if (impl_->manager->running()) return true;
   impl_->manager->listen_sock_ = std::make_shared<socket::Listener>();
   Address addr{impl_->manager->setting_.address};
   if (!impl_->manager->listen_sock_->init(addr)) return false;
@@ -37,7 +38,7 @@ bool Listener::start() {
   
 void Listener::stop() {
   // Manager must stoped.
-  if (impl_->manager->running_) impl_->manager->stop();
+  if (impl_->manager->running()) impl_->manager->stop();
 }
 
 void Listener::set_codec(const stream::codec_t &codec) noexcept {
@@ -48,8 +49,8 @@ const plain::net::stream::codec_t &Listener::codec() const noexcept {
   return impl_->manager->codec();
 }
   
-void Listener::set_packet_dispatcher(packet::dispatch_func func) noexcept {
-  impl_->manager->set_packet_dispatcher(func);
+void Listener::set_dispatcher(packet::dispatch_func func) noexcept {
+  impl_->manager->set_dispatcher(func);
 }
   
 const plain::net::packet::dispatch_func &Listener::dispatcher() const noexcept {
@@ -71,4 +72,9 @@ void Listener::broadcast(std::shared_ptr<packet::Basic> packet) noexcept {
   
 plain::concurrency::executor::Basic &Listener::get_executor() {
   return impl_->manager->get_executor();
+}
+  
+plain::net::Address Listener::address() const noexcept {
+  if (!impl_->manager->listen_sock_) return {};
+  return impl_->manager->listen_sock_->address();
 }

@@ -20,7 +20,7 @@ Basic::~Basic() {
 Basic::Basic(Basic &&object) noexcept = default;
 
 bool Basic::create() {
-  impl_->id = socket::create(AF_INET, SOCK_STREAM, 0);
+  impl_->id = socket::create(AF_INET, SOCK_STREAM, 0); // default is ip_v4
   return valid();
 }
 

@@ -18,7 +18,8 @@
 namespace plain::net {
 namespace connection {
 
-class PLAIN_API Iocp : public Manager {
+class PLAIN_API alignas(kCacheInlineAlignment)
+Iocp final : public Manager {
 
  public:
   Iocp(const setting_t &setting);

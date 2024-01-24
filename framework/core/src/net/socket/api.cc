@@ -487,8 +487,77 @@ Error get_last_error() noexcept {
   return s_error;
 }
 
+#if OS_WIN
+int32_t socketpair(
+  int32_t domain, int32_t type, int32_t protocol, id_t fds[2]) {
+  int32_t tcp1{-1}, tcp2{-1};
+  
+  bytes_t name;
+  if (domain == AF_INET6) {
+    sockaddr_in6 addr;
+    memset(&addr, 0, sizeof(addr));
+    addr.sin6_family = domain;
+    auto cr = inet_pton(AF_INET6, "::1", &addr.sin6_addr);
+    if (cr != 1) return -1;
+    name.append(reinterpret_cast<std::byte *>(&addr), sizeof(addr));
+
+  } else {
+    sockaddr_in addr;
+    memset(&addr, 0, sizeof(addr));
+    addr.sin_family = domain;
+    addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    name.append(reinterpret_cast<std::byte *>(&addr), sizeof(addr));
+  }
+
+  int32_t namelen = name.size();
+  int32_t tcp = create(domain, type, protocol);
+  if (tcp == -1){
+    goto clean;
+  }
+  if (bind(tcp, reinterpret_cast<sockaddr *>(&name.data()), namelen) == -1){
+    goto clean;
+  }
+  if (listen(tcp, 5) == -1){
+    goto clean;
+  }
+  if (getsockname(
+      tcp, reinterpret_cast<sockaddr *>(&name.data()), &namelen) == -1){
+    goto clean;
+  }
+  tcp1 = create(domain, type, protocol);
+  if (tcp1 == -1){
+    goto clean;
+  }
+  if (-1 == connect(tcp1, reinterpret_cast<sockaddr *>(&name.data()), namelen)){
+    goto clean;
+  }
+
+  tcp2 = accept(tcp, reinterpret_cast<sockaddr *>(&name.data()), &namelen);
+  if (tcp2 == -1){
+    goto clean;
+  }
+  if (close(tcp) == -1){
+    goto clean;
+  }
+  fds[0] = tcp1;
+  fds[1] = tcp2;
+  return 0;
+clean:
+  if (tcp != -1){
+    close(tcp);
+  }
+  if (tcp2 != -1){
+    close(tcp2);
+  }
+  if (tcp1 != -1){
+    close(tcp1);
+  }
+  return -1;
+}
+#endif
+
 bool make_pair(id_t fd_pair[2]) noexcept {
-#if OS_UNIX
+#if OS_UNIX || OS_WIN
   auto r = socketpair(AF_UNIX, SOCK_SEQPACKET, 0, fd_pair);
   return r == 0;
 #else

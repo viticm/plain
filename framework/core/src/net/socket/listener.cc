@@ -13,7 +13,7 @@ Listener::~Listener() = default;
 
 bool Listener::init(const Address &addr, uint32_t backlog) {
   if (!socket_->close()) return false;
-  if (!socket_->create()) {
+  if (!socket_->create(addr.family(), SOCK_STREAM, 0)) {
     LOG_ERROR << "can't create: " << get_last_error();
     return false;
   }

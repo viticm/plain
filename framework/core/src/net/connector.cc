@@ -28,7 +28,7 @@ Connector::Connector(const setting_t &setting) :
 
 Connector::~Connector() {
   // Manager must stoped.
-  if (impl_->manager->running_) impl_->manager->stop();
+  if (impl_->manager->running()) impl_->manager->stop();
 }
   
 bool Connector::start() {
@@ -60,8 +60,8 @@ const plain::net::stream::codec_t &Connector::codec() const noexcept {
   return impl_->manager->codec();
 }
   
-void Connector::set_packet_dispatcher(packet::dispatch_func func) noexcept {
-  impl_->manager->set_packet_dispatcher(func);
+void Connector::set_dispatcher(packet::dispatch_func func) noexcept {
+  impl_->manager->set_dispatcher(func);
 }
   
 const plain::net::packet::dispatch_func &Connector::dispatcher() const noexcept {
@@ -102,18 +102,19 @@ Connector::connect_impl(
   auto sock = conn->socket();
   if (!sock->set_nonblocking()) {
     impl_->manager->remove(conn);
-    LOG_ERROR << "connect set_nonblocking failed: " << socket::get_last_error();
+    LOG_ERROR << "set_nonblocking failed: " << socket::get_last_error();
     return {};
   }
   if (!sock->set_linger(0)) {
     impl_->manager->remove(conn);
-    LOG_ERROR << "connect set_linger(0) failed: " << socket::get_last_error();
+    LOG_ERROR << "set_linger(0) failed: " << socket::get_last_error();
     return {};
   }
   if (!impl_->manager->sock_add(sock->id(), conn->id())) {
     impl_->manager->remove(conn);
-    LOG_ERROR << "connect sock add failed";
+    LOG_ERROR << "sock add failed";
     return {};
   }
+  impl_->manager->send_ctrl_cmd("w"); // wakeup to add socket descriptor.
   return conn;
 }

@@ -26,6 +26,7 @@ enum class ErrorCode : std::uint8_t {
   RunTime,
   NetPacketCantFill,
   NetPacketNeedRecv,
+  NetPacketInvalid,
 };
 
 class PLAIN_API [[nodiscard]] Error : copyable {

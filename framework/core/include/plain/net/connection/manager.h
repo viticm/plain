@@ -34,16 +34,19 @@ class PLAIN_API Manager :
  public:
   bool start();
   void stop();
+  bool running() const noexcept;
 
  public:
   void set_codec(const stream::codec_t &codec) noexcept;
   const stream::codec_t &codec() const noexcept;
-  void set_packet_dispatcher(packet::dispatch_func func) noexcept;
+  void set_dispatcher(packet::dispatch_func func) noexcept;
   const packet::dispatch_func &dispatcher() const noexcept;
   std::shared_ptr<Basic> get_conn(id_t id) const noexcept;
   bool is_full() const noexcept;
   void broadcast(std::shared_ptr<packet::Basic> packet) noexcept;
   concurrency::executor::Basic &get_executor();
+  bool send_ctrl_cmd(std::string_view cmd) noexcept;
+  void execute(std::function<void()> func); // Multi safe execute.
  
  protected:
   virtual bool work() noexcept = 0; // working
@@ -66,7 +69,6 @@ class PLAIN_API Manager :
   socket::id_t listen_fd_{socket::kInvalidSocket};
   std::shared_ptr<socket::Listener> listen_sock_;
   socket::id_t ctrl_read_fd_{socket::kInvalidSocket};
-  bool running_{false};
 
  private:
   friend class Basic;

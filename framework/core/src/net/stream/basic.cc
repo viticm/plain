@@ -25,6 +25,7 @@ int32_t Basic::pull() noexcept {
   auto socket = impl_->weak_socket.lock();
   if (!socket || !socket->valid()) return 0;
   auto socket_avail = socket->avail();
+  if (socket_avail == 0) return 0;
   auto once_max = impl_->buffer.write_avail() + impl_->buffer.size();
   bytes_t bytes;
   bytes.reserve(socket_avail >= once_max ? once_max : socket_avail);
@@ -32,23 +33,26 @@ int32_t Basic::pull() noexcept {
   if (e == kErrorWouldBlock) return 0;
   if (e == kSocketError) return kSocketError - 1;
   if (e == 0) return kSocketError - 2;
-  auto read_size = impl_->buffer.write(bytes.data(), bytes.size());
-  if (read_size <= bytes.size()) return kSocketError - 3;
+  uint32_t size = e;
+  auto read_size = impl_->buffer.write(bytes.data(), size);
+  if (read_size < size) return kSocketError - 3;
   return read_size;
 }
 
 int32_t Basic::push() noexcept {
+  // std::cout << "push" << this << std::endl;
   auto socket = impl_->weak_socket.lock();
   if (!socket || !socket->valid()) return 0;
   auto send_size = impl_->buffer.read_avail();
+  // std::cout << "need size: " << send_size << std::endl;
   if (send_size == 0) return 0;
   constexpr auto once_max = 1024;
   if (send_size > once_max)
     send_size = once_max;
   bytes_t bytes;
-  bytes.reserve(send_size);
-  impl_->buffer.read(bytes.data(), send_size, true); // Read to temp.
-  send_size = bytes.size(); // The real need send size.
+  bytes.resize(send_size);
+  send_size = impl_->buffer.read(bytes.data(), send_size, true); // Read to temp.
+  // std::cout << "push value: " << (char *)bytes.data() << std::endl;
   decltype(send_size) real_send_size{0};
   for (uint16_t i = 0; i < 99; ++i) {
     if (real_send_size >= send_size) break;

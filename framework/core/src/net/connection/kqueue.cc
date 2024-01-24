@@ -167,7 +167,7 @@ Kqueue::~Kqueue() {
   
 bool Kqueue::prepare() noexcept {
 #if ENABLE_KQUEUE
-  if (running_) return true;
+  if (running()) return true;
   impl_->data.event_datas = std::vector<uint64_t>(setting_.max_count, 0);
   auto fd = poll_create(impl_->data, setting_.max_count);
   if (fd <= 0) {
@@ -239,11 +239,9 @@ bool Kqueue::sock_remove([[maybe_unused]] socket::id_t sock_id) noexcept {
 
 void Kqueue::handle_input() noexcept {
 #if ENABLE_KQUEUE
-  if (!running_) return;
   size_t accept_count{0};
   auto &d = impl_->data;
   for (int32_t i = 0; i < d.result_event_count; ++i) {
-    if (!running_) break;
     uint64_t ud = d.events[i].ud ? *d.events[i].ud : 0;
     auto sock_id = static_cast<socket::id_t>(get_highsection(ud);
     auto conn_id = static_cast<connection::id_t>(get_lowsection(ud));

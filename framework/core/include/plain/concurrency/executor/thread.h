@@ -45,8 +45,8 @@ Thread final : public Derivable<Thread> {
   std::list<thread_t> workers_;
   std::condition_variable condition_;
   std::list<thread_t> last_retired_;
-  bool abort_;
-  std::atomic_bool atomic_abort_;
+  bool abort_{false};
+  std::atomic_bool atomic_abort_{false};
   const std::function<void(std::string_view name)> started_callback_;
   const std::function<void(std::string_view name)> terminated_callback_;
 

@@ -17,7 +17,8 @@
 namespace plain::net {
 namespace packet {
 
-using dispatch_func = std::function<bool(std::shared_ptr<Basic>)>;
+using dispatch_func = std::function<
+  bool(connection::Basic *, std::shared_ptr<Basic>)>;
 using id_t = uint16_t;
 
 } // namespace packet

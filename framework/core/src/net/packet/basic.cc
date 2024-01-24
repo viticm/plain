@@ -15,8 +15,8 @@ struct Basic::Impl {
   bool have_flag(uint32_t flag) const noexcept;
 };
 
-bool Basic::Impl::have_flag(uint32_t flag) const noexcept {
-  return flag & (1 << flag);
+bool Basic::Impl::have_flag(uint32_t type) const noexcept {
+  return flag & (1 << type);
 }
 
 size_t Basic::write(std::string_view str) {
@@ -24,14 +24,22 @@ size_t Basic::write(std::string_view str) {
   if (str.size() == 0) return 0;
   const auto *buffer = reinterpret_cast<const std::byte *>(str.data());
   auto size = str.size();
+  *this << static_cast<uint32_t>(size);
   impl_->data.append(buffer, size);
   return size;
 }
 
 size_t Basic::write(const bytes_t &bytes) {
   if (!impl_->have_flag(kWriteableFlag)) return 0;
+  *this << static_cast<uint32_t>(bytes.size());
   impl_->data.append(bytes);
   return bytes.size();
+}
+
+size_t Basic::write(std::byte *bytes, size_t length) {
+  if (!impl_->have_flag(kWriteableFlag)) return 0;
+  impl_->data.append(bytes, length);
+  return length;
 }
 
 size_t Basic::read(std::string &str) {
@@ -43,7 +51,7 @@ size_t Basic::read(std::string &str) {
   if (left < length) return 0;
   const auto *buffer = reinterpret_cast<const char *>(
     impl_->data.data() + impl_->offset);
-  str.insert(0, buffer, length);
+  str.append(buffer, length);
   impl_->offset += length;
   return str.size();
 }
@@ -65,9 +73,9 @@ size_t Basic::read(std::byte *value, size_t length) {
   if (!value || !impl_->have_flag(kReadableFlag)) return 0;
   auto left = impl_->data.size() - impl_->offset;
   if (left < length) return 0;
-  impl_->offset += length;
   const auto *buffer = impl_->data.data() + impl_->offset;
   std::memcpy(value, buffer, length);
+  impl_->offset += length;
   return length;
 }
 

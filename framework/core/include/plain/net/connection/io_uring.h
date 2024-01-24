@@ -19,7 +19,8 @@
 namespace plain::net {
 namespace connection {
 
-class PLAIN_API IoUring : public Manager {
+class PLAIN_API alignas(kCacheInlineAlignment)
+IoUring final : public Manager {
 
  public:
   IoUring(const setting_t &setting);

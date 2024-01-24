@@ -20,7 +20,7 @@
 
 namespace plain::net {
 
-class PLAIN_API Listener {
+class PLAIN_API Listener final {
 
  public:
   Listener(
@@ -37,12 +37,15 @@ class PLAIN_API Listener {
  public:
   void set_codec(const stream::codec_t &codec) noexcept;
   const stream::codec_t &codec() const noexcept;
-  void set_packet_dispatcher(packet::dispatch_func func) noexcept;
+  void set_dispatcher(packet::dispatch_func func) noexcept;
   const packet::dispatch_func &dispatcher() const noexcept;
   std::shared_ptr<connection::Basic> get_conn(id_t id) const noexcept;
   bool is_full() const noexcept;
   void broadcast(std::shared_ptr<packet::Basic> packet) noexcept;
   concurrency::executor::Basic &get_executor();
+ 
+ public:
+  Address address() const noexcept;
 
  private:
   struct Impl;

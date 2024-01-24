@@ -60,6 +60,12 @@ namespace packet {
 
 class Basic;
 
+struct limit_struct {
+  uint32_t max_id{std::numeric_limits<uint16_t>::max()};
+  uint32_t max_length{200 * 1024}; // default 200k
+};
+using limit_t = limit_struct;
+
 } // namespace packet
 
 struct setting_struct {
@@ -71,6 +77,7 @@ struct setting_struct {
   // ip_v4: x.x.x.x:port ip_v6: [x:x:x:...]:port
   std::string address; // listener only
   std::string name;
+  packet::limit_t packet_limit;
 };
 
 using setting_t = setting_struct;

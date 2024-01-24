@@ -18,7 +18,8 @@
 namespace plain::net {
 namespace connection {
 
-class Select : public Manager {
+class PLAIN_API alignas(kCacheInlineAlignment)
+Select final : public Manager {
 
  public:
   Select(const setting_t &setting);

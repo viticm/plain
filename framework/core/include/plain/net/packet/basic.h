@@ -28,6 +28,7 @@ class PLAIN_API Basic {
  public:
   size_t write(std::string_view str);
   size_t write(const bytes_t &bytes);
+  size_t write(std::byte *value, size_t length);
   size_t read(std::string &str);
   size_t read(bytes_t &bytes);
   size_t read(std::byte *value, size_t length);
@@ -49,11 +50,21 @@ class PLAIN_API Basic {
     bytes.reserve(sizeof(T));
     auto temp = hton(value);
     bytes.insert(0, reinterpret_cast<bytes_t::value_type *>(&temp), sizeof(T));
-    write(bytes);
+    write(bytes.data(), bytes.size());
+    return *this;
+  }
+
+  Basic &operator<<(const char *str) {
+    write(str);
     return *this;
   }
 
   Basic &operator<<(std::string_view str) {
+    write(str);
+    return *this;
+  }
+
+  Basic &operator<<(std::string str) {
     write(str);
     return *this;
   }
@@ -66,7 +77,7 @@ class PLAIN_API Basic {
   template <typename T>
   Basic &operator>>(T &value) {
     value = T{};
-    read(reinterpret_cast<std::byte *>(value), sizeof(T));
+    read(reinterpret_cast<std::byte *>(&value), sizeof(T));
     value = ntoh(value);
     return *this;
   }
@@ -87,7 +98,7 @@ class PLAIN_API Basic {
 
 };
 
-bool dispatch(std::shared_ptr<Basic> packet) noexcept;
+bool dispatch(connection::Basic *conn, std::shared_ptr<Basic> packet) noexcept;
 
 } // namespace packet
 } // namespace plain::net

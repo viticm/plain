@@ -20,7 +20,7 @@
 
 namespace plain::net {
 
-class PLAIN_API Connector {
+class PLAIN_API Connector final {
 
  public:
   Connector(
@@ -48,7 +48,7 @@ class PLAIN_API Connector {
  public:
   void set_codec(const stream::codec_t &codec) noexcept;
   const stream::codec_t &codec() const noexcept;
-  void set_packet_dispatcher(packet::dispatch_func func) noexcept;
+  void set_dispatcher(packet::dispatch_func func) noexcept;
   const packet::dispatch_func &dispatcher() const noexcept;
   std::shared_ptr<connection::Basic> get_conn(id_t id) const noexcept;
   bool is_full() const noexcept;

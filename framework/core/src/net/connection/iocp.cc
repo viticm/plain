@@ -199,11 +199,9 @@ bool Iocp::sock_remove([[maybe_unused]] socket::id_t sock_id) noexcept {
 
 void Iocp::handle_input() noexcept {
 #if OS_WIN
-  if (!running_) return;
   size_t accept_count{0};
   auto &d = impl_->data;
   for (int32_t i = 0; i < d.result_event_count; ++i) {
-    if (!running_) break;
     auto sock_id = static_cast<socket::id_t>(
       get_highsection(d.events[i].data.u64));
     auto conn_id = static_cast<connection::id_t>(
