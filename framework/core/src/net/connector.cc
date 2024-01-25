@@ -67,7 +67,16 @@ void Connector::set_dispatcher(packet::dispatch_func func) noexcept {
 const plain::net::packet::dispatch_func &Connector::dispatcher() const noexcept {
   return impl_->manager->dispatcher();
 }
+   
+void Connector::set_connect_callback(connection::callable_func func) noexcept {
+  impl_->manager->set_connect_callback(func);
+}
   
+void Connector::set_disconnect_callback(
+  connection::callable_func func) noexcept {
+  impl_->manager->set_disconnect_callback(func);
+}
+ 
 std::shared_ptr<plain::net::connection::Basic>
 Connector::get_conn(id_t id) const noexcept {
   return impl_->manager->get_conn(id);
@@ -95,26 +104,30 @@ Connector::connect_impl(
     conn->socket()->connect(addr_or_ip, timeout) :
     conn->socket()->connect(addr_or_ip, port, timeout);
   if (!success) {
-    impl_->manager->remove(conn);
+    impl_->manager->remove(conn, true);
     LOG_ERROR << "connect failed: " << socket::get_last_error();
     return {};
   }
   auto sock = conn->socket();
   if (!sock->set_nonblocking()) {
-    impl_->manager->remove(conn);
+    impl_->manager->remove(conn, true);
     LOG_ERROR << "set_nonblocking failed: " << socket::get_last_error();
     return {};
   }
   if (!sock->set_linger(0)) {
-    impl_->manager->remove(conn);
+    impl_->manager->remove(conn, true);
     LOG_ERROR << "set_linger(0) failed: " << socket::get_last_error();
     return {};
   }
   if (!impl_->manager->sock_add(sock->id(), conn->id())) {
-    impl_->manager->remove(conn);
+    impl_->manager->remove(conn, true);
     LOG_ERROR << "sock add failed";
     return {};
   }
   impl_->manager->send_ctrl_cmd("w"); // wakeup to add socket descriptor.
+  conn->on_connect();
+  const auto &callback = impl_->manager->connect_callback();
+  if (static_cast<bool>(callback))
+    callback(conn.get());
   return conn;
 }

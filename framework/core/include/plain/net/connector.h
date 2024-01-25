@@ -14,6 +14,7 @@
 
 #include "plain/net/config.h"
 #include "plain/concurrency/config.h"
+#include "plain/net/connection/config.h"
 #include "plain/net/packet/config.h"
 #include "plain/net/socket/config.h"
 #include "plain/net/stream/codec.h"
@@ -50,6 +51,10 @@ class PLAIN_API Connector final {
   const stream::codec_t &codec() const noexcept;
   void set_dispatcher(packet::dispatch_func func) noexcept;
   const packet::dispatch_func &dispatcher() const noexcept;
+  void set_connect_callback(connection::callable_func func) noexcept;
+  void set_disconnect_callback(connection::callable_func func) noexcept;
+
+ public:
   std::shared_ptr<connection::Basic> get_conn(id_t id) const noexcept;
   bool is_full() const noexcept;
   void broadcast(std::shared_ptr<packet::Basic> packet) noexcept;

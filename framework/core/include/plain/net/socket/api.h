@@ -97,6 +97,9 @@ getpeername(id_t id, sockaddr *name, int32_t *namelength);
 
 PLAIN_API Error get_last_error() noexcept;
 
+PLAIN_API int32_t 
+socketpair(int32_t family, int32_t type, int32_t protocol, id_t fds[2]);
+
 PLAIN_API bool make_pair(id_t fd_pair[2]) noexcept;
 
 } // namespace socket

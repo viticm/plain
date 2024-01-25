@@ -96,7 +96,7 @@ bool Select::work() noexcept {
   bool r{true};
   if (impl_->select_result < 0) {
     r = false;
-    LOG_ERROR << "error: " << impl_->select_result;
+    LOG_ERROR << setting_.name << " error: " << impl_->select_result;
   } else {
     handle_io();
   }
@@ -124,18 +124,18 @@ void Select::handle_io() noexcept {
       // std::cout << "handle_io: " << id << std::endl;
       if (id == socket::kInvalidSocket || id == listen_fd) return;
       if (FD_ISSET(id, &impl_->except_fds.use)) {
-        LOG_ERROR << "connection has except: " << conn->id();
+        LOG_ERROR << setting_.name << " connection has except: " << conn->id();
         this->remove(conn->id());
         return;
       } else if (FD_ISSET(id, &impl_->read_fds.use) ||
         FD_ISSET(id, &impl_->write_fds.use)) {
-        LOG_DEBUG << "hanle io: " << conn->id();
+        LOG_DEBUG << setting_.name << " hanle io: " << conn->id();
         conn->enqueue_work();
       }
       
     });
   } catch(...) {
-    LOG_ERROR << "handle io except";
+    LOG_ERROR << setting_.name << " handle io except";
   }
 }
   

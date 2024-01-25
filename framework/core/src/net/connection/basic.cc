@@ -47,7 +47,7 @@ struct Basic::Impl {
   bool process_exception() noexcept;
   bool work(Basic *conn) noexcept;
   void enqueue_work() noexcept;
-  static std::string get_name(Basic *conn) noexcept;
+  static std::string get_name(const Basic *conn) noexcept;
 };
 
 Basic::Impl::Impl() :
@@ -164,7 +164,7 @@ void Basic::Impl::enqueue_work() noexcept {
   });
 }
 
-std::string Basic::Impl::get_name(Basic *conn) noexcept {
+std::string Basic::Impl::get_name(const Basic *conn) noexcept {
   std::string r;
   auto m = conn->impl_->manager.lock();
   if (m && !m->setting_.name.empty()) {
@@ -226,6 +226,10 @@ void Basic::enqueue_work() noexcept {
 plain::net::connection::id_t Basic::id() const noexcept {
   return impl_->id;
 }
+
+std::string Basic::name() const noexcept {
+  return impl_->get_name(this);
+}
   
 void Basic::set_id(id_t id) noexcept {
   impl_->id = id;
@@ -235,6 +239,7 @@ std::shared_ptr<plain::net::socket::Basic> Basic::socket() const noexcept {
   return impl_->socket;
 }
   
+/*
 plain::net::stream::Basic &Basic::istream() {
   return *(impl_->istream);
 }
@@ -242,6 +247,7 @@ plain::net::stream::Basic &Basic::istream() {
 plain::net::stream::Basic &Basic::ostream() {
   return *(impl_->ostream);
 }
+*/
 
 void Basic::set_codec(const stream::codec_t &codec) noexcept {
   impl_->codec = codec;

@@ -31,6 +31,11 @@ void test_net_listener_constructor();
 void test_net_listener_operator();
 void test_net_listener_func();
 
+error_or_t<std::shared_ptr<packet::Basic>>
+line_decode(stream::Basic *input, const packet::limit_t &packet_limit);
+
+bytes_t line_encode(std::shared_ptr<packet::Basic> packet);
+
 }
 
 void plain::tests::test_net_listener_constructor() {
@@ -51,6 +56,41 @@ void plain::tests::test_net_listener_constructor() {
 
 void plain::tests::test_net_listener_operator() {
 
+}
+
+plain::error_or_t<std::shared_ptr<packet::Basic>>
+plain::tests::line_decode(
+  stream::Basic *input, const packet::limit_t &packet_limit) {
+  if (!input) return Error{ErrorCode::RunTime};
+  bytes_t bytes;
+  bytes.reserve(packet_limit.max_length);
+  auto readed = input->peek(bytes.data(), bytes.capacity());
+  if (readed == 0) return ErrorCode{ErrorCode::NetPacketNeedRecv};
+  std::string_view str{reinterpret_cast<char *>(bytes.data()), readed};
+  auto pos = str.find('\n');
+  if (pos == std::string::npos) {
+    if (readed == packet_limit.max_length )
+      return Error{ErrorCode::RunTime};
+    else
+      return Error{ErrorCode::NetPacketNeedRecv};
+  }
+  input->remove(pos + 1); // remove readed line.
+  if (pos > 0 && str[pos - 1] == '\r') {
+    pos -= 1;
+  }
+  auto p = std::make_shared<packet::Basic>();
+  if (pos > 0) {
+    p->set_writeable(true);
+    p->write(bytes.data(), pos);
+    p->set_writeable(false);
+  }
+  p->set_readable(true);
+  return p;
+}
+
+plain::bytes_t plain::tests::line_encode(std::shared_ptr<packet::Basic> packet) {
+  auto d = packet->data();
+  return {d.data(), d.size()};
 }
 
 void plain::tests::test_net_listener_func() {
@@ -117,6 +157,42 @@ void plain::tests::test_net_listener_func() {
   auto conn2 = connector.connect("[::]:9529");
   ASSERT_TRUE(conn2);
   conn2->send(pack);
+
+  setting.address = ":9530";
+  setting.name = "listener5";
+  Listener listener5(setting);
+  started = listener5.start();
+  ASSERT_TRUE(started);
+  listener5.set_codec({.encode = line_encode, .decode = line_decode});
+  listener5.set_dispatcher([](
+    connection::Basic *conn, std::shared_ptr<packet::Basic> packet) {
+    std::cout << conn->name() << ": " <<
+      reinterpret_cast<const char *>(packet->data().data()) << std::endl;
+    return true;
+  });
+  listener5.set_connect_callback([](connection::Basic *conn) {
+    std::cout << conn->name() << " connected" << std::endl;
+  });
+  listener5.set_disconnect_callback([](connection::Basic *conn) {
+    std::cout << conn->name() << " disconnected" << std::endl;
+  });
+
+  auto pack1 = std::make_shared<packet::Basic>();
+  pack1->set_writeable(true);
+  std::string line{"hello world\n"};
+  pack1->write(reinterpret_cast<std::byte *>(line.data()), line.size());
+  std::string line1{"plain\n"};
+  pack1->write(reinterpret_cast<std::byte *>(line1.data()), line1.size());
+  auto conn3 = connector.connect(":9530");
+  ASSERT_TRUE(conn3);
+  conn3->set_codec({.encode = line_encode, .decode = line_decode});
+  conn3->send(pack1);
+  // conn3->ostream().write("framework\n");
+
+  auto conn4 = connector.connect(":9530");
+  ASSERT_TRUE(conn4);
+  conn4->close();
+
   std::this_thread::sleep_for(50ms);
  
 }

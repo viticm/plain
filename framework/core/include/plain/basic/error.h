@@ -40,12 +40,12 @@ class PLAIN_API [[nodiscard]] Error : copyable {
 
   }
 
-  Error(code_t code, std::string_view message) :
+  Error(code_t code, std::string_view message = {}) :
     code_{code}, message_{message} {
 
   }
 
-  Error(enums auto code, std::string_view message) :
+  Error(enums auto code, std::string_view message = {}) :
     code_{std::to_underlying(code)}, message_{message} {
 
   }

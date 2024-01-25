@@ -38,9 +38,11 @@ class PLAIN_API Manager :
 
  public:
   void set_codec(const stream::codec_t &codec) noexcept;
-  const stream::codec_t &codec() const noexcept;
   void set_dispatcher(packet::dispatch_func func) noexcept;
-  const packet::dispatch_func &dispatcher() const noexcept;
+  void set_connect_callback(callable_func func) noexcept;
+  void set_disconnect_callback(callable_func func) noexcept;
+
+ public:
   std::shared_ptr<Basic> get_conn(id_t id) const noexcept;
   bool is_full() const noexcept;
   void broadcast(std::shared_ptr<packet::Basic> packet) noexcept;
@@ -59,10 +61,15 @@ class PLAIN_API Manager :
 
  protected:
   std::shared_ptr<Basic> new_conn() noexcept;
-  void remove(std::shared_ptr<Basic> conn) noexcept;
-  void remove(connection::id_t conn_id) noexcept;
+  void remove(std::shared_ptr<Basic> conn, bool no_event = false) noexcept;
+  void remove(connection::id_t conn_id, bool no_event = false) noexcept;
   void foreach(std::function<void(std::shared_ptr<Basic> conn)> func); // valid
   void recv_ctrl_cmd() noexcept;
+
+ protected:
+  const stream::codec_t &codec() const noexcept;
+  const packet::dispatch_func &dispatcher() const noexcept;
+  const callable_func &connect_callback() const noexcept;
 
  protected:
   setting_t setting_;

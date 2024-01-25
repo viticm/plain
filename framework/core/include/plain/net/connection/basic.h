@@ -38,9 +38,8 @@ class PLAIN_API Basic {
 
  public:
   id_t id() const noexcept;
+  std::string name() const noexcept;
   std::shared_ptr<socket::Basic> socket() const noexcept;
-  stream::Basic &istream();
-  stream::Basic &ostream();
 
  public:
   void set_codec(const stream::codec_t &codec) noexcept;
@@ -59,6 +58,7 @@ class PLAIN_API Basic {
   friend class Iocp;
   friend class IoUring;
   friend class Kqueue;
+  friend class net::Connector;
 
  private:
   struct Impl;

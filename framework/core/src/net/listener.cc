@@ -57,6 +57,15 @@ const plain::net::packet::dispatch_func &Listener::dispatcher() const noexcept {
   return impl_->manager->dispatcher();
 }
   
+void Listener::set_connect_callback(connection::callable_func func) noexcept {
+  impl_->manager->set_connect_callback(func);
+}
+  
+void Listener::set_disconnect_callback(
+  connection::callable_func func) noexcept {
+  impl_->manager->set_disconnect_callback(func);
+}
+
 std::shared_ptr<plain::net::connection::Basic>
 Listener::get_conn(id_t id) const noexcept {
   return impl_->manager->get_conn(id);

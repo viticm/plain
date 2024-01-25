@@ -43,6 +43,8 @@ struct Manager::Impl {
   thread_t worker; // The main worker.
   socket::id_t ctrl_write_fd{socket::kInvalidSocket};
   bool running{false};
+  callable_func connect_callback;
+  callable_func disconnect_callback;
 #ifdef PLAIN_NET_MANAGER_USE_COROUTINE
   detail::task_handle_t task_handle;
   std::atomic_bool tasking{false};
@@ -74,10 +76,14 @@ void Manager::Impl::init_connections(uint32_t count) {
 void Manager::Impl::enqueue_work(std::shared_ptr<Manager> manager) noexcept {
   assert(manager);
   // The work in executor wait resume.
-  if (!manager->running() || manager->impl_->tasking) return;
-  if (manager->get_executor().shutdown_requested()) return;
-  manager->get_executor().post([manager]() {
-    work(manager);
+  manager->execute([manager] {
+    if (!manager->running() || manager->impl_->tasking) return;
+    if (manager->get_executor().shutdown_requested()) return;
+    std::weak_ptr<Manager> m{manager};
+    manager->get_executor().post([m]() {
+      auto manager = m.lock();
+      if (manager) work(manager);
+    });
   });
 }
 #endif
@@ -105,7 +111,8 @@ bool Manager::Impl::wait_work(std::shared_ptr<Manager> manager) noexcept {
   });
   if (manager->impl_->tasking) {
     manager->impl_->cv.wait(lock, [manager] {
-      return static_cast<bool>(manager->impl_->task_handle);
+      return static_cast<bool>(manager->impl_->task_handle) ||
+        !manager->impl_->tasking;
     });
   }
   manager->impl_->handle(manager);
@@ -113,8 +120,8 @@ bool Manager::Impl::wait_work(std::shared_ptr<Manager> manager) noexcept {
     const auto tasking = manager->impl_->tasking.load(std::memory_order_relaxed);
     return !tasking; // || !manager->running();
   });
-  //const auto tasking = manager->impl_->tasking.load(std::memory_order_relaxed);
-  //std::cout << "tasking:" << (tasking ? 1: 0) << ":" << manager << std::endl;
+  // const auto tasking = manager->impl_->tasking.load(std::memory_order_relaxed);
+  // std::cout << "tasking:" << (tasking ? 1: 0) << ":" << manager << std::endl;
   if (!manager->running()) return false;
   enqueue_work(manager);
   return true;
@@ -144,7 +151,9 @@ Manager::Impl::work(std::shared_ptr<Manager> manager) noexcept {
     return true;
   };
   //std::cout << "waiting...: " << manager << std::endl;
-  manager->impl_->tasking.store(true, std::memory_order_relaxed);
+  auto tasking = 
+    manager->impl_->tasking.exchange(true, std::memory_order_relaxed);
+  if (tasking) co_return;
   co_await detail::Awaitable{func};
   //std::cout << "working...: " << manager << std::endl;
   auto r = manager->work();
@@ -156,8 +165,8 @@ Manager::Impl::work(std::shared_ptr<Manager> manager) noexcept {
 
 void Manager::Impl::handle(std::shared_ptr<Manager> manager) noexcept {
   if (static_cast<bool>(manager->impl_->task_handle)) {
-    manager->impl_->task_handle();
-    manager->impl_->task_handle = detail::task_handle_t{};
+    auto handle = std::exchange(manager->impl_->task_handle, {});
+    handle();
   }
 }
 #endif
@@ -193,8 +202,9 @@ bool Manager::start() {
   if (socket::make_pair(fds)) {
     ctrl_read_fd_ = fds[0];
     impl_->ctrl_write_fd = fds[1];
+    // std::cout << "fds: " << fds[0] << "|" << fds[1] << std::endl;
     if (!sock_add(ctrl_read_fd_, 0)) {
-      LOG_ERROR << "add ctrl read fd failed";
+      LOG_ERROR << setting_.name << " add ctrl read fd failed";
       return false;
     }
   }
@@ -253,6 +263,19 @@ const plain::net::packet::dispatch_func &Manager::dispatcher() const noexcept {
   return impl_->dispatcher;
 }
 
+void Manager::set_connect_callback(callable_func func) noexcept {
+  impl_->connect_callback = func;
+}
+
+const plain::net::connection::callable_func &
+Manager::connect_callback() const noexcept {
+  return impl_->connect_callback;
+}
+ 
+void Manager::set_disconnect_callback(callable_func func) noexcept {
+  impl_->disconnect_callback = func;
+}
+  
 std::shared_ptr<plain::net::connection::Basic>
 Manager::get_conn(id_t id) const noexcept {
   auto index = static_cast<size_t>(id) - 1;
@@ -296,19 +319,24 @@ bool Manager::is_full() const noexcept {
     impl_->connection_info.max_id >= static_cast<id_t>(setting_.max_count);
 }
 
-void Manager::remove(std::shared_ptr<Basic> conn) noexcept {
+void Manager::remove(std::shared_ptr<Basic> conn, bool no_event) noexcept {
   if (conn->id() == connection::kInvalidId) return;
-  remove(conn->id());
+  remove(conn->id(), no_event);
 }
   
-void Manager::remove(connection::id_t conn_id) noexcept {
+void Manager::remove(connection::id_t conn_id, bool no_event) noexcept {
   std::unique_lock<decltype(impl_->mutex)> auto_lock(impl_->mutex);
   assert(conn_id != connection::kInvalidId);
   if (conn_id <= 0 || conn_id > impl_->connection_info.max_id)
     return;
   auto &conn = impl_->connection_info.list[conn_id - 1];
+  // std::cout << "remove: " << conn_id << std::endl;
   if (conn) {
-    if (conn->valid()) conn->on_disconnect();
+    if (!no_event) {
+      if (static_cast<bool>(impl_->disconnect_callback))
+        impl_->disconnect_callback(conn.get());
+      conn->on_disconnect();
+    }
     if (conn->socket()->valid()) this->sock_remove(conn->socket()->id());
     conn->close();
   }
@@ -335,7 +363,7 @@ std::shared_ptr<plain::net::connection::Basic> Manager::accept() noexcept {
     return {};
   auto conn = new_conn();
   if (!conn) {
-    LOG_WARN << "new conn failed";
+    LOG_WARN << setting_.name << " new conn failed";
     auto sock = std::make_shared<socket::Basic>();
     listen_sock_->accept(sock);
     sock->close();
@@ -343,30 +371,37 @@ std::shared_ptr<plain::net::connection::Basic> Manager::accept() noexcept {
   }
   if (!listen_sock_->accept(conn->socket())) {
     remove(conn);
-    LOG_ERROR << "connection accept error: " << socket::get_last_error();
+    LOG_ERROR << setting_.name <<
+      " connection accept error: " << socket::get_last_error();
     return {};
   }
   if (!conn->socket()->set_nonblocking()) {
     remove(conn);
-    LOG_ERROR << "set_nonblocking error: " << socket::get_last_error();
+    LOG_ERROR << setting_.name << " set_nonblocking error: " <<
+      socket::get_last_error();
     return {};
   }
   if (conn->socket()->error()) {
     remove(conn);
-    LOG_ERROR << "socket have error: " << socket::get_last_error();
+    LOG_ERROR << setting_.name << " socket have error: " <<
+      socket::get_last_error();
     return {};
   }
   if (!conn->socket()->set_linger(0)) {
     remove(conn);
-    LOG_ERROR << "set_linger error: " << socket::get_last_error();
+    LOG_ERROR << setting_.name << "set_linger error: " <<
+      socket::get_last_error();
     return {};
   }
   if (!sock_add(conn->socket()->id(), conn->id())) {
     remove(conn);
-    LOG_ERROR << "sock_add error";
+    LOG_ERROR << setting_.name << " sock_add error";
     return {};
   }
   conn->on_connect();
+  if (static_cast<bool>(impl_->connect_callback)) {
+    impl_->connect_callback(conn.get());
+  }
   return conn;
 }
 
@@ -380,7 +415,7 @@ bool Manager::send_ctrl_cmd(std::string_view cmd) noexcept {
 void Manager::recv_ctrl_cmd() noexcept {
   if (ctrl_read_fd_ == socket::kInvalidSocket)
     return;
-  std::array<char, 256> buffer;
+  std::array<char, 256> buffer{0};
   socket::recv(ctrl_read_fd_, buffer.data(), buffer.size(), 0);
   auto type = buffer[0];
   switch (type) {
@@ -388,7 +423,7 @@ void Manager::recv_ctrl_cmd() noexcept {
     case 'k': // stop
       break;
     default:
-      LOG_ERROR << "unknown cmd: " << buffer.data();
+      LOG_ERROR << setting_.name << " unknown cmd: " << buffer.data();
       break;
   }
   // std::cout << "recv_ctrl_cmd: " << buffer.data() << std::endl;

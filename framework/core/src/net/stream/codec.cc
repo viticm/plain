@@ -13,6 +13,17 @@ struct head_t {
 #pragma pack(pop)
 static constexpr size_t kHeaderSize{sizeof(head_t)};
 
+bytes_t encode(std::shared_ptr<packet::Basic> packet) {
+  bytes_t r;
+  auto d = packet->data();
+  head_t head;
+  head.id = hton(packet->id());
+  head.length = hton(static_cast<length_t>(d.size()));
+  r.append(reinterpret_cast<std::byte *>(&head), sizeof(head));
+  r.append(d.data(), d.size());
+  return r;
+}
+
 error_or_t<std::shared_ptr<packet::Basic>>
 decode(Basic *input, const packet::limit_t &packet_limit) {
   if (!input) {
@@ -21,7 +32,7 @@ decode(Basic *input, const packet::limit_t &packet_limit) {
   head_t head;
   auto head_pointer = reinterpret_cast<std::byte *>(&head);
   memset(head_pointer, 0, kHeaderSize);
-  if (!input->peek(head_pointer, kHeaderSize)) {
+  if (input->peek(head_pointer, kHeaderSize) != kHeaderSize) {
     return Error{ErrorCode::NetPacketCantFill, ""};    
   }
   head.id = ntoh(head.id);
@@ -49,17 +60,6 @@ decode(Basic *input, const packet::limit_t &packet_limit) {
   p->set_writeable(false);
   p->set_readable(true);
   return p;
-}
-
-bytes_t encode(std::shared_ptr<packet::Basic> packet) {
-  bytes_t r;
-  auto d = packet->data();
-  head_t head;
-  head.id = hton(packet->id());
-  head.length = hton(static_cast<length_t>(d.size()));
-  r.append(reinterpret_cast<std::byte *>(&head), sizeof(head));
-  r.append(d.data(), d.size());
-  return r;
 }
 
 } // namespace plain::net::stream

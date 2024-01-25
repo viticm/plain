@@ -171,14 +171,14 @@ bool Kqueue::prepare() noexcept {
   impl_->data.event_datas = std::vector<uint64_t>(setting_.max_count, 0);
   auto fd = poll_create(impl_->data, setting_.max_count);
   if (fd <= 0) {
-    LOG_ERROR << "create error max_count: "
+    LOG_ERROR << setting_.name << " create error max_count: "
       << setting_.max_count << " fd: " << fd;
     return false;
   }
   if (listen_fd_ != socket::kInvalidSocket) {
     auto r = poll_add(impl_->data, listen_fd_, EPOLLIN, connection::kInvalidId);
     if (r < 0) {
-      LOG_ERROR << "add error result: " << r;
+      LOG_ERROR << setting_.name << " add error result: " << r;
       return false;
     }
   }
@@ -192,7 +192,7 @@ bool Kqueue::work() noexcept {
 #if ENABLE_KQUEUE
   poll_wait(impl_->data, 0);
   if (impl_->data.result_event_count < 0) {
-    LOG_ERROR << "error: " << impl_->data.result_event_count;
+    LOG_ERROR << setting_.name << " error: " << impl_->data.result_event_count;
     return false;
   }
   handle_input();
@@ -216,7 +216,7 @@ bool Kqueue::sock_add(
 #if ENABLE_KQUEUE
   if (poll_add(impl_->data, sock_id, conn_id) != 0 ||
       poll_enable(impl_->data, sock_id, conn_id, true, true) != 0) {
-    LOG_ERROR << "sock_add error: " << strerror(errno);
+    LOG_ERROR << setting_.name << " error: " << strerror(errno);
   } else {
     return true;
   }
@@ -229,7 +229,7 @@ bool Kqueue::sock_remove([[maybe_unused]] socket::id_t sock_id) noexcept {
   assert(sock_id != socket::kInvalidSocket);
 #if ENABLE_KQUEUE
   if (poll_delete(impl_->data, sock_id) != 0) {
-    LOG_ERROR << "sock_remove error: " << strerror(errno);
+    LOG_ERROR << setting_.name << "error: " << strerror(errno);
   } else {
     return true;
   }
@@ -255,16 +255,16 @@ void Kqueue::handle_input() noexcept {
     } else if (filter == EVFILT_READ) {
       auto conn = get_conn(conn_id);
       if (!conn) {
-        LOG_ERROR << "can't find connection: " << conn_id;
+        LOG_ERROR << setting_.name << " can't find connection: " << conn_id;
         continue;
       }
       if (sock_id == socket::kInvalidSocket) {
-        LOG_ERROR << "can't find socket: " << conn_id;
+        LOG_ERROR << setting_.name << " can't find socket: " << conn_id;
         remove(conn_id);
         continue;
       }
       if (conn->socket()->error()) {
-        LOG_ERROR << "socket error: " << conn_id;
+        LOG_ERROR << setting_.name << " socket error: " << conn_id;
         remove(conn_id);
         continue;
       }
@@ -272,7 +272,7 @@ void Kqueue::handle_input() noexcept {
     } else if (d.events[i].flags & EV_ERROR) {
       auto conn = get_conn(conn_id);
       if (conn) {
-        LOG_ERROR << "kevent error";
+        LOG_ERROR << setting_.name << " kevent error";
         remove(conn_id);
         continue;
       }

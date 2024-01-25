@@ -19,23 +19,23 @@
 namespace plain::net {
 namespace stream {
 
+using encode_func =
+  std::function<bytes_t(std::shared_ptr<packet::Basic> packet)>;
 using decode_func =
   std::function<error_or_t<std::shared_ptr<packet::Basic>>(
     Basic *input, const packet::limit_t &packet_limit)>;
-using encode_func =
-  std::function<bytes_t(std::shared_ptr<packet::Basic> packet)>;
 
 struct codec_struct {
-  decode_func decode{};
   encode_func encode{};
+  decode_func decode{};
 };
 
 using codec_t = codec_struct;
 
 // The default codec functions.
+bytes_t encode(std::shared_ptr<packet::Basic> packet);
 error_or_t<std::shared_ptr<packet::Basic>>
 decode(Basic *input, const packet::limit_t &packet_limit);
-bytes_t encode(std::shared_ptr<packet::Basic> packet);
 
 } // namespace stream
 } // namespace plain::net

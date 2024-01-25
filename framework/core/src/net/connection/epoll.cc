@@ -137,14 +137,14 @@ bool Epoll::prepare() noexcept {
   if (running()) return true;
   auto fd = poll_create(impl_->data, setting_.max_count);
   if (fd <= 0) {
-    LOG_ERROR << "create error max_count: "
+    LOG_ERROR << setting_.name << " create error max_count: "
       << setting_.max_count << " fd: " << fd;
     return false;
   }
   if (listen_fd_ != socket::kInvalidSocket) {
     auto r = poll_add(impl_->data, listen_fd_, EPOLLIN, connection::kInvalidId);
     if (r < 0) {
-      LOG_ERROR << "add error result: " << r;
+      LOG_ERROR << setting_.name << " add error result: " << r;
       return false;
     }
   }
@@ -181,7 +181,7 @@ bool Epoll::sock_add(
   assert(conn_id != connection::kInvalidId);
 #if OS_UNIX
   if (poll_add(impl_->data, sock_id, EPOLLIN | EPOLLET, conn_id) != 0) {
-    LOG_ERROR << "sock_add error: " << strerror(errno);
+    LOG_ERROR << setting_.name << " sock_add error: " << strerror(errno);
   } else {
     return true;
   }
@@ -194,7 +194,7 @@ bool Epoll::sock_remove([[maybe_unused]] socket::id_t sock_id) noexcept {
   assert(sock_id != socket::kInvalidSocket);
 #if OS_UNIX
   if (poll_delete(impl_->data, sock_id) != 0) {
-    LOG_ERROR << "sock_remove error: " << strerror(errno);
+    LOG_ERROR << setting_.name << " sock_remove error: " << strerror(errno);
   } else {
     return true;
   }
@@ -224,16 +224,16 @@ void Epoll::handle_input() noexcept {
         continue;
       auto conn = get_conn(conn_id);
       if (!conn) {
-        LOG_ERROR << "can't find connection: " << conn_id;
+        LOG_ERROR << setting_.name << " can't find connection: " << conn_id;
         continue;
       }
       if (sock_id == socket::kInvalidSocket) {
-        LOG_ERROR << "can't find socket: " << conn_id;
+        LOG_ERROR << setting_.name << " can't find socket: " << conn_id;
         remove(conn_id);
         continue;
       }
       if (conn->socket()->error()) {
-        LOG_ERROR << "socket error: " << conn_id;
+        LOG_ERROR << setting_.name << " socket error: " << conn_id;
         remove(conn_id);
         continue;
       }
