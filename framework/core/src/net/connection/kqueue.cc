@@ -268,7 +268,7 @@ void Kqueue::handle_input() noexcept {
         remove(conn_id);
         continue;
       }
-      conn->enqueue_work();
+      conn->enqueue_work(WorkFlag::Input);
     } else if (d.events[i].flags & EV_ERROR) {
       auto conn = get_conn(conn_id);
       if (conn) {

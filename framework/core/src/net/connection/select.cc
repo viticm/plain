@@ -121,7 +121,6 @@ void Select::handle_io() noexcept {
   try {
     foreach([this, listen_fd = listen_fd_](std::shared_ptr<Basic> conn){
       auto id = conn->socket()->id();
-      // std::cout << "handle_io: " << id << std::endl;
       if (id == socket::kInvalidSocket || id == listen_fd) return;
       if (FD_ISSET(id, &impl_->except_fds.use)) {
         LOG_ERROR << setting_.name << " connection has except: " << conn->id();
@@ -130,7 +129,7 @@ void Select::handle_io() noexcept {
       } else if (FD_ISSET(id, &impl_->read_fds.use) ||
         FD_ISSET(id, &impl_->write_fds.use)) {
         LOG_DEBUG << setting_.name << " hanle io: " << conn->id();
-        conn->enqueue_work();
+        conn->enqueue_work(WorkFlag::Input);
       }
       
     });

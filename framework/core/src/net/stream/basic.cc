@@ -25,7 +25,7 @@ int32_t Basic::pull() noexcept {
   auto socket = impl_->weak_socket.lock();
   if (!socket || !socket->valid()) return 0;
   auto socket_avail = socket->avail();
-  if (socket_avail == 0) return 0;
+  if (socket_avail == 0) socket_avail = 1;
   auto once_max = impl_->buffer.write_avail() + impl_->buffer.size();
   bytes_t bytes;
   bytes.reserve(socket_avail >= once_max ? once_max : socket_avail);

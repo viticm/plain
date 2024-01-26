@@ -69,7 +69,7 @@ class PLAIN_API Basic {
   void on_disconnect() noexcept;
   void set_id(id_t id) noexcept;
   bool work() noexcept;
-  void enqueue_work() noexcept;
+  void enqueue_work(WorkFlag flag) noexcept;
 
 };
 

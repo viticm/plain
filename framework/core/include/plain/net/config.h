@@ -17,7 +17,7 @@
 
 namespace plain::net {
 
-enum class Mode {
+enum class Mode : std::uint8_t {
   Select = 0,
   Epoll = 1,
   IoUring = 2,
@@ -46,6 +46,13 @@ class Select;
 class Epoll;
 class IoUring;
 class Iocp;
+
+enum class WorkFlag : std::uint8_t {
+  Input = 0,
+  Output = 1,
+  Except = 2,
+  Command = 3,
+};
 
 } // namespace connection
 

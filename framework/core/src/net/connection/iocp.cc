@@ -229,7 +229,7 @@ void Iocp::handle_input() noexcept {
         remove(conn_id);
         continue;
       }
-      conn->enqueue_work();
+      conn->enqueue_work(WorkFlag::Input);
     }
   }
 #endif

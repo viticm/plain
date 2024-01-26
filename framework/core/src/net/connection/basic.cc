@@ -40,13 +40,15 @@ struct Basic::Impl {
   std::atomic_bool working{false};
   std::mutex mutex;
   uint8_t error_times{0};
-  bool input_waiting{false};
+  uint8_t work_flags{0};
   bool process_input(Basic *conn) noexcept;
   bool process_output(Basic *conn) noexcept;
   bool process_command(Basic *conn) noexcept;
   bool process_exception() noexcept;
   bool work(Basic *conn) noexcept;
-  void enqueue_work() noexcept;
+  void enqueue_work() noexcept; 
+  bool has_work_flag(WorkFlag flag) const noexcept;
+  void set_work_flag(WorkFlag flag, bool enable) noexcept;
   static std::string get_name(const Basic *conn) noexcept;
 };
 
@@ -62,6 +64,7 @@ Basic::Impl::Impl() :
 Basic::Impl::~Impl() = default;
 
 bool Basic::Impl::process_input(Basic *conn) noexcept {
+  if (!has_work_flag(WorkFlag::Input)) return true;
   assert(conn);
   // std::cout << "process_input: " << this << std::endl;
   if (!socket->valid()) return false;
@@ -70,10 +73,13 @@ bool Basic::Impl::process_input(Basic *conn) noexcept {
     LOG_ERROR << get_name(conn) << " pull failed: " << r;
     return false;
   }
+  if (socket->avail() == 0)
+    set_work_flag(WorkFlag::Input, false);
   return true;
 }
 
 bool Basic::Impl::process_output(Basic *conn) noexcept {
+  if (!has_work_flag(WorkFlag::Output)) return true;
   assert(conn);
   if (!socket->valid()) return false;
   auto r = ostream->push();
@@ -81,11 +87,12 @@ bool Basic::Impl::process_output(Basic *conn) noexcept {
     LOG_ERROR << get_name(conn) << " push failed: " << r;
     return false;
   }
+  if (ostream->size() == 0)
+    set_work_flag(WorkFlag::Output, false);
   return true;
 }
 
 bool Basic::Impl::process_command(Basic *conn) noexcept {
-  input_waiting = false;
   assert(conn);
   if (istream->size() == 0) return true;
   stream::decode_func func{stream::decode};
@@ -108,7 +115,6 @@ bool Basic::Impl::process_command(Basic *conn) noexcept {
         clear_error = false;
         return true;
       } else if (e->is_code(ErrorCode::NetPacketNeedRecv)) {
-        input_waiting = true;
         return true;
       }
       LOG_ERROR << get_name(conn) << " error: " << e->code();
@@ -126,10 +132,15 @@ bool Basic::Impl::process_command(Basic *conn) noexcept {
     }
   }
   if (clear_error) error_times = 0;
+  if (istream->size() == 0)
+    set_work_flag(WorkFlag::Command, false);
+  else
+    set_work_flag(WorkFlag::Command, true);
   return true;
 }
 
 bool Basic::Impl::process_exception() noexcept {
+  if (!has_work_flag(WorkFlag::Except)) return true;
   return true;
 }
 
@@ -164,6 +175,17 @@ void Basic::Impl::enqueue_work() noexcept {
   });
 }
 
+bool Basic::Impl::has_work_flag(WorkFlag flag) const noexcept {
+  return work_flags & (0x1 << std::to_underlying(flag));
+}
+  
+void Basic::Impl::set_work_flag(WorkFlag flag, bool enable) noexcept {
+  if (enable)
+    work_flags |= (0x1 << std::to_underlying(flag));
+  else
+    work_flags &= ~(0x1 << std::to_underlying(flag));
+}
+
 std::string Basic::Impl::get_name(const Basic *conn) noexcept {
   std::string r;
   auto m = conn->impl_->manager.lock();
@@ -196,9 +218,7 @@ bool Basic::init() noexcept {
 
 bool Basic::idle() const noexcept {
   return !impl_->socket->valid() ||
-    (impl_->socket->avail() == 0 &&
-     (impl_->istream->empty() || impl_->input_waiting) &&
-     impl_->ostream->empty());
+    (impl_->socket->avail() == 0 && impl_->work_flags == 0);
 }
   
 bool Basic::shutdown(int32_t how) noexcept {
@@ -219,7 +239,11 @@ bool Basic::work() noexcept {
   return impl_->work(this);
 }
 
-void Basic::enqueue_work() noexcept {
+void Basic::enqueue_work(WorkFlag flag) noexcept {
+  {
+    std::unique_lock<std::mutex> lock{impl_->mutex};
+    impl_->set_work_flag(flag, true);
+  }
   impl_->enqueue_work();
 }
 
@@ -284,7 +308,7 @@ bool Basic::send(const std::shared_ptr<packet::Basic> &packet) noexcept {
   if (bytes.empty()) return false;
   auto r = impl_->ostream->write(bytes);
   lock.unlock();
-  if (r) impl_->enqueue_work();
+  if (r) enqueue_work(WorkFlag::Output);
   return r;
 }
 

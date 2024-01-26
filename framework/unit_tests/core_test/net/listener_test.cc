@@ -193,7 +193,7 @@ void plain::tests::test_net_listener_func() {
   ASSERT_TRUE(conn4);
   conn4->close();
 
-  std::this_thread::sleep_for(50ms);
+  std::this_thread::sleep_for(5s);
  
 }
 
