@@ -45,8 +45,7 @@ class PLAIN_API Basic {
   void set_codec(const stream::codec_t &codec) noexcept;
   void set_connect_callback(callable_func func) noexcept;
   void set_disconnect_callback(callable_func func) noexcept;
-  void set_manager(std::shared_ptr<Manager> manager) noexcept;
-  void set_packet_dispatcher(packet::dispatch_func func) noexcept;
+  void set_dispatcher(packet::dispatch_func func) noexcept;
 
  public:
   bool send(const std::shared_ptr<packet::Basic> &packet) noexcept;
@@ -67,7 +66,12 @@ class PLAIN_API Basic {
  private:
   void on_connect() noexcept;
   void on_disconnect() noexcept;
+
+ private:
   void set_id(id_t id) noexcept;
+  void set_manager(std::shared_ptr<Manager> manager) noexcept;
+
+ private:
   bool work() noexcept;
   void enqueue_work(WorkFlag flag) noexcept;
 

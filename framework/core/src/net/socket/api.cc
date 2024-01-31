@@ -87,6 +87,7 @@ static void set_error(int32_t e) {
 #else
   switch (s_error.code()) {
     case EWOULDBLOCK : {
+      s_error.set_code(kErrorWouldBlock);
       s_error.set_message("EWOULDBLOCK");
       break;
     }
@@ -361,8 +362,10 @@ int32_t send(id_t id, const void *buffer, uint32_t length, uint32_t flag) {
 #elif OS_WIN
   r = ::send(id, static_cast<const char *>(buffer), length, flag);
 #endif
-  if (r == kSocketError) set_error();
-  if (s_error.code() == kErrorWouldBlock) r = kErrorWouldBlock;
+  if (r == kSocketError) {
+    set_error();
+    if (s_error.code() == kErrorWouldBlock) r = kErrorWouldBlock;
+  }
   return r;
 }
 
@@ -375,8 +378,10 @@ int32_t sendto(
 #elif OS_WIN
   r = ::sendto(id, static_cast<const char *>(buffer),length, flag, to, tolength);
 #endif
-  if (r == kSocketError) set_error();
-  if (s_error.code() == kErrorWouldBlock) r = 0;
+  if (r == kSocketError) {
+    set_error();
+    if (s_error.code() == kErrorWouldBlock) r = 0;
+  }
   return r;
 }
 
@@ -387,8 +392,10 @@ int32_t recv(id_t id, void *buffer, uint32_t length, uint32_t flag) {
 #elif OS_WIN
   r = ::recv(id, static_cast<char *>(buffer), length, flag);
 #endif
-  if (r == kSocketError) set_error();
-  if (s_error.code() == kErrorWouldBlock) r = kErrorWouldBlock;
+  if (r == kSocketError) {
+    set_error();
+    if (s_error.code() == kErrorWouldBlock) r = kErrorWouldBlock;
+  } 
   return r;
 }
 
@@ -403,8 +410,10 @@ int32_t recvfrom(
     id, static_cast<char *>(buffer), length, flag, from,
     static_cast<char *>(fromlength));
 #endif
-  if (r == kSocketError) set_error();
-  if (s_error.code() == kErrorWouldBlock) r = kErrorWouldBlock;
+  if (r == kSocketError) {
+    set_error();
+    if (s_error.code() == kErrorWouldBlock) r = kErrorWouldBlock;
+  }
   return r;
 }
 

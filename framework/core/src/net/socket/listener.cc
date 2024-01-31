@@ -30,6 +30,10 @@ bool Listener::init(const Address &addr, uint32_t backlog) {
     LOG_ERROR << "can't listen: " << backlog << " error: " << get_last_error();
     return false;
   }
+  if (!socket_->set_nonblocking()) {
+    LOG_ERROR << "can't set nonblocking" << " error: " << get_last_error();
+    return false;
+  }
   return true;
 }
 

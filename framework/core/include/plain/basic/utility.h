@@ -15,6 +15,11 @@
 
 namespace plain {
 
+template <class T>
+constexpr std::string_view as_string_view(T &container) noexcept {
+  return {reinterpret_cast<const char *>(container.data()), container.size()};
+}
+
 PLAIN_API std::string format_size(uint64_t size);
 
 PLAIN_API char get_base64char(int32_t index);

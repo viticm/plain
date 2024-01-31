@@ -9,8 +9,8 @@
 namespace plain::net {
 
 std::shared_ptr<connection::Manager>
-make_manager(Mode mode, const setting_t &setting) noexcept {
-  switch (mode) {
+make_manager(const setting_t &setting) noexcept {
+  switch (setting.mode) {
     case Mode::Epoll:
       return std::make_shared<connection::Epoll>(setting);
     case Mode::Select:
@@ -28,9 +28,9 @@ make_manager(Mode mode, const setting_t &setting) noexcept {
 
 std::shared_ptr<connection::Manager>
 make_manager(
-  Mode mode, std::unique_ptr<concurrency::executor::Basic> &&executor,
+  std::unique_ptr<concurrency::executor::Basic> &&executor,
   const setting_t &setting) noexcept {
-  switch (mode) {
+  switch (setting.mode) {
     case Mode::Epoll:
       return std::make_shared<connection::Epoll>(
         std::forward<decltype(executor)>(executor), setting);

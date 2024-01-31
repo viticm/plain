@@ -39,7 +39,7 @@ int32_t poll_create(data_t &d, int32_t max_count) {
     d.max_count = max_count;
     d.events = new kevent[max_count];
     assert(d.events);
-    signal(SIGPIPE, SIG_IGN);
+    // signal(SIGPIPE, SIG_IGN);
   } else {
     perror("poll_create failed");
   }

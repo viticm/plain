@@ -18,11 +18,11 @@
 namespace plain::net {
 
 std::shared_ptr<connection::Manager>
-make_manager(Mode mode, const setting_t &setting = {}) noexcept;
+make_manager(const setting_t &setting = {}) noexcept;
 
 std::shared_ptr<connection::Manager>
 make_manager(
-  Mode mode, std::unique_ptr<concurrency::executor::Basic> &&executor,
+  std::unique_ptr<concurrency::executor::Basic> &&executor,
   const setting_t &setting = {}) noexcept;
 
 } // namespace plain::net

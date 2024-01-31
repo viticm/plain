@@ -31,15 +31,15 @@ bswap(std::uint16_t n) noexcept {
 constexpr std::uint32_t
 bswap(std::uint32_t n) noexcept {
   return static_cast<std::uint32_t>(
-      bswap(static_cast<std::uint16_t>(n))) << 16U |
-      static_cast<std::uint32_t>(bswap(static_cast<std::uint16_t>(n >> 16U)));
+    bswap(static_cast<std::uint16_t>(n))) << 16U |
+    static_cast<std::uint32_t>(bswap(static_cast<std::uint16_t>(n >> 16U)));
 }
     
 constexpr std::uint64_t
 bswap(std::uint64_t n) noexcept {
   return static_cast<std::uint64_t>(
-      bswap(static_cast<std::uint32_t>(n))) << 32U |
-      static_cast<std::uint64_t>(bswap(static_cast<std::uint32_t>(n >> 32U)));
+    bswap(static_cast<std::uint32_t>(n))) << 32U |
+    static_cast<std::uint64_t>(bswap(static_cast<std::uint32_t>(n >> 32U)));
 }
 
 template <typename T>
@@ -69,7 +69,7 @@ byteswap(T n) noexcept {
     return static_cast<T>(endian_impl::bswap(static_cast<std::uint64_t>(n)));
   } else {
     static_assert(0 == sizeof(n), 
-        "ecpp::byteswap is not endian_implemented for type of this size");
+      "ecpp::byteswap is not endian_implemented for type of this size");
   }
 #endif
 }
@@ -143,6 +143,57 @@ template <std::integral T, endian_impl::contiguous_output_byte_iterator iter_t>
 constexpr void
 hton(T n, iter_t dest) noexcept {
   return ntoh(n, dest);
+}
+
+namespace endian_impl {
+
+template <typename T>
+union decimal_t {
+  T value;
+  unsigned char bytes[sizeof(T)];
+};
+ 
+constexpr void swap_bytes(unsigned char *data, size_t size) {
+  for (size_t i = 0; i < size / 2; ++i) {
+    auto temp = data[size - 1 - i];
+    data[size - 1 - i] = data[i];
+    data[i] = temp;
+  }
+}
+
+template <typename T>
+[[nodiscard]] constexpr T
+decimal_convert(T n) noexcept {
+  if constexpr (std::endian::native == std::endian::big) {
+    return n;
+  } else {
+    decimal_t<T> temp;
+    temp.value = n;
+    swap_bytes(&temp.bytes[0], sizeof(n));
+    return temp.value;
+  }
+}
+
+} // endian_impl
+
+[[nodiscard]] constexpr float
+hton(float n) noexcept {
+  return endian_impl::decimal_convert(n);
+}
+
+[[nodiscard]] constexpr double
+hton(double n) noexcept {
+  return endian_impl::decimal_convert(n);
+}
+
+[[nodiscard]] constexpr float
+ntoh(float n) noexcept {
+  return endian_impl::decimal_convert(n);
+}
+
+[[nodiscard]] constexpr double
+ntoh(double n) noexcept {
+  return endian_impl::decimal_convert(n);
 }
 
 } // namespace plain

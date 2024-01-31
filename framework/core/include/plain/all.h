@@ -16,6 +16,7 @@
 #define PLAIN_H_
 
 /* basic */
+#include "plain/basic/type/byte.h"
 #include "plain/basic/type/variable.h"
 #include "plain/basic/copyable.h"
 #include "plain/basic/noncopyable.h"

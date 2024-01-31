@@ -36,7 +36,7 @@ size_t Basic::write(const bytes_t &bytes) {
   return bytes.size();
 }
 
-size_t Basic::write(std::byte *bytes, size_t length) {
+size_t Basic::write(const std::byte *bytes, size_t length) {
   if (!impl_->have_flag(kWriteableFlag)) return 0;
   impl_->data.append(bytes, length);
   return length;
@@ -63,9 +63,9 @@ size_t Basic::read(bytes_t &bytes) {
   if (length == 0) return 0;
   auto left = impl_->data.size() - impl_->offset;
   if (left < length) return 0;
-  impl_->offset += length;
   const auto *buffer = impl_->data.data() + impl_->offset;
   bytes.insert(0, buffer, length);
+  impl_->offset += length;
   return bytes.size();
 }
 

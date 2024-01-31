@@ -28,7 +28,7 @@ class PLAIN_API Basic {
  public:
   size_t write(std::string_view str);
   size_t write(const bytes_t &bytes);
-  size_t write(std::byte *value, size_t length);
+  size_t write(const std::byte *value, size_t length);
   size_t read(std::string &str);
   size_t read(bytes_t &bytes);
   size_t read(std::byte *value, size_t length);
@@ -36,7 +36,7 @@ class PLAIN_API Basic {
   const_byte_span_t data() const noexcept;
 
  public:
-  void set_readable(bool flag) noexcept;
+ void set_readable(bool flag) noexcept;
   void set_writeable(bool flag) noexcept;
 
  public:

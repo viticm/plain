@@ -80,6 +80,8 @@ Select::~Select() = default;
 
 bool Select::prepare() noexcept {
   if (listen_fd_ != socket::kInvalidSocket) {
+    FD_SET(listen_fd_, &impl_->read_fds.full);
+    FD_SET(listen_fd_, &impl_->except_fds.full);
     impl_->change_vaild_fd(listen_fd_, true);
     impl_->select_timeout = -1;
   } else if (ctrl_read_fd_ != socket::kInvalidSocket) {
@@ -121,15 +123,14 @@ void Select::handle_io() noexcept {
   try {
     foreach([this, listen_fd = listen_fd_](std::shared_ptr<Basic> conn){
       auto id = conn->socket()->id();
-      if (id == socket::kInvalidSocket || id == listen_fd) return;
       if (FD_ISSET(id, &impl_->except_fds.use)) {
         LOG_ERROR << setting_.name << " connection has except: " << conn->id();
         this->remove(conn->id());
         return;
-      } else if (FD_ISSET(id, &impl_->read_fds.use) ||
-        FD_ISSET(id, &impl_->write_fds.use)) {
-        LOG_DEBUG << setting_.name << " hanle io: " << conn->id();
+      } else if (FD_ISSET(id, &impl_->read_fds.use)) {
         conn->enqueue_work(WorkFlag::Input);
+      } else if (FD_ISSET(id, &impl_->write_fds.use)) { // output ?
+
       }
       
     });

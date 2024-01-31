@@ -197,6 +197,7 @@ Manager::~Manager() {
 
 bool Manager::start() {
   if (impl_->running) return true;
+  if (!socket::initialize()) return false;
   if (!prepare()) return false;
   socket::id_t fds[2]{socket::kInvalidSocket};
   if (socket::make_pair(fds)) {
@@ -228,6 +229,9 @@ void Manager::stop() {
     impl_->running = false;
   }
   off();
+  for (auto conn : impl_->connection_info.list) {
+    if (conn && conn->valid()) conn->shutdown();
+  }
   impl_->cv.notify_one(); // Just one for wait work.
   send_ctrl_cmd("k"); // Send stop.
   // The will get "Resource deadlock avoided" except if not join(destroy join).
@@ -370,31 +374,34 @@ std::shared_ptr<plain::net::connection::Basic> Manager::accept() noexcept {
     return {};
   }
   if (!listen_sock_->accept(conn->socket())) {
-    remove(conn);
-    LOG_ERROR << setting_.name <<
-      " connection accept error: " << socket::get_last_error();
+    remove(conn, true);
+    auto last_error = socket::get_last_error();
+    if (last_error.code() != socket::kErrorWouldBlock) {
+      LOG_ERROR << setting_.name <<
+        " connection accept error: " << last_error;
+    }
     return {};
   }
   if (!conn->socket()->set_nonblocking()) {
-    remove(conn);
+    remove(conn, true);
     LOG_ERROR << setting_.name << " set_nonblocking error: " <<
       socket::get_last_error();
     return {};
   }
   if (conn->socket()->error()) {
-    remove(conn);
+    remove(conn, true);
     LOG_ERROR << setting_.name << " socket have error: " <<
       socket::get_last_error();
     return {};
   }
   if (!conn->socket()->set_linger(0)) {
-    remove(conn);
+    remove(conn, true);
     LOG_ERROR << setting_.name << "set_linger error: " <<
       socket::get_last_error();
     return {};
   }
   if (!sock_add(conn->socket()->id(), conn->id())) {
-    remove(conn);
+    remove(conn, true);
     LOG_ERROR << setting_.name << " sock_add error";
     return {};
   }

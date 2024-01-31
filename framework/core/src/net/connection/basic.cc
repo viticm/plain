@@ -37,10 +37,11 @@ struct Basic::Impl {
   stream::codec_t codec;
   std::weak_ptr<Manager> manager;
   packet::dispatch_func dispatcher;
-  std::atomic_bool working{false};
-  std::mutex mutex;
   uint8_t error_times{0};
   uint8_t work_flags{0};
+  std::atomic_bool working{false};
+  mutable std::mutex mutex;
+
   bool process_input(Basic *conn) noexcept;
   bool process_output(Basic *conn) noexcept;
   bool process_command(Basic *conn) noexcept;
@@ -66,13 +67,13 @@ Basic::Impl::~Impl() = default;
 bool Basic::Impl::process_input(Basic *conn) noexcept {
   if (!has_work_flag(WorkFlag::Input)) return true;
   assert(conn);
-  // std::cout << "process_input: " << this << std::endl;
   if (!socket->valid()) return false;
   auto r = istream->pull();
   if (r < 0) {
     LOG_ERROR << get_name(conn) << " pull failed: " << r;
     return false;
   }
+  // std::cout << "process_input: " << conn->name() << "|" << r << std::endl;
   if (socket->avail() == 0)
     set_work_flag(WorkFlag::Input, false);
   return true;
@@ -82,10 +83,14 @@ bool Basic::Impl::process_output(Basic *conn) noexcept {
   if (!has_work_flag(WorkFlag::Output)) return true;
   assert(conn);
   if (!socket->valid()) return false;
-  auto r = ostream->push();
-  if (r < 0) {
-    LOG_ERROR << get_name(conn) << " push failed: " << r;
-    return false;
+  {
+    std::unique_lock<std::mutex> lock{mutex};
+    auto r = ostream->push();
+    // std::cout << "process_output: " << ostream->size() << std::endl;
+    if (r < 0) {
+      LOG_ERROR << get_name(conn) << " push failed: " << r;
+      return false;
+    }
   }
   if (ostream->size() == 0)
     set_work_flag(WorkFlag::Output, false);
@@ -134,8 +139,6 @@ bool Basic::Impl::process_command(Basic *conn) noexcept {
   if (clear_error) error_times = 0;
   if (istream->size() == 0)
     set_work_flag(WorkFlag::Command, false);
-  else
-    set_work_flag(WorkFlag::Command, true);
   return true;
 }
 
@@ -176,10 +179,12 @@ void Basic::Impl::enqueue_work() noexcept {
 }
 
 bool Basic::Impl::has_work_flag(WorkFlag flag) const noexcept {
+  std::unique_lock<std::mutex> lock{mutex};
   return work_flags & (0x1 << std::to_underlying(flag));
 }
   
 void Basic::Impl::set_work_flag(WorkFlag flag, bool enable) noexcept {
+  std::unique_lock<std::mutex> lock{mutex};
   if (enable)
     work_flags |= (0x1 << std::to_underlying(flag));
   else
@@ -187,6 +192,7 @@ void Basic::Impl::set_work_flag(WorkFlag flag, bool enable) noexcept {
 }
 
 std::string Basic::Impl::get_name(const Basic *conn) noexcept {
+  if (!conn->valid()) return {};
   std::string r;
   auto m = conn->impl_->manager.lock();
   if (m && !m->setting_.name.empty()) {
@@ -212,6 +218,13 @@ Basic &Basic::operator=(Basic &&object) noexcept = default;
 bool Basic::init() noexcept {
   if (!impl_->socket->close()) return false;
   impl_->working.store(false, std::memory_order_relaxed);
+  impl_->work_flags = 0;
+  impl_->istream->clear();
+  impl_->ostream->clear();
+  auto connect_call_key = get_callable_key(this, "__connect");
+  s_callables.erase(connect_call_key);
+  auto disconnect_call_key = get_callable_key(this, "__disconnect");
+  s_callables.erase(disconnect_call_key);
   // if (!impl_->socket->create()) return false;
   return true;
 }
@@ -222,7 +235,7 @@ bool Basic::idle() const noexcept {
 }
   
 bool Basic::shutdown(int32_t how) noexcept {
-  if (!impl_->socket->valid()) return false;
+  if (!impl_->socket->valid()) return true;
   return impl_->socket->shutdown(how);
 }
   
@@ -240,10 +253,8 @@ bool Basic::work() noexcept {
 }
 
 void Basic::enqueue_work(WorkFlag flag) noexcept {
-  {
-    std::unique_lock<std::mutex> lock{impl_->mutex};
-    impl_->set_work_flag(flag, true);
-  }
+  if (impl_->has_work_flag(flag)) return;
+  impl_->set_work_flag(flag, true);
   impl_->enqueue_work();
 }
 
@@ -291,7 +302,7 @@ void Basic::set_manager(std::shared_ptr<Manager> manager) noexcept {
   impl_->manager = manager;
 }
   
-void Basic::set_packet_dispatcher(packet::dispatch_func func) noexcept {
+void Basic::set_dispatcher(packet::dispatch_func func) noexcept {
   impl_->dispatcher = func;
 }
 

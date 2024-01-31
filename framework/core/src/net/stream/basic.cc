@@ -1,6 +1,7 @@
 #include "plain/net/stream/basic.h"
 #include <cassert>
 #include "plain/basic/ring.h"
+#include "plain/net/socket/api.h"
 #include "plain/net/socket/basic.h"
 
 using plain::net::stream::Basic;
@@ -12,6 +13,12 @@ struct Basic::Impl {
   DynamicRing<std::byte, 128> buffer;
   std::string encrypt_key;
   bool compressed{false};
+#if OS_WIN
+  static constexpr uint32_t kSendFlag{MSG_DONTROUTE};
+#else
+  static constexpr uint32_t kSendFlag{MSG_NOSIGNAL};
+#endif
+
 };
 
 Basic::Basic(std::shared_ptr<socket::Basic> socket) :
@@ -58,7 +65,7 @@ int32_t Basic::push() noexcept {
     if (real_send_size >= send_size) break;
     bytes_t temp;
     temp.insert(0, bytes.data() + real_send_size, send_size - real_send_size);
-    auto send_result = socket->send(temp);
+    auto send_result = socket->send(temp, Impl::kSendFlag);
     if (send_result == kErrorWouldBlock || send_result == 0) break;
     if (send_result == kSocketError) return kSocketError - 1;
     assert(send_result > 0);

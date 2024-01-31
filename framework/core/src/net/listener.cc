@@ -14,12 +14,12 @@ Listener::Listener(
   std::unique_ptr<concurrency::executor::Basic> &&executor,
   const setting_t &setting) : impl_{std::make_unique<Impl>()} {
   impl_->manager = make_manager(
-    setting.mode, std::forward<decltype(executor)>(executor), setting);
+    std::forward<decltype(executor)>(executor), setting);
   assert(impl_->manager);
 }
   
 Listener::Listener(const setting_t &setting) : impl_{std::make_unique<Impl>()} {
-  impl_->manager = make_manager(setting.mode, setting);
+  impl_->manager = make_manager(setting);
   assert(impl_->manager);
 }
 
