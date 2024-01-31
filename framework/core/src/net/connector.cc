@@ -41,15 +41,18 @@ void Connector::stop() {
 
 std::shared_ptr<plain::net::connection::Basic>
 Connector::connect(
-  std::string_view address, const std::chrono::milliseconds &timeout) noexcept {
-  return connect_impl(address, 0, timeout);
+  std::string_view address,
+  std::function<bool(connection::Basic *)> init_func,
+  const std::chrono::milliseconds &timeout) noexcept {
+  return connect_impl(address, 0, init_func, timeout);
 }
  
 std::shared_ptr<plain::net::connection::Basic>
 Connector::connect(
   std::string_view ip, uint16_t port,
+  std::function<bool(connection::Basic *)> init_func,
   const std::chrono::milliseconds &timeout) noexcept {
-  return connect_impl(ip, port, timeout);
+  return connect_impl(ip, port, init_func, timeout);
 }
 
 void Connector::set_codec(const stream::codec_t &codec) noexcept {
@@ -97,9 +100,15 @@ plain::concurrency::executor::Basic &Connector::get_executor() {
 std::shared_ptr<plain::net::connection::Basic>
 Connector::connect_impl(
   std::string_view addr_or_ip, uint16_t port,
+  std::function<bool(connection::Basic *)> init_func,
   const std::chrono::milliseconds &timeout) noexcept {
   auto conn = impl_->manager->new_conn();
   if (!conn || conn->id() == connection::kInvalidId) return {};
+  if (static_cast<bool>(init_func) && !init_func(conn.get())) {
+    impl_->manager->remove(conn, true);
+    LOG_ERROR << "initialize failed";
+    return {};
+  }
   auto success = port == 0 ?
     conn->socket()->connect(addr_or_ip, timeout) :
     conn->socket()->connect(addr_or_ip, port, timeout);

@@ -38,11 +38,13 @@ class PLAIN_API Connector final {
   std::shared_ptr<connection::Basic>
   connect(
     std::string_view address,
+    std::function<bool(connection::Basic *)> init_func = {},
     const std::chrono::milliseconds 
     &timeout = std::chrono::seconds(5)) noexcept;
   std::shared_ptr<connection::Basic>
   connect(
     std::string_view ip, uint16_t port,
+    std::function<bool(connection::Basic *)> init_func = {},
     const std::chrono::milliseconds
     &timeout = std::chrono::seconds(5)) noexcept;
 
@@ -68,6 +70,7 @@ class PLAIN_API Connector final {
   std::shared_ptr<connection::Basic>
   connect_impl(
     std::string_view addr_or_ip, uint16_t port = 0,
+    std::function<bool(connection::Basic *)> init_func = {},
     const std::chrono::milliseconds &timeout = {}) noexcept;
 
 };

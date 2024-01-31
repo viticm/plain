@@ -106,25 +106,30 @@ void plain::tests::test_net_connection_funcs() {
   Connector connector;
   r = connector.start();
   ASSERT_TRUE(r);
-  auto conn1 = connector.connect(":9527");
+
+  auto init_func = [](connection::Basic *conn) -> bool {
+    conn->set_codec({.encode = line_encode, .decode = line_decode});
+    conn->set_connect_callback([](connection::Basic *conn) {
+      std::cout << "send hello" << std::endl;
+      test_net_connection_send_line(conn, "hello world");
+    });
+    conn->set_disconnect_callback([](connection::Basic *conn) {
+      std::cout << "disconnect: " << conn->name() << std::endl;
+    });
+    conn->set_dispatcher(
+      [](connection::Basic *conn, std::shared_ptr<packet::Basic> pack) {
+      auto d = pack->data();
+      std::cout << conn->name() << ": " << as_string_view(d) << std::endl;
+      return true;
+    });
+    return true;
+  };
+
+  auto conn1 = connector.connect(":9527", init_func);
   ASSERT_TRUE(static_cast<bool>(conn1));
 
-  conn1->set_codec({.encode = line_encode, .decode = line_decode});
-  conn1->set_connect_callback([](connection::Basic *conn) {
-    std::cout << "send hello" << std::endl;
-    test_net_connection_send_line(conn, "hello world");
-  });
-  conn1->set_disconnect_callback([](connection::Basic *conn) {
-    std::cout << "disconnect: " << conn->name() << std::endl;
-  });
-  conn1->set_dispatcher(
-    [](connection::Basic *conn, std::shared_ptr<packet::Basic> pack) {
-    auto d = pack->data();
-    std::cout << conn->name() << ": " << as_string_view(d) << std::endl;
-    return true;
-  });
-  test_net_connection_send_line(conn1.get(), "hello world");
- 
+  auto conn2 = connector.connect(":9527", nullptr, 5s);
+  ASSERT_TRUE(static_cast<bool>(conn2));
   
   std::this_thread::sleep_for(50ms);
 }
