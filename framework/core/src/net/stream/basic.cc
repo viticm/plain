@@ -125,19 +125,13 @@ size_t Basic::write(const_byte_span_t bytes) {
 }
 
 size_t Basic::read(std::string &str) {
-  uint32_t length{0};
-  *this >> length;
-  if (length == 0) return 0;
-  str.reserve(length);
+  uint32_t length = str.size();
   auto *buffer = reinterpret_cast<std::byte *>(str.data());
   return impl_->buffer.read(buffer, length);
 }
 
 size_t Basic::read(bytes_t &bytes) {
-  uint32_t length{0};
-  *this >> length;
-  if (length == 0) return 0;
-  bytes.reserve(length);
+  uint32_t length = bytes.size();
   return impl_->buffer.read(bytes.data(), length);
 }
 

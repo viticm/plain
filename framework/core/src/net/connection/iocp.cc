@@ -137,7 +137,7 @@ bool Iocp::prepare() noexcept {
       setting_.max_count;
     return false;
   }
-  if (listen_fd_ != socket::kInvalidSocket) {
+  if (listen_fd_ != socket::kInvalidId) {
     auto r = poll_add(impl_->data, listen_fd_, EPOLLIN, connection::kInvalidId);
     if (r < 0) {
       LOG_ERROR << setting_.name << " add error result: " << r;
@@ -173,7 +173,7 @@ void Iocp::off() noexcept {
 bool Iocp::sock_add(
   [[maybe_unused]] socket::id_t sock_id,
   [[maybe_unused]] connection::id_t conn_id) noexcept {
-  assert(sock_id != socket::kInvalidSocket);
+  assert(sock_id != socket::kInvalidId);
   assert(conn_id != connection::kInvalidId);
 #if OS_WIN
   if (poll_add(impl_->data, sock_id, EPOLLIN | EPOLLET, conn_id) != 0) {
@@ -187,7 +187,7 @@ bool Iocp::sock_add(
   
 bool Iocp::sock_remove([[maybe_unused]] socket::id_t sock_id) noexcept {
   assert(sock_id >= 0);
-  assert(sock_id != socket::kInvalidSocket);
+  assert(sock_id != socket::kInvalidId);
 #if OS_WIN
   if (poll_delete(impl_->data, sock_id) != 0) {
     LOG_ERROR << setting_.name << " sock_remove error: " << strerror(errno);
@@ -207,11 +207,11 @@ void Iocp::handle_input() noexcept {
       get_highsection(d.events[i].data.u64));
     auto conn_id = static_cast<connection::id_t>(
       get_lowsection(d.events[i].data.u64));
-    if (sock_id != socket::kInvalidSocket &&
+    if (sock_id != socket::kInvalidId &&
         sock_id == listen_fd_ && accept_count < kOnceAcccpetCount) {
       ++accept_count;
       this->accept();
-    } else if (sock_id != socket::kInvalidSocket && sock_id == ctrl_read_fd_) {
+    } else if (sock_id != socket::kInvalidId && sock_id == ctrl_read_fd_) {
       recv_ctrl_cmd();
     } else if (d.events[i].events & EPOLLIN) {
       auto conn = get_conn(conn_id);
@@ -219,7 +219,7 @@ void Iocp::handle_input() noexcept {
         LOG_ERROR << setting_.name << " can't find connection: " << conn_id;
         continue;
       }
-      if (sock_id == socket::kInvalidSocket) {
+      if (sock_id == socket::kInvalidId) {
         LOG_ERROR << setting_.name << " can't find socket: " << conn_id;
         remove(conn_id);
         continue;

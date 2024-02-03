@@ -19,7 +19,7 @@ namespace socket {
 
 using id_t = int32_t;
 
-static constexpr id_t kInvalidSocket{-1};
+static constexpr id_t kInvalidId{-1};
 static constexpr int32_t kErrorWouldBlock{-100};
 static constexpr int32_t kSocketError{-1};
 

@@ -21,11 +21,16 @@ namespace socket {
 class PLAIN_API Basic : noncopyable {
 
  public:
-  Basic(id_t id = kInvalidSocket);
+  Basic(id_t id = kInvalidId);
   virtual ~Basic();
 
  public:
   Basic(Basic &&object) noexcept;
+
+ public:
+  explicit operator bool() const noexcept {
+    return valid();
+  }
 
  public:
   bool create();
@@ -34,9 +39,6 @@ class PLAIN_API Basic : noncopyable {
   id_t release() noexcept;
   Basic clone() noexcept;
   bool valid() const noexcept;
-  explicit operator bool() const noexcept {
-    return valid();
-  }
   bool error() const noexcept;
   int32_t send(const bytes_t &bytes, uint32_t flag = 0);
   int32_t recv(bytes_t &bytes, uint32_t flag = 0); // recv max bytes capacity size.
@@ -52,9 +54,9 @@ class PLAIN_API Basic : noncopyable {
     return get_option(level, name, reinterpret_cast<void *>(val), &len);
   }
   id_t id() const noexcept;
-  bool set_recv_size(uint32_t size) const;
+  bool set_recv_size(uint32_t size) const; // recv buffer size.
   uint32_t get_recv_size() const;
-  bool set_send_size(uint32_t size) const;
+  bool set_send_size(uint32_t size) const; // send buffer size.
   uint32_t get_send_size() const;
   bool set_id(id_t id) noexcept;
 

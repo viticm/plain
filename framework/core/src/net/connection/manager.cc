@@ -41,7 +41,7 @@ struct Manager::Impl {
   std::mutex wait_mutex;
   std::condition_variable cv;
   thread_t worker; // The main worker.
-  socket::id_t ctrl_write_fd{socket::kInvalidSocket};
+  socket::id_t ctrl_write_fd{socket::kInvalidId};
   bool running{false};
   callable_func connect_callback;
   callable_func disconnect_callback;
@@ -102,7 +102,7 @@ bool Manager::Impl::wait_work(std::shared_ptr<Manager> manager) noexcept {
     */
   } else {
     manager->impl_->cv.wait(lock, [manager] {
-      return manager->listen_fd_ != socket::kInvalidSocket ||
+      return manager->listen_fd_ != socket::kInvalidId ||
         manager->impl_->connection_info.size > 0 || !manager->running();
     });
   }
@@ -127,7 +127,7 @@ bool Manager::Impl::wait_work(std::shared_ptr<Manager> manager) noexcept {
   return true;
 #else
   manager->impl_->cv.wait(lock, [manager] {
-    return manager->listen_fd_ != socket::kInvalidSocket ||
+    return manager->listen_fd_ != socket::kInvalidId ||
       manager->impl_->connection_info.size > 0 || !manager->running();
   });
   if (!manager->running() || !manager->work()) return false;
@@ -189,9 +189,9 @@ Manager::Manager(
 }
 
 Manager::~Manager() {
-  if (ctrl_read_fd_ != socket::kInvalidSocket)
+  if (ctrl_read_fd_ != socket::kInvalidId)
     close(ctrl_read_fd_);
-  if (impl_->ctrl_write_fd != socket::kInvalidSocket)
+  if (impl_->ctrl_write_fd != socket::kInvalidId)
     close(impl_->ctrl_write_fd);
 }
 
@@ -199,7 +199,7 @@ bool Manager::start() {
   if (impl_->running) return true;
   if (!socket::initialize()) return false;
   if (!prepare()) return false;
-  socket::id_t fds[2]{socket::kInvalidSocket};
+  socket::id_t fds[2]{socket::kInvalidId};
   if (socket::make_pair(fds)) {
     ctrl_read_fd_ = fds[0];
     impl_->ctrl_write_fd = fds[1];
@@ -363,7 +363,7 @@ void Manager::foreach(std::function<void(std::shared_ptr<Basic> conn)> func) {
 }
 
 std::shared_ptr<plain::net::connection::Basic> Manager::accept() noexcept {
-  if (listen_fd_ == socket::kInvalidSocket || !listen_sock_)
+  if (listen_fd_ == socket::kInvalidId || !listen_sock_)
     return {};
   auto conn = new_conn();
   if (!conn) {
@@ -413,14 +413,14 @@ std::shared_ptr<plain::net::connection::Basic> Manager::accept() noexcept {
 }
 
 bool Manager::send_ctrl_cmd(std::string_view cmd) noexcept {
-  if (impl_->ctrl_write_fd == socket::kInvalidSocket)
+  if (impl_->ctrl_write_fd == socket::kInvalidId)
     return false;
   auto r = socket::send(impl_->ctrl_write_fd, cmd.data(), cmd.size(), 0);
   return r >= 0;
 }
   
 void Manager::recv_ctrl_cmd() noexcept {
-  if (ctrl_read_fd_ == socket::kInvalidSocket)
+  if (ctrl_read_fd_ == socket::kInvalidId)
     return;
   std::array<char, 256> buffer{0};
   socket::recv(ctrl_read_fd_, buffer.data(), buffer.size(), 0);

@@ -45,7 +45,7 @@ bool Listener::accept(std::shared_ptr<Basic> socket) {
   if (!socket) return false;
   if (!socket_->valid()) return false;
   id_t id = socket_->accept();
-  if (id == kInvalidSocket) return false;
+  if (id == kInvalidId) return false;
   return socket->set_id(id);
 }
 

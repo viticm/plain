@@ -21,7 +21,7 @@ namespace {
 static constexpr size_t kOnceAcccpetCount{64};
 
 struct data_struct {
-  int32_t fd{socket::kInvalidSocket};
+  int32_t fd{socket::kInvalidId};
   int32_t max_count{std::numeric_limits<int32_t>::max()};
   std::atomic_int32_t result_event_count{0};
   int32_t event_index{0};
@@ -141,7 +141,7 @@ bool Epoll::prepare() noexcept {
       << setting_.max_count << " fd: " << fd;
     return false;
   }
-  if (listen_fd_ != socket::kInvalidSocket) {
+  if (listen_fd_ != socket::kInvalidId) {
     auto r = poll_add(impl_->data, listen_fd_, EPOLLIN, connection::kInvalidId);
     if (r < 0) {
       LOG_ERROR << setting_.name << " add error result: " << r;
@@ -177,7 +177,7 @@ void Epoll::off() noexcept {
 bool Epoll::sock_add(
   [[maybe_unused]] socket::id_t sock_id,
   [[maybe_unused]] connection::id_t conn_id) noexcept {
-  assert(sock_id != socket::kInvalidSocket);
+  assert(sock_id != socket::kInvalidId);
   assert(conn_id != connection::kInvalidId);
 #if OS_UNIX
   if (poll_add(impl_->data, sock_id, EPOLLIN | EPOLLET, conn_id) != 0) {
@@ -191,7 +191,7 @@ bool Epoll::sock_add(
   
 bool Epoll::sock_remove([[maybe_unused]] socket::id_t sock_id) noexcept {
   assert(sock_id >= 0);
-  assert(sock_id != socket::kInvalidSocket);
+  assert(sock_id != socket::kInvalidId);
 #if OS_UNIX
   if (poll_delete(impl_->data, sock_id) != 0) {
     LOG_ERROR << setting_.name << " sock_remove error: " << strerror(errno);
@@ -213,11 +213,11 @@ void Epoll::handle_input() noexcept {
       get_highsection(d.events[i].data.u64));
     auto conn_id = static_cast<connection::id_t>(
       get_lowsection(d.events[i].data.u64));
-    if (sock_id != socket::kInvalidSocket &&
+    if (sock_id != socket::kInvalidId &&
         sock_id == listen_fd_ && accept_count < kOnceAcccpetCount) {
       ++accept_count;
       this->accept();
-    } else if (sock_id != socket::kInvalidSocket && sock_id == ctrl_read_fd_) {
+    } else if (sock_id != socket::kInvalidId && sock_id == ctrl_read_fd_) {
       recv_ctrl_cmd();
     } else if (d.events[i].events & EPOLLIN) {
       if (conn_id == connection::kInvalidId)
@@ -227,7 +227,7 @@ void Epoll::handle_input() noexcept {
         LOG_ERROR << setting_.name << " can't find connection: " << conn_id;
         continue;
       }
-      if (sock_id == socket::kInvalidSocket) {
+      if (sock_id == socket::kInvalidId) {
         LOG_ERROR << setting_.name << " can't find socket: " << conn_id;
         remove(conn_id);
         continue;

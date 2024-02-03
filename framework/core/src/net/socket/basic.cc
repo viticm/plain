@@ -6,7 +6,7 @@
 using plain::net::socket::Basic;
 
 struct Basic::Impl {
-  id_t id{kInvalidSocket};
+  id_t id{kInvalidId};
 };
 
 Basic::Basic(id_t id) : impl_{std::make_unique<Impl>()} {
@@ -14,34 +14,37 @@ Basic::Basic(id_t id) : impl_{std::make_unique<Impl>()} {
 }
 
 Basic::~Basic() {
-  close();
+  if (static_cast<bool>(impl_)) close();
 }
 
 Basic::Basic(Basic &&object) noexcept = default;
 
 bool Basic::create() {
+  if (!close()) return false;
   impl_->id = socket::create(AF_INET, SOCK_STREAM, 0); // default is ip_v4
   return valid();
 }
 
 bool Basic::create(int32_t domain, int32_t type, int32_t protocol) {
+  if (!close()) return false;
   impl_->id = socket::create(domain, type, protocol);
   return valid();
 }
 
 bool Basic::close() noexcept {
-  if (impl_->id == kInvalidSocket) return true;
+  if (impl_->id == kInvalidId) return true;
   return socket::close(release());
 }
 
 plain::net::socket::id_t Basic::release() noexcept {
   auto r = impl_->id;
-  impl_->id = kInvalidSocket;
+  impl_->id = kInvalidId;
   return r;
 }
 
 Basic Basic::clone() noexcept {
-  id_t id{kInvalidSocket};
+  if (impl_->id == kInvalidId) return {};
+  id_t id{kInvalidId};
 #if OS_WIN
   WSAPROTOCOL_INFOW prot_info;
   if (::WSADuplicateSocketW(impl_->id, ::GetCurrentProcessId(), &prot_info) == 0)
@@ -54,11 +57,11 @@ Basic Basic::clone() noexcept {
 }
 
 bool Basic::valid() const noexcept {
-  return impl_->id != kInvalidSocket && !error();
+  return impl_->id != kInvalidId && !error();
 }
 
 bool Basic::error() const noexcept {
-  if (impl_->id == kInvalidSocket) return true;
+  if (impl_->id == kInvalidId) return true;
   int32_t value{0};
   uint32_t length{static_cast<uint32_t>(sizeof(value))};
   getsockoptb(impl_->id, SOL_SOCKET, SO_ERROR, &value, &length);
@@ -84,7 +87,7 @@ plain::net::Address Basic::address() const {
   auto store = sockaddr_storage{};
   int32_t len = sizeof(store);
   auto e = getsockname(impl_->id, reinterpret_cast<sockaddr *>(&store), &len);
-  if (e == kInvalidSocket)
+  if (e == kInvalidId)
     return Address{};
   Address::value_type value;
   value.reserve(len);
@@ -97,7 +100,7 @@ plain::net::Address Basic::peer_address() const {
   auto store = sockaddr_storage{};
   int32_t len = sizeof(store);
   auto e = getpeername(impl_->id, reinterpret_cast<sockaddr *>(&store), &len);
-  if (e == kInvalidSocket)
+  if (e == kInvalidId)
     return Address{};
   Address::value_type value;
   value.reserve(len);
@@ -145,7 +148,7 @@ uint32_t Basic::get_send_size() const {
 }
 
 bool Basic::shutdown(int32_t how) noexcept {
-  if (!valid()) return false;
+  if (!valid()) return true;
   return socket::shutdown(impl_->id, how);
 }
   
@@ -203,7 +206,7 @@ bool Basic::listen(uint32_t backlog) {
 }
   
 int32_t Basic::accept(Address &addr) {
-  int32_t r{kInvalidSocket};
+  int32_t r{kInvalidId};
   if (!valid()) return r;
   auto d = addr.data();
   uint32_t len{static_cast<uint32_t>(d.size())};
@@ -213,7 +216,7 @@ int32_t Basic::accept(Address &addr) {
 }
   
 int32_t Basic::accept() {
-  int32_t r{kInvalidSocket};
+  int32_t r{kInvalidId};
   if (!valid()) return r;
   r = socket::accept(impl_->id, nullptr, 0);
   return r;

@@ -193,7 +193,7 @@ bool initialize() {
 
 id_t create(int32_t domain, int32_t type, int32_t protocol) {
   id_t id = ::socket(domain, type, protocol);
-  if (id == kInvalidSocket) {
+  if (id == kInvalidId) {
     set_error();
   }
   return id;
@@ -500,7 +500,7 @@ Error get_last_error() noexcept {
 int32_t socketpair(
   int32_t family, int32_t type, int32_t protocol, id_t fds[2]) {
 #if OS_WIN
-  id_t tcp1{kInvalidSocket}, tcp2{kInvalidSocket};
+  id_t tcp1{kInvalidId}, tcp2{kInvalidSocket};
   bytes_t name;
   if (family == AF_INET6) {
     sockaddr_in6 addr;
@@ -519,7 +519,7 @@ int32_t socketpair(
 
   uint32_t namelen = name.size();
   id_t tcp = create(family, type, protocol);
-  if (tcp == kInvalidSocket){
+  if (tcp == kInvalidId){
     goto clean;
   }
   if (::bind(tcp, reinterpret_cast<sockaddr *>(name.data()), namelen) == -1){
@@ -533,7 +533,7 @@ int32_t socketpair(
     goto clean;
   }
   tcp1 = create(family, type, protocol);
-  if (tcp1 == kInvalidSocket){
+  if (tcp1 == kInvalidId){
     goto clean;
   }
   if (kSocketError == ::connect(
@@ -542,7 +542,7 @@ int32_t socketpair(
   }
 
   tcp2 = ::accept(tcp, reinterpret_cast<sockaddr *>(name.data()), &namelen);
-  if (tcp2 == kInvalidSocket){
+  if (tcp2 == kInvalidId){
     goto clean;
   }
   if (!close(tcp)){
@@ -552,16 +552,16 @@ int32_t socketpair(
   fds[1] = tcp2;
   return 0;
 clean:
-  if (tcp != kInvalidSocket){
+  if (tcp != kInvalidId){
     close(tcp);
   }
-  if (tcp2 != kInvalidSocket){
+  if (tcp2 != kInvalidId){
     close(tcp2);
   }
-  if (tcp1 != kInvalidSocket){
+  if (tcp1 != kInvalidId){
     close(tcp1);
   }
-  return kInvalidSocket;
+  return kInvalidId;
 #else
   return ::socketpair(family, type, protocol, fds);
 #endif

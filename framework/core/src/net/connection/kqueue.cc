@@ -22,7 +22,7 @@ namespace {
 static constexpr size_t kOnceAcccpetCount{64};
 
 struct data_struct {
-  int32_t fd{socket::kInvalidSocket};
+  int32_t fd{socket::kInvalidId};
   int32_t max_count{std::numeric_limits<int32_t>::max()};
   std::atomic_int32_t result_event_count{0};
   int32_t event_index{0};
@@ -56,7 +56,7 @@ int32_t poll_delete(data_t &d, int32_t fd) {
 }
 
 int32_t poll_add(data_t &d, int32_t fd, id_t conn_id) {
-  if (conn_id > d.event_datas.size() || d.fd == socket::kInvalidSocket) {
+  if (conn_id > d.event_datas.size() || d.fd == socket::kInvalidId) {
     return -1;
   }
   struct kevent event;
@@ -91,7 +91,7 @@ int32_t poll_add(data_t &d, int32_t fd, id_t conn_id) {
 int32_t poll_enable(
   data_t &d, int32_t fd, bool read_enable, bool write_enable) {
   if (conn_id > d.event_datas.size() || conn_id <= 0 
-      || d.fd == socket::kInvalidSocket) {
+      || d.fd == socket::kInvalidId) {
     return -1;
   }
   size_t index = conn_id - 1;
@@ -175,7 +175,7 @@ bool Kqueue::prepare() noexcept {
       << setting_.max_count << " fd: " << fd;
     return false;
   }
-  if (listen_fd_ != socket::kInvalidSocket) {
+  if (listen_fd_ != socket::kInvalidId) {
     auto r = poll_add(impl_->data, listen_fd_, EPOLLIN, connection::kInvalidId);
     if (r < 0) {
       LOG_ERROR << setting_.name << " add error result: " << r;
@@ -211,7 +211,7 @@ void Kqueue::off() noexcept {
 bool Kqueue::sock_add(
   [[maybe_unused]] socket::id_t sock_id,
   [[maybe_unused]] connection::id_t conn_id) noexcept {
-  assert(sock_id != socket::kInvalidSocket);
+  assert(sock_id != socket::kInvalidId);
   assert(conn_id != connection::kInvalidId);
 #if ENABLE_KQUEUE
   if (poll_add(impl_->data, sock_id, conn_id) != 0 ||
@@ -226,7 +226,7 @@ bool Kqueue::sock_add(
   
 bool Kqueue::sock_remove([[maybe_unused]] socket::id_t sock_id) noexcept {
   assert(sock_id >= 0);
-  assert(sock_id != socket::kInvalidSocket);
+  assert(sock_id != socket::kInvalidId);
 #if ENABLE_KQUEUE
   if (poll_delete(impl_->data, sock_id) != 0) {
     LOG_ERROR << setting_.name << "error: " << strerror(errno);
@@ -246,11 +246,11 @@ void Kqueue::handle_input() noexcept {
     auto sock_id = static_cast<socket::id_t>(get_highsection(ud);
     auto conn_id = static_cast<connection::id_t>(get_lowsection(ud));
     auto filter = d.events[i].filter;
-    if (sock_id != socket::kInvalidSocket &&
+    if (sock_id != socket::kInvalidId &&
         sock_id == listen_fd_ && accept_count < kOnceAcccpetCount) {
       ++accept_count;
       this->accept();
-    } else if (sock_id != socket::kInvalidSocket && sock_id == ctrl_read_fd_) {
+    } else if (sock_id != socket::kInvalidId && sock_id == ctrl_read_fd_) {
       recv_ctrl_cmd();
     } else if (filter == EVFILT_READ) {
       auto conn = get_conn(conn_id);
@@ -258,7 +258,7 @@ void Kqueue::handle_input() noexcept {
         LOG_ERROR << setting_.name << " can't find connection: " << conn_id;
         continue;
       }
-      if (sock_id == socket::kInvalidSocket) {
+      if (sock_id == socket::kInvalidId) {
         LOG_ERROR << setting_.name << " can't find socket: " << conn_id;
         remove(conn_id);
         continue;

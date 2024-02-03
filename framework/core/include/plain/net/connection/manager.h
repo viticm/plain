@@ -73,9 +73,9 @@ class PLAIN_API Manager :
 
  protected:
   setting_t setting_;
-  socket::id_t listen_fd_{socket::kInvalidSocket};
+  socket::id_t listen_fd_{socket::kInvalidId};
   std::shared_ptr<socket::Listener> listen_sock_;
-  socket::id_t ctrl_read_fd_{socket::kInvalidSocket};
+  socket::id_t ctrl_read_fd_{socket::kInvalidId};
 
  private:
   friend class Basic;
