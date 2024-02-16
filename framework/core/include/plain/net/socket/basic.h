@@ -14,6 +14,7 @@
 
 #include "plain/net/socket/config.h"
 #include "plain/net/address.h"
+#include "plain/net/detail/coroutine.h"
 
 namespace plain::net {
 namespace socket {
@@ -43,6 +44,19 @@ class PLAIN_API Basic : noncopyable {
   int32_t send(const bytes_t &bytes, uint32_t flag = 0);
   int32_t recv(bytes_t &bytes, uint32_t flag = 0); // recv max bytes capacity size.
   size_t avail() const noexcept;
+
+ public:
+  virtual detail::Awaitable send_await(
+    const bytes_t &bytes, uint32_t flag = 0, void *udata = nullptr) {
+    return detail::Awaitable{nullptr};
+  }
+  virtual detail::Awaitable recv_await(
+    bytes_t &bytes, uint32_t flag = 0, void *udata = nullptr) {
+    return detail::Awaitable{nullptr};
+  }
+  virtual constexpr bool awaitable() const {
+    return false;
+  }
 
  public:
   Address address() const;

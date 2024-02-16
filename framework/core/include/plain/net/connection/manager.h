@@ -57,7 +57,11 @@ class PLAIN_API Manager :
     socket::id_t sock_id, connection::id_t conn_id) noexcept = 0;
   virtual bool sock_remove(socket::id_t sock_id) noexcept = 0;
   std::shared_ptr<Basic> accept() noexcept;
+  std::shared_ptr<Basic> accept(socket::id_t sock_id) noexcept;
   virtual bool prepare() noexcept { return true; }
+  virtual void *get_sock_data() noexcept { // send/recv need data.
+    return nullptr;
+  }
 
  protected:
   std::shared_ptr<Basic> new_conn() noexcept;

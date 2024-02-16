@@ -19,10 +19,12 @@
 namespace plain::net {
 namespace connection {
 
-class PLAIN_API Basic {
+class PLAIN_API alignas(kCacheInlineAlignment)
+Basic final {
 
  public:
   Basic();
+  Basic(std::shared_ptr<socket::Basic> socket);
   Basic(Basic &&object) noexcept;
   ~Basic();
 

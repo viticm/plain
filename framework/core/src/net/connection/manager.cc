@@ -411,6 +411,48 @@ std::shared_ptr<plain::net::connection::Basic> Manager::accept() noexcept {
   }
   return conn;
 }
+  
+std::shared_ptr<plain::net::connection::Basic>
+Manager::accept(socket::id_t sock_id) noexcept {
+  auto conn = new_conn();
+  if (!conn) {
+    LOG_WARN << setting_.name << " new conn failed";
+    auto sock = std::make_shared<socket::Basic>();
+    listen_sock_->accept(sock);
+    sock->close();
+    return {};
+  }
+  if (sock_id == socket::kInvalidId) return {};
+  conn->socket()->set_id(sock_id);
+  if (!conn->socket()->set_nonblocking()) {
+    remove(conn, true);
+    LOG_ERROR << setting_.name << " set_nonblocking error: " <<
+      socket::get_last_error();
+    return {};
+  }
+  if (conn->socket()->error()) {
+    remove(conn, true);
+    LOG_ERROR << setting_.name << " socket have error: " <<
+      socket::get_last_error();
+    return {};
+  }
+  if (!conn->socket()->set_linger(0)) {
+    remove(conn, true);
+    LOG_ERROR << setting_.name << "set_linger error: " <<
+      socket::get_last_error();
+    return {};
+  }
+  if (!sock_add(conn->socket()->id(), conn->id())) {
+    remove(conn, true);
+    LOG_ERROR << setting_.name << " sock_add error";
+    return {};
+  }
+  conn->on_connect();
+  if (static_cast<bool>(impl_->connect_callback)) {
+    impl_->connect_callback(conn.get());
+  }
+  return conn;
+}
 
 bool Manager::send_ctrl_cmd(std::string_view cmd) noexcept {
   if (impl_->ctrl_write_fd == socket::kInvalidId)

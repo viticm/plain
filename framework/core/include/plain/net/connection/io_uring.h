@@ -13,6 +13,7 @@
 #define PLAIN_NET_CONNECTION_IO_URING_H_
 
 #include "plain/net/connection/config.h"
+#include "plain/net/detail/coroutine.h"
 #include "plain/net/connection/manager.h"
 #include "plain/net/connection/detail/config.h"
 
@@ -30,19 +31,21 @@ IoUring final : public Manager {
   virtual ~IoUring();
 
  protected:
+  bool prepare() noexcept override;
   bool work() noexcept override;
   void off() noexcept override;
   bool sock_add(
     socket::id_t sock_id, connection::id_t conn_id) noexcept override;
   bool sock_remove(socket::id_t sock_id) noexcept override;
+  void *get_sock_data() noexcept override;
 
  private:
   struct Impl;
-  std::shared_ptr<Impl> impl_;
+  std::unique_ptr<Impl> impl_;
 
  private:
-  detail::Task work_recurrence() noexcept;
   void handle_input() noexcept;
+  net::detail::Task<int32_t> accept_await() noexcept;
 
 };
 

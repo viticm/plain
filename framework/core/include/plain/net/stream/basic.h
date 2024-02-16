@@ -15,6 +15,7 @@
 #include "plain/net/stream/config.h"
 #include "plain/basic/type/byte.h"
 #include "plain/basic/endian.h"
+#include "plain/net/detail/coroutine.h"
 
 namespace plain::net {
 namespace stream {
@@ -28,6 +29,10 @@ class PLAIN_API Basic : noncopyable {
  public:
   int32_t pull() noexcept; // socket -> buffer
   int32_t push() noexcept; // buffer -> socket
+
+ public:
+  detail::Task<int32_t> pull_await(void *udata) noexcept;
+  detail::Task<int32_t> push_await(void *udata) noexcept;
 
  public:
   bool full() const noexcept;

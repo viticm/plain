@@ -2,6 +2,7 @@
 #include <map>
 #include "plain/basic/logger.h"
 #include "plain/concurrency/executor/basic.h"
+#include "plain/net/detail/coroutine.h"
 #include "plain/net/socket/basic.h"
 #include "plain/net/stream/basic.h"
 #include "plain/net/connection/manager.h"
@@ -29,6 +30,7 @@ static void check_callable(Basic *p, std::string_view suffix) noexcept {
 
 struct Basic::Impl {
   Impl();
+  Impl(std::shared_ptr<socket::Basic> socket);
   ~Impl();
   id_t id;
   std::shared_ptr<socket::Basic> socket;
@@ -44,6 +46,8 @@ struct Basic::Impl {
 
   bool process_input(Basic *conn) noexcept;
   bool process_output(Basic *conn) noexcept;
+  net::detail::Task<> process_input_await(Basic *conn) noexcept;
+  net::detail::Task<> process_output_await(Basic *conn) noexcept;
   bool process_command(Basic *conn) noexcept;
   bool process_exception() noexcept;
   bool work(Basic *conn) noexcept;
@@ -56,6 +60,15 @@ struct Basic::Impl {
 Basic::Impl::Impl() :
   id{kInvalidId},
   socket{std::make_shared<socket::Basic>()},
+  istream{std::make_unique<stream::Basic>(socket)},
+  ostream{std::make_unique<stream::Basic>(socket)},
+  codec{}, manager{} {
+
+}
+
+Basic::Impl::Impl(std::shared_ptr<socket::Basic> socket) :
+  id{kInvalidId},
+  socket{socket},
   istream{std::make_unique<stream::Basic>(socket)},
   ostream{std::make_unique<stream::Basic>(socket)},
   codec{}, manager{} {
@@ -95,6 +108,34 @@ bool Basic::Impl::process_output(Basic *conn) noexcept {
   if (ostream->size() == 0)
     set_work_flag(WorkFlag::Output, false);
   return true;
+}
+
+plain::net::detail::Task<>
+Basic::Impl::process_input_await(Basic *conn) noexcept {
+  auto m = manager.lock();
+  if (!m) co_return;
+  auto sock_data = m->get_sock_data();
+  auto r = co_await istream->pull_await(sock_data);
+  if (r < 0) {
+    LOG_ERROR << get_name(conn) << " pull failed: " << r;
+    m->remove(id);
+  }
+}
+  
+plain::net::detail::Task<>
+Basic::Impl::process_output_await(Basic *conn) noexcept {
+  auto m = manager.lock();
+  if (!m) co_return;
+  auto sock_data = m->get_sock_data();
+  for (;;) {
+    auto r = co_await ostream->push_await(sock_data);
+    if (ostream->size() == 0) break;
+    if (r < 0) {
+      LOG_ERROR << get_name(conn) << " pull failed: " << r;
+      m->remove(id);
+      break;
+    }
+  }
 }
 
 bool Basic::Impl::process_command(Basic *conn) noexcept {
@@ -209,6 +250,11 @@ Basic::Basic() : impl_{std::make_unique<Impl>()} {
 
 }
 
+Basic::Basic(std::shared_ptr<socket::Basic> socket) :
+  impl_{std::make_unique<Impl>(socket)} {
+
+}
+
 Basic::Basic(Basic &&object) noexcept = default;
 
 Basic::~Basic() = default;
@@ -253,9 +299,17 @@ bool Basic::work() noexcept {
 }
 
 void Basic::enqueue_work(WorkFlag flag) noexcept {
-  if (impl_->has_work_flag(flag)) return;
-  impl_->set_work_flag(flag, true);
-  impl_->enqueue_work();
+  if (impl_->socket->awaitable() &&
+      (flag == WorkFlag::Input || flag == WorkFlag::Input)) {
+    if (flag == WorkFlag::Input)
+      impl_->process_input_await(this);
+    else if (flag == WorkFlag::Output)
+      impl_->process_output_await(this);
+  } else {
+    if (impl_->has_work_flag(flag)) return;
+    impl_->set_work_flag(flag, true);
+    impl_->enqueue_work();
+  }
 }
 
 plain::net::connection::id_t Basic::id() const noexcept {

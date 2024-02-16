@@ -75,6 +75,52 @@ int32_t Basic::push() noexcept {
   return real_send_size;
 }
 
+plain::net::detail::Task<int32_t> Basic::pull_await(void *udata) noexcept {
+  auto socket = impl_->weak_socket.lock();
+  if (!socket || !socket->valid()) co_return 0;
+  auto socket_avail = socket->avail();
+  if (socket_avail == 0) socket_avail = 1;
+  auto once_max = impl_->buffer.write_avail() + impl_->buffer.size();
+  bytes_t bytes;
+  bytes.reserve(socket_avail >= once_max ? once_max : socket_avail);
+  auto e = co_await socket->recv_await(bytes);
+  if (e == kErrorWouldBlock) co_return 0;
+  if (e == kSocketError) co_return kSocketError - 1;
+  if (e == 0) co_return kSocketError - 2;
+  uint32_t size = e;
+  auto read_size = impl_->buffer.write(bytes.data(), size);
+  if (read_size < size) co_return kSocketError - 3;
+  co_return read_size;
+}
+
+plain::net::detail::Task<int32_t> Basic::push_await(void *udata) noexcept {
+  auto socket = impl_->weak_socket.lock();
+  if (!socket || !socket->valid()) co_return 0;
+  auto send_size = impl_->buffer.read_avail();
+  // std::cout << "need size: " << send_size << std::endl;
+  if (send_size == 0) co_return 0;
+  constexpr auto once_max = 1024;
+  if (send_size > once_max)
+    send_size = once_max;
+  bytes_t bytes;
+  bytes.resize(send_size);
+  send_size = impl_->buffer.read(bytes.data(), send_size, true); // Read to temp.
+  // std::cout << "push value: " << (char *)bytes.data() << std::endl;
+  decltype(send_size) real_send_size{0};
+  for (uint16_t i = 0; i < 99; ++i) {
+    if (real_send_size >= send_size) break;
+    bytes_t temp;
+    temp.insert(0, bytes.data() + real_send_size, send_size - real_send_size);
+    auto send_result = co_await socket->send_await(temp, Impl::kSendFlag);
+    if (send_result == kErrorWouldBlock || send_result == 0) break;
+    if (send_result == kSocketError) co_return kSocketError - 1;
+    assert(send_result > 0);
+    impl_->buffer.remove(send_result); // Sended then remove of buffer.
+    real_send_size += send_result;
+  }
+  co_return real_send_size;
+}
+
 bool Basic::full() const noexcept {
   return impl_->buffer.full();
 }
