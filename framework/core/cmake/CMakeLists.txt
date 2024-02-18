@@ -30,17 +30,19 @@ option(
   "Use shared (DLL) run-time lib even when Plain Framework is built as static lib."
   OFF)
 
-option(plain_build_tests "Build all of pf's own tests." OFF)
+option(plain_build_tests "Build all of plain's own tests." OFF)
 
-option(plain_build_shared "Build all of pf as share library." ON)
+option(plain_build_shared "Build all of plain as share library." ON)
 
-option(plain_build_samples "Build pf's sample programs." OFF)
+option(plain_build_samples "Build plain's sample programs." OFF)
 
-option(plain_disable_pthreads "Disable uses of pthreads in pf." OFF)
+option(plain_disable_pthreads "Disable uses of pthreads in plain." OFF)
+
+option(plain_with_uring "Build plain with liburing(just on unix)." OFF)
 
 option(
   plain_hide_internal_symbols
-  "Build pf with internal symbols hidden in shared libraries."
+  "Build plain with internal symbols hidden in shared libraries."
   OFF)
 
 set(CMAKE_DEBUG_POSTFIX "d" CACHE STRING "Generate debug library name with a postfix.")
@@ -103,7 +105,12 @@ file(GLOB_RECURSE LIB_SOURCES_C "${PLAIN_SOURCE_DIR}/src/*.c")
 if (MSVC)
   set(WITH_LIBS "ws2_32")
 else()
-  set(WITH_LIBS "dl")
+  if (plain_with_uring)
+    set(WITH_LIBS "dl;uring.a") # Lib uring use static link.
+    set(core_flags "${core_flags} -DPLAIN_LIBURING_ENABLE")
+  else()
+    set(WITH_LIBS "dl")
+  endif()
 endif()
 
 # This is the directory into which the executables are built.
@@ -212,7 +219,7 @@ if (plain_build_tests)
   ############################################################
   # C++ tests built with standard compiler flags.
 
-  #cxx_test(pf-death-test_test plain_main)
+  #cxx_test(plain-death-test_test plain_main)
 
   ############################################################
   # C++ tests built with non-standard compiler flags.

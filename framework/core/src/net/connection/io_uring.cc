@@ -5,14 +5,14 @@
 #include <sys/epoll.h>
 #include <sys/utsname.h>
 #include <sys/poll.h>
-// #define LIBURING_ENABLE
+// #define PLAIN_LIBURING_ENABLE
 #endif
 #include "plain/basic/logger.h"
 
 using plain::net::connection::IoUring;
 using plain::net::detail::Awaitable;
 
-#ifndef LIBURING_ENABLE
+#ifndef PLAIN_LIBURING_ENABLE
 
 struct IoUring::Impl{};
 
@@ -73,16 +73,17 @@ struct IoUring::Impl {
   socket::id_t ring_fd{socket::kInvalidId};
   socket::id_t epoll_fd{socket::kInvalidId};
   struct io_uring ring;
+  uint32_t cqe_count{0};
+  bool ready{false};
   static Awaitable await_work(io_uring_sqe *sqe, uint8_t flags);
   [[nodiscard]] struct io_uring_sqe *get_sqe() noexcept;
-  uint32_t cqe_count{0};
   bool submit() noexcept;
 };
 
 IoUring::Impl::Impl() = default;
 
 IoUring::Impl::~Impl() {
-  io_uring_queue_exit(&ring);
+  if (ready) io_uring_queue_exit(&ring);
   if (ring_fd != socket::kInvalidId) close(ring_fd);
   if (epoll_fd != socket::kInvalidId) close(epoll_fd);
 }
@@ -126,7 +127,6 @@ IoUring::IoUring(
   const setting_t &setting) :
   Manager(std::forward<decltype(executor)>(executor), setting),
   impl_{std::make_unique<Impl>()} {
-
 }
 
 IoUring::~IoUring() = default;
@@ -149,6 +149,7 @@ bool IoUring::prepare() noexcept {
     return false;
   }
 
+  impl_->ready = true;
   return true;
 }
 
