@@ -1018,8 +1018,8 @@ std::string get_error_str(int32_t errno) {
   buf[0] = '\0';
 #if OS_WIN
   FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-    NULL, errno, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), buf, sizeof(buf),
-    NULL);
+    NULL, errno, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+    reinterpret_cast<LPWSTR>(buf), sizeof(buf), NULL);
 #else
 
 #ifdef _GNU_SOURCE

@@ -95,9 +95,6 @@ class CallableVtable {
     return allocated_ptr(src);
   }
 
- public:
-  static constexpr inline vtable vtable_ = CallableVtable::make_vtable();
-
  private:
   static T *inline_ptr(void *src) noexcept {
     return static_cast<T *>(src);
@@ -172,6 +169,9 @@ class CallableVtable {
     auto new_ptr = new T(std::forward<CT>(callable));
     new (dst) T*(new_ptr);
   }
+
+ public:
+  static constexpr inline vtable vtable_ = CallableVtable::make_vtable();
 
 };
 
