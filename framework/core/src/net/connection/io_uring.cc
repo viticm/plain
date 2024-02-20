@@ -2,12 +2,12 @@
 #if __has_include(<liburing.h>)
 #include <liburing.h>
 #include <sys/eventfd.h>
-#include <sys/epoll.h>
 #include <sys/utsname.h>
 #include <sys/poll.h>
 // #define PLAIN_LIBURING_ENABLE
 #endif
 #include "plain/basic/logger.h"
+#include "plain/basic/utility.h"
 
 using plain::net::connection::IoUring;
 using plain::net::detail::Awaitable;
@@ -67,25 +67,33 @@ plain::net::detail::Task<int32_t> IoUring::accept_await() noexcept {
 }
 #else
 
+#ifdef PLAIN_LIBURING_VERBOSE
+#define puts_if_verbose(x) puts(x)
+#define printf_if_verbose(...) printf(__VA_ARGS__)
+#else
+#define puts_if_verbose(x)
+#define printf_if_verbose(...)
+#endif
+
 struct IoUring::Impl {
   Impl();
   ~Impl();
-  socket::id_t ring_fd{socket::kInvalidId};
-  socket::id_t epoll_fd{socket::kInvalidId};
   struct io_uring ring;
   uint32_t cqe_count{0};
   bool ready{false};
+  static std::array<bool, IORING_OP_LAST> probe_ops;
   static Awaitable await_work(io_uring_sqe *sqe, uint8_t flags);
+  void test_uring_op(const io_uring_params &params) noexcept;
   [[nodiscard]] struct io_uring_sqe *get_sqe() noexcept;
   bool submit() noexcept;
 };
+
+std::array<bool, IORING_OP_LAST> IoUring::Impl::probe_ops = {};
 
 IoUring::Impl::Impl() = default;
 
 IoUring::Impl::~Impl() {
   if (ready) io_uring_queue_exit(&ring);
-  if (ring_fd != socket::kInvalidId) close(ring_fd);
-  if (epoll_fd != socket::kInvalidId) close(epoll_fd);
 }
 
 Awaitable IoUring::Impl::await_work(io_uring_sqe *sqe, uint8_t flags = 0) {
@@ -94,6 +102,92 @@ Awaitable IoUring::Impl::await_work(io_uring_sqe *sqe, uint8_t flags = 0) {
     io_uring_sqe_set_data(sqe, data);
   };
   return Awaitable(set_data);
+}
+
+void IoUring::Impl::test_uring_op(const io_uring_params &params) noexcept {
+  auto probe = io_uring_get_probe_ring(&ring);
+  scoped_executor_t free_probe([=]() { io_uring_free_probe(probe); });
+#define TEST_URING_OP(opcode) do {\
+    for (int i = 0; i < probe->ops_len; ++i) {\
+        if (probe->ops[i].op == opcode && \
+            probe->ops[i].flags & IO_URING_OP_SUPPORTED) {\
+                probe_ops[i] = true;\
+                puts_if_verbose("\t" #opcode);\
+                break;\
+            }\
+        }\
+    } while (false)
+    puts_if_verbose("Supported io_uring opcodes by current kernel:");
+    TEST_URING_OP(IORING_OP_NOP);
+    TEST_URING_OP(IORING_OP_READV);
+    TEST_URING_OP(IORING_OP_WRITEV);
+    TEST_URING_OP(IORING_OP_FSYNC);
+    TEST_URING_OP(IORING_OP_READ_FIXED);
+    TEST_URING_OP(IORING_OP_WRITE_FIXED);
+    TEST_URING_OP(IORING_OP_POLL_ADD);
+    TEST_URING_OP(IORING_OP_POLL_REMOVE);
+    TEST_URING_OP(IORING_OP_SYNC_FILE_RANGE);
+    TEST_URING_OP(IORING_OP_SENDMSG);
+    TEST_URING_OP(IORING_OP_RECVMSG);
+    TEST_URING_OP(IORING_OP_TIMEOUT);
+    TEST_URING_OP(IORING_OP_TIMEOUT_REMOVE);
+    TEST_URING_OP(IORING_OP_ACCEPT);
+    TEST_URING_OP(IORING_OP_ASYNC_CANCEL);
+    TEST_URING_OP(IORING_OP_LINK_TIMEOUT);
+    TEST_URING_OP(IORING_OP_CONNECT);
+    TEST_URING_OP(IORING_OP_FALLOCATE);
+    TEST_URING_OP(IORING_OP_OPENAT);
+    TEST_URING_OP(IORING_OP_CLOSE);
+    TEST_URING_OP(IORING_OP_FILES_UPDATE);
+    TEST_URING_OP(IORING_OP_STATX);
+    TEST_URING_OP(IORING_OP_READ);
+    TEST_URING_OP(IORING_OP_WRITE);
+    TEST_URING_OP(IORING_OP_FADVISE);
+    TEST_URING_OP(IORING_OP_MADVISE);
+    TEST_URING_OP(IORING_OP_SEND);
+    TEST_URING_OP(IORING_OP_RECV);
+    TEST_URING_OP(IORING_OP_OPENAT2);
+    TEST_URING_OP(IORING_OP_EPOLL_CTL);
+    TEST_URING_OP(IORING_OP_SPLICE);
+    TEST_URING_OP(IORING_OP_PROVIDE_BUFFERS);
+    TEST_URING_OP(IORING_OP_REMOVE_BUFFERS);
+    TEST_URING_OP(IORING_OP_TEE);
+    TEST_URING_OP(IORING_OP_SHUTDOWN);
+    TEST_URING_OP(IORING_OP_RENAMEAT);
+    TEST_URING_OP(IORING_OP_UNLINKAT);
+    TEST_URING_OP(IORING_OP_MKDIRAT);
+    TEST_URING_OP(IORING_OP_SYMLINKAT);
+    TEST_URING_OP(IORING_OP_LINKAT);
+    TEST_URING_OP(IORING_OP_MSG_RING);
+    TEST_URING_OP(IORING_OP_FSETXATTR);
+    TEST_URING_OP(IORING_OP_SETXATTR);
+    TEST_URING_OP(IORING_OP_FGETXATTR);
+    TEST_URING_OP(IORING_OP_GETXATTR);
+    TEST_URING_OP(IORING_OP_SOCKET);
+    TEST_URING_OP(IORING_OP_URING_CMD);
+    TEST_URING_OP(IORING_OP_SEND_ZC);
+    TEST_URING_OP(IORING_OP_SENDMSG_ZC);
+#undef TEST_URING_OP
+
+#define TEST_URING_FEATURE(feature) \
+    if (params.features & feature) puts_if_verbose("\t" #feature)
+    puts_if_verbose("Supported io_uring features by current kernel:");
+    TEST_URING_FEATURE(IORING_FEAT_SINGLE_MMAP);
+    TEST_URING_FEATURE(IORING_FEAT_NODROP);
+    TEST_URING_FEATURE(IORING_FEAT_SUBMIT_STABLE);
+    TEST_URING_FEATURE(IORING_FEAT_RW_CUR_POS);
+    TEST_URING_FEATURE(IORING_FEAT_CUR_PERSONALITY);
+    TEST_URING_FEATURE(IORING_FEAT_FAST_POLL);
+    TEST_URING_FEATURE(IORING_FEAT_POLL_32BITS);
+    TEST_URING_FEATURE(IORING_FEAT_SQPOLL_NONFIXED);
+    TEST_URING_FEATURE(IORING_FEAT_EXT_ARG);
+    TEST_URING_FEATURE(IORING_FEAT_NATIVE_WORKERS);
+    TEST_URING_FEATURE(IORING_FEAT_RSRC_TAGS);
+    TEST_URING_FEATURE(IORING_FEAT_CQE_SKIP);
+    TEST_URING_FEATURE(IORING_FEAT_LINKED_FILE);
+    TEST_URING_FEATURE(IORING_FEAT_REG_REG_RING);
+#undef TEST_URING_FEATURE
+
 }
 
 struct io_uring_sqe *IoUring::Impl::get_sqe() noexcept {
@@ -132,23 +226,17 @@ IoUring::IoUring(
 IoUring::~IoUring() = default;
 
 bool IoUring::prepare() noexcept {
-  impl_->epoll_fd = epoll_create1(EPOLL_CLOEXEC);
-  if (impl_->epoll_fd < 0) {
-    LOG_ERROR << "epoll_create1 error: " << impl_->epoll_fd;
-    return false;
-  }
-  impl_->ring_fd = eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK);
-  if (impl_->ring_fd < 0) {
-    LOG_ERROR << "eventfd error: " << impl_->ring_fd;
-    return false;
-  }
-
+  io_uring_params params {
+    .flags = 0,
+    .wq_fd = 0
+  };
   int32_t error{0};
-  if ((error = io_uring_queue_init(setting_.max_count, &impl_->ring, 0)) < 0) {
-    LOG_ERROR << "io_uring_queue_init error: " << error;
+  if ((error = io_uring_queue_init_params(
+      setting_.max_count, &impl_->ring, &params)) < 0) {
+    LOG_ERROR << "io_uring_queue_init_params error: " << -error;
     return false;
   }
-
+  impl_->test_uring_op(params);
   impl_->ready = true;
   return true;
 }

@@ -157,6 +157,16 @@ PLAIN_API char *strerror_pl(int32_t saved_errno);
 
 PLAIN_API std::string get_error_str(int32_t errno);
 
+template <typename F>
+struct scoped_executor_t {
+ public:
+  scoped_executor_t(F &&func) : func_{std::move(func)} {}
+  ~scoped_executor_t() { this->func_(); }
+
+ private:
+  F func_;
+};
+
 } // namespace plain
 
 #endif // PLAIN_BASIC_UTILITY_H_

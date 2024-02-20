@@ -195,6 +195,33 @@ void plain::tests::test_net_listener_func() {
 
   std::this_thread::sleep_for(100ms);
  
+  // Io uring
+  setting.address = ":9531";
+  setting.name = "listener6";
+  setting.mode = Mode::IoUring;
+  Listener listener6(setting);
+  started = listener6.start();
+  // ASSERT_TRUE(started);
+  listener5.set_codec({.encode = line_encode, .decode = line_decode});
+  listener5.set_dispatcher([](
+    connection::Basic *conn, std::shared_ptr<packet::Basic> packet) {
+    std::cout << conn->name() << ": " <<
+      reinterpret_cast<const char *>(packet->data().data()) << std::endl;
+    return true;
+  });
+  listener6.set_connect_callback([](connection::Basic *conn) {
+    std::cout << conn->name() << " connected" << std::endl;
+  });
+  listener6.set_disconnect_callback([](connection::Basic *conn) {
+    std::cout << conn->name() << " disconnected" << std::endl;
+  });
+
+  if (started) {
+    auto conn5 = connector.connect(":9531");
+    ASSERT_TRUE(conn5);
+    conn5->close();
+  }
+
 }
 
 using namespace plain::tests;
