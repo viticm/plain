@@ -5,6 +5,7 @@
 #include <sys/resource.h>
 #endif
 #include "plain/basic/base64.h"
+#include "plain/basic/io.h"
 #include "plain/sys/assert.h"
 
 namespace plain {
