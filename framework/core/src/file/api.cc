@@ -255,7 +255,7 @@ int32_t ioctl(
 #if OS_UNIX
   r = ::ioctl(fd, request, argp);
 #elif OS_WIN
-  r = ::ioctlsocket(fd, request, argp);
+  r = ::ioctlsocket(fd, request, reinterpret_cast<u_long *>(argp));
 #endif
   return r;
 }
@@ -267,7 +267,7 @@ uint32_t available([[maybe_unused]] int32_t fd) {
   return arg;
 #elif OS_WIN
   uint64_t arg{0};
-  ::ioctlsocket(fd, FIONREAD, &arg);
+  ::ioctlsocket(fd, FIONREAD, reinterpret_cast<u_long *>(&arg));
   return static_cast<uint32_t>(arg);
 #endif
 }
