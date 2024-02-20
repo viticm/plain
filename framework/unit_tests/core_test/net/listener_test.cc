@@ -193,8 +193,6 @@ void plain::tests::test_net_listener_func() {
   ASSERT_TRUE(conn4);
   conn4->close();
 
-  std::this_thread::sleep_for(100ms);
- 
   // Io uring
   setting.address = ":9531";
   setting.name = "listener6";
@@ -202,8 +200,8 @@ void plain::tests::test_net_listener_func() {
   Listener listener6(setting);
   started = listener6.start();
   // ASSERT_TRUE(started);
-  listener5.set_codec({.encode = line_encode, .decode = line_decode});
-  listener5.set_dispatcher([](
+  listener6.set_codec({.encode = line_encode, .decode = line_decode});
+  listener6.set_dispatcher([](
     connection::Basic *conn, std::shared_ptr<packet::Basic> packet) {
     std::cout << conn->name() << ": " <<
       reinterpret_cast<const char *>(packet->data().data()) << std::endl;
@@ -222,6 +220,34 @@ void plain::tests::test_net_listener_func() {
     conn5->close();
   }
 
+  // Iocp
+  setting.address = ":9532";
+  setting.name = "listener6";
+  setting.mode = Mode::Iocp;
+  Listener listener7(setting);
+  started = listener7.start();
+  // ASSERT_TRUE(started);
+  listener7.set_codec({.encode = line_encode, .decode = line_decode});
+  listener7.set_dispatcher([](
+    connection::Basic *conn, std::shared_ptr<packet::Basic> packet) {
+    std::cout << conn->name() << ": " <<
+      reinterpret_cast<const char *>(packet->data().data()) << std::endl;
+    return true;
+  });
+  listener7.set_connect_callback([](connection::Basic *conn) {
+    std::cout << conn->name() << " connected" << std::endl;
+  });
+  listener7.set_disconnect_callback([](connection::Basic *conn) {
+    std::cout << conn->name() << " disconnected" << std::endl;
+  });
+
+  if (started) {
+    auto conn6 = connector.connect(":9532");
+    ASSERT_TRUE(conn6);
+    conn6->close();
+  }
+
+  std::this_thread::sleep_for(100ms);
 }
 
 using namespace plain::tests;
