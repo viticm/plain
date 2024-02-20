@@ -47,9 +47,9 @@ endif()
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-#For utf8 no boom.
+#For utf8 no boom and standard.
 if (MSVC)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -wd4819")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++latest -wd4819")
 endif()
 
 # Options that control the build configuration.

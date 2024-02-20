@@ -46,14 +46,14 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Winterference-size"
 #endif
-constexpr inline std::size_t kCacheInlineAlignment = 
+constexpr std::size_t kCacheInlineAlignment = 
   std::hardware_destructive_interference_size;
 #if defined(__GNUC__) || defined(__GNUG__)
 #pragma GCC diagnostic pop
 #endif
 
 #else
-constexpr inline std::size_t kCacheInlineAlignment = 64;
+constexpr std::size_t kCacheInlineAlignment = 64;
 #endif
 
 #endif //PLAIN_BASIC_MACROS_LIMIT_H_
