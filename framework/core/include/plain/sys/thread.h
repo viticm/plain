@@ -28,7 +28,7 @@ class PLAIN_API ThreadPool {
   ThreadPool(size_t);
   template<typename F, typename... Args>
   auto enqueue(F&& f, Args&&... args) 
-  -> std::future<typename std::result_of_t<F(Args...)>>;
+  -> std::future<typename std::invoke_result_t<F, Args...>>;
   ~ThreadPool();
  private:
   // need to keep track of threads so we can join them
@@ -159,7 +159,7 @@ void check_running(std::false_type, std::future<T> &task_res) {
 template <typename F, typename... Args>
 // requires std::predicate<F, Args...>
 thread_t create(const std::string_view &name, F&& f, Args&&... args) {
-  using return_type = typename std::result_of_t<F(Args...)>;
+  using return_type = typename std::invoke_result_t<F, Args...>;
   auto task = std::make_shared< std::packaged_task<return_type()> >(
     std::bind(std::forward<F>(f), std::forward<Args>(args)...)
   );
