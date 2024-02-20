@@ -11,7 +11,7 @@
 #ifndef PLAIN_BASIC_MACROS_EXPORT_H_
 #define PLAIN_BASIC_MACROS_EXPORT_H_
 
-#include "pf/basic/macros/platform.h"
+#include "plain/basic/macros/platform.h"
 
 // Compatible for anthor defined for dll.
 #if OS_WIN && (defined(PLAIN_LINKED_AS_SHARED_LIBRARY) || \
