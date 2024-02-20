@@ -73,7 +73,7 @@ bool Library::load(bool tryprefix, bool seeglb) {
     UNUSED(seeglb);
     tryprefix = false;
 #ifdef _UNICODE
-    auto wstr = str2wstr(temp);
+    auto wstr = str2wstr(path.string());
     handle_ = cast(void*, LoadLibrary(wstr.c_str()));
 #else
     handle_ = cast(void*, LoadLibrary(temp.c_str()));
