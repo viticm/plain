@@ -32,6 +32,9 @@
 //API warnings.
 #pragma warning (disable: 4996)
 
+// alignas
+#pragma warning (disable: 4324)
+
 #endif
 
 #if OS_UNIX

@@ -150,7 +150,7 @@ void check_running(std::true_type, std::future<T> &task_res) {
 }
 
 template <typename T>
-void check_running(std::false_type, std::future<T> &task_res) {
+void check_running(std::false_type, std::future<T> &) {
   stop();
 }
 
