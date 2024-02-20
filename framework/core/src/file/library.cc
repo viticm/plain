@@ -18,7 +18,6 @@ typedef void (__stdcall *function_open)(plain::Kernel*, void*);
 #define LIBRARY_SUFFIX ".dll"
 
 static inline std::string GetLastErrorString(DWORD nErrorCode) {
-  using namespace plain::string;
   WCHAR *msg = 0; //Qt: wchar_t
   // Ask Windows to prepare a standard message for a GetLastError() code:
   FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | 
