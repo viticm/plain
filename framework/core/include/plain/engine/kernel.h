@@ -57,8 +57,8 @@ class PLAIN_API Kernel : public Singleton<Kernel> {
  public:
   template<class F, class... Args>
   auto enqueue(F&& f, Args&&... args) 
-  -> std::future<typename std::result_of<F(Args...)>::type> {
-    using return_type = typename std::result_of<F(Args...)>::type;
+  -> std::future<typename std::invoke_result_t<F, Args...>> {
+    using return_type = typename std::invoke_result_t<F, Args...>;
     auto task = std::make_shared<std::packaged_task<return_type()>>(
       std::bind(std::forward<F>(f), std::forward<Args>(args)...)
     );
@@ -75,7 +75,7 @@ class PLAIN_API Kernel : public Singleton<Kernel> {
   template<class F, class... Args>
   std::thread::id newthread(
       const std::string &name, F&& f, Args&&... args) {
-    using return_type = typename std::result_of<F(Args...)>::type;
+    using return_type = typename std::invoke_result_t<F, Args...>;
     std::thread::id res;
     {
       std::unique_lock<std::mutex> lock(mutex_);

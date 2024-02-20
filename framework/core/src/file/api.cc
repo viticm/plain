@@ -10,6 +10,7 @@
 #elif OS_WIN /* }{ */
 #include <io.h>         // for _open()
 #include <fcntl.h>      // for _open()/_close()/_read()/_write()...
+#include <winioctl.h>
 #endif /* } */
 
 namespace plain {

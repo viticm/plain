@@ -109,10 +109,7 @@ bool Library::load(bool tryprefix, bool seeglb) {
   }
   isloaded_ = !is_null(handle_);
 #if _DEBUG
-  SLOW_DEBUGLOG("library", 
-                "[library] load(%s) handle: %p", 
-                filename_.c_str(), 
-                handle_);
+  LOG_DEBUG << "load: " << filename_;
 #endif
   return !is_null(handle_);
 }
