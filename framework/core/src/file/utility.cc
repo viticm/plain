@@ -7,7 +7,9 @@ using namespace plain;
 FileAppend::FileAppend(const std::string_view &filename)
   : fp_{fopen(filename.data(), "ae")}, buffer_{0}, written_bytes_{0} {
   assert(fp_);
+#if OS_UNIX
   ::setbuffer(fp_, buffer_, sizeof buffer_);
+#endif
 }
 
 FileAppend::~FileAppend() {

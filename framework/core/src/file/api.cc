@@ -10,7 +10,7 @@
 #elif OS_WIN /* }{ */
 #include <io.h>         // for _open()
 #include <fcntl.h>      // for _open()/_close()/_read()/_write()...
-#include <winioctl.h>
+#include <winsock.h>
 #endif /* } */
 
 namespace plain {
@@ -241,7 +241,7 @@ bool set_nonblocking([[maybe_unused]] int32_t fd, [[maybe_unused]] bool on) {
   r = e >= 0;
 #elif OS_WIN
   unsigned long mode = on ? 1 : 0;
-  auto e = ::ioctlsocket(handle_, FIONBIO, &mode);
+  auto e = ::ioctlsocket(fd, FIONBIO, &mode);
   r = e >= 0;
 #endif
   return r;
@@ -255,7 +255,7 @@ int32_t ioctl(
 #if OS_UNIX
   r = ::ioctl(fd, request, argp);
 #elif OS_WIN
-  r = ::ioctlex(fd, request, argp);
+  r = ::ioctlsocket(fd, request, argp);
 #endif
   return r;
 }
@@ -267,7 +267,7 @@ uint32_t available([[maybe_unused]] int32_t fd) {
   return arg;
 #elif OS_WIN
   uint64_t arg{0};
-  ::ioctlex(fd, FIONREAD, &arg);
+  ::ioctlsocket(fd, FIONREAD, &arg);
   return static_cast<uint32_t>(arg);
 #endif
 }
