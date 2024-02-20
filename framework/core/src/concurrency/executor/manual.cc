@@ -31,9 +31,6 @@ void Manual::enqueue(std::span<Task> tasks) {
 }
 
 int32_t Manual::max_concurrency_level() const noexcept {
-#if OS_WIN
-#undef max
-#endif
   return std::numeric_limits<int>::max();
 }
 

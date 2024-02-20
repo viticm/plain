@@ -107,4 +107,10 @@
 #define instanceof(p,c) (dynamic_cast<c *>(p) != nullptr)
 #endif
 
+/* use std::min/max */
+#if OS_WIN
+#undef max
+#undef min
+#endif
+
 #endif //PLAIN_BASIC_MACROS_FUNCTION_H_

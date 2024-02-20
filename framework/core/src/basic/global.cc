@@ -27,7 +27,7 @@ void InitGlobal::init() {
   SET("app.debug", false);
   SET("app.status", AppStatus::Stopped);
   auto current_directory{std::filesystem::current_path()};
-  std::string basepath{current_directory.c_str()};
+  std::string basepath(current_directory.c_str());
   SET("app.basepath", basepath);
   
   // Logs settings.
