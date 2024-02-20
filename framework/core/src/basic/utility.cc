@@ -1008,7 +1008,8 @@ char *strerror_pl(int32_t saved_errno) {
 #if OS_UNIX
   return strerror_r(saved_errno, g_error_buff, sizeof g_error_buff);
 #else
-  return strerror_s(saved_errno, g_error_buff, sizeof g_error_buff);
+  strerror_s(g_error_buff, sizeof g_error_buff, saved_errno);
+  return g_error_buff;
 #endif
 }
 
