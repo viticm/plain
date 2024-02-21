@@ -132,7 +132,8 @@ struct TaskPromiseBasic {
 
       Awaiter(TaskPromiseBasic *me): me_(me) {};
       std::coroutine_handle<>
-      await_suspend(std::coroutine_handle<> caller) const noexcept {
+      await_suspend(
+        [[maybe_unused]] std::coroutine_handle<> caller) const noexcept {
         if (me_->result_.index() == 3) [[unlikely]] {
           // FIXME: destroy current coroutine; otherwise memory leaks.
           if (me_->waiter_) {

@@ -63,7 +63,7 @@ void *IoUring::get_sock_data() noexcept {
 }
 
 plain::net::detail::Task<int32_t> IoUring::accept_await() noexcept {
-  co_await Awaitable{nullptr};
+  co_return 1;
 }
 #else
 

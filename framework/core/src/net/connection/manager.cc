@@ -457,7 +457,8 @@ Manager::accept(socket::id_t sock_id) noexcept {
 bool Manager::send_ctrl_cmd(std::string_view cmd) noexcept {
   if (impl_->ctrl_write_fd == socket::kInvalidId)
     return false;
-  auto r = socket::send(impl_->ctrl_write_fd, cmd.data(), cmd.size(), 0);
+  auto size = static_cast<uint32_t>(cmd.size());
+  auto r = socket::send(impl_->ctrl_write_fd, cmd.data(), size, 0);
   return r >= 0;
 }
   
@@ -465,6 +466,7 @@ void Manager::recv_ctrl_cmd() noexcept {
   if (ctrl_read_fd_ == socket::kInvalidId)
     return;
   std::array<char, 256> buffer{0};
+  auto size = static_cast<uint32_t>(buffer.size());
   socket::recv(ctrl_read_fd_, buffer.data(), buffer.size(), 0);
   auto type = buffer[0];
   switch (type) {

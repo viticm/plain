@@ -66,7 +66,7 @@ int32_t poll_mod(data_t &d, int32_t fd, int32_t mask) {
 int32_t poll_delete(data_t &d, int32_t fd) {
   struct epoll_event _epoll_event;
   memset(&_epoll_event, 0, sizeof(_epoll_event));
-  _epoll_event.events = EPOLLIN | EPOLLET;
+  _epoll_event.events = EPOLLIN;
   _epoll_event.data.fd = fd;
   int32_t r = epoll_ctl(d.fd, EPOLL_CTL_DEL, fd, &_epoll_event);
   return r;
@@ -152,7 +152,7 @@ bool Iocp::prepare() noexcept {
 
 bool Iocp::work() noexcept {
 #if OS_WIN
-  poll_wait(self->data, -1);
+  poll_wait(impl_->data, -1);
   if (impl_->data.result_event_count < 0) {
     LOG_ERROR << setting_.name << " error: " << impl_->data.result_event_count;
     return false;
@@ -176,7 +176,7 @@ bool Iocp::sock_add(
   assert(sock_id != socket::kInvalidId);
   assert(conn_id != connection::kInvalidId);
 #if OS_WIN
-  if (poll_add(impl_->data, sock_id, EPOLLIN | EPOLLET, conn_id) != 0) {
+  if (poll_add(impl_->data, sock_id, EPOLLIN, conn_id) != 0) {
     LOG_ERROR << setting_.name << " sock_add error: " << strerror(errno);
   } else {
     return true;
