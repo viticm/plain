@@ -17,6 +17,21 @@ namespace plain {
 
 class TaskQueue {
 
+public:
+   void work_one() {
+     std::function<void()> task;
+     {
+       std::unique_lock<std::mutex> lock(queue_mutex_);
+       if (tasks_.empty()) return;
+       task = std::move(tasks_.front());
+       tasks_.pop();
+     }
+     task();
+   }
+   void work_all() {
+     while (!tasks_.empty()) work_one();
+   }
+
  public:
    TaskQueue() : stop_{false} {}
    ~TaskQueue() {
@@ -30,8 +45,8 @@ class TaskQueue {
  public:
    template<class F, class... Args>
    auto enqueue(F&& f, Args&&... args) 
-     -> std::future<typename std::result_of<F(Args...)>::type> {
-     using return_type = typename std::result_of<F(Args...)>::type;
+     -> std::future<typename std::invoke_result_t<F, Args...>> {
+     using return_type = typename std::invoke_result_t<F, Args...>;
      auto task = std::make_shared< std::packaged_task<return_type()> >(
          std::bind(std::forward<F>(f), std::forward<Args>(args)...)
        );
@@ -45,21 +60,6 @@ class TaskQueue {
        tasks_.emplace([task](){ (*task)(); });
      }
      return res;
-   }
-
- public:
-   void work_one() {
-     std::function<void()> task;
-     {
-       std::unique_lock<std::mutex> lock(queue_mutex_);
-       if (tasks_.empty()) return;
-       task = std::move(tasks_.front());
-       tasks_.pop();
-     }
-     task();
-   }
-   void work_all() {
-     while (!tasks_.empty()) work_one();
    }
 
  private:

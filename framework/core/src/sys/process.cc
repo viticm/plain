@@ -2,6 +2,7 @@
 #if OS_WIN
 #include <process.h>
 #include <psapi.h>
+#include <winsock2.h>
 #elif OS_UNIX
 #include <sys/stat.h>
 #include <sys/types.h>
