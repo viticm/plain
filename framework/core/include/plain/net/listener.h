@@ -44,7 +44,8 @@ class PLAIN_API Listener final {
   void set_disconnect_callback(connection::callable_func func) noexcept;
  
  public:
-  std::shared_ptr<connection::Basic> get_conn(id_t id) const noexcept;
+  std::shared_ptr<connection::Basic>
+  get_conn(connection::id_t id) const noexcept;
   bool is_full() const noexcept;
   void broadcast(std::shared_ptr<packet::Basic> packet) noexcept;
   concurrency::executor::Basic &get_executor();

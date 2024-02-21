@@ -81,7 +81,7 @@ void Connector::set_disconnect_callback(
 }
  
 std::shared_ptr<plain::net::connection::Basic>
-Connector::get_conn(id_t id) const noexcept {
+Connector::get_conn(connection::id_t id) const noexcept {
   return impl_->manager->get_conn(id);
 }
   

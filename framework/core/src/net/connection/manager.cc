@@ -467,7 +467,7 @@ void Manager::recv_ctrl_cmd() noexcept {
     return;
   std::array<char, 256> buffer{0};
   auto size = static_cast<uint32_t>(buffer.size());
-  socket::recv(ctrl_read_fd_, buffer.data(), buffer.size(), 0);
+  socket::recv(ctrl_read_fd_, buffer.data(), size, 0);
   auto type = buffer[0];
   switch (type) {
     case 'w': // wakeup
