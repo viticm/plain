@@ -171,7 +171,7 @@ bool Basic::Impl::process_command(Basic *conn) noexcept {
     // Handle packet.
     if (dispatcher) {
       if (!dispatcher(conn, *p)) return false;
-    } else if (auto m = manager.lock(); m && m->dispatcher()) {
+    } else if (m && m->dispatcher()) {
       if (!m->dispatcher()(conn, *p)) return false;
     } else {
       LOG_WARN << get_name(conn) << " packet unhandled: " << (*p)->id();

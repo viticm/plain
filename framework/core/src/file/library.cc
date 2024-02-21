@@ -273,6 +273,8 @@ bool LibraryManager::load(const std::string &name,
 __extension__
 #endif
     function_open openfunc = reinterpret_cast<function_open>(openhanlde);
+    UNUSED(openfunc);
+    UNUSED(params);
     // openfunc(ENGINE_POINTER, cast(void *, &params));
   }
 

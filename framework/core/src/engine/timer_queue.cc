@@ -166,8 +166,8 @@ TimerQueue::Impl::Impl(
 }
 
 plain::thread_t TimerQueue::Impl::ensure_worker_thread(
-  std::unique_lock<std::mutex> &lock) {
-  assert(lock.owns_lock());
+  std::unique_lock<std::mutex> &_lock) {
+  assert(_lock.owns_lock());
   if (!idle) return {};
   auto old_worker = std::move(worker);
   worker = thread_t([this] {

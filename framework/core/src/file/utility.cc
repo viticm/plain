@@ -31,7 +31,7 @@ void FileAppend::append(const std::string_view &log) {
     written += n;
   }
 
-  written_bytes_ += written;
+  written_bytes_ += static_cast<off_t>(written);
 }
 
 void FileAppend::flush() {

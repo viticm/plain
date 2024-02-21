@@ -111,7 +111,7 @@ const Tab::field_data* Tab::search_first_column_equal(
     const field_data &value) const {
   if (column < 0 || column > field_number_) return nullptr;
   field_type_enum type = type_[column];
-  register int32_t i;
+  int32_t i;
   for (i = 0; i < record_number_; ++i) {
     const field_data &_field_data = 
       data_buffer_[(field_number_ * i) + column];
@@ -172,7 +172,7 @@ const char *Tab::get_line_from_memory(char *str,
                                            int32_t size, 
                                            const char *memory, 
                                            const char *end) {
-  register const char *_memory = memory;
+  const char *_memory = memory;
   if (_memory >= end || 0 == *_memory) return nullptr;
   while (_memory < end &&
          _memory - memory + 1 < size &&
@@ -211,7 +211,7 @@ bool Tab::open_from_memory_text(const char *memory,
                                 const char *filename) {
   char line[(1024 * 10) + 1]; //long string
   memset(line, '\0', sizeof(line));
-  register const char *_memory = memory;
+  const char *_memory = memory;
   _memory = get_line_from_memory(line, sizeof(line) - 1, _memory, end);
   if (!_memory) return false;
   std::vector<std::string> result;
@@ -327,7 +327,7 @@ bool Tab::open_from_memory_text(const char *memory,
   //unsigned char blank = '\0';
   string_buffer_[0] = '\0';
   
-  register char *temp = string_buffer_ + 1;
+  char *temp = string_buffer_ + 1;
   for (i = 0; i < static_cast<int32_t>(string_buffer.size()); ++i) {
     memcpy(temp, 
            string_buffer[i].first.c_str(), 
@@ -337,7 +337,7 @@ bool Tab::open_from_memory_text(const char *memory,
   }
 
   //relocate string block
-  register uint16_t m, n;
+  uint16_t m, n;
   for (m = 0; m < field_number; ++m) {
     if (type_[m] != kTypeString) continue;
     for (n = 0; n < record_number; ++n) {
@@ -352,7 +352,7 @@ bool Tab::open_from_memory_text(const char *memory,
 bool Tab::open_from_memory_binary(const char *memory, 
                              const char *end, 
                              const char *filename) {
-  register const char *_memory = memory;
+  const char *_memory = memory;
   file_head_t file_head;
   memcpy(&file_head, _memory, sizeof(file_head_t));
   if (file_head.identify != FILE_DATABASE_INDENTIFY) return false;

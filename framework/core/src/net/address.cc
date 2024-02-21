@@ -113,16 +113,16 @@ static bool is_ipv4(std::string_view address) noexcept {
 /* std::tuple<ip_v4, ip, port> */
 static std::tuple<bool, std::string, uint16_t>
 parse_address(std::string_view address) noexcept {
+  uint16_t port{0};
   if (address.empty())
-    return std::make_tuple(true, "", 0);
+    return std::make_tuple(true, "", port);
   using std::operator ""sv;
   if (is_ipv4(address)) {
     size_t pos{std::string::npos};
     if ((pos = address.find(":")) == std::string::npos) {
-      return std::make_tuple(true, std::string{address}, 0);
+      return std::make_tuple(true, std::string{address}, port);
     } else {
       std::string ip;
-      uint16_t port{0};
       size_t index{0};
       for (auto str : std::views::split(address, ":"sv)) {
         if (index++ == 0) {
@@ -138,10 +138,9 @@ parse_address(std::string_view address) noexcept {
   } else { // ip v6
     size_t pos{std::string::npos};
     if ((pos = address.find("]")) == std::string::npos) {
-      return std::make_tuple(false, std::string{address}, 0);
+      return std::make_tuple(false, std::string{address}, port);
     } else {
       std::string ip;
-      uint16_t port{0};
       size_t index{0};
       for (auto str : std::views::split(address, "]:"sv)) {
         if (index++ == 0) {

@@ -30,8 +30,8 @@ struct Resolver {
 struct ResumeResolver final: Resolver {
   friend struct Awaitable;
 
-  void resolve(int32_t result) noexcept override {
-    this->result = result;
+  void resolve(int32_t _result) noexcept override {
+    this->result = _result;
     handle.resume();
   }
 
@@ -42,8 +42,8 @@ struct ResumeResolver final: Resolver {
 static_assert(std::is_trivially_destructible_v<ResumeResolver>);
 
 struct DeferredResolver final: Resolver {
-  void resolve(int32_t result) noexcept override {
-    this->result = result;
+  void resolve(int32_t _result) noexcept override {
+    this->result = _result;
   }
 
 #ifndef NDEBUG
@@ -152,7 +152,11 @@ struct TaskPromiseBasic {
       if (result_.index() == 3) [[unlikely]] return;
       result_.template emplace<2>(std::current_exception());
     } else {
+#if OS_UNIX
       __builtin_unreachable();
+#else
+      std::terminate();
+#endif
     }
   }
 
