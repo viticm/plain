@@ -48,10 +48,16 @@ class PLAIN_API Basic : noncopyable {
  public:
   virtual detail::Awaitable send_await(
     const bytes_t &bytes, uint32_t flag = 0, void *udata = nullptr) {
+    UNUSED(bytes);
+    UNUSED(flag);
+    UNUSED(udata);
     return detail::Awaitable{nullptr};
   }
   virtual detail::Awaitable recv_await(
     bytes_t &bytes, uint32_t flag = 0, void *udata = nullptr) {
+    UNUSED(bytes);
+    UNUSED(flag);
+    UNUSED(udata);
     return detail::Awaitable{nullptr};
   }
   virtual constexpr bool awaitable() const {
