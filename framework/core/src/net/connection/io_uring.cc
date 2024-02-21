@@ -44,12 +44,12 @@ void IoUring::off() noexcept {
 }
 
 bool IoUring::sock_add(
-  socket::id_t sock_id, connection::id_t conn_id) noexcept {
+  socket::id_t, connection::id_t) noexcept {
   LOG_ERROR << "disabled";
   return false;
 }
 
-bool IoUring::sock_remove(socket::id_t sock_id) noexcept {
+bool IoUring::sock_remove(socket::id_t) noexcept {
   LOG_ERROR << "disabled";
   return false;
 }
