@@ -2,6 +2,8 @@
 #include <errno.h>
 #if OS_UNIX
 #include <signal.h>
+#elif OS_WIN
+#include <ws2tcpip.h>
 #endif
 #include "plain/file/api.h"
 #include "plain/basic/type/config.h"
@@ -51,6 +53,7 @@ static void set_error(int32_t e) {
         s_error.set_message("WSAEOPNOTSUPP");
         break;
       }
+      case WSAESHUTDOWN: {
         s_error.set_message("WSAESHUTDOWN");
         break;
       }
@@ -171,7 +174,7 @@ class Initializer : noncopyable {
 Initializer::Initializer() {
 #if OS_WIN
   WSADATA data;
-  auto e = ::WSAStartup(MAKEWORD(2, 0), &wsadata);
+  auto e = ::WSAStartup(MAKEWORD(2, 0), &data);
   success_ = 0 == e;
 #elif OS_UNIX
   ::signal(SIGPIPE, SIG_IGN);
@@ -192,7 +195,7 @@ bool initialize() {
 }
 
 id_t create(int32_t domain, int32_t type, int32_t protocol) {
-  id_t id = ::socket(domain, type, protocol);
+  id_t id = static_cast<id_t>(::socket(domain, type, protocol));
   if (id == kInvalidId) {
     set_error();
   }
@@ -287,7 +290,7 @@ int32_t accept(id_t id, sockaddr *addr, uint32_t *addrlength) {
   r = ::accept(id, addr, addrlength);
 #elif OS_WIN
   r = static_cast<int32_t>(
-    ::accept(id, addr, static_cast<int32_t *>(addrlength)));
+    ::accept(id, addr, reinterpret_cast<int32_t *>(addrlength)));
 #endif
   if (r == kSocketError) set_error();
   return r;
@@ -301,7 +304,7 @@ bool getsockoptb(
 #elif OS_WIN
   e = ::getsockopt(
     id, level, optname, static_cast<char *>(optval),
-    static_cast<int32_t *>(optlength));
+    reinterpret_cast<int32_t *>(optlength));
 #endif
   bool r = e != kSocketError;
   if (!r) set_error();
@@ -335,7 +338,7 @@ uint32_t getsockoptu(
 #elif OS_WIN
   auto e = ::getsockopt(
     id, level, optname, static_cast<char *>(optval),
-    static_cast<int32_t *>(optlength));
+    reinterpret_cast<int32_t *>(optlength));
   if (e == kSocketError) set_error();
 #endif
   return r;
@@ -348,7 +351,7 @@ bool setsockopt(
 #if OS_UNIX
   e = ::setsockopt(id, level, optname, optval, optlength);
 #elif OS_WIN
-  e = ::setsockopt(id, level, optname, static_cast<char *>(optval), optlength);
+  e = ::setsockopt(id, level, optname, reinterpret_cast<const char *>(optval), optlength);
 #endif
   bool r = e != kSocketError;
   if (!r) set_error();
@@ -408,7 +411,7 @@ int32_t recvfrom(
 #elif OS_WIN
   r = ::recvfrom(
     id, static_cast<char *>(buffer), length, flag, from,
-    static_cast<char *>(fromlength));
+    reinterpret_cast<int32_t *>(fromlength));
 #endif
   if (r == kSocketError) {
     set_error();
@@ -434,7 +437,7 @@ bool ioctl(
   [[maybe_unused]] uint64_t *argp) {
   bool r{false};
 #if OS_WIN
-  auto e = ioctlsocket(id, static_cast<long>(cmd),static_cast<u_long *>(argp));
+  auto e = ioctlsocket(id, static_cast<long>(cmd), reinterpret_cast<u_long *>(argp));
   r = e != kSocketError;
   if (!r) set_error();
 #endif
@@ -500,24 +503,24 @@ Error get_last_error() noexcept {
 int32_t socketpair(
   int32_t family, int32_t type, int32_t protocol, id_t fds[2]) {
 #if OS_WIN
-  id_t tcp1{kInvalidId}, tcp2{kInvalidSocket};
+  id_t tcp1{kInvalidId}, tcp2{ kInvalidId };
   bytes_t name;
   if (family == AF_INET6) {
     sockaddr_in6 addr;
     memset(&addr, 0, sizeof(addr));
-    addr.sin6_family = family;
+    addr.sin6_family = static_cast<ADDRESS_FAMILY>(family);
     auto cr = inet_pton(AF_INET6, "::1", &addr.sin6_addr);
     if (cr != 1) return -1;
     name.append(reinterpret_cast<std::byte *>(&addr), sizeof(addr));
   } else {
     sockaddr_in addr;
     memset(&addr, 0, sizeof(addr));
-    addr.sin_family = family;
+    addr.sin_family = static_cast<ADDRESS_FAMILY>(family);
     addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
     name.append(reinterpret_cast<std::byte *>(&addr), sizeof(addr));
   }
 
-  uint32_t namelen = name.size();
+  int32_t namelen = static_cast<int32_t>(name.size());
   id_t tcp = create(family, type, protocol);
   if (tcp == kInvalidId){
     goto clean;
@@ -528,7 +531,7 @@ int32_t socketpair(
   if (!listen(tcp, 5)){
     goto clean;
   }
-  if (getsockname(
+  if (::getsockname(
       tcp, reinterpret_cast<sockaddr *>(name.data()), &namelen) == -1){
     goto clean;
   }
@@ -541,7 +544,8 @@ int32_t socketpair(
     goto clean;
   }
 
-  tcp2 = ::accept(tcp, reinterpret_cast<sockaddr *>(name.data()), &namelen);
+  tcp2 = static_cast<id_t>(
+    ::accept(tcp, reinterpret_cast<sockaddr *>(name.data()), &namelen));
   if (tcp2 == kInvalidId){
     goto clean;
   }

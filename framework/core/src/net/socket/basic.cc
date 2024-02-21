@@ -49,7 +49,7 @@ Basic Basic::clone() noexcept {
   WSAPROTOCOL_INFOW prot_info;
   if (::WSADuplicateSocketW(impl_->id, ::GetCurrentProcessId(), &prot_info) == 0)
     id = ::WSASocketW(
-      AF_INET, SOCK_STREAM, 0, &protInfo, 0, WSA_FLAG_OVERLAPPED);
+      AF_INET, SOCK_STREAM, 0, &prot_info, 0, WSA_FLAG_OVERLAPPED);
 #elif OS_UNIX
   id = dup(impl_->id);
 #endif
@@ -70,12 +70,14 @@ bool Basic::error() const noexcept {
 
 int32_t Basic::send(const bytes_t &bytes, uint32_t flag) {
   if (!valid()) return 0;
-  return socket::send(impl_->id, bytes.data(), bytes.size(), flag);
+  auto size = static_cast<uint32_t>(bytes.size());
+  return socket::send(impl_->id, bytes.data(), size, flag);
 }
   
 int32_t Basic::recv(bytes_t &bytes, uint32_t flag) {
   if (!valid()) return 0;
-  return socket::recv(impl_->id, bytes.data(), bytes.capacity(), flag);
+  auto size = static_cast<uint32_t>(bytes.capacity());
+  return socket::recv(impl_->id, bytes.data(), size, flag);
 }
   
 size_t Basic::avail() const noexcept {
@@ -166,7 +168,8 @@ bool Basic::bind(const Address &addr) {
   if (!valid()) return false;
   auto d = addr.data();
   auto ptr = reinterpret_cast<sockaddr *>(d.data());
-  return socket::bind(impl_->id, ptr, d.size());
+  auto size = static_cast<uint32_t>(d.size());
+  return socket::bind(impl_->id, ptr, size);
 }
   
 bool Basic::bind() {

@@ -38,6 +38,9 @@ IoUring::send_await(const bytes_t &bytes, uint32_t flag, void *udata) {
   io_uring_prep_send(sqe, this->id(), bytes.data(), bytes.size(), 0);
   return impl_->await_work(sqe);
 #else
+  UNUSED(bytes);
+  UNUSED(flag);
+  UNUSED(udata);
   return Awaitable{nullptr};
 #endif
 }
@@ -48,6 +51,9 @@ Awaitable IoUring::recv_await(bytes_t &bytes, uint32_t flag, void *udata) {
   io_uring_prep_recv(sqe, this->id(), bytes.data(), bytes.size(), 0);
   return impl_->await_work(sqe);
 #else
+  UNUSED(bytes);
+  UNUSED(flag);
+  UNUSED(udata);
   return Awaitable{nullptr};
 #endif
 }
