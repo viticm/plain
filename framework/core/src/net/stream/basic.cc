@@ -43,7 +43,7 @@ int32_t Basic::pull() noexcept {
   uint32_t size = e;
   auto read_size = impl_->buffer.write(bytes.data(), size);
   if (read_size < size) return kSocketError - 3;
-  return read_size;
+  return static_cast<int32_t>(read_size);
 }
 
 int32_t Basic::push() noexcept {
@@ -72,7 +72,7 @@ int32_t Basic::push() noexcept {
     impl_->buffer.remove(send_result); // Sended then remove of buffer.
     real_send_size += send_result;
   }
-  return real_send_size;
+  return static_cast<int32_t>(real_send_size);
 }
 
 plain::net::detail::Task<int32_t> Basic::pull_await(void *udata) noexcept {
@@ -90,7 +90,7 @@ plain::net::detail::Task<int32_t> Basic::pull_await(void *udata) noexcept {
   uint32_t size = e;
   auto read_size = impl_->buffer.write(bytes.data(), size);
   if (read_size < size) co_return kSocketError - 3;
-  co_return read_size;
+  co_return static_cast<int32_t>(read_size);
 }
 
 plain::net::detail::Task<int32_t> Basic::push_await(void *udata) noexcept {
@@ -118,7 +118,7 @@ plain::net::detail::Task<int32_t> Basic::push_await(void *udata) noexcept {
     impl_->buffer.remove(send_result); // Sended then remove of buffer.
     real_send_size += send_result;
   }
-  co_return real_send_size;
+  co_return static_cast<int32_t>(real_send_size);
 }
 
 bool Basic::full() const noexcept {
@@ -171,13 +171,13 @@ size_t Basic::write(const_byte_span_t bytes) {
 }
 
 size_t Basic::read(std::string &str) {
-  uint32_t length = str.size();
+  auto length = str.size();
   auto *buffer = reinterpret_cast<std::byte *>(str.data());
   return impl_->buffer.read(buffer, length);
 }
 
 size_t Basic::read(bytes_t &bytes) {
-  uint32_t length = bytes.size();
+  auto length = bytes.size();
   return impl_->buffer.read(bytes.data(), length);
 }
 

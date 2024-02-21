@@ -48,8 +48,8 @@ Basic Basic::clone() noexcept {
 #if OS_WIN
   WSAPROTOCOL_INFOW prot_info;
   if (::WSADuplicateSocketW(impl_->id, ::GetCurrentProcessId(), &prot_info) == 0)
-    id = ::WSASocketW(
-      AF_INET, SOCK_STREAM, 0, &prot_info, 0, WSA_FLAG_OVERLAPPED);
+    id = static_cast<id_t>(::WSASocketW(
+      AF_INET, SOCK_STREAM, 0, &prot_info, 0, WSA_FLAG_OVERLAPPED));
 #elif OS_UNIX
   id = dup(impl_->id);
 #endif
