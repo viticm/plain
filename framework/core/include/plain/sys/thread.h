@@ -60,9 +60,9 @@ class PLAIN_API ThreadCollect {
 
 namespace thread {
 
-void set_name(const std::string_view &name) noexcept;
+PLAIN_API void set_name(const std::string_view &name) noexcept;
 
-std::uintptr_t get_current_virtual_id() noexcept;
+PLAIN_API std::uintptr_t get_current_virtual_id() noexcept;
 
 inline const std::string get_id() {
   std::stringstream ss;

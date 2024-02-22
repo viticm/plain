@@ -17,10 +17,10 @@
 
 namespace plain::net {
 
-std::shared_ptr<connection::Manager>
+PLAIN_API std::shared_ptr<connection::Manager>
 make_manager(const setting_t &setting = {}) noexcept;
 
-std::shared_ptr<connection::Manager>
+PLAIN_API std::shared_ptr<connection::Manager>
 make_manager(
   std::unique_ptr<concurrency::executor::Basic> &&executor,
   const setting_t &setting = {}) noexcept;
