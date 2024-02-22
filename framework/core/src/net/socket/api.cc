@@ -2,8 +2,6 @@
 #include <errno.h>
 #if OS_UNIX
 #include <signal.h>
-#elif OS_WIN
-#include <ws2tcpip.h>
 #endif
 #include "plain/file/api.h"
 #include "plain/basic/type/config.h"

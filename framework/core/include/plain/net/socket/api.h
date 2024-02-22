@@ -15,6 +15,7 @@
 #include "plain/net/socket/config.h"
 #if OS_WIN
 #include <winsock2.h>
+#include <ws2tcpip.h>
 #elif OS_UNIX
 #include <netinet/in.h>
 #include <arpa/inet.h>

@@ -11,7 +11,7 @@
 cmake_minimum_required(VERSION 3.27.0)
 
 set(PROJECT_NAME PlainFramework)
-set(PLAIN_VERSION 2.0)
+set(PLAIN_VERSION 2.0.0)
 set(PROJECT_DESC "Plain framework, based on c++ for net applictions")
 
 if (CMAKE_VERSION VERSION_LESS 3.0)
