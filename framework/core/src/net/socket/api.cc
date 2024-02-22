@@ -9,7 +9,7 @@
 
 namespace plain::net::socket {
 
-Error s_error;
+static thread_local Error s_error;
 
 static void set_error(int32_t e) {
   s_error.set_code(e);
@@ -230,7 +230,7 @@ bool connect(
     return false;
   }
 #if OS_WIN
-  if (connect_errno != WSAEINPROGRESS) {
+  if (connect_errno != WSAEINPROGRESS && connect_errno != WSAEWOULDBLOCK) {
     set_error();
     return false;
   }
