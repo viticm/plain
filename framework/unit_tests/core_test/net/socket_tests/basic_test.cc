@@ -144,11 +144,19 @@ void plain::tests::test_net_socket_funcs() {
   ASSERT_EQ(i_r, socket::kSocketError);
 
   sock.create();
+#if OS_WIN
+  r = sock.connect({":135"});
+  ASSERT_TRUE(r);
+  sock.create();
+  r = sock.connect("127.0.0.1", 135);
+  ASSERT_TRUE(r);
+#else
   r = sock.connect({":22"});
   ASSERT_TRUE(r);
   sock.create();
   r = sock.connect("127.0.0.1", 22);
   ASSERT_TRUE(r);
+#endif
   sock.create();
   r = sock.connect({":888"}, 20ms);
   ASSERT_FALSE(r);

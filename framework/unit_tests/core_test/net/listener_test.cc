@@ -140,6 +140,7 @@ void plain::tests::test_net_listener_func() {
   ASSERT_FALSE(started);
 #endif
 
+  setting.mode = Mode::Select;
   setting.address = "[::]:9529";
   setting.name = "listener4";
   Listener listener4(setting);

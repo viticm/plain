@@ -54,6 +54,7 @@ void plain::tests::test_net_connector_func() {
   Connector connector1;
   auto started = connector1.start();
   ASSERT_TRUE(started);
+#if OS_UNIX
   auto conn = connector1.connect("127.0.0.1", 22);
   ASSERT_TRUE(static_cast<bool>(conn));
   auto conn1 = connector1.connect("127.0.0.1:22");
@@ -62,14 +63,29 @@ void plain::tests::test_net_connector_func() {
   ASSERT_TRUE(static_cast<bool>(conn2));
   auto conn3 = connector1.connect("[::]:22");
   ASSERT_TRUE(static_cast<bool>(conn3));
-
+#elif OS_WIN
+  auto conn = connector1.connect("127.0.0.1", 135);
+  ASSERT_TRUE(static_cast<bool>(conn));
+  auto conn1 = connector1.connect("127.0.0.1:135");
+  ASSERT_TRUE(static_cast<bool>(conn1));
+  auto conn2 = connector1.connect("::1", 135);
+  ASSERT_TRUE(static_cast<bool>(conn2));
+  auto conn3 = connector1.connect("[::]:135");
+  ASSERT_TRUE(static_cast<bool>(conn3));
+#endif
   setting_t setting;
   setting.mode = Mode::Epoll;
   setting.name = "connector2";
   Connector connector2(setting);
   started = connector2.start();
+#if OS_UNIX
   auto conn4 = connector2.connect("[::]:22");
   ASSERT_TRUE(static_cast<bool>(conn4));
+#elif OS_WIN
+  auto conn4 = connector2.connect("[::]:135");
+  ASSERT_TRUE(static_cast<bool>(conn4));
+#endif
+
 #if OS_WIN
   ASSERT_FALSE(started);
 #elif OS_UNIX
