@@ -15,6 +15,7 @@
 /* C { */
 #include <cinttypes>
 #include <cstring>
+#include <cstddef>
 /* } C */
 
 /* C++ { */

@@ -12,7 +12,6 @@
 #define PLAIN_BASIC_TYPE_CONFIG_H_
 
 #include "plain/basic/config.h"
-#include <cstddef>
 #include <unordered_map>
 
 namespace plain {
