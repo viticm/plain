@@ -1,5 +1,6 @@
 #include "gtest/gtest.h"
 #include "env.h"
+#include "plain/net/socket/api.h"
 
 // std::unique_ptr<plain_engine::Kernel> engine{nullptr};
 
@@ -7,6 +8,7 @@ class AllEnvironment : public testing::Environment {
 
  public:
    virtual void SetUp() {
+      assert(plain::net::socket::initialize());
      //std::cout << "SetUp" << std::endl;
    }
    virtual void TearDown() {
