@@ -190,9 +190,9 @@ Manager::Manager(
 
 Manager::~Manager() {
   if (ctrl_read_fd_ != socket::kInvalidId)
-    close(ctrl_read_fd_);
+    socket::close(ctrl_read_fd_);
   if (impl_->ctrl_write_fd != socket::kInvalidId)
-    close(impl_->ctrl_write_fd);
+    socket::close(impl_->ctrl_write_fd);
 }
 
 bool Manager::start() {
