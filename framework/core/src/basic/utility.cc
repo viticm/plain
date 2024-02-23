@@ -1041,9 +1041,9 @@ std::string get_error_str(int32_t errno) {
 
 std::string to_hex(const bytes_t &bytes) {
   std::ostringstream out;
+  out << std::hex;
   for (size_t i = 0; i < bytes.size(); ++i)
     out << "\\x" << (static_cast<int16_t>(bytes[i]) & 0xff);
-  out << std::hex;
   return out.str();
 }
 
