@@ -26,7 +26,7 @@ std::string get_filename(const std::string &name) {
   r = log_directory + "/" + name;
 #if OS_WIN
   auto time_str_temp = Time::format();
-  auto time_str = plain::str_replace(time_str_temp, ":", "_");
+  auto time_str = plain::str_replace(":", "_", time_str_temp);
   r += "." + time_str + "." + process::hostname();
 #else
   r += "." + Time::format() + "." + process::hostname();
