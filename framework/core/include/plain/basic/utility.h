@@ -25,10 +25,6 @@ PLAIN_API std::string format_size(uint64_t size);
 
 PLAIN_API char get_base64char(int32_t index);
 
-PLAIN_API void replace_all(std::string &str, 
-                           const std::string source, 
-                           const std::string destination);
-
 PLAIN_API int64_t toint64(const char *str);
 PLAIN_API uint64_t touint64(const char *str);
 
