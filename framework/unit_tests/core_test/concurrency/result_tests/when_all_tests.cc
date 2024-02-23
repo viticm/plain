@@ -335,23 +335,23 @@ plain::tests::test_when_all_tuple_valid(
   std::shared_ptr<plain::concurrency::executor::Thread> ex) {
   std::atomic_size_t counter = 0;
 
-  auto int_res_val = ex->submit([&] -> int {
+  auto int_res_val = ex->submit([&]() -> int {
     counter.fetch_add(1, std::memory_order_relaxed);
     return value_gen<int>::default_value();
   });
 
-  auto int_res_ex = ex->submit([&] -> int {
+  auto int_res_ex = ex->submit([&]() -> int {
     counter.fetch_add(1, std::memory_order_relaxed);
     throw custom_exception(0);
     return value_gen<int>::default_value();
   });
 
-  auto s_res_val = ex->submit([&] -> std::string {
+  auto s_res_val = ex->submit([&]() -> std::string {
     counter.fetch_add(1, std::memory_order_relaxed);
     return value_gen<std::string>::default_value();
   });
 
-  auto s_res_ex = ex->submit([&] -> std::string {
+  auto s_res_ex = ex->submit([&]() -> std::string {
     counter.fetch_add(1, std::memory_order_relaxed);
     throw custom_exception(1);
     return value_gen<std::string>::default_value();
@@ -366,23 +366,23 @@ plain::tests::test_when_all_tuple_valid(
     throw custom_exception(2);
   });
 
-  auto int_ref_res_val = ex->submit([&] -> int &{
+  auto int_ref_res_val = ex->submit([&]() -> int &{
     counter.fetch_add(1, std::memory_order_relaxed);
     return value_gen<int&>::default_value();
   });
 
-  auto int_ref_res_ex = ex->submit([&] -> int &{
+  auto int_ref_res_ex = ex->submit([&]() -> int &{
     counter.fetch_add(1, std::memory_order_relaxed);
     throw custom_exception(3);
     return value_gen<int&>::default_value();
   });
 
-  auto str_ref_res_val = ex->submit([&] -> std::string &{
+  auto str_ref_res_val = ex->submit([&]() -> std::string &{
     counter.fetch_add(1, std::memory_order_relaxed);
     return value_gen<std::string&>::default_value();
   });
 
-  auto str_ref_res_ex = ex->submit([&] -> std::string &{
+  auto str_ref_res_ex = ex->submit([&]() -> std::string &{
     counter.fetch_add(1, std::memory_order_relaxed);
     throw custom_exception(4);
     return value_gen<std::string&>::default_value();
