@@ -158,7 +158,7 @@ void plain::tests::test_net_socket_funcs() {
   ASSERT_TRUE(r);
 #endif
   sock.create();
-  r = sock.connect({":777"}, 20ms);
+  r = sock.connect({":888"}, 20ms);
   ASSERT_FALSE(r);
   r = sock.connect("127.0.0.1", 888, 20ms);
   ASSERT_FALSE(r);

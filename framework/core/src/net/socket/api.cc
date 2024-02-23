@@ -252,6 +252,11 @@ bool connect(
       static_cast<decltype(tv.tv_usec)>(timeout.count() % 1000 * 1000)
     };
     e = socket::select(FD_SETSIZE, &read_fds, &write_fds, nullptr, &tv);
+  } else {
+    e = socket::select(FD_SETSIZE, &read_fds, &write_fds, nullptr, nullptr); 
+  }
+  r = (e > 0);
+  if (!r) {
     // zero return is mean timeout.
     if (e == 0) {
 #if OS_WIN
@@ -260,11 +265,6 @@ bool connect(
       e = ETIMEDOUT;
 #endif
     }
-  } else {
-    e = socket::select(FD_SETSIZE, &read_fds, &write_fds, nullptr, nullptr); 
-  }
-  r = (e >= 0);
-  if (!r) {
     set_error(e);
     return false;
   }
