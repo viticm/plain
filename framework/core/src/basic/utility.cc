@@ -829,7 +829,7 @@ bool string_tobinary(const char *in,
   uint32_t out_index = 0;
   uint32_t i;
   for (i = 0; i < in_length; ++i) {
-    if ('\0' == in[i] || '\0' == in[i]) break;
+    if ('\0' == in[i] || '\0' == in[i + 1]) break;
     out[out_index] = (ascii_tovalue(in[i]) << 4) + ascii_tovalue(in[i + 1]);
     ++out_index;
     i += 2;
@@ -1037,6 +1037,14 @@ std::string get_error_str(int32_t errno) {
 
 #endif
   return buf;
+}
+
+std::string to_hex(const bytes_t &bytes) {
+  std::ostringstream out;
+  for (size_t i = 0; i < bytes.size(); ++i)
+    out << "\\x" << (static_cast<int16_t>(bytes[i]) & 0xff);
+  out << std::hex;
+  return out.str();
 }
 
 } // namespace plain

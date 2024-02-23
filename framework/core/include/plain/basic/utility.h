@@ -12,6 +12,7 @@
 #define PLAIN_BASIC_UTILITY_H_
 
 #include "plain/basic/config.h"
+#include "plain/basic/type/config.h"
 
 namespace plain {
 
@@ -166,6 +167,8 @@ struct scoped_executor_t {
  private:
   F func_;
 };
+
+PLAIN_API std::string to_hex(const bytes_t &bytes);
 
 } // namespace plain
 
