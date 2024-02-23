@@ -146,6 +146,7 @@ void Select::handle_io() noexcept {
   
 bool Select::sock_add(
     socket::id_t sock_id, connection::id_t conn_id) noexcept {
+  std::unique_lock lock{impl_->mutex};
   assert(impl_->fd_size < FD_SETSIZE);
   assert(sock_id != socket::kInvalidId);
   assert(conn_id != connection::kInvalidId);
@@ -159,6 +160,7 @@ bool Select::sock_add(
 }
   
 bool Select::sock_remove(socket::id_t sock_id) noexcept {
+  std::unique_lock lock{impl_->mutex};
   assert(sock_id != socket::kInvalidId);
   auto id = static_cast<uint32_t>(sock_id);
   FD_CLR(id, &impl_->read_fds.full);
