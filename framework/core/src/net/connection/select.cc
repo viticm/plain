@@ -18,8 +18,12 @@ struct Select::Impl {
   static constexpr size_t kOnceAcccpetCount{64};
   
   struct fd_info_t {
-    fd_set full{};
-    fd_set use{};
+    fd_info_t() {
+      std::memset(&full, 0, sizeof(full));
+      std::memset(&use, 0, sizeof(use));
+    }
+    fd_set full;
+    fd_set use;
   };
 
   fd_info_t read_fds;
