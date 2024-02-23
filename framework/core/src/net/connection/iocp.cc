@@ -166,7 +166,7 @@ bool Iocp::work() noexcept {
 
 void Iocp::off() noexcept {
 #if OS_WIN
-  poll_destory(impl_->data);
+  // poll_destory(impl_->data);
 #endif
 }
 
