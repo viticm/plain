@@ -39,7 +39,7 @@ template<class type>
 void test_when_any_vector_null_resume_executor();
 
 template<class type>
-concurrency::Result<void>
+plain::concurrency::Result<void>
 test_when_any_vector_valid(
   std::shared_ptr<plain::concurrency::executor::WorkerThread> resume_executor,
   std::shared_ptr<plain::concurrency::executor::Thread> ex);
@@ -58,7 +58,7 @@ void test_when_any_tuple_empty_result(
 
 void test_when_any_tuple_null_resume_executor();
 
-concurrency::Result<void>
+plain::concurrency::Result<void>
 test_when_any_tuple_impl(
   std::shared_ptr<plain::concurrency::executor::WorkerThread> resume_executor,
   std::shared_ptr<plain::concurrency::executor::Thread> ex);
@@ -74,8 +74,8 @@ template<class type>
 void plain::tests::test_when_any_vector_empty_result(
   std::shared_ptr<plain::concurrency::executor::WorkerThread> resume_executor) {
   constexpr size_t task_count = 63;
-  std::vector<concurrency::ResultPromise<type>> result_promises(task_count);
-  std::vector<concurrency::Result<type>> results;
+  std::vector<plain::concurrency::ResultPromise<type>> result_promises(task_count);
+  std::vector<plain::concurrency::Result<type>> results;
 
   for (auto &rp : result_promises) {
     results.emplace_back(rp.get_result());
@@ -102,11 +102,11 @@ void plain::tests::test_when_any_vector_empty_result(
 template<class type>
 void plain::tests::test_when_any_vector_empty_range(
   std::shared_ptr<plain::concurrency::executor::WorkerThread> resume_executor) {
-  std::vector<concurrency::Result<type>> empty_range;
+  std::vector<plain::concurrency::Result<type>> empty_range;
 
   assert_throws_with_error_message<std::invalid_argument>(
     [&] {
-      concurrency::result::when_any(
+      plain::concurrency::result::when_any(
         resume_executor, empty_range.begin(), empty_range.end());
     },
     "when_any - given range contains no elements.");
@@ -115,8 +115,8 @@ void plain::tests::test_when_any_vector_empty_range(
 template<class type>
 void plain::tests::test_when_any_vector_null_resume_executor() {
   constexpr size_t task_count = 16;
-  std::vector<concurrency::ResultPromise<type>> result_promises(task_count);
-  std::vector<concurrency::Result<type>> results;
+  std::vector<plain::concurrency::ResultPromise<type>> result_promises(task_count);
+  std::vector<plain::concurrency::Result<type>> results;
 
   for (auto &rp : result_promises) {
     results.emplace_back(rp.get_result());
@@ -125,7 +125,7 @@ void plain::tests::test_when_any_vector_null_resume_executor() {
   // with results
   assert_throws_with_error_message<std::invalid_argument>(
     [&] {
-      concurrency::result::when_any(
+      plain::concurrency::result::when_any(
         std::shared_ptr<plain::concurrency::executor::WorkerThread> {},
         results.begin(), results.end());
     },
@@ -139,7 +139,7 @@ plain::tests::test_when_any_vector_valid(
   std::shared_ptr<plain::concurrency::executor::Thread> ex) {
   constexpr size_t task_count = 64;
   value_gen<type> gen;
-  std::vector<concurrency::Result<type>> results;
+  std::vector<plain::concurrency::Result<type>> results;
   random randomizer;
 
   for (size_t i = 0; i < task_count; i++) {
@@ -155,7 +155,7 @@ plain::tests::test_when_any_vector_valid(
     }));
   }
 
-  auto any_res = concurrency::result::when_any(
+  auto any_res = plain::concurrency::result::when_any(
     resume_executor, results.begin(), results.end());
 
   const auto all_empty = std::all_of(
@@ -164,7 +164,7 @@ plain::tests::test_when_any_vector_valid(
   });
 
   local_assert_true(all_empty);
-  local_assert_eq(any_res.status(), concurrency::ResultStatus::Idle);
+  local_assert_eq(any_res.status(), plain::concurrency::ResultStatus::Idle);
 
   auto any_done = co_await any_res;
 
@@ -200,9 +200,9 @@ plain::tests::test_when_any_vector_valid(
 namespace plain::tests {
   
 template<class type>
-concurrency::Result<void> 
+plain::concurrency::Result<void> 
 await_result_when_any(
-  std::atomic_uintptr_t &resuming_thread_id, concurrency::Result<type> res) {
+  std::atomic_uintptr_t &resuming_thread_id, plain::concurrency::Result<type> res) {
   co_await res;
   resuming_thread_id.store(plain::thread::get_current_virtual_id());
 }
@@ -213,8 +213,8 @@ template<class type>
 void plain::tests::test_when_any_vector_resuming_mechanism(
   std::shared_ptr<plain::concurrency::executor::WorkerThread> resume_executor) {
   constexpr size_t task_count = 16;
-  std::vector<concurrency::ResultPromise<type>> result_promises(task_count);
-  std::vector<concurrency::Result<type>> results;
+  std::vector<plain::concurrency::ResultPromise<type>> result_promises(task_count);
+  std::vector<plain::concurrency::Result<type>> results;
 
   for (auto &rp : result_promises) {
     results.emplace_back(rp.get_result());
@@ -223,7 +223,7 @@ void plain::tests::test_when_any_vector_resuming_mechanism(
   std::atomic_uintptr_t this_thread_id = 
     plain::thread::get_current_virtual_id(), resuming_thread_id {0};
 
-  auto any = concurrency::result::when_any(
+  auto any = plain::concurrency::result::when_any(
     resume_executor, results.begin(), results.end()).run();
 
   auto test = await_result_when_any(resuming_thread_id, std::move(any));
@@ -261,23 +261,23 @@ void plain::tests::test_when_any_vector() {
 
 void plain::tests::test_when_any_tuple_empty_result(
   std::shared_ptr<plain::concurrency::executor::WorkerThread> resume_executor) {
-  concurrency::ResultPromise<int> rp_int;
+  plain::concurrency::ResultPromise<int> rp_int;
   auto int_res = rp_int.get_result();
 
-  concurrency::ResultPromise<std::string> rp_str;
+  plain::concurrency::ResultPromise<std::string> rp_str;
   auto str_res = rp_str.get_result();
 
-  concurrency::ResultPromise<void> rp_void;
+  plain::concurrency::ResultPromise<void> rp_void;
   auto void_res = rp_void.get_result();
 
-  concurrency::ResultPromise<int&> rp_int_ref;
+  plain::concurrency::ResultPromise<int&> rp_int_ref;
   auto int_ref_res = rp_int_ref.get_result();
 
-  concurrency::Result<std::string&> str_ref_res;
+  plain::concurrency::Result<std::string&> str_ref_res;
 
   assert_throws_with_error_message<std::runtime_error>(
     [&] {
-      concurrency::result::when_any(resume_executor,
+      plain::concurrency::result::when_any(resume_executor,
            std::move(int_res),
            std::move(str_res),
            std::move(void_res),
@@ -294,19 +294,19 @@ void plain::tests::test_when_any_tuple_empty_result(
 }
 
 void plain::tests::test_when_any_tuple_null_resume_executor() {
-  concurrency::ResultPromise<int> rp_int;
+  plain::concurrency::ResultPromise<int> rp_int;
   auto int_res = rp_int.get_result();
 
-  concurrency::ResultPromise<std::string> rp_str;
+  plain::concurrency::ResultPromise<std::string> rp_str;
   auto str_res = rp_str.get_result();
 
-  concurrency::ResultPromise<void> rp_void;
+  plain::concurrency::ResultPromise<void> rp_void;
   auto void_res = rp_void.get_result();
 
   // with results
   assert_throws_with_error_message<std::invalid_argument>(
     [&] {
-      concurrency::result::when_any(
+      plain::concurrency::result::when_any(
         std::shared_ptr<plain::concurrency::executor::WorkerThread> {},
         std::move(int_res), std::move(str_res), std::move(void_res));
     },
@@ -393,7 +393,7 @@ plain::tests::test_when_any_tuple_impl(
     return value_gen<std::string&>::default_value();
   });
 
-  auto any_res = concurrency::result::when_any(resume_executor,
+  auto any_res = plain::concurrency::result::when_any(resume_executor,
               std::move(int_res_val),
               std::move(int_res_ex),
               std::move(s_res_val),
@@ -405,7 +405,7 @@ plain::tests::test_when_any_tuple_impl(
               std::move(str_ref_res_val),
               std::move(str_ref_res_ex));
 
-  local_assert_eq(any_res.status(), concurrency::ResultStatus::Idle);
+  local_assert_eq(any_res.status(), plain::concurrency::ResultStatus::Idle);
 
   auto any_done = co_await any_res;
 
@@ -478,19 +478,19 @@ plain::tests::test_when_any_tuple_impl(
 
 void plain::tests::test_when_any_tuple_resuming_mechanism(
   std::shared_ptr<plain::concurrency::executor::WorkerThread> resume_executor) {
-  concurrency::ResultPromise<int> rp_int;
+  plain::concurrency::ResultPromise<int> rp_int;
   auto int_res = rp_int.get_result();
 
-  concurrency::ResultPromise<std::string> rp_str;
+  plain::concurrency::ResultPromise<std::string> rp_str;
   auto str_res = rp_str.get_result();
 
-  concurrency::ResultPromise<void> rp_void;
+  plain::concurrency::ResultPromise<void> rp_void;
   auto void_res = rp_void.get_result();
 
   std::atomic_uintptr_t this_thread_id = 
     plain::thread::get_current_virtual_id(), resuming_thread_id {0};
 
-  auto any = concurrency::result::when_any(
+  auto any = plain::concurrency::result::when_any(
     resume_executor, std::move(int_res), std::move(str_res),
     std::move(void_res)).run();
   auto test = await_result_when_any(resuming_thread_id, std::move(any));

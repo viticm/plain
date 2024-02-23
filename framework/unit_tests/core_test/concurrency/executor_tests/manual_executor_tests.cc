@@ -273,7 +273,7 @@ void plain::tests::test_manual_executor_submit_foreign() {
   ASSERT_EQ(executor->size(), static_cast<size_t>(0));
   ASSERT_TRUE(executor->empty());
 
-  std::vector<concurrency::Result<size_t>> results;
+  std::vector<plain::concurrency::Result<size_t>> results;
   results.resize(task_count);
 
   for (size_t i = 0; i < task_count; i++) {
@@ -312,7 +312,7 @@ void plain::tests::test_manual_executor_submit_inline() {
   ASSERT_TRUE(executor->empty());
 
   auto results_res = executor->submit([executor, &observer] {
-    std::vector<concurrency::Result<size_t>> results;
+    std::vector<plain::concurrency::Result<size_t>> results;
     results.resize(task_count);
     for (size_t i = 0; i < task_count; i++) {
       results[i] = executor->submit(observer.get_testing_stub(i));
@@ -332,7 +332,7 @@ void plain::tests::test_manual_executor_submit_inline() {
   ASSERT_EQ(observer.get_execution_count(), static_cast<size_t>(0));
   ASSERT_EQ(observer.get_destruction_count(), static_cast<size_t>(0));
 
-  ASSERT_EQ(results_res.status(), concurrency::ResultStatus::Value);
+  ASSERT_EQ(results_res.status(), plain::concurrency::ResultStatus::Value);
   auto results = results_res.get();
 
   for (size_t i = 0; i < task_count / 2; i++) {
@@ -544,7 +544,7 @@ void plain::tests::test_manual_executor_bulk_submit_inline() {
   ASSERT_EQ(observer.get_execution_count(), static_cast<size_t>(0));
   ASSERT_EQ(observer.get_destruction_count(), static_cast<size_t>(0));
 
-  ASSERT_EQ(results_res.status(), concurrency::ResultStatus::Value);
+  ASSERT_EQ(results_res.status(), plain::concurrency::ResultStatus::Value);
   auto results = results_res.get();
 
   for (size_t i = 0; i < task_count / 2; i++) {
@@ -586,7 +586,7 @@ void plain::tests::test_manual_executor_loop_once() {
     ASSERT_FALSE(executor->loop_once());
   }
 
-  std::vector<concurrency::Result<size_t>> results;
+  std::vector<plain::concurrency::Result<size_t>> results;
   results.resize(task_count);
 
   for (size_t i = 0; i < task_count; i++) {
@@ -792,7 +792,7 @@ void plain::tests::test_manual_executor_loop() {
 
   ASSERT_EQ(executor->loop(100), static_cast<size_t>(0));
 
-  std::vector<concurrency::Result<size_t>> results;
+  std::vector<plain::concurrency::Result<size_t>> results;
   results.resize(task_count);
 
   for (size_t i = 0; i < task_count; i++) {
@@ -1023,7 +1023,7 @@ void plain::tests::test_manual_executor_clear() {
 
   ASSERT_EQ(executor->clear(), static_cast<size_t>(0));
 
-  std::vector<concurrency::Result<size_t>> results;
+  std::vector<plain::concurrency::Result<size_t>> results;
   results.resize(task_count);
 
   for (size_t i = 0; i < task_count; i++) {

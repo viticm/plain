@@ -143,7 +143,7 @@ void plain::tests::test_inline_executor_submit_foreign() {
   auto executor = std::make_shared<plain::concurrency::executor::Inline>();
   executor_shutdowner shutdown(executor);
 
-  std::vector<concurrency::Result<size_t>> results;
+  std::vector<plain::concurrency::Result<size_t>> results;
   results.resize(task_count);
 
   for (size_t i = 0; i < task_count; i++) {
@@ -151,7 +151,7 @@ void plain::tests::test_inline_executor_submit_foreign() {
   }
 
   for (size_t i = 0; i < task_count; i++) {
-    ASSERT_EQ(results[i].status(), concurrency::ResultStatus::Value);
+    ASSERT_EQ(results[i].status(), plain::concurrency::ResultStatus::Value);
     ASSERT_EQ(results[i].get(), i);
   }
 
@@ -167,7 +167,7 @@ void plain::tests::test_inline_executor_submit_inline() {
   executor_shutdowner shutdown(executor);
 
   auto results_res = executor->submit([executor, &observer] {
-    std::vector<concurrency::Result<size_t>> results;
+    std::vector<plain::concurrency::Result<size_t>> results;
     results.resize(task_count);
 
     for (size_t i = 0; i < task_count; i++) {
@@ -179,7 +179,7 @@ void plain::tests::test_inline_executor_submit_inline() {
 
   auto results = results_res.get();
   for (size_t i = 0; i < task_count; i++) {
-    ASSERT_EQ(results[i].status(), concurrency::ResultStatus::Value);
+    ASSERT_EQ(results[i].status(), plain::concurrency::ResultStatus::Value);
     ASSERT_EQ(results[i].get(), i);
   }
 
@@ -292,7 +292,7 @@ void plain::tests::test_inline_executor_bulk_submit_foreign() {
 
   auto results = executor->bulk_submit<value_testing_stub>(stubs);
   for (size_t i = 0; i < task_count; i++) {
-    ASSERT_EQ(results[i].status(), concurrency::ResultStatus::Value);
+    ASSERT_EQ(results[i].status(), plain::concurrency::ResultStatus::Value);
     ASSERT_EQ(results[i].get(), i);
   }
 
@@ -320,7 +320,7 @@ void plain::tests::test_inline_executor_bulk_submit_inline() {
 
   auto results = results_res.get();
   for (size_t i = 0; i < task_count; i++) {
-    ASSERT_EQ(results[i].status(), concurrency::ResultStatus::Value);
+    ASSERT_EQ(results[i].status(), plain::concurrency::ResultStatus::Value);
     ASSERT_EQ(results[i].get(), i);
   }
 

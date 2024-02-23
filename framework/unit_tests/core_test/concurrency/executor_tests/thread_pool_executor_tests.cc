@@ -202,7 +202,7 @@ void plain::tests::test_thread_pool_executor_submit_foreign() {
       "threadpool", worker_count, std::chrono::seconds(10));
   executor_shutdowner shutdown(executor);
 
-  std::vector<concurrency::Result<size_t>> results;
+  std::vector<plain::concurrency::Result<size_t>> results;
   results.resize(task_count);
 
   for (size_t i = 0; i < task_count; i++) {
@@ -227,7 +227,7 @@ void plain::tests::test_thread_pool_executor_submit_inline() {
   executor_shutdowner shutdown(executor);
 
   auto results_res = executor->submit([executor, &observer, task_count] {
-    std::vector<concurrency::Result<size_t>> results;
+    std::vector<plain::concurrency::Result<size_t>> results;
     results.resize(task_count);
     for (size_t i = 0; i < task_count; i++) {
       results[i] = executor->submit(observer.get_testing_stub(i));
@@ -590,7 +590,7 @@ void plain::tests::test_thread_pool_executor_thread_callbacks() {
         started_callback,
         terminated_callback);
     },
-    concurrency::executor::detail::make_executor_worker_name(thread_pool_name));
+    plain::concurrency::executor::detail::make_executor_worker_name(thread_pool_name));
 }
 
 using namespace plain::tests;

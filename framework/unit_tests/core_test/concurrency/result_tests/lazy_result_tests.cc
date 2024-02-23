@@ -37,7 +37,7 @@ void test_lazy_result_destructor_impl();
 void test_lazy_result_destructor();
 
 template<class type>
-concurrency::Result<void> test_lazy_result_status_impl();
+plain::concurrency::Result<void> test_lazy_result_status_impl();
 void test_lazy_result_status();
 
 template<class type>
@@ -78,42 +78,42 @@ void test_lazy_result_assignment_operator();
 namespace plain::tests {
 
 template<class type>
-concurrency::LazyResult<type> sync_lazy_coro() {
+plain::concurrency::LazyResult<type> sync_lazy_coro() {
   co_return value_gen<type>::default_value();
 }
 
 template<class type>
-concurrency::LazyResult<type> sync_lazy_coro(testing_stub stub) {
+plain::concurrency::LazyResult<type> sync_lazy_coro(testing_stub stub) {
   co_return value_gen<type>::default_value();
 }
 
 template<class type>
-concurrency::LazyResult<type> sync_lazy_coro(testing_stub stub, value_gen<type> &gen, size_t i) {
+plain::concurrency::LazyResult<type> sync_lazy_coro(testing_stub stub, value_gen<type> &gen, size_t i) {
   co_return gen.value_of(i);
 }
 
 template<class type>
-concurrency::LazyResult<type> sync_lazy_coro_ex(intptr_t id) {
+plain::concurrency::LazyResult<type> sync_lazy_coro_ex(intptr_t id) {
   throw custom_exception(id);
   co_return value_gen<type>::default_value();
 }
 
 template<class type>
-concurrency::LazyResult<type>
+plain::concurrency::LazyResult<type>
 async_lazy_coro_val(
   bool &started, std::shared_ptr<plain::concurrency::executor::Thread> ex) {
   started = true;
-  co_await concurrency::result::resume_on(ex);
+  co_await plain::concurrency::result::resume_on(ex);
   co_return value_gen<type>::default_value();
 }
 
 template<class type>
-concurrency::LazyResult<type> 
+plain::concurrency::LazyResult<type> 
 async_lazy_coro_ex(
   bool &started, std::shared_ptr<plain::concurrency::executor::Thread> ex,
   intptr_t id) {
   started = true;
-  co_await concurrency::result::resume_on(ex);
+  co_await plain::concurrency::result::resume_on(ex);
   throw custom_exception(id);
   co_return value_gen<type>::default_value();
 }
@@ -124,13 +124,13 @@ template<class type>
 void plain::tests::test_lazy_result_constructor_impl() {
   // default ctor
   {
-    concurrency::LazyResult<type> result;
+    plain::concurrency::LazyResult<type> result;
     ASSERT_FALSE(static_cast<bool>(result));
   }
 
   // move ctor
   {
-    concurrency::LazyResult<type> result = sync_lazy_coro<type>();
+    plain::concurrency::LazyResult<type> result = sync_lazy_coro<type>();
     ASSERT_TRUE(static_cast<bool>(result));
 
     auto other = std::move(result);
@@ -171,26 +171,26 @@ template<class type>
 plain::concurrency::Result<void> plain::tests::test_lazy_result_status_impl() {
   assert_throws_with_error_message<std::runtime_error>(
     [] {
-      concurrency::LazyResult<type>().status();
+      plain::concurrency::LazyResult<type>().status();
     },
     "status - result is empty.");
 
   // value
   {
-    concurrency::LazyResult<type> result = sync_lazy_coro<type>();
-    local_assert_eq(result.status(), concurrency::ResultStatus::Idle);
+    plain::concurrency::LazyResult<type> result = sync_lazy_coro<type>();
+    local_assert_eq(result.status(), plain::concurrency::ResultStatus::Idle);
 
     const auto done_result = co_await result.resolve();
-    local_assert_eq(done_result.status(), concurrency::ResultStatus::Value);
+    local_assert_eq(done_result.status(), plain::concurrency::ResultStatus::Value);
   }
 
   // exception
   {
-    concurrency::LazyResult<type> result = sync_lazy_coro_ex<type>(12345);
-    local_assert_eq(result.status(), concurrency::ResultStatus::Idle);
+    plain::concurrency::LazyResult<type> result = sync_lazy_coro_ex<type>(12345);
+    local_assert_eq(result.status(), plain::concurrency::ResultStatus::Idle);
 
     const auto done_result = co_await result.resolve();
-    local_assert_eq(done_result.status(), concurrency::ResultStatus::Exception);
+    local_assert_eq(done_result.status(), plain::concurrency::ResultStatus::Exception);
   }
 }
 
@@ -205,7 +205,7 @@ void plain::tests::test_lazy_result_status() {
 namespace plain::tests {
 
 template<class type>
-concurrency::Result<void>
+plain::concurrency::Result<void>
 test_lazy_result_resolve_non_ready_coro_val(
   std::shared_ptr<plain::concurrency::executor::Thread> ex) {
   const auto thread_id_before = thread::get_current_virtual_id();
@@ -213,7 +213,7 @@ test_lazy_result_resolve_non_ready_coro_val(
   auto result = async_lazy_coro_val<type>(started, ex);
 
   local_assert_false(started);
-  local_assert_eq(result.status(), concurrency::ResultStatus::Idle);
+  local_assert_eq(result.status(), plain::concurrency::ResultStatus::Idle);
 
   auto done_result = co_await result.resolve();
   const auto thread_id_after = thread::get_current_virtual_id();
@@ -223,7 +223,7 @@ test_lazy_result_resolve_non_ready_coro_val(
 }
 
 template<class type>
-concurrency::Result<void>
+plain::concurrency::Result<void>
 test_lazy_result_resolve_non_ready_coro_ex(
   std::shared_ptr<plain::concurrency::executor::Thread> ex) {
   const auto thread_id_before = thread::get_current_virtual_id();
@@ -233,7 +233,7 @@ test_lazy_result_resolve_non_ready_coro_ex(
   auto result = async_lazy_coro_ex<type>(started, ex, id);
 
   local_assert_false(started);
-  local_assert_eq(result.status(), concurrency::ResultStatus::Idle);
+  local_assert_eq(result.status(), plain::concurrency::ResultStatus::Idle);
 
   auto done_result = co_await result.resolve();
   const auto thread_id_after = thread::get_current_virtual_id();
@@ -243,7 +243,7 @@ test_lazy_result_resolve_non_ready_coro_ex(
 }
 
 template<class type>
-concurrency::Result<void> test_lazy_result_resolve_ready_coro_val() {
+plain::concurrency::Result<void> test_lazy_result_resolve_ready_coro_val() {
   auto done_result = co_await sync_lazy_coro<type>().resolve();
 
   const auto thread_id_before = thread::get_current_virtual_id();
@@ -257,7 +257,7 @@ concurrency::Result<void> test_lazy_result_resolve_ready_coro_val() {
 }
 
 template<class type>
-concurrency::Result<void> test_lazy_result_resolve_ready_coro_ex() {
+plain::concurrency::Result<void> test_lazy_result_resolve_ready_coro_ex() {
   constexpr intptr_t id = 987654321;
   auto done_result = co_await sync_lazy_coro_ex<type>(id).resolve();
 
@@ -277,7 +277,7 @@ template<class type>
 void plain::tests::test_lazy_result_resolve_impl() {
   assert_throws_with_error_message<std::runtime_error>(
     [] {
-      concurrency::LazyResult<type>().resolve();
+      plain::concurrency::LazyResult<type>().resolve();
     },
     "resolve - result is empty.");
 
@@ -301,12 +301,12 @@ void plain::tests::test_lazy_result_resolve() {
 namespace plain::tests {
 
 template<class type>
-concurrency::LazyResult<type> proxy_coro(concurrency::LazyResult<type> result) {
+plain::concurrency::LazyResult<type> proxy_coro(plain::concurrency::LazyResult<type> result) {
   co_return co_await result;
 }
 
 template<class type>
-concurrency::Result<void> 
+plain::concurrency::Result<void> 
 test_lazy_result_co_await_non_ready_coro_val(
   std::shared_ptr<plain::concurrency::executor::Thread> ex) {
   const auto thread_id_before = thread::get_current_virtual_id();
@@ -315,7 +315,7 @@ test_lazy_result_co_await_non_ready_coro_val(
   auto proxy_result = proxy_coro(std::move(result));
 
   local_assert_false(started);
-  local_assert_eq(proxy_result.status(), concurrency::ResultStatus::Idle);
+  local_assert_eq(proxy_result.status(), plain::concurrency::ResultStatus::Idle);
 
   auto done_result = co_await proxy_result.resolve();
   const auto thread_id_after = thread::get_current_virtual_id();
@@ -326,7 +326,7 @@ test_lazy_result_co_await_non_ready_coro_val(
 }
 
 template<class type>
-concurrency::Result<void> 
+plain::concurrency::Result<void> 
 test_lazy_result_co_await_non_ready_coro_ex(
   std::shared_ptr<plain::concurrency::executor::Thread> ex) {
   constexpr intptr_t id = 987654321;
@@ -338,7 +338,7 @@ test_lazy_result_co_await_non_ready_coro_ex(
 
   local_assert_false(started);
 
-  local_assert_eq(proxy_result.status(), concurrency::ResultStatus::Idle);
+  local_assert_eq(proxy_result.status(), plain::concurrency::ResultStatus::Idle);
 
   auto done_result = co_await proxy_result.resolve();
 
@@ -350,7 +350,7 @@ test_lazy_result_co_await_non_ready_coro_ex(
 }
 
 template<class type>
-concurrency::Result<void> test_lazy_result_co_await_ready_coro_val() {
+plain::concurrency::Result<void> test_lazy_result_co_await_ready_coro_val() {
   auto done_result = co_await proxy_coro(sync_lazy_coro<type>()).resolve();
 
   const auto thread_id_before = thread::get_current_virtual_id();
@@ -364,7 +364,7 @@ concurrency::Result<void> test_lazy_result_co_await_ready_coro_val() {
 }
 
 template<class type>
-concurrency::Result<void> test_lazy_result_co_await_ready_coro_ex() {
+plain::concurrency::Result<void> test_lazy_result_co_await_ready_coro_ex() {
   constexpr intptr_t id = 987654321;
   auto done_result = co_await proxy_coro(sync_lazy_coro_ex<type>(id)).resolve();
 
@@ -383,7 +383,7 @@ template<class type>
 void plain::tests::test_lazy_result_co_await_operator_impl() {
   assert_throws_with_error_message<std::runtime_error>(
     [] {
-      concurrency::LazyResult<type>().operator co_await();
+      plain::concurrency::LazyResult<type>().operator co_await();
     },
     "co_await - result is empty.");
 
@@ -407,7 +407,7 @@ void plain::tests::test_lazy_result_run_impl(
   std::shared_ptr<plain::concurrency::executor::Thread> ex) {
   assert_throws_with_error_message<std::runtime_error>(
     [] {
-      concurrency::LazyResult<type>().run();
+      plain::concurrency::LazyResult<type>().run();
     },
     "run - result is empty.");
 
@@ -454,7 +454,7 @@ void plain::tests::test_lazy_result_assignment_operator_self() {
 
 template<class type>
 void plain::tests::test_lazy_result_assignment_operator_empty_to_empty() {
-  concurrency::LazyResult<type> res0, res1;
+  plain::concurrency::LazyResult<type> res0, res1;
   res0 = std::move(res1);
 
   local_assert_false(static_cast<bool>(res0));
@@ -466,7 +466,7 @@ void plain::tests::test_lazy_result_assignment_operator_non_empty_to_empty() {
   object_observer observer;
   value_gen<type> gen;
 
-  concurrency::LazyResult<type> res0, res1 = 
+  plain::concurrency::LazyResult<type> res0, res1 = 
     sync_lazy_coro<type>(observer.get_testing_stub(), gen, 1);
   res0 = std::move(res1);
 
@@ -484,7 +484,7 @@ template<class type>
 void plain::tests::test_lazy_result_assignment_operator_empty_to_non_empty() {
   object_observer observer;
 
-  concurrency::LazyResult<type> res0, res1 =
+  plain::concurrency::LazyResult<type> res0, res1 =
     sync_lazy_coro<type>(observer.get_testing_stub());
   res1 = std::move(res0);
 
@@ -499,9 +499,9 @@ void plain::tests::test_lazy_result_assignment_operator_non_empty_to_non_empty()
   object_observer observer;
   value_gen<type> gen;
 
-  concurrency::LazyResult<type> res0 = 
+  plain::concurrency::LazyResult<type> res0 = 
     sync_lazy_coro<type>(observer.get_testing_stub(), gen, 0);
-  concurrency::LazyResult<type> res1 = 
+  plain::concurrency::LazyResult<type> res1 = 
     sync_lazy_coro<type>(observer.get_testing_stub(), gen, 1);
   res0 = std::move(res1);
 

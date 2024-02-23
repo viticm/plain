@@ -19,13 +19,13 @@ void test_resume_on_ref();
 
 namespace plain::tests {
 
-concurrency::Result<void>
+plain::concurrency::Result<void>
 resume_on_1_executor(
   std::shared_ptr<plain::concurrency::executor::Basic> executor) {
   co_await plain::concurrency::result::resume_on(executor);
 }
 
-concurrency::Result<void> 
+plain::concurrency::Result<void> 
 resume_on_many_executors_shared(
   std::span<std::shared_ptr<plain::concurrency::executor::Basic>> executors,
   std::unordered_set<size_t> &set) {
@@ -35,7 +35,7 @@ resume_on_many_executors_shared(
   }
 }
 
-concurrency::Result<void> 
+plain::concurrency::Result<void> 
 resume_on_many_executors_ref(
   std::span<plain::concurrency::executor::Basic*> executors,
   std::unordered_set<size_t> &set) {

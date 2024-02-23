@@ -124,7 +124,7 @@ void plain::tests::test_timer_queue_thread_callbacks() {
     ++thread_started_callback_invocations_num;
     ASSERT_EQ(
       thread_name,
-      concurrency::executor::detail::make_executor_worker_name("timer queue"));
+      plain::concurrency::executor::detail::make_executor_worker_name("timer queue"));
   };
 
   auto thread_terminated_callback = 
@@ -132,7 +132,7 @@ void plain::tests::test_timer_queue_thread_callbacks() {
     ++thread_terminated_callback_invocations_num;
     ASSERT_EQ(
       thread_name,
-      concurrency::executor::detail::make_executor_worker_name("timer queue"));
+      plain::concurrency::executor::detail::make_executor_worker_name("timer queue"));
   };
 
   auto timer_queue = std::make_shared<plain::TimerQueue>(

@@ -65,27 +65,27 @@ using namespace plain::tests;
 
 template<class type>
 void plain::tests::test_shared_result_constructor_impl() {
-  concurrency::result::Shared<type> default_constructed_result;
+  plain::concurrency::result::Shared<type> default_constructed_result;
   ASSERT_FALSE(static_cast<bool>(default_constructed_result));
 
   // from result
-  concurrency::ResultPromise<type> rp;
+  plain::concurrency::ResultPromise<type> rp;
   auto result = rp.get_result();
-  concurrency::result::Shared<type> sr(std::move(result));
+  plain::concurrency::result::Shared<type> sr(std::move(result));
 
   ASSERT_TRUE(static_cast<bool>(sr));
-  ASSERT_EQ(sr.status(), concurrency::ResultStatus::Idle);
+  ASSERT_EQ(sr.status(), plain::concurrency::ResultStatus::Idle);
 
   // copy
   auto copy_result = sr;
   ASSERT_TRUE(static_cast<bool>(copy_result));
-  ASSERT_EQ(sr.status(), concurrency::ResultStatus::Idle);
+  ASSERT_EQ(sr.status(), plain::concurrency::ResultStatus::Idle);
 
   // move
   auto new_result = std::move(sr);
   ASSERT_FALSE(static_cast<bool>(sr));
   ASSERT_TRUE(static_cast<bool>(new_result));
-  ASSERT_EQ(new_result.status(), concurrency::ResultStatus::Idle);
+  ASSERT_EQ(new_result.status(), plain::concurrency::ResultStatus::Idle);
 }
 
 void plain::tests::test_shared_result_constructor() {
@@ -102,46 +102,46 @@ void plain::tests::test_shared_result_status_impl() {
   {
     assert_throws_with_error_message<std::runtime_error>(
       [] {
-        concurrency::result::Shared<type>().status();
+        plain::concurrency::result::Shared<type>().status();
       },
       "status - result is empty.");
   }
 
   // idle result
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
-    concurrency::result::Shared<type> sr(std::move(result));
-    ASSERT_EQ(sr.status(), concurrency::ResultStatus::Idle);
+    plain::concurrency::result::Shared<type> sr(std::move(result));
+    ASSERT_EQ(sr.status(), plain::concurrency::ResultStatus::Idle);
   }
 
   // ready by value
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
-    concurrency::result::Shared<type> sr(std::move(result));
+    plain::concurrency::result::Shared<type> sr(std::move(result));
     rp.set_from_function(value_gen<type>::default_value);
-    ASSERT_EQ(sr.status(), concurrency::ResultStatus::Value);
+    ASSERT_EQ(sr.status(), plain::concurrency::ResultStatus::Value);
   }
 
   // exception result
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
-    concurrency::result::Shared<type> sr(std::move(result));
+    plain::concurrency::result::Shared<type> sr(std::move(result));
     rp.set_from_function(value_gen<type>::throw_ex);
-    ASSERT_EQ(sr.status(), concurrency::ResultStatus::Exception);
+    ASSERT_EQ(sr.status(), plain::concurrency::ResultStatus::Exception);
   }
 
   // multiple calls of status are ok
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
-    concurrency::result::Shared<type> sr(std::move(result));
+    plain::concurrency::result::Shared<type> sr(std::move(result));
     rp.set_from_function(value_gen<type>::default_value);
 
     for (size_t i = 0; i < 10; i++) {
-      ASSERT_EQ(sr.status(), concurrency::ResultStatus::Value);
+      ASSERT_EQ(sr.status(), plain::concurrency::ResultStatus::Value);
     }
   }
 }
@@ -160,16 +160,16 @@ void plain::tests::test_shared_result_get_impl() {
   {
     assert_throws_with_error_message<std::runtime_error>(
       [] {
-        concurrency::result::Shared<type>().get();
+        plain::concurrency::result::Shared<type>().get();
       },
       "get - result is empty.");
   }
 
   // get blocks until value is present
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
-    concurrency::result::Shared<type> sr(std::move(result));
+    plain::concurrency::result::Shared<type> sr(std::move(result));
 
     const auto unblocking_time = high_resolution_clock::now() + milliseconds(150);
 
@@ -191,9 +191,9 @@ void plain::tests::test_shared_result_get_impl() {
 
   // get blocks until exception is present and empties the result
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
-    concurrency::result::Shared<type> sr(std::move(result));
+    plain::concurrency::result::Shared<type> sr(std::move(result));
     const auto id = 12345689;
     const auto unblocking_time = high_resolution_clock::now() + milliseconds(150);
 
@@ -219,9 +219,9 @@ void plain::tests::test_shared_result_get_impl() {
 
   // if result is ready with value, get returns immediately
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
-    concurrency::result::Shared<type> sr(std::move(result));
+    plain::concurrency::result::Shared<type> sr(std::move(result));
 
     rp.set_from_function(value_gen<type>::default_value);
 
@@ -239,9 +239,9 @@ void plain::tests::test_shared_result_get_impl() {
 
   // if result is ready with exception, get returns immediately
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
-    concurrency::result::Shared<type> sr(std::move(result));
+    plain::concurrency::result::Shared<type> sr(std::move(result));
 
     const auto id = 123456789;
 
@@ -265,15 +265,15 @@ void plain::tests::test_shared_result_get_impl() {
 
   // get can be called multiple times
   {
-    concurrency::result::Shared<type> sr_val(result_gen<type>::ready());
+    plain::concurrency::result::Shared<type> sr_val(result_gen<type>::ready());
 
     for (size_t i = 0; i < 6; i++) {
       sr_val.get();
       ASSERT_TRUE(static_cast<bool>(sr_val));
     }
 
-    concurrency::result::Shared<type> sr_ex(
-      concurrency::result::make_exceptional<type>(
+    plain::concurrency::result::Shared<type> sr_ex(
+      plain::concurrency::result::make_exceptional<type>(
         std::make_exception_ptr(std::exception {})));
 
     for (size_t i = 0; i < 6; i++) {
@@ -300,16 +300,16 @@ void plain::tests::test_shared_result_wait_impl() {
   {
     assert_throws_with_error_message<std::runtime_error>(
       [] {
-        concurrency::result::Shared<type>().wait();
+        plain::concurrency::result::Shared<type>().wait();
       },
       "wait - result is empty.");
   }
 
   // wait blocks until value is present
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
-    concurrency::result::Shared<type> sr(std::move(result));
+    plain::concurrency::result::Shared<type> sr(std::move(result));
     const auto unblocking_time = high_resolution_clock::now() + milliseconds(150);
 
     std::thread thread([rp = std::move(rp), unblocking_time]() mutable {
@@ -329,9 +329,9 @@ void plain::tests::test_shared_result_wait_impl() {
 
   // wait blocks until exception is present
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
-    concurrency::result::Shared<type> sr(std::move(result));
+    plain::concurrency::result::Shared<type> sr(std::move(result));
     const auto id = 123456789;
     const auto unblocking_time = high_resolution_clock::now() + milliseconds(150);
 
@@ -352,9 +352,9 @@ void plain::tests::test_shared_result_wait_impl() {
 
   // if result is ready with value, wait returns immediately
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
-    concurrency::result::Shared<type> sr(std::move(result));
+    plain::concurrency::result::Shared<type> sr(std::move(result));
     rp.set_from_function(value_gen<type>::default_value);
 
     const auto time_before = high_resolution_clock::now();
@@ -369,9 +369,9 @@ void plain::tests::test_shared_result_wait_impl() {
 
   // if result is ready with exception, wait returns immediately
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
-    concurrency::result::Shared<type> sr(std::move(result));
+    plain::concurrency::result::Shared<type> sr(std::move(result));
 
     const auto id = 123456789;
 
@@ -389,9 +389,9 @@ void plain::tests::test_shared_result_wait_impl() {
 
   // multiple calls to wait are ok
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
-    concurrency::result::Shared<type> sr(std::move(result));
+    plain::concurrency::result::Shared<type> sr(std::move(result));
 
     const auto unblocking_time = high_resolution_clock::now() + milliseconds(50);
 
@@ -423,16 +423,16 @@ void plain::tests::test_shared_result_wait_for_impl() {
   {
     assert_throws_with_error_message<std::runtime_error>(
       [] {
-        concurrency::result::Shared<type>().wait_for(seconds(1));
+        plain::concurrency::result::Shared<type>().wait_for(seconds(1));
       },
       "wait_for - result is empty.");
   }
 
   // if the result is ready by value, don't block and return status::value
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
-    concurrency::result::Shared<type> sr(std::move(result));
+    plain::concurrency::result::Shared<type> sr(std::move(result));
 
     rp.set_from_function(value_gen<type>::default_value);
 
@@ -442,15 +442,15 @@ void plain::tests::test_shared_result_wait_for_impl() {
     const auto time = duration_cast<milliseconds>(after - before).count();
 
     ASSERT_LE(time, 20);
-    ASSERT_EQ(status, concurrency::ResultStatus::Value);
+    ASSERT_EQ(status, plain::concurrency::ResultStatus::Value);
     test_ready_result(std::move(sr));
   }
 
   // if the result is ready by exception, don't block and return status::exception
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
-    concurrency::result::Shared<type> sr(std::move(result));
+    plain::concurrency::result::Shared<type> sr(std::move(result));
 
     const size_t id = 123456789;
 
@@ -462,15 +462,15 @@ void plain::tests::test_shared_result_wait_for_impl() {
     const auto time = duration_cast<milliseconds>(after - before).count();
 
     ASSERT_LE(time, 20);
-    ASSERT_EQ(status, concurrency::ResultStatus::Exception);
+    ASSERT_EQ(status, plain::concurrency::ResultStatus::Exception);
     test_ready_result_custom_exception(std::move(sr), id);
   }
 
   // if timeout reaches and no value/exception - return status::idle
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
-    concurrency::result::Shared<type> sr(std::move(result));
+    plain::concurrency::result::Shared<type> sr(std::move(result));
 
     const auto waiting_time = milliseconds(50);
     const auto before = high_resolution_clock::now();
@@ -478,15 +478,15 @@ void plain::tests::test_shared_result_wait_for_impl() {
     const auto after = high_resolution_clock::now();
     const auto time = duration_cast<milliseconds>(after - before);
 
-    ASSERT_EQ(status, concurrency::ResultStatus::Idle);
+    ASSERT_EQ(status, plain::concurrency::ResultStatus::Idle);
     ASSERT_GE(time, waiting_time);
   }
 
   // if result is set before timeout, unblock, and return status::value
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
-    concurrency::result::Shared<type> sr(std::move(result));
+    plain::concurrency::result::Shared<type> sr(std::move(result));
 
     const auto unblocking_time = high_resolution_clock::now() + milliseconds(150);
 
@@ -506,9 +506,9 @@ void plain::tests::test_shared_result_wait_for_impl() {
 
   // if exception is set before timeout, unblock, and return status::exception
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
-    concurrency::result::Shared<type> sr(std::move(result));
+    plain::concurrency::result::Shared<type> sr(std::move(result));
     const auto id = 123456789;
     const auto unblocking_time = high_resolution_clock::now() + milliseconds(150);
 
@@ -528,9 +528,9 @@ void plain::tests::test_shared_result_wait_for_impl() {
 
   // multiple calls of wait_for are ok
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
-    concurrency::result::Shared<type> sr(std::move(result));
+    plain::concurrency::result::Shared<type> sr(std::move(result));
 
     const auto unblocking_time = high_resolution_clock::now() + milliseconds(150);
 
@@ -562,17 +562,17 @@ void plain::tests::test_shared_result_wait_until_impl() {
     assert_throws_with_error_message<std::runtime_error>(
       [] {
         const auto later = high_resolution_clock::now() + seconds(10);
-        concurrency::result::Shared<type>().wait_until(later);
+        plain::concurrency::result::Shared<type>().wait_until(later);
       },
       "wait_until - result is empty.");
   }
 
   // if time_point <= now, the function is equivalent to result::status
   {
-    concurrency::ResultPromise<type> rp_idle, rp_val, rp_err;
-    concurrency::Result<type> idle_result = rp_idle.get_result(),
+    plain::concurrency::ResultPromise<type> rp_idle, rp_val, rp_err;
+    plain::concurrency::Result<type> idle_result = rp_idle.get_result(),
       value_result = rp_val.get_result(), err_result = rp_err.get_result();
-    concurrency::result::Shared<type>
+    plain::concurrency::result::Shared<type>
       shared_idle_result(std::move(idle_result)), 
       shared_value_result(std::move(value_result)),
       shared_err_result(std::move(err_result));
@@ -593,9 +593,9 @@ void plain::tests::test_shared_result_wait_until_impl() {
 
   // if the result is ready by value, don't block and return status::value
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
-    concurrency::result::Shared<type> sr(std::move(result));
+    plain::concurrency::result::Shared<type> sr(std::move(result));
 
     rp.set_from_function(value_gen<type>::default_value);
 
@@ -608,15 +608,15 @@ void plain::tests::test_shared_result_wait_until_impl() {
     const auto ms = duration_cast<milliseconds>(after - before).count();
 
     ASSERT_LE(ms, 20);
-    ASSERT_EQ(status, concurrency::ResultStatus::Value);
+    ASSERT_EQ(status, plain::concurrency::ResultStatus::Value);
     test_ready_result(std::move(sr));
   }
 
   // if the result is ready by exception, don't block and return status::exception
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
-    concurrency::result::Shared<type> sr(std::move(result));
+    plain::concurrency::result::Shared<type> sr(std::move(result));
     const size_t id = 123456789;
 
     rp.set_exception(std::make_exception_ptr(custom_exception(id)));
@@ -630,15 +630,15 @@ void plain::tests::test_shared_result_wait_until_impl() {
     const auto time = duration_cast<milliseconds>(after - before).count();
 
     ASSERT_LE(time, 20);
-    ASSERT_EQ(status, concurrency::ResultStatus::Exception);
+    ASSERT_EQ(status, plain::concurrency::ResultStatus::Exception);
     test_ready_result_custom_exception(std::move(sr), id);
   }
 
   // if timeout reaches and no value/exception - return status::idle
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
-    concurrency::result::Shared<type> sr(std::move(result));
+    plain::concurrency::result::Shared<type> sr(std::move(result));
 
     const auto later = high_resolution_clock::now() + milliseconds(150);
     const auto status = sr.wait_until(later);
@@ -646,15 +646,15 @@ void plain::tests::test_shared_result_wait_until_impl() {
 
     const auto ms = duration_cast<microseconds>(now - later).count();
     ASSERT_GE(ms, 0); // FIXME: use variable.
-    ASSERT_EQ(status, concurrency::ResultStatus::Idle);
+    ASSERT_EQ(status, plain::concurrency::ResultStatus::Idle);
     ASSERT_GE(now, later);
   }
 
   // if result is set before timeout, unblock, and return status::value
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
-    concurrency::result::Shared<type> sr(std::move(result));
+    plain::concurrency::result::Shared<type> sr(std::move(result));
 
     const auto unblocking_time = high_resolution_clock::now() + milliseconds(150);
     const auto later = high_resolution_clock::now() + seconds(10);
@@ -675,9 +675,9 @@ void plain::tests::test_shared_result_wait_until_impl() {
 
   // if exception is set before timeout, unblock, and return status::exception
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
-    concurrency::result::Shared<type> sr(std::move(result));
+    plain::concurrency::result::Shared<type> sr(std::move(result));
     const auto id = 123456789;
 
     const auto unblocking_time = high_resolution_clock::now() + milliseconds(150);
@@ -699,9 +699,9 @@ void plain::tests::test_shared_result_wait_until_impl() {
 
   // multiple calls to wait_until are ok
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
-    concurrency::result::Shared<type> sr(std::move(result));
+    plain::concurrency::result::Shared<type> sr(std::move(result));
 
     const auto unblocking_time = high_resolution_clock::now() + milliseconds(150);
 
@@ -729,7 +729,7 @@ void plain::tests::test_shared_result_wait_until() {
 
 template<class type>
 void plain::tests::test_shared_result_assignment_operator_empty_to_empty_move() {
-  concurrency::result::Shared<type> result_0, result_1;
+  plain::concurrency::result::Shared<type> result_0, result_1;
   result_0 = std::move(result_1);
   ASSERT_FALSE(static_cast<bool>(result_0));
   ASSERT_FALSE(static_cast<bool>(result_1));
@@ -737,10 +737,10 @@ void plain::tests::test_shared_result_assignment_operator_empty_to_empty_move() 
 
 template<class type>
 void plain::tests::test_shared_result_assignment_operator_non_empty_to_non_empty_move() {
-  concurrency::ResultPromise<type> rp_0, rp_1;
-  concurrency::Result<type> result_0 = rp_0.get_result(),
+  plain::concurrency::ResultPromise<type> rp_0, rp_1;
+  plain::concurrency::Result<type> result_0 = rp_0.get_result(),
     result_1 = rp_1.get_result();
-  concurrency::result::Shared<type> sr0(std::move(result_0)),
+  plain::concurrency::result::Shared<type> sr0(std::move(result_0)),
     sr1(std::move(result_1));
 
   sr0 = std::move(sr1);
@@ -749,7 +749,7 @@ void plain::tests::test_shared_result_assignment_operator_non_empty_to_non_empty
   ASSERT_TRUE(static_cast<bool>(sr0));
 
   rp_0.set_from_function(value_gen<type>::default_value);
-  ASSERT_EQ(sr0.status(), concurrency::ResultStatus::Idle);
+  ASSERT_EQ(sr0.status(), plain::concurrency::ResultStatus::Idle);
 
   rp_1.set_from_function(value_gen<type>::default_value);
   test_ready_result(std::move(sr0));
@@ -757,9 +757,9 @@ void plain::tests::test_shared_result_assignment_operator_non_empty_to_non_empty
 
 template<class type>
 void plain::tests::test_shared_result_assignment_operator_empty_to_non_empty_move() {
-  concurrency::ResultPromise<type> rp_0;
-  concurrency::Result<type> result_0 = rp_0.get_result(), result_1;
-  concurrency::result::Shared<type>
+  plain::concurrency::ResultPromise<type> rp_0;
+  plain::concurrency::Result<type> result_0 = rp_0.get_result(), result_1;
+  plain::concurrency::result::Shared<type>
     sr0(std::move(result_0)), sr1(std::move(result_1));
 
   sr0 = std::move(sr1);
@@ -769,9 +769,9 @@ void plain::tests::test_shared_result_assignment_operator_empty_to_non_empty_mov
 
 template<class type>
 void plain::tests::test_shared_result_assignment_operator_non_empty_to_empty_move() {
-  concurrency::ResultPromise<type> rp_1;
-  concurrency::Result<type> result_0, result_1 = rp_1.get_result();
-  concurrency::result::Shared<type>
+  plain::concurrency::ResultPromise<type> rp_1;
+  plain::concurrency::Result<type> result_0, result_1 = rp_1.get_result();
+  plain::concurrency::result::Shared<type>
     sr0(std::move(result_0)), sr1(std::move(result_1));
 
   sr0 = std::move(sr1);
@@ -784,14 +784,14 @@ void plain::tests::test_shared_result_assignment_operator_non_empty_to_empty_mov
 
 template<class type>
 void plain::tests::test_shared_result_assignment_operator_assign_to_self_move() {
-  concurrency::result::Shared<type> empty;
+  plain::concurrency::result::Shared<type> empty;
 
   // empty = std::move(empty);
   ASSERT_FALSE(static_cast<bool>(empty));
 
-  concurrency::ResultPromise<type> rp_1;
+  plain::concurrency::ResultPromise<type> rp_1;
   auto res1 = rp_1.get_result();
-  concurrency::result::Shared<type> non_empty(std::move(res1));
+  plain::concurrency::result::Shared<type> non_empty(std::move(res1));
 
   // non_empty = std::move(non_empty);
   ASSERT_TRUE(static_cast<bool>(non_empty));
@@ -804,7 +804,7 @@ void plain::tests::test_shared_result_assignment_operator_assign_to_self_move() 
 
 template<class type>
 void plain::tests::test_shared_result_assignment_operator_empty_to_empty_copy() {
-  concurrency::result::Shared<type> result_0, result_1;
+  plain::concurrency::result::Shared<type> result_0, result_1;
   result_0 = result_1;
   ASSERT_FALSE(static_cast<bool>(result_0));
   ASSERT_FALSE(static_cast<bool>(result_1));
@@ -812,10 +812,10 @@ void plain::tests::test_shared_result_assignment_operator_empty_to_empty_copy() 
 
 template<class type>
 void plain::tests::test_shared_result_assignment_operator_non_empty_to_non_empty_copy() {
-  concurrency::ResultPromise<type> rp_0, rp_1;
-  concurrency::Result<type>
+  plain::concurrency::ResultPromise<type> rp_0, rp_1;
+  plain::concurrency::Result<type>
     result_0 = rp_0.get_result(), result_1 = rp_1.get_result();
-  concurrency::result::Shared<type>
+  plain::concurrency::result::Shared<type>
     sr0(std::move(result_0)), sr1(std::move(result_1));
 
   sr0 = sr1;
@@ -824,7 +824,7 @@ void plain::tests::test_shared_result_assignment_operator_non_empty_to_non_empty
   ASSERT_TRUE(static_cast<bool>(sr0));
 
   rp_0.set_from_function(value_gen<type>::default_value);
-  ASSERT_EQ(sr0.status(), concurrency::ResultStatus::Idle);
+  ASSERT_EQ(sr0.status(), plain::concurrency::ResultStatus::Idle);
 
   rp_1.set_from_function(value_gen<type>::default_value);
   test_ready_result(std::move(sr0));
@@ -832,9 +832,9 @@ void plain::tests::test_shared_result_assignment_operator_non_empty_to_non_empty
 
 template<class type>
 void plain::tests::test_shared_result_assignment_operator_empty_to_non_empty_copy() {
-  concurrency::ResultPromise<type> rp_0;
-  concurrency::Result<type> result_0 = rp_0.get_result(), result_1;
-  concurrency::result::Shared<type>
+  plain::concurrency::ResultPromise<type> rp_0;
+  plain::concurrency::Result<type> result_0 = rp_0.get_result(), result_1;
+  plain::concurrency::result::Shared<type>
     sr0(std::move(result_0)), sr1(std::move(result_1));
 
   sr0 = sr1;
@@ -844,9 +844,9 @@ void plain::tests::test_shared_result_assignment_operator_empty_to_non_empty_cop
 
 template<class type>
 void plain::tests::test_shared_result_assignment_operator_non_empty_to_empty_copy() {
-  concurrency::ResultPromise<type> rp_1;
-  concurrency::Result<type> result_0, result_1 = rp_1.get_result();
-  concurrency::result::Shared<type>
+  plain::concurrency::ResultPromise<type> rp_1;
+  plain::concurrency::Result<type> result_0, result_1 = rp_1.get_result();
+  plain::concurrency::result::Shared<type>
     sr0(std::move(result_0)), sr1(std::move(result_1));
 
   sr0 = sr1;
@@ -859,14 +859,14 @@ void plain::tests::test_shared_result_assignment_operator_non_empty_to_empty_cop
 
 template<class type>
 void plain::tests::test_shared_result_assignment_operator_assign_to_self_copy() {
-  concurrency::result::Shared<type> empty;
+  plain::concurrency::result::Shared<type> empty;
 
   empty = empty;
   ASSERT_FALSE(static_cast<bool>(empty));
 
-  concurrency::ResultPromise<type> rp_1;
+  plain::concurrency::ResultPromise<type> rp_1;
   auto res1 = rp_1.get_result();
-  concurrency::result::Shared<type> non_empty(std::move(res1));
+  plain::concurrency::result::Shared<type> non_empty(std::move(res1));
 
   non_empty = non_empty;
   ASSERT_TRUE(static_cast<bool>(non_empty));

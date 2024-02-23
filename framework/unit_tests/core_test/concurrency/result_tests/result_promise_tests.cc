@@ -53,7 +53,7 @@ namespace plain::tests {
 
 template<class type>
 void plain::tests::test_result_promise_constructor_impl() {
-  concurrency::ResultPromise<type> rp;
+  plain::concurrency::ResultPromise<type> rp;
   ASSERT_TRUE(static_cast<bool>(rp));
 
   auto other = std::move(rp);
@@ -74,12 +74,12 @@ void plain::tests::test_result_promise_destructor_impl() {
   plain::concurrency::Result<type> result;
 
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     result = rp.get_result();
   }
 
   ASSERT_TRUE(static_cast<bool>(result));
-  ASSERT_EQ(result.status(), concurrency::ResultStatus::Exception);
+  ASSERT_EQ(result.status(), plain::concurrency::ResultStatus::Exception);
   assert_throws<std::runtime_error>([&] {
     result.get();
   });
@@ -89,10 +89,10 @@ void plain::tests::test_result_promise_RAII_impl() {
   object_observer observer;
 
   {
-    concurrency::Result<testing_stub> result;
+    plain::concurrency::Result<testing_stub> result;
 
     {
-      concurrency::ResultPromise<testing_stub> rp;
+      plain::concurrency::ResultPromise<testing_stub> rp;
       result = rp.get_result();
       rp.set_result(observer.get_testing_stub());
     }
@@ -162,7 +162,7 @@ void plain::tests::test_result_promise_set_value_impl(const arguments_tuple_type
 
     ASSERT_TRUE(static_cast<bool>(result));
     ASSERT_TRUE(static_cast<bool>(rp));
-    ASSERT_EQ(result.status(), concurrency::ResultStatus::Idle);
+    ASSERT_EQ(result.status(), plain::concurrency::ResultStatus::Idle);
   }
 
   auto set_rp = [](auto &rp, auto tuple) {
@@ -212,18 +212,18 @@ void plain::tests::test_result_promise_set_value_thrown_exception() {
     }
   };
 
-  concurrency::ResultPromise<throws_on_construction> rp;
+  plain::concurrency::ResultPromise<throws_on_construction> rp;
   auto result = rp.get_result();
 
   assert_throws<std::runtime_error>([&] {
     rp.set_result();
   });
 
-  ASSERT_EQ(result.status(), concurrency::ResultStatus::Idle);
+  ASSERT_EQ(result.status(), plain::concurrency::ResultStatus::Idle);
   ASSERT_TRUE(static_cast<bool>(rp));
 
   rp.set_result();  // should not throw.
-  ASSERT_EQ(result.status(), concurrency::ResultStatus::Value);
+  ASSERT_EQ(result.status(), plain::concurrency::ResultStatus::Value);
 }
 
 void plain::tests::test_result_promise_set_value() {
@@ -254,7 +254,7 @@ template<class type>
 void plain::tests::test_result_promise_set_exception_impl() {
   // can't set result to an empty rp
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto dummy = std::move(rp);
     assert_throws<std::runtime_error>([&rp] {
       const auto exception = std::make_exception_ptr(std::exception());
@@ -265,7 +265,7 @@ void plain::tests::test_result_promise_set_exception_impl() {
   // null exception_ptr throws std::invalid_argument
   {
     assert_throws<std::invalid_argument>([] {
-      concurrency::ResultPromise<type> rp;
+      plain::concurrency::ResultPromise<type> rp;
       rp.set_exception(std::exception_ptr {});
     });
   }
@@ -298,7 +298,7 @@ void plain::tests::test_result_promise_set_exception() {
 
 template<class type>
 void plain::tests::test_result_promise_set_from_function_value_impl() {
-  concurrency::ResultPromise<type> rp;
+  plain::concurrency::ResultPromise<type> rp;
   auto result = rp.get_result();
   rp.set_from_function(value_gen<type>::default_value);
   test_ready_result(std::move(result));
@@ -306,7 +306,7 @@ void plain::tests::test_result_promise_set_from_function_value_impl() {
 
 template<class type>
 void plain::tests::test_result_promise_set_from_function_exception_impl() {
-  concurrency::ResultPromise<type> rp;
+  plain::concurrency::ResultPromise<type> rp;
   auto result = rp.get_result();
   const auto id = 123456789;
 
@@ -317,7 +317,7 @@ void plain::tests::test_result_promise_set_from_function_exception_impl() {
 
   ASSERT_FALSE(static_cast<bool>(rp));
   ASSERT_TRUE(static_cast<bool>(result));
-  ASSERT_EQ(result.status(), concurrency::ResultStatus::Exception);
+  ASSERT_EQ(result.status(), plain::concurrency::ResultStatus::Exception);
   test_ready_result_custom_exception(std::move(result), id);
 }
 
@@ -337,7 +337,7 @@ void plain::tests::test_result_promise_set_from_function() {
 
 template<class type>
 void plain::tests::test_rp_assignment_operator_impl_empty_to_empty() {
-  concurrency::ResultPromise<type> rp1, rp2;
+  plain::concurrency::ResultPromise<type> rp1, rp2;
   auto dummy1(std::move(rp1)), dummy2(std::move(rp2));
 
   ASSERT_FALSE(static_cast<bool>(rp1));
@@ -351,7 +351,7 @@ void plain::tests::test_rp_assignment_operator_impl_empty_to_empty() {
 
 template<class type>
 void plain::tests::test_rp_assignment_operator_impl_non_empty_to_empty() {
-  concurrency::ResultPromise<type> rp1, rp2;
+  plain::concurrency::ResultPromise<type> rp1, rp2;
   auto dummy(std::move(rp2));
 
   ASSERT_TRUE(static_cast<bool>(rp1));
@@ -365,7 +365,7 @@ void plain::tests::test_rp_assignment_operator_impl_non_empty_to_empty() {
 
 template<class type>
 void plain::tests::test_rp_assignment_operator_impl_empty_to_non_empty() {
-  concurrency::ResultPromise<type> rp1, rp2;
+  plain::concurrency::ResultPromise<type> rp1, rp2;
   auto dummy(std::move(rp2));
 
   auto result = rp1.get_result();
@@ -378,7 +378,7 @@ void plain::tests::test_rp_assignment_operator_impl_empty_to_non_empty() {
   ASSERT_FALSE(static_cast<bool>(rp1));
   ASSERT_FALSE(static_cast<bool>(rp2));
 
-  ASSERT_EQ(result.status(), concurrency::ResultStatus::Exception);
+  ASSERT_EQ(result.status(), plain::concurrency::ResultStatus::Exception);
   assert_throws<std::runtime_error>([&] {
     result.get();
   });
@@ -386,7 +386,7 @@ void plain::tests::test_rp_assignment_operator_impl_empty_to_non_empty() {
 
 template<class type>
 void plain::tests::test_rp_assignment_operator_impl_non_empty_to_non_empty() {
-  concurrency::ResultPromise<type> rp1, rp2;
+  plain::concurrency::ResultPromise<type> rp1, rp2;
 
   auto result1 = rp1.get_result();
   auto result2 = rp2.get_result();
@@ -396,17 +396,17 @@ void plain::tests::test_rp_assignment_operator_impl_non_empty_to_non_empty() {
   ASSERT_TRUE(static_cast<bool>(rp1));
   ASSERT_FALSE(static_cast<bool>(rp2));
 
-  ASSERT_EQ(result1.status(), concurrency::ResultStatus::Exception);
+  ASSERT_EQ(result1.status(), plain::concurrency::ResultStatus::Exception);
   assert_throws<std::runtime_error>([&] {
     result1.get();
   });
 
-  ASSERT_EQ(result2.status(), concurrency::ResultStatus::Idle);
+  ASSERT_EQ(result2.status(), plain::concurrency::ResultStatus::Idle);
 }
 
 template<class type>
 void plain::tests::test_rp_assignment_operator_assign_to_self() {
-  concurrency::ResultPromise<type> rp;
+  plain::concurrency::ResultPromise<type> rp;
   //FIXME: This warning disabled.
   // rp = std::move(rp);
   ASSERT_TRUE(static_cast<bool>(rp));

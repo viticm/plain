@@ -138,6 +138,7 @@ void test_ready_result_custom_exception(
     ASSERT_EQ(e.id, id);
     return;
   } catch (const std::runtime_error &e) {
+    UNUSED(e);
     return;
   } catch (...) {
   }

@@ -53,18 +53,18 @@ using namespace plain::tests;
 
 template<class type>
 void plain::tests::test_result_constructor_impl() {
-  concurrency::Result<type> default_constructed_result;
+  plain::concurrency::Result<type> default_constructed_result;
   ASSERT_FALSE(static_cast<bool>(default_constructed_result));
 
-  concurrency::ResultPromise<type> rp;
+  plain::concurrency::ResultPromise<type> rp;
   auto rp_result = rp.get_result();
   ASSERT_TRUE(static_cast<bool>(rp_result));
-  ASSERT_EQ(rp_result.status(), concurrency::ResultStatus::Idle);
+  ASSERT_EQ(rp_result.status(), plain::concurrency::ResultStatus::Idle);
 
   auto new_result = std::move(rp_result);
   ASSERT_FALSE(static_cast<bool>(rp_result));
   ASSERT_TRUE(static_cast<bool>(new_result));
-  ASSERT_EQ(new_result.status(), concurrency::ResultStatus::Idle);
+  ASSERT_EQ(new_result.status(), plain::concurrency::ResultStatus::Idle);
 }
 
 void plain::tests::test_result_constructor() {
@@ -81,42 +81,42 @@ void plain::tests::test_result_status_impl() {
   {
     assert_throws_with_error_message<std::runtime_error>(
       [] {
-        concurrency::Result<type>().status();
+        plain::concurrency::Result<type>().status();
       },
       "status - result is empty.");
   }
 
   // idle result
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
-    ASSERT_EQ(result.status(), concurrency::ResultStatus::Idle);
+    ASSERT_EQ(result.status(), plain::concurrency::ResultStatus::Idle);
   }
 
   // ready by value
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
     rp.set_from_function(value_gen<type>::default_value);
-    ASSERT_EQ(result.status(), concurrency::ResultStatus::Value);
+    ASSERT_EQ(result.status(), plain::concurrency::ResultStatus::Value);
   }
 
   // exception result
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
     rp.set_from_function(value_gen<type>::throw_ex);
-    ASSERT_EQ(result.status(), concurrency::ResultStatus::Exception);
+    ASSERT_EQ(result.status(), plain::concurrency::ResultStatus::Exception);
   }
 
   // multiple calls of status are ok
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
     rp.set_from_function(value_gen<type>::default_value);
 
     for (size_t i = 0; i < 10; i++) {
-      ASSERT_EQ(result.status(), concurrency::ResultStatus::Value);
+      ASSERT_EQ(result.status(), plain::concurrency::ResultStatus::Value);
     }
   }
 }
@@ -131,7 +131,7 @@ void plain::tests::test_result_status() {
 
 namespace plain::tests {
   template<class type>
-  concurrency::Result<type> get_helper(concurrency::Result<type> &res) {
+  plain::concurrency::Result<type> get_helper(plain::concurrency::Result<type> &res) {
     co_return res.get();
   }
 }  // namespace plain::tests
@@ -142,14 +142,14 @@ void plain::tests::test_result_get_impl() {
   {
     assert_throws_with_error_message<std::runtime_error>(
       [] {
-        concurrency::Result<type>().get();
+        plain::concurrency::Result<type>().get();
       },
       "get - result is empty.");
   }
 
   // get blocks until value is present and empties the result
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
     const auto unblocking_time = high_resolution_clock::now() + milliseconds(150);
 
@@ -171,7 +171,7 @@ void plain::tests::test_result_get_impl() {
 
   // get blocks until exception is present and empties the result
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
     const auto id = 12345689;
     const auto unblocking_time = high_resolution_clock::now() + milliseconds(150);
@@ -194,7 +194,7 @@ void plain::tests::test_result_get_impl() {
 
   // if result is ready with value, get returns immediately
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
     rp.set_from_function(value_gen<type>::default_value);
 
@@ -210,7 +210,7 @@ void plain::tests::test_result_get_impl() {
 
   // if result is ready with exception, get returns immediately
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
     const auto id = 123456789;
 
@@ -242,14 +242,14 @@ void plain::tests::test_result_wait_impl() {
   {
     assert_throws_with_error_message<std::runtime_error>(
       [] {
-        concurrency::Result<type>().wait();
+        plain::concurrency::Result<type>().wait();
       },
       "wait - result is empty.");
   }
 
   // wait blocks until value is present
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
     const auto unblocking_time = high_resolution_clock::now() + milliseconds(150);
 
@@ -270,7 +270,7 @@ void plain::tests::test_result_wait_impl() {
 
   // wait blocks until exception is present
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
     const auto id = 123456789;
     const auto unblocking_time = high_resolution_clock::now() + milliseconds(150);
@@ -292,7 +292,7 @@ void plain::tests::test_result_wait_impl() {
 
   // if result is ready with value, wait returns immediately
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
     rp.set_from_function(value_gen<type>::default_value);
 
@@ -308,7 +308,7 @@ void plain::tests::test_result_wait_impl() {
 
   // if result is ready with exception, wait returns immediately
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
     const auto id = 123456789;
 
@@ -326,7 +326,7 @@ void plain::tests::test_result_wait_impl() {
 
   // multiple calls to wait are ok
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
     const auto unblocking_time = high_resolution_clock::now() + milliseconds(50);
 
@@ -358,14 +358,14 @@ void plain::tests::test_result_wait_for_impl() {
   {
     assert_throws_with_error_message<std::runtime_error>(
       [] {
-        concurrency::Result<type>().wait_for(seconds(1));
+        plain::concurrency::Result<type>().wait_for(seconds(1));
       },
       "wait_for - result is empty.");
   }
 
   // if the result is ready by value, don't block and return status::value
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
 
     rp.set_from_function(value_gen<type>::default_value);
@@ -376,13 +376,13 @@ void plain::tests::test_result_wait_for_impl() {
     const auto time = duration_cast<milliseconds>(after - before).count();
 
     ASSERT_LE(time, 5);
-    ASSERT_EQ(status, concurrency::ResultStatus::Value);
+    ASSERT_EQ(status, plain::concurrency::ResultStatus::Value);
     test_ready_result(std::move(result));
   }
 
   // if the result is ready by exception, don't block and return status::exception
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
     const size_t id = 123456789;
 
@@ -394,13 +394,13 @@ void plain::tests::test_result_wait_for_impl() {
     const auto time = duration_cast<milliseconds>(after - before).count();
 
     ASSERT_LE(time, 5);
-    ASSERT_EQ(status, concurrency::ResultStatus::Exception);
+    ASSERT_EQ(status, plain::concurrency::ResultStatus::Exception);
     test_ready_result_custom_exception(std::move(result), id);
   }
 
   // if timeout reaches and no value/exception - return status::idle
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
 
     const auto waiting_time = milliseconds(50);
@@ -409,13 +409,13 @@ void plain::tests::test_result_wait_for_impl() {
     const auto after = high_resolution_clock::now();
     const auto time = duration_cast<milliseconds>(after - before);
 
-    ASSERT_EQ(status, concurrency::ResultStatus::Idle);
+    ASSERT_EQ(status, plain::concurrency::ResultStatus::Idle);
     ASSERT_GE(time, waiting_time);
   }
 
   // if result is set before timeout, unblock, and return status::value
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
     const auto unblocking_time = high_resolution_clock::now() + milliseconds(150);
 
@@ -435,7 +435,7 @@ void plain::tests::test_result_wait_for_impl() {
 
   // if exception is set before timeout, unblock, and return status::exception
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
     const auto id = 123456789;
     const auto unblocking_time = high_resolution_clock::now() + milliseconds(150);
@@ -457,7 +457,7 @@ void plain::tests::test_result_wait_for_impl() {
 
   // multiple calls of wait_for are ok
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
     const auto unblocking_time = high_resolution_clock::now() + milliseconds(150);
 
@@ -489,15 +489,15 @@ void plain::tests::test_result_wait_until_impl() {
     assert_throws_with_error_message<std::runtime_error>(
       [] {
         const auto later = high_resolution_clock::now() + seconds(10);
-        concurrency::Result<type>().wait_until(later);
+        plain::concurrency::Result<type>().wait_until(later);
       },
       "wait_until - result is empty.");
   }
 
   // if time_point <= now, the function is equivalent to result::status
   {
-    concurrency::ResultPromise<type> rp_idle, rp_val, rp_err;
-    concurrency::Result<type> idle_result = rp_idle.get_result(),
+    plain::concurrency::ResultPromise<type> rp_idle, rp_val, rp_err;
+    plain::concurrency::Result<type> idle_result = rp_idle.get_result(),
       value_result = rp_val.get_result(),
       err_result = rp_err.get_result();
 
@@ -514,7 +514,7 @@ void plain::tests::test_result_wait_until_impl() {
 
   // if the result is ready by value, don't block and return status::value
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
 
     rp.set_from_function(value_gen<type>::default_value);
@@ -528,13 +528,13 @@ void plain::tests::test_result_wait_until_impl() {
     const auto ms = duration_cast<milliseconds>(after - before).count();
 
     ASSERT_LE(ms, 5);
-    ASSERT_EQ(status, concurrency::ResultStatus::Value);
+    ASSERT_EQ(status, plain::concurrency::ResultStatus::Value);
     test_ready_result(std::move(result));
   }
 
   // if the result is ready by exception, don't block and return status::exception
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
     const size_t id = 123456789;
 
@@ -549,26 +549,26 @@ void plain::tests::test_result_wait_until_impl() {
     const auto time = duration_cast<milliseconds>(after - before).count();
 
     ASSERT_LE(time, 5);
-    ASSERT_EQ(status, concurrency::ResultStatus::Exception);
+    ASSERT_EQ(status, plain::concurrency::ResultStatus::Exception);
     test_ready_result_custom_exception(std::move(result), id);
   }
 
   // if timeout reaches and no value/exception - return status::idle
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
 
     const auto later = high_resolution_clock::now() + milliseconds(50);
     const auto status = result.wait_until(later);
     const auto now = high_resolution_clock::now();
 
-    ASSERT_EQ(status, concurrency::ResultStatus::Idle);
+    ASSERT_EQ(status, plain::concurrency::ResultStatus::Idle);
     ASSERT_GE(now, later);
   }
 
   // if result is set before timeout, unblock, and return status::value
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
     const auto unblocking_time = high_resolution_clock::now() + milliseconds(150);
     const auto later = high_resolution_clock::now() + seconds(10);
@@ -589,7 +589,7 @@ void plain::tests::test_result_wait_until_impl() {
 
   // if exception is set before timeout, unblock, and return status::exception
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
     const auto id = 123456789;
 
@@ -612,7 +612,7 @@ void plain::tests::test_result_wait_until_impl() {
 
   // multiple calls to wait_until are ok
   {
-    concurrency::ResultPromise<type> rp;
+    plain::concurrency::ResultPromise<type> rp;
     auto result = rp.get_result();
     const auto unblocking_time = high_resolution_clock::now() + milliseconds(150);
 
@@ -640,7 +640,7 @@ void plain::tests::test_result_wait_until() {
 
 template<class type>
 void plain::tests::test_result_assignment_operator_empty_to_empty() {
-  concurrency::Result<type> result_0, result_1;
+  plain::concurrency::Result<type> result_0, result_1;
   result_0 = std::move(result_1);
   ASSERT_FALSE(static_cast<bool>(result_0));
   ASSERT_FALSE(static_cast<bool>(result_1));
@@ -648,8 +648,8 @@ void plain::tests::test_result_assignment_operator_empty_to_empty() {
 
 template<class type>
 void plain::tests::test_result_assignment_operator_non_empty_to_non_empty() {
-  concurrency::ResultPromise<type> rp_0, rp_1;
-  concurrency::Result<type> result_0 = rp_0.get_result(), result_1 = rp_1.get_result();
+  plain::concurrency::ResultPromise<type> rp_0, rp_1;
+  plain::concurrency::Result<type> result_0 = rp_0.get_result(), result_1 = rp_1.get_result();
 
   result_0 = std::move(result_1);
 
@@ -657,7 +657,7 @@ void plain::tests::test_result_assignment_operator_non_empty_to_non_empty() {
   ASSERT_TRUE(static_cast<bool>(result_0));
 
   rp_0.set_from_function(value_gen<type>::default_value);
-  ASSERT_EQ(result_0.status(), concurrency::ResultStatus::Idle);
+  ASSERT_EQ(result_0.status(), plain::concurrency::ResultStatus::Idle);
 
   rp_1.set_from_function(value_gen<type>::default_value);
   test_ready_result(std::move(result_0));
@@ -665,8 +665,8 @@ void plain::tests::test_result_assignment_operator_non_empty_to_non_empty() {
 
 template<class type>
 void plain::tests::test_result_assignment_operator_empty_to_non_empty() {
-  concurrency::ResultPromise<type> rp_0;
-  concurrency::Result<type> result_0 = rp_0.get_result(), result_1;
+  plain::concurrency::ResultPromise<type> rp_0;
+  plain::concurrency::Result<type> result_0 = rp_0.get_result(), result_1;
   result_0 = std::move(result_1);
   ASSERT_FALSE(static_cast<bool>(result_0));
   ASSERT_FALSE(static_cast<bool>(result_1));
@@ -674,8 +674,8 @@ void plain::tests::test_result_assignment_operator_empty_to_non_empty() {
 
 template<class type>
 void plain::tests::test_result_assignment_operator_non_empty_to_empty() {
-  concurrency::ResultPromise<type> rp_1;
-  concurrency::Result<type> result_0, result_1 = rp_1.get_result();
+  plain::concurrency::ResultPromise<type> rp_1;
+  plain::concurrency::Result<type> result_0, result_1 = rp_1.get_result();
   result_0 = std::move(result_1);
   ASSERT_TRUE(static_cast<bool>(result_0));
   ASSERT_FALSE(static_cast<bool>(result_1));
@@ -686,12 +686,12 @@ void plain::tests::test_result_assignment_operator_non_empty_to_empty() {
 
 template<class type>
 void plain::tests::test_result_assignment_operator_assign_to_self() {
-  concurrency::Result<type> res0;
+  plain::concurrency::Result<type> res0;
 
   // res0 = std::move(res0);
   ASSERT_FALSE(static_cast<bool>(res0));
 
-  concurrency::ResultPromise<type> rp_1;
+  plain::concurrency::ResultPromise<type> rp_1;
   auto res1 = rp_1.get_result();
 
   // res1 = std::move(res1);

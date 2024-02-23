@@ -10,18 +10,18 @@
 namespace plain::tests {
 
 template<class type>
-concurrency::Result<void> test_result_resolve_impl_result_ready_value();
+plain::concurrency::Result<void> test_result_resolve_impl_result_ready_value();
 
 template<class type>
-concurrency::Result<void> test_result_resolve_impl_result_ready_exception();
+plain::concurrency::Result<void> test_result_resolve_impl_result_ready_exception();
 
 template<class type>
-concurrency::Result<void>
+plain::concurrency::Result<void>
 test_result_resolve_impl_result_not_ready_value(
   std::shared_ptr<plain::concurrency::executor::Thread> thread_executor);
 
 template<class type>
-concurrency::Result<void>
+plain::concurrency::Result<void>
 test_result_resolve_impl_result_not_ready_exception(
   std::shared_ptr<plain::concurrency::executor::Thread> thread_executor);
 
@@ -30,18 +30,18 @@ void test_result_resolve_impl();
 void test_result_resolve();
 
 template<class type>
-concurrency::Result<void> test_result_await_impl_result_ready_value();
+plain::concurrency::Result<void> test_result_await_impl_result_ready_value();
 
 template<class type>
-concurrency::Result<void> test_result_await_impl_result_ready_exception();
+plain::concurrency::Result<void> test_result_await_impl_result_ready_exception();
 
 template<class type>
-concurrency::Result<void>
+plain::concurrency::Result<void>
 test_result_await_impl_result_not_ready_value(
   std::shared_ptr<plain::concurrency::executor::Thread> thread_executor);
 
 template<class type>
-concurrency::Result<void>
+plain::concurrency::Result<void>
 test_result_await_impl_result_not_ready_exception(
   std::shared_ptr<plain::concurrency::executor::Thread> thread_executor);
 
@@ -50,7 +50,7 @@ void test_result_await_impl();
 void test_result_await();
 
 template<class type>
-concurrency::Result<type> wrap_co_await(concurrency::Result<type> result) {
+plain::concurrency::Result<type> wrap_co_await(plain::concurrency::Result<type> result) {
   co_return co_await result;
 }
 
@@ -72,7 +72,7 @@ static void local_assert_eq(T value1, T value2) {
 */
 
 template<class type>
-concurrency::Result<void>
+plain::concurrency::Result<void>
 plain::tests::test_result_resolve_impl_result_ready_value() {
   auto result = result_gen<type>::ready();
 
@@ -88,9 +88,9 @@ plain::tests::test_result_resolve_impl_result_ready_value() {
 }
 
 template<class type>
-concurrency::Result<void> plain::tests::test_result_resolve_impl_result_ready_exception() {
+plain::concurrency::Result<void> plain::tests::test_result_resolve_impl_result_ready_exception() {
   const auto id = 1234567;
-  auto result = concurrency::result::make_exceptional<type>(custom_exception(id));
+  auto result = plain::concurrency::result::make_exceptional<type>(custom_exception(id));
 
   const auto thread_id_0 = thread::get_current_virtual_id();
 
@@ -104,7 +104,7 @@ concurrency::Result<void> plain::tests::test_result_resolve_impl_result_ready_ex
 }
 
 template<class type>
-concurrency::Result<void>
+plain::concurrency::Result<void>
 plain::tests::test_result_resolve_impl_result_not_ready_value(
   std::shared_ptr<plain::concurrency::executor::Thread> thread_executor) {
   std::atomic_uintptr_t setting_thread_id = 0;
@@ -123,7 +123,7 @@ plain::tests::test_result_resolve_impl_result_not_ready_value(
 }
 
 template<class type>
-concurrency::Result<void>
+plain::concurrency::Result<void>
 plain::tests::test_result_resolve_impl_result_not_ready_exception(
   std::shared_ptr<plain::concurrency::executor::Thread> thread_executor) {
   std::atomic_uintptr_t setting_thread_id = 0;
@@ -138,7 +138,7 @@ plain::tests::test_result_resolve_impl_result_not_ready_exception(
 
   auto done_result = co_await result.resolve();
 
-  local_assert_eq(done_result.status(), concurrency::ResultStatus::Exception);
+  local_assert_eq(done_result.status(), plain::concurrency::ResultStatus::Exception);
   assert_throws<test_exception>([&done_result] {
     done_result.get();
   });
@@ -152,7 +152,7 @@ void plain::tests::test_result_resolve_impl() {
   {
     assert_throws_with_error_message<std::runtime_error>(
       [] {
-        concurrency::Result<type>().resolve();
+        plain::concurrency::Result<type>().resolve();
       },
       "resolve - result is empty.");
   }
@@ -175,7 +175,7 @@ void plain::tests::test_result_resolve() {
 }
 
 template<class type>
-concurrency::Result<void>
+plain::concurrency::Result<void>
 plain::tests::test_result_await_impl_result_ready_value() {
   auto result = result_gen<type>::ready();
 
@@ -191,10 +191,10 @@ plain::tests::test_result_await_impl_result_ready_value() {
 }
 
 template<class type>
-concurrency::Result<void>
+plain::concurrency::Result<void>
 plain::tests::test_result_await_impl_result_ready_exception() {
   const auto id = 1234567;
-  auto result = concurrency::result::make_exceptional<type>(custom_exception(id));
+  auto result = plain::concurrency::result::make_exceptional<type>(custom_exception(id));
 
   const auto thread_id_0 = thread::get_current_virtual_id();
 
@@ -208,7 +208,7 @@ plain::tests::test_result_await_impl_result_ready_exception() {
 }
 
 template<class type>
-concurrency::Result<void>
+plain::concurrency::Result<void>
 plain::tests::test_result_await_impl_result_not_ready_value(
   std::shared_ptr<plain::concurrency::executor::Thread> thread_executor) {
   std::atomic_uintptr_t setting_thread_id = 0;
@@ -227,7 +227,7 @@ plain::tests::test_result_await_impl_result_not_ready_value(
 }
 
 template<class type>
-concurrency::Result<void>
+plain::concurrency::Result<void>
 plain::tests::test_result_await_impl_result_not_ready_exception(
   std::shared_ptr<plain::concurrency::executor::Thread> thread_executor) {
   std::atomic_uintptr_t setting_thread_id = 0;
@@ -242,7 +242,7 @@ plain::tests::test_result_await_impl_result_not_ready_exception(
 
   auto done_result = co_await wrap_co_await(std::move(result)).resolve();
 
-  local_assert_eq(done_result.status(), concurrency::ResultStatus::Exception);
+  local_assert_eq(done_result.status(), plain::concurrency::ResultStatus::Exception);
   assert_throws<test_exception>([&done_result] {
     done_result.get();
   });
@@ -256,7 +256,7 @@ void plain::tests::test_result_await_impl() {
   {
     assert_throws_with_error_message<std::runtime_error>(
       [] {
-        concurrency::Result<type>().operator co_await();
+        plain::concurrency::Result<type>().operator co_await();
       },
       "co_await - result is empty.");
   }

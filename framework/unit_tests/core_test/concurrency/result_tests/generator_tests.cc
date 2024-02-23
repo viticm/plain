@@ -31,19 +31,19 @@ void test_generator_iterator_comparison_operators();
 }  // namespace plain::tests
 
 void plain::tests::test_generator_move_constructor() {
-  auto gen0 = []() -> concurrency::result::Generator<int> {
+  auto gen0 = []() -> plain::concurrency::result::Generator<int> {
     co_yield 1;
   }();
 
   ASSERT_TRUE(static_cast<bool>(gen0));
 
-  concurrency::result::Generator<int> gen1(std::move(gen0));
+  plain::concurrency::result::Generator<int> gen1(std::move(gen0));
   ASSERT_FALSE(static_cast<bool>(gen0));
   ASSERT_TRUE(static_cast<bool>(gen1));
 }
 
 void plain::tests::test_generator_destructor() {
-  auto gen_fn = [](testing_stub stub) -> concurrency::result::Generator<int> {
+  auto gen_fn = [](testing_stub stub) -> plain::concurrency::result::Generator<int> {
     co_yield 1;
   };
 
@@ -58,7 +58,7 @@ void plain::tests::test_generator_destructor() {
 }
 
 void plain::tests::test_generator_begin() {
-  auto gen0 = []() -> concurrency::result::Generator<int> {
+  auto gen0 = []() -> plain::concurrency::result::Generator<int> {
     throw custom_exception(1234567);
     co_yield 1;
   }();
@@ -67,7 +67,7 @@ void plain::tests::test_generator_begin() {
     gen0.begin();
   });
 
-  auto gen1 = []() -> concurrency::result::Generator<int> {
+  auto gen1 = []() -> plain::concurrency::result::Generator<int> {
     co_yield 1;
   }();
 
@@ -82,7 +82,7 @@ void plain::tests::test_generator_begin() {
 template<class type>
 void plain::tests::test_generator_begin_end_impl() {
   value_gen<type> val_gen;
-  auto gen = [&val_gen]() -> concurrency::result::Generator<type> {
+  auto gen = [&val_gen]() -> plain::concurrency::result::Generator<type> {
     for (size_t i = 0; i < 1024; i++) {
       co_yield val_gen.value_of(i);
     }
@@ -109,7 +109,7 @@ void plain::tests::test_generator_begin_end() {
 }
 
 void plain::tests::test_generator_iterator_operator_plus_plus_exception() {
-  auto gen = []() -> concurrency::result::Generator<int> {
+  auto gen = []() -> plain::concurrency::result::Generator<int> {
     for (auto i = 0; i < 10; i++) {
       if (i != 0  &&i % 3 == 0) {
         throw custom_exception(i);
@@ -138,7 +138,7 @@ void plain::tests::test_generator_iterator_operator_plus_plus_exception() {
 }
 
 void plain::tests::test_generator_iterator_operator_plus_plus_ran_to_end() {
-  auto gen = []() -> concurrency::result::Generator<int> {
+  auto gen = []() -> plain::concurrency::result::Generator<int> {
     for (auto i = 0; i < 3; i++) {
       co_yield i;
     }
@@ -168,7 +168,7 @@ void plain::tests::test_generator_iterator_operator_plus_plus() {
 
 void
 plain::tests::test_generator_iterator_operator_plus_plus_postfix_exception() {
-  auto gen = []() -> concurrency::result::Generator<int> {
+  auto gen = []() -> plain::concurrency::result::Generator<int> {
     for (auto i = 0; i < 10; i++) {
       if (i != 0  &&i % 3 == 0) {
         throw custom_exception(i);
@@ -197,7 +197,7 @@ plain::tests::test_generator_iterator_operator_plus_plus_postfix_exception() {
 
 void
 plain::tests::test_generator_iterator_operator_plus_plus_postfix_ran_to_end() {
-  auto gen = []() -> concurrency::result::Generator<int> {
+  auto gen = []() -> plain::concurrency::result::Generator<int> {
     for (auto i = 0; i < 3; i++) {
       co_yield i;
     }
@@ -228,7 +228,7 @@ void plain::tests::test_generator_iterator_dereferencing_operators() {
   };
 
   dummy arr[6] = {};
-  auto gen = [](std::span<dummy> s) -> concurrency::result::Generator<dummy> {
+  auto gen = [](std::span<dummy> s) -> plain::concurrency::result::Generator<dummy> {
     int i = 0;
     while (true) {
       co_yield s[i % s.size()];
@@ -249,7 +249,7 @@ void plain::tests::test_generator_iterator_dereferencing_operators() {
 }
 
 void plain::tests::test_generator_iterator_comparison_operators() {
-  auto gen = []() -> concurrency::result::Generator<int> {
+  auto gen = []() -> plain::concurrency::result::Generator<int> {
     co_yield 1;
     co_yield 2;
   };

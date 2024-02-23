@@ -19,12 +19,12 @@ void test_make_exceptional_result();
 
 template<class type>
 void plain::tests::test_make_ready_result_impl() {
-  concurrency::Result<type> result;
+  plain::concurrency::Result<type> result;
 
   if constexpr (std::is_same_v<void, type>) {
-    result = concurrency::result::make_ready<type>();
+    result = plain::concurrency::result::make_ready<type>();
   } else {
-    result = concurrency::result::make_ready<type>(
+    result = plain::concurrency::result::make_ready<type>(
       value_gen<type>::default_value());
   }
 
@@ -44,15 +44,15 @@ void plain::tests::test_make_exceptional_result_impl() {
   // empty exception_ptr makes make_exceptional_result throw.
   assert_throws_with_error_message<std::invalid_argument>(
     [] {
-      concurrency::result::make_exceptional<type>({});
+      plain::concurrency::result::make_exceptional<type>({});
     },
     "make_exceptional exception null");
 
   const size_t id = 123456789;
-  auto res0 = concurrency::result::make_exceptional<type>(custom_exception(id));
+  auto res0 = plain::concurrency::result::make_exceptional<type>(custom_exception(id));
   test_ready_result_custom_exception(std::move(res0), id);
 
-  auto res1 = concurrency::result::make_exceptional<type>(
+  auto res1 = plain::concurrency::result::make_exceptional<type>(
     std::make_exception_ptr(custom_exception(id)));
   test_ready_result_custom_exception(std::move(res1), id);
 }

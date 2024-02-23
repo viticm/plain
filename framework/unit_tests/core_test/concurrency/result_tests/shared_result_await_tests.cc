@@ -46,20 +46,20 @@ static void local_assert_eq(T value1, T value2) {
 
 namespace plain::tests {
 
-template<class type, concurrency::ResultStatus status>
+template<class type, plain::concurrency::ResultStatus status>
 struct test_await_ready_result {
-  concurrency::Result<void> operator()();
+  plain::concurrency::Result<void> operator()();
 };
 
 template<class type>
-struct test_await_ready_result<type, concurrency::ResultStatus::Value> {
+struct test_await_ready_result<type, plain::concurrency::ResultStatus::Value> {
 
  private:
   uintptr_t thread_id_0_ = 0;
 
-  concurrency::Result<type> proxy_task() {
+  plain::concurrency::Result<type> proxy_task() {
     auto result = result_gen<type>::ready();
-    concurrency::result::Shared<type> sr(std::move(result));
+    plain::concurrency::result::Shared<type> sr(std::move(result));
 
     thread_id_0_ = thread::get_current_virtual_id();
 
@@ -67,7 +67,7 @@ struct test_await_ready_result<type, concurrency::ResultStatus::Value> {
   }
 
  public:
-  concurrency::Result<void> operator()() {
+  plain::concurrency::Result<void> operator()() {
     auto done_result = co_await proxy_task().resolve();
 
     const auto thread_id_1 = thread::get_current_virtual_id();
@@ -78,15 +78,15 @@ struct test_await_ready_result<type, concurrency::ResultStatus::Value> {
 };
 
 template<class type>
-struct test_await_ready_result<type, concurrency::ResultStatus::Exception> {
+struct test_await_ready_result<type, plain::concurrency::ResultStatus::Exception> {
 
  private:
   uintptr_t thread_id_0_ = 0;
 
-  concurrency::Result<type> proxy_task(const size_t id) {
+  plain::concurrency::Result<type> proxy_task(const size_t id) {
     auto result = 
-      concurrency::result::make_exceptional<type>(custom_exception(id));
-    concurrency::result::Shared<type> sr(std::move(result));
+      plain::concurrency::result::make_exceptional<type>(custom_exception(id));
+    plain::concurrency::result::Shared<type> sr(std::move(result));
 
     thread_id_0_ = thread::get_current_virtual_id();
 
@@ -94,7 +94,7 @@ struct test_await_ready_result<type, concurrency::ResultStatus::Exception> {
   }
 
  public:
-  concurrency::Result<void> operator()() {
+  plain::concurrency::Result<void> operator()() {
     const auto id = 1234567;
     auto done_result = co_await proxy_task(id).resolve();
 
@@ -105,31 +105,31 @@ struct test_await_ready_result<type, concurrency::ResultStatus::Exception> {
   }
 };
 
-template<class type, concurrency::ResultStatus status>
+template<class type, plain::concurrency::ResultStatus status>
 struct test_await_not_ready_result {
-  concurrency::Result<void>
+  plain::concurrency::Result<void>
   operator()(std::shared_ptr<plain::concurrency::executor::Thread> executor);
 };
 
 template<class type>
-struct test_await_not_ready_result<type, concurrency::ResultStatus::Value> {
+struct test_await_not_ready_result<type, plain::concurrency::ResultStatus::Value> {
 
  private:
   uintptr_t setting_thread_id_ = 0;
   uintptr_t resuming_thread_id_ = 0;
 
-  concurrency::Result<type>
+  plain::concurrency::Result<type>
   proxy_task(
     std::shared_ptr<plain::concurrency::executor::Manual> manual_executor) {
     auto result = manual_executor->submit([]() -> decltype(auto) {
       return value_gen<type>::default_value();
     });
-    concurrency::result::Shared<type> sr(std::move(result));
+    plain::concurrency::result::Shared<type> sr(std::move(result));
 
     co_return co_await sr;
   }
 
-  concurrency::Result<void>
+  plain::concurrency::Result<void>
   inner_task(
     std::shared_ptr<plain::concurrency::executor::Manual> manual_executor) {
     auto done_result = co_await proxy_task(manual_executor).resolve();
@@ -140,7 +140,7 @@ struct test_await_not_ready_result<type, concurrency::ResultStatus::Value> {
   }
 
  public:
-  concurrency::Result<void>
+  plain::concurrency::Result<void>
   operator()(
     std::shared_ptr<plain::concurrency::executor::Manual> manual_executor,
     std::shared_ptr<plain::concurrency::executor::Thread> thread_executor) {
@@ -160,13 +160,13 @@ struct test_await_not_ready_result<type, concurrency::ResultStatus::Value> {
 };
 
 template<class type>
-struct test_await_not_ready_result<type, concurrency::ResultStatus::Exception> {
+struct test_await_not_ready_result<type, plain::concurrency::ResultStatus::Exception> {
 
  private:
   uintptr_t setting_thread_id_ = 0;
   uintptr_t resuming_thread_id_ = 0;
 
-  concurrency::Result<type>
+  plain::concurrency::Result<type>
   proxy_task(
     std::shared_ptr<plain::concurrency::executor::Manual> manual_executor,
     const size_t id) {
@@ -174,12 +174,12 @@ struct test_await_not_ready_result<type, concurrency::ResultStatus::Exception> {
       throw custom_exception(id);
       return value_gen<type>::default_value();
     });
-    concurrency::result::Shared<type> sr(std::move(result));
+    plain::concurrency::result::Shared<type> sr(std::move(result));
 
     co_return co_await sr;
   }
 
-  concurrency::Result<void>
+  plain::concurrency::Result<void>
   inner_task(
     std::shared_ptr<plain::concurrency::executor::Manual> manual_executor) {
     const auto id = 1234567;
@@ -191,7 +191,7 @@ struct test_await_not_ready_result<type, concurrency::ResultStatus::Exception> {
   }
 
  public:
-  concurrency::Result<void>
+  plain::concurrency::Result<void>
   operator()(
     std::shared_ptr<plain::concurrency::executor::Manual> manual_executor,
     std::shared_ptr<plain::concurrency::executor::Thread> thread_executor) {
@@ -218,14 +218,14 @@ void plain::tests::test_shared_result_await_impl() {
   {
     assert_throws_with_error_message<std::runtime_error>(
       [] {
-        concurrency::result::Shared<type>().operator co_await();
+        plain::concurrency::result::Shared<type>().operator co_await();
       },
       "co_await - result is empty.");
   }
 
   // await can be called multiple times
   {
-    concurrency::result::Shared<type> sr(result_gen<type>::ready());
+    plain::concurrency::result::Shared<type> sr(result_gen<type>::ready());
 
     for (size_t i = 0; i < 6; i++) {
       sr.operator co_await();
@@ -237,11 +237,11 @@ void plain::tests::test_shared_result_await_impl() {
   auto manual_executor = std::make_shared<plain::concurrency::executor::Manual>();
   executor_shutdowner es0(thread_executor), es1(manual_executor);
 
-  test_await_ready_result<type, concurrency::ResultStatus::Value>()().get();
-  test_await_ready_result<type, concurrency::ResultStatus::Exception>()().get();
-  test_await_not_ready_result<type, concurrency::ResultStatus::Value>()(
+  test_await_ready_result<type, plain::concurrency::ResultStatus::Value>()().get();
+  test_await_ready_result<type, plain::concurrency::ResultStatus::Exception>()().get();
+  test_await_not_ready_result<type, plain::concurrency::ResultStatus::Value>()(
     manual_executor, thread_executor).get();
-  test_await_not_ready_result<type, concurrency::ResultStatus::Exception>()(
+  test_await_not_ready_result<type, plain::concurrency::ResultStatus::Exception>()(
     manual_executor, thread_executor).get();
 }
 

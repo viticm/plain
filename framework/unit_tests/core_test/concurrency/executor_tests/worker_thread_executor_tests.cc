@@ -180,7 +180,7 @@ void plain::tests::test_worker_thread_executor_submit_foreign() {
   auto executor = std::make_shared<plain::concurrency::executor::WorkerThread>();
   executor_shutdowner shutdown(executor);
 
-  std::vector<concurrency::Result<size_t>> results;
+  std::vector<plain::concurrency::Result<size_t>> results;
   results.resize(task_count);
 
   for (size_t i = 0; i < task_count; i++) {
@@ -203,7 +203,7 @@ void plain::tests::test_worker_thread_executor_submit_inline() {
   executor_shutdowner shutdown(executor);
 
   auto results_res = executor->submit([executor, &observer] {
-    std::vector<concurrency::Result<size_t>> results;
+    std::vector<plain::concurrency::Result<size_t>> results;
     results.resize(task_count);
     for (size_t i = 0; i < task_count; i++) {
       results[i] = executor->submit(observer.get_testing_stub(i));
@@ -374,7 +374,7 @@ void plain::tests::test_worker_thread_executor_thread_callbacks() {
       return std::make_shared<plain::concurrency::executor::WorkerThread>(
         thread_started_callback, thread_terminated_callback);
     },
-    concurrency::executor::detail::make_executor_worker_name("worker thread"));
+    plain::concurrency::executor::detail::make_executor_worker_name("worker thread"));
 }
 
 using namespace plain::tests;

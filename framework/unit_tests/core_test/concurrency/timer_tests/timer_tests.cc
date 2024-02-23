@@ -64,7 +64,7 @@ namespace plain::tests {
 
    public:
     counting_executor() :
-      concurrency::executor::Basic("counting executor"), invocation_count_(0) {}
+      plain::concurrency::executor::Basic("counting executor"), invocation_count_(0) {}
 
     void enqueue(plain::concurrency::Task task) override {
       ++invocation_count_;
@@ -100,7 +100,7 @@ namespace plain::tests {
     ::time_point start_time_;
 
    public:
-    recording_executor() : concurrency::executor::Basic("recording executor") {
+    recording_executor() : plain::concurrency::executor::Basic("recording executor") {
       time_points_.reserve(128);
     }
 
