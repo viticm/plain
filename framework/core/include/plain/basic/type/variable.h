@@ -198,9 +198,11 @@ struct PLAIN_API variable_struct {
 }; //PLAIN变量，类似脚本变量
 
 // FIXME: This not implicit any type to variable_t when test(gcc 13.1).
-std::ostream &operator<<(std::ostream &os, const variable_t &object) noexcept;
+PLAIN_API std::ostream &
+operator<<(std::ostream &os, const variable_t &object) noexcept;
 
-std::ostream &operator<<(std::ostream &os, const bytes_t &bytes) noexcept;
+PLAIN_API std::ostream &
+operator<<(std::ostream &os, const bytes_t &bytes) noexcept;
 
 } //namespace plain
 

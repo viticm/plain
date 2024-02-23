@@ -27,7 +27,8 @@ template <class T, class Alloc = std::allocator<T> >
 class StackAllocator {
  public:
   using Node = stack_node_t<T>;
-  using allocator = typename std::allocator_traits<Alloc>::rebind_alloc<Node>;
+  using allocator =
+    typename std::allocator_traits<Alloc>::template rebind_alloc<Node>;
 
   /** Default constructor */
   StackAllocator() { head_ = 0; }

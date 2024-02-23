@@ -22,7 +22,8 @@ namespace plain {
 
 namespace detail {
 
-class TimerStateBasic : public std::enable_shared_from_this<TimerStateBasic> {
+class PLAIN_API TimerStateBasic :
+  public std::enable_shared_from_this<TimerStateBasic> {
 
  public:
   using clock_type = std::chrono::high_resolution_clock;
