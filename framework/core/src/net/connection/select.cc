@@ -39,6 +39,7 @@ struct Select::Impl {
     if (flag) {
       valid_fds.emplace(id);
     } else {
+      if (valid_fds.empty()) return;
       auto it = valid_fds.find(id);
       if (it != valid_fds.end()) valid_fds.erase(it);
     }
