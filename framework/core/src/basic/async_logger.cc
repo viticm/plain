@@ -7,6 +7,7 @@
 #include "plain/basic/constants.h"
 #include "plain/basic/ring.h"
 #include "plain/basic/time.h"
+#include "plain/basic/utility.h"
 #include "plain/file/utility.h"
 #include "plain/sys/thread.h"
 #include "plain/sys/process.h"
@@ -23,7 +24,13 @@ std::string get_filename(const std::string &name) {
   auto log_directory = GLOBALS["log.directory"].get<std::string>();
   r.reserve(log_directory.length() + 1 + name.length() + 64);
   r = log_directory + "/" + name;
+#if OS_WIN
+  auto time_str = Time::format();
+  plain::replace_all(time_str, ":", "_");
+  r += "." + time_str + "." + process::hostname();
+#else
   r += "." + Time::format() + "." + process::hostname();
+#endif
   r += "." + std::to_string(process::getid()) + ".log";
   return r;
 }
