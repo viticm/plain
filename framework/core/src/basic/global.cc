@@ -1,5 +1,6 @@
 #include "plain/basic/global.h"
 #include <filesystem>
+#include "plain/basic/utility.h"
 #include "plain/engine/config.h"
 
 namespace plain {
@@ -27,11 +28,16 @@ void InitGlobal::init() {
   SET("app.debug", false);
   SET("app.status", AppStatus::Stopped);
   auto current_directory{std::filesystem::current_path()};
-  SET("app.basepath", current_directory.string());
+  auto path = current_directory.string();
+#if OS_WIN
+  path_tounix(path.c_str(), path.size());
+#endif
+
+  SET("app.basepath", path);
   
   // Logs settings.
   SET("log.print", false);
-  auto log_directory = current_directory.string() + "/log";
+  auto log_directory = path + "/log";
   SET("log.directory", log_directory);
 }
 
