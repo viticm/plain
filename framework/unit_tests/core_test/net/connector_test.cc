@@ -97,7 +97,7 @@ void plain::tests::test_net_connector_func() {
   started = connector4.start();
 #if OS_WIN
   ASSERT_TRUE(started);
-  auto conn4 = connector2.connect("[::]:135");
+  auto conn4 = connector4.connect("[::]:135");
   ASSERT_TRUE(static_cast<bool>(conn4));
 #else
   ASSERT_FALSE(started);
