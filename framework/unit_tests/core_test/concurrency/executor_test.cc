@@ -27,7 +27,7 @@ class Executor : public testing::Test {
 
 std::vector<int> make_random_vector() {
   std::vector<int> vec(64 * 1'024);
-  std::srand(std::time(nullptr));
+  std::srand(static_cast<uint32_t>(std::time(nullptr)));
   for (auto &i : vec) {
     i = ::rand();
   }

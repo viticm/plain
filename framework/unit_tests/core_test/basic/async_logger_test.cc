@@ -2,6 +2,7 @@
 #include "plain/basic/logger.h"
 #include "plain/basic/async_logger.h"
 #include "plain/basic/time.h"
+#include "plain/basic/io.h"
 #include "plain/sys/process.h"
 
 using namespace std::chrono_literals;
@@ -21,15 +22,15 @@ class AsyncLogger : public testing::Test {
  public:
 
   virtual void SetUp() {
-    plain::Logger::set_output([this](const std::string_view& log) {
+    plain::Logger::set_output([this](const std::string_view &log) {
       log_.append(log);
     });
     log_.start();
   }
 
   virtual void TearDown() {
-    plain::Logger::set_output([](const std::string_view& log){
-
+    plain::Logger::set_output([](const std::string_view &log){
+      UNUSED(log);
     });
   }
 
@@ -57,7 +58,8 @@ void bench(bool long_log) {
       ++cnt;
     }
     auto end = plain::Time::nanoseconds();
-    printf("%ldns\n", (end - start) / kBatch);
+    // printf("%ldns\n", (end - start) / kBatch);
+    plain::io_cdebug("{}ns", (end - start) / kBatch);
     std::this_thread::sleep_for(500ms);
   }
 }

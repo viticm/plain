@@ -161,6 +161,7 @@ void test_ready_result_custom_exception(
       }
       return;
     } catch (const std::runtime_error &e) {
+      UNUSED(e);
       return;
     } catch (...) {
     }
