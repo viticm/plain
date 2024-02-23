@@ -81,9 +81,6 @@ void plain::tests::test_net_connector_func() {
 #if OS_UNIX
   auto conn4 = connector2.connect("[::]:22");
   ASSERT_TRUE(static_cast<bool>(conn4));
-#elif OS_WIN
-  auto conn4 = connector2.connect("[::]:135");
-  ASSERT_TRUE(static_cast<bool>(conn4));
 #endif
 
 #if OS_WIN
@@ -100,6 +97,8 @@ void plain::tests::test_net_connector_func() {
   started = connector4.start();
 #if OS_WIN
   ASSERT_TRUE(started);
+  auto conn4 = connector2.connect("[::]:135");
+  ASSERT_TRUE(static_cast<bool>(conn4));
 #else
   ASSERT_FALSE(started);
 #endif

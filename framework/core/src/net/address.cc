@@ -181,6 +181,7 @@ to_addr(bool ip_v4, std::string_view ip, uint16_t port, bool listen) {
     sockaddr_in6 addr;
     addr.sin6_family = AF_INET6;
     addr.sin6_flowinfo = 0;
+    addr.sin6_scope_id = 0;
     r.reserve(sizeof addr);
     if (ip.empty() || ip == "::" || ip == "0:0:0:0:0:0:0:0" || ip == "::1") {
       if (listen) {

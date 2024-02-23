@@ -123,7 +123,7 @@ void plain::tests::test_net_socket_funcs() {
 
   sock.create();
   r = sock.bind();
-  ASSERT_FALSE(r);
+  ASSERT_TRUE(r);
 
   auto linger = sock.get_linger();
   std::cout << "linger: " << linger << std::endl;

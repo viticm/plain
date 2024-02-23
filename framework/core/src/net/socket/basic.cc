@@ -174,7 +174,7 @@ bool Basic::bind(const Address &addr) {
   
 bool Basic::bind() {
   if (!valid()) return false;
-  return socket::bind(impl_->id, nullptr, 0);
+  return bind(Address{":0"}); // ip_v4
 }
   
 uint32_t Basic::get_linger() const noexcept {
