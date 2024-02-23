@@ -1,4 +1,5 @@
 #include "plain/basic/global.h"
+#include <cassert>
 #include <filesystem>
 #include "plain/basic/utility.h"
 #include "plain/engine/config.h"
@@ -30,7 +31,7 @@ void InitGlobal::init() {
   auto current_directory{std::filesystem::current_path()};
   auto path = current_directory.string();
 #if OS_WIN
-  path_tounix(path.c_str(), path.size());
+  path_tounix(&path[0], static_cast<uint16_t>(path.size()));
 #endif
 
   SET("app.basepath", path);
@@ -38,6 +39,7 @@ void InitGlobal::init() {
   // Logs settings.
   SET("log.print", false);
   auto log_directory = path + "/log";
+  assert(makedir(log_directory.c_str()));
   SET("log.directory", log_directory);
 }
 
