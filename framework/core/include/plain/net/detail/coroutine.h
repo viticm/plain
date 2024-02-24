@@ -153,7 +153,7 @@ struct TaskPromiseBasic {
       if (result_.index() == 3) [[unlikely]] return;
       result_.template emplace<2>(std::current_exception());
     } else {
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
       __builtin_unreachable();
 #else
       std::terminate();

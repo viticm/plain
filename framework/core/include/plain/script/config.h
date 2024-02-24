@@ -19,7 +19,7 @@
 #if OS_WIN
 #define SCRIPT_ROOT_PATH "public\\data\\script"
 #define SCRIPT_WORK_PATH "\\"
-#elif OS_UNIX
+#elif OS_UNIX || OS_MAC
 #define SCRIPT_ROOT_PATH "public/data/script"
 #define SCRIPT_WORK_PATH "/"
 #endif

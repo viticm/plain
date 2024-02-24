@@ -7,7 +7,7 @@ using namespace plain;
 FileAppend::FileAppend(const std::string_view &filename)
   : fp_{fopen(filename.data(), "a+")}, buffer_{0}, written_bytes_{0} {
   assert(fp_);
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
   ::setbuffer(fp_, buffer_, sizeof buffer_);
 #endif
 }
@@ -39,7 +39,7 @@ void FileAppend::flush() {
 }
 
 std::size_t FileAppend::write(const std::string_view &log) {
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
   return ::fwrite_unlocked(log.data(), 1, log.size(), fp_);
 #else
   return ::fwrite(log.data(), 1, log.size(), fp_);

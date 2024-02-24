@@ -31,7 +31,7 @@ using node_save_func_t = std::function<bool(void*, void*)>;
 
 namespace api {
 
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
 PLAIN_API int32_t create(uint32_t key, size_t size);
 PLAIN_API int32_t open(uint32_t key, size_t size, bool errorlog = true);
 PLAIN_API void close(int32_t handle);
@@ -67,7 +67,7 @@ class PLAIN_API Base {
    size_t size_;
    char *data_;
    char *header_;
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
    int32_t handle_;
 #elif OS_WIN
    HANDLE handle_;
@@ -686,7 +686,7 @@ void Node<T>::set_minutes(uint32_t index, uint32_t minutes) {
 }
 
 inline void clear([[maybe_unused]] int32_t key) {
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
   char cmd[256]{0}; char result[512]{0};
   snprintf(cmd, sizeof(cmd) - 1, "ipcrm -M %u\n", key);
   plain::exec(cmd, result, sizeof(result) - 1);

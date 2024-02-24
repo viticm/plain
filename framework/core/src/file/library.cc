@@ -38,7 +38,7 @@ static inline std::string GetLastErrorString(DWORD nErrorCode) {
 #define LIBRARY_PREFIX "lib"
 #define LIBRARY_SUFFIX ".dylib"
 #include <dlfcn.h>
-#elif OS_UNIX
+#elif OS_UNIX || OS_MAC
 #define LIBRARY_PREFIX "lib"
 #define LIBRARY_SUFFIX ".so"
 #include <dlfcn.h>
@@ -172,7 +172,7 @@ LibraryManager::LibraryManager() {
       GLOBALS["app.basepath"].get<std::string>(),
       GLOBALS["app.basepath"].get<std::string>() + "plugins/",
   });
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
   add_searchpaths({
       "/lib/", 
       "/lib64/",

@@ -5,7 +5,7 @@
 namespace plain {
 
 void __show__(const char *temp) {
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
   io_cerr("Assert: %s", temp);
 #endif
   LOG_WARN << temp;
@@ -17,7 +17,7 @@ void __show__(const char *temp) {
 }
 
 void __messagebox__(const char *msg) {
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
 UNUSED(msg);
 #endif
 #if OS_WIN
@@ -30,7 +30,7 @@ void __assert__(const char *file,
                 const char *func , 
                 const char *expr) {
   char temp[1024] = {0};
-#if OS_UNIX //换个格式
+#if OS_UNIX || OS_MAC //换个格式
   sprintf(temp, "[%s][%d][%s][%s]\n", file, line, func, expr);
 #else
   sprintf(temp, "[%s][%d][%s][%s]", file, line, func, expr);
@@ -44,7 +44,7 @@ void __assertex__(const char *file,
                   const char *expr,
                   const char *msg) {
   char temp[1024] = {0};
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
   sprintf(temp, "[%s][%d][%s][%s]\n[%s]\n", file, line, func, expr, msg);
 #else
   sprintf(temp, "[%s][%d][%s][%s]\n[%s]", file, line, func, expr, msg);
@@ -58,7 +58,7 @@ void __assertspecial__(const char *file,
                        const char *expr,
                        const char *msg) {
   char temp[1024] = {0};
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
   sprintf(temp, "S[%s][%d][%s][%s]\n[%s]\n", file, line, func, expr, msg) ;
 #else
   sprintf(temp, "S[%s][%d][%s][%s]\n[%s]", file, line, func, expr, msg ) ;

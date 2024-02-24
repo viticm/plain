@@ -41,7 +41,7 @@ PLAIN_API void __show__(const char *temp);
   #define AssertSpecial(expr,msg) ((void)0)
   #define MyMessageBox(msg) ((void)0)
   #define check_exp(c,e)(e)
-#elif OS_UNIX
+#elif OS_UNIX || OS_MAC
   #define Assert(expr) { \
   if (!(expr)) { \
     plain::__assert__(__FILE__,__LINE__,__PRETTY_FUNCTION__,#expr); \

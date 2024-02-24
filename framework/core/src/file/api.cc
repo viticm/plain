@@ -1,6 +1,6 @@
 #include "plain/file/api.h"
 
-#if OS_UNIX /* { */
+#if OS_UNIX || OS_MAC /* { */
 #include <sys/types.h>  // for open()
 #include <sys/stat.h>   // for open()
 #include <unistd.h>     // for fcntl()
@@ -16,13 +16,13 @@
 namespace plain {
 
 int32_t open(const char *filename, int32_t flag) {
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
   int32_t fd = ::open(filename, flag);
 #elif OS_WIN
   int32_t fd = ::_open(filename, flag);
 #endif
   if (fd < 0) {
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
     switch (errno) {
       case EEXIST : 
       case ENOENT : 
@@ -53,14 +53,14 @@ int32_t open(const char *filename, int32_t flag) {
 
 int32_t openmode(const char * filename, int32_t flag, int32_t mode) {
   int32_t fd{-1};
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
   fd = ::open(filename, flag, mode);
 #elif OS_WIN
   fd = ::_open(filename, flag, mode);
 #endif
 
   if (fd < 0) {
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
     switch (errno) {
       case EEXIST : 
       case EISDIR : 
@@ -90,14 +90,14 @@ int32_t openmode(const char * filename, int32_t flag, int32_t mode) {
 }
 
 uint32_t read(int32_t fd, void *buffer, uint32_t length) {
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
   int32_t result = ::read(fd, buffer, length);
 #elif OS_WIN
   int32_t result = ::_read (fd, buffer, length);
 #endif
   if (result < 0) {
 
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
     switch (errno) {
       case EINTR : 
       case EAGAIN : 
@@ -122,7 +122,7 @@ uint32_t read(int32_t fd, void *buffer, uint32_t length) {
 }
 
 uint32_t write(int32_t fd, const void *buffer, uint32_t length) {
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
   int32_t result = ::write(fd, buffer, length);
 #elif OS_WIN
   int32_t result = ::_write(fd, buffer, length);
@@ -130,7 +130,7 @@ uint32_t write(int32_t fd, const void *buffer, uint32_t length) {
 
   if (result < 0) {
     
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
     switch (errno) {
       case EAGAIN : 
       case EINTR : 
@@ -155,7 +155,7 @@ uint32_t write(int32_t fd, const void *buffer, uint32_t length) {
 
 void close(int32_t fd) {
  
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
   ::close(fd);
   switch ( errno ) {
     case EBADF : 
@@ -169,7 +169,7 @@ void close(int32_t fd) {
 }
 
 int32_t fcntl([[maybe_unused]] int32_t fd, [[maybe_unused]] int32_t cmd) {
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
   int32_t result = ::fcntl(fd, cmd);
   if (result < 0) {
     switch (errno) {
@@ -195,7 +195,7 @@ int32_t fcntlarg(
     [[maybe_unused]] int32_t fd,
     [[maybe_unused]] int32_t cmd,
     [[maybe_unused]] int32_t arg) {
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
   int32_t result = ::fcntl(fd, cmd, arg);
   if (result < 0) {
     switch (errno) {
@@ -219,7 +219,7 @@ int32_t fcntlarg(
 }
 
 bool get_nonblocking([[maybe_unused]] int32_t fd) {
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
   int32_t flag = fcntlarg(fd, F_GETFL, 0);
   return flag & O_NONBLOCK;
 #elif OS_WIN
@@ -229,7 +229,7 @@ bool get_nonblocking([[maybe_unused]] int32_t fd) {
 
 bool set_nonblocking([[maybe_unused]] int32_t fd, [[maybe_unused]] bool on) {
   bool r{false};
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
   int32_t flag = fcntlarg(fd, F_GETFL, 0);
   if (on)
     // make nonblocking fd
@@ -252,7 +252,7 @@ int32_t ioctl(
     [[maybe_unused]] int32_t request,
     [[maybe_unused]] void *argp) {
   int32_t r{-1};
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
   r = ::ioctl(fd, request, argp);
 #elif OS_WIN
   r = ::ioctlsocket(fd, request, reinterpret_cast<u_long *>(argp));
@@ -261,7 +261,7 @@ int32_t ioctl(
 }
 
 uint32_t available([[maybe_unused]] int32_t fd) {
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
   uint32_t arg{0};
   ::ioctl(fd, FIONREAD, &arg);
   return arg;
@@ -274,14 +274,14 @@ uint32_t available([[maybe_unused]] int32_t fd) {
 
 int32_t dup(int32_t fd) {
   int32_t r{-1};
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
   r = ::dup(fd);
 #elif OS_WIN
   r = ::_dup(fd);
 #endif
 
   if (r < 0) {
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
     switch (errno) {
       case EBADF : 
       case EMFILE : 
@@ -297,7 +297,7 @@ int32_t dup(int32_t fd) {
 }
 
 int64_t lseek(int32_t fd, uint64_t offset, int32_t whence) {
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
   int64_t result = ::lseek(fd, offset, whence);
   if (result < 0) {
     switch (errno) {
@@ -319,7 +319,7 @@ int64_t lseek(int32_t fd, uint64_t offset, int32_t whence) {
 
 int64_t tell([[maybe_unused]] int32_t fd) {
   int64_t result = 0;
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
   //do nothing
 #elif OS_WIN
   result = ::_tell(fd);

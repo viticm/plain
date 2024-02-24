@@ -3,7 +3,7 @@
 #include <process.h>
 #include <psapi.h>
 #include <winsock2.h>
-#elif OS_UNIX
+#elif OS_UNIX || OS_MAC
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <signal.h>
@@ -19,7 +19,7 @@ int32_t getid() {
   int32_t id = ID_INVALID;
 #if OS_WIN
   id = _getpid();
-#elif OS_UNIX
+#elif OS_UNIX || OS_MAC
   id = getpid();
 #endif
   return id;
@@ -65,7 +65,7 @@ bool waitexit(const char *filename) {
             filename);
     return false;
   }
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
   kill(id, 10);
   std::this_thread::sleep_for(2s);
   kill(id, 10);
@@ -145,7 +145,7 @@ float get_cpu_usage(int32_t id) {
     (system_time_delta * 100 + time_delta / 2) / time_delta);
   last_system_time = system_time;
   last_time = time;
-#elif OS_UNIX /* } { */
+#elif OS_UNIX || OS_MAC /* } { */
   char temp[32] = {0};
   char command[128] = {0};
   snprintf(command, 
@@ -167,7 +167,7 @@ uint64_t get_virtualmemory_usage(int32_t id) {
     if (::GetProcessMemoryInfo(hProcess, &pmc, sizeof(pmc))) {
       result = pmc.PagefileUsage;
     }
-#elif OS_UNIX /* }{ */
+#elif OS_UNIX || OS_MAC /* }{ */
   char temp[128] = {0};
   char command[128] = {0};
   snprintf(command, 
@@ -191,7 +191,7 @@ uint64_t get_physicalmemory_usage(int32_t id) {
     if (::GetProcessMemoryInfo(hProcess, &pmc, sizeof(pmc))) {
       result = pmc.WorkingSetSize;
     }
-#elif OS_UNIX /* }{ */
+#elif OS_UNIX || OS_MAC /* }{ */
   char temp[128] = {0};
   char command[128] = {0};
   snprintf(command, 
@@ -209,7 +209,7 @@ uint64_t get_physicalmemory_usage(int32_t id) {
 
 bool daemon() {
   bool result = false;
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
   pid_t pid;
   if ((pid = fork()) != 0) exit(0);
   setsid();

@@ -1,6 +1,6 @@
 #include "plain/basic/utility.h"
 #include <random>
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
 #include <sys/stat.h>
 #include <sys/resource.h>
 #endif
@@ -854,7 +854,7 @@ void dirname(const char *filepath, char *save) {
 void sleep(uint32_t million_seconds) {
 #if OS_WIN
   Sleep(million_seconds);
-#elif OS_UNIX
+#elif OS_UNIX || OS_MAC
   usleep(million_seconds * 1000);
 #endif
 }
@@ -930,7 +930,7 @@ void get_module_filename(char *buffer, size_t size) {
 #else
   resultcode = (int32_t)GetModuleFileName(nullptr, buffer, (DWORD)size);
 #endif
-#elif OS_UNIX
+#elif OS_UNIX || OS_MAC
   resultcode = readlink("/proc/self/exe", buffer, size);
   Assert(resultcode > 0 && resultcode < static_cast<int32_t>(size));
   buffer[resultcode] = '\0';
@@ -947,7 +947,7 @@ void disable_windowclose() {
 #endif
 }
 
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
 bool makedir(const char *path, uint16_t mode) {
 #elif OS_WIN
 bool makedir(const char *path, uint16_t) {
@@ -1005,7 +1005,7 @@ void complementpath(char *filepath, size_t size, char delimiter) {
 }
 
 char *strerror_pl(int32_t saved_errno) {
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
   return strerror_r(saved_errno, g_error_buff, sizeof g_error_buff);
 #else
   strerror_s(g_error_buff, sizeof g_error_buff, saved_errno);

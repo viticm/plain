@@ -1,6 +1,6 @@
 #include "plain/net/socket/api.h"
 #include <errno.h>
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
 #include <signal.h>
 #endif
 #include "plain/file/api.h"
@@ -174,7 +174,7 @@ Initializer::Initializer() {
   WSADATA data;
   auto e = ::WSAStartup(MAKEWORD(2, 0), &data);
   success_ = 0 == e;
-#elif OS_UNIX
+#elif OS_UNIX || OS_MAC
   ::signal(SIGPIPE, SIG_IGN);
   if (!set_core_rlimit())
     success_ = false;
@@ -218,7 +218,7 @@ bool connect(
   auto e = ::connect(id, addr, addrlength);
 #if OS_WIN
   const auto connect_errno = WSAGetLastError();
-#elif OS_UNIX
+#elif OS_UNIX || OS_MAC
   const auto connect_errno = errno;
 #else
   const auto connect_errno = 0;
@@ -234,7 +234,7 @@ bool connect(
     set_error();
     return false;
   }
-#elif OS_UNIX
+#elif OS_UNIX || OS_MAC
   if (connect_errno != EINPROGRESS) {
     set_error();
     return false;
@@ -284,7 +284,7 @@ bool listen(id_t id, uint32_t backlog) {
 
 int32_t accept(id_t id, sockaddr *addr, uint32_t *addrlength) {
   int32_t r{kSocketError};
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
   r = ::accept(id, addr, addrlength);
 #elif OS_WIN
   r = static_cast<int32_t>(
@@ -297,7 +297,7 @@ int32_t accept(id_t id, sockaddr *addr, uint32_t *addrlength) {
 bool getsockoptb(
   id_t id, int32_t level, int32_t optname, void *optval, uint32_t *optlength) {
   int32_t e{kSocketError};
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
   e = ::getsockopt(id, level, optname, optval, optlength);
 #elif OS_WIN
   e = ::getsockopt(
@@ -312,7 +312,7 @@ bool getsockoptb(
 uint32_t getsockoptu(
   id_t id, int32_t level, int32_t optname, void *optval, uint32_t *optlength) {
   uint32_t r{0};
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
   if (::getsockopt(id, level, optname, optval, optlength) == kSocketError) {
     set_error();
     switch (s_error.code()) {
@@ -346,7 +346,7 @@ bool setsockopt(
   id_t id, int32_t level, int32_t optname, const void *optval,
   uint32_t optlength) {
   int32_t e{kSocketError};
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
   e = ::setsockopt(id, level, optname, optval, optlength);
 #elif OS_WIN
   e = ::setsockopt(id, level, optname, reinterpret_cast<const char *>(optval), optlength);
@@ -358,7 +358,7 @@ bool setsockopt(
 
 int32_t send(id_t id, const void *buffer, uint32_t length, uint32_t flag) {
   int32_t r{kSocketError};
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
   r = ::send(id, buffer, length, flag);
 #elif OS_WIN
   r = ::send(id, static_cast<const char *>(buffer), length, flag);
@@ -374,7 +374,7 @@ int32_t sendto(
   id_t id, const void *buffer, int32_t length, uint32_t flag,
   const sockaddr *to, int32_t tolength) {
   int32_t r{kSocketError};
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
   r = ::sendto(id, buffer, length, flag, to, tolength);
 #elif OS_WIN
   r = ::sendto(id, static_cast<const char *>(buffer),length, flag, to, tolength);
@@ -388,7 +388,7 @@ int32_t sendto(
 
 int32_t recv(id_t id, void *buffer, uint32_t length, uint32_t flag) {
   int32_t r{kSocketError};
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
   r = ::recv(id, buffer, length, flag);
 #elif OS_WIN
   r = ::recv(id, static_cast<char *>(buffer), length, flag);
@@ -404,7 +404,7 @@ int32_t recvfrom(
   id_t id, void *buffer, int32_t length, uint32_t flag, sockaddr *from,
   uint32_t *fromlength) {
   int32_t r{kSocketError};
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
   r = ::recvfrom(id, buffer, length, flag, from, fromlength);
 #elif OS_WIN
   r = ::recvfrom(
@@ -420,7 +420,7 @@ int32_t recvfrom(
 
 bool close(id_t id) {
   int32_t e{kSocketError};
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
   e = ::close(id);
 #elif OS_WIN
   e = ::closesocket(id);
@@ -474,7 +474,7 @@ int32_t select(
 
 int32_t getsockname(id_t id, sockaddr *name, int32_t *namelength) {
   int32_t r{0};
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
   r = ::getsockname(id, name, reinterpret_cast<socklen_t *>(namelength));
 #elif OS_WIN
   r = ::getsockname(id, name, namelength);
@@ -485,7 +485,7 @@ int32_t getsockname(id_t id, sockaddr *name, int32_t *namelength) {
 
 int32_t getpeername(id_t id, sockaddr *name, int32_t *namelength) {
   int32_t r{0};
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
   r = ::getpeername(id, name, reinterpret_cast<socklen_t *>(namelength));
 #elif OS_WIN
   r = ::getpeername(id, name, namelength);

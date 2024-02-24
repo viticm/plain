@@ -13,7 +13,7 @@
 
 #include "plain/file/config.h"
 
-#if OS_UNIX /* { */
+#if OS_UNIX || OS_MAC /* { */
 #include <sys/types.h>  // for open()
 #include <sys/stat.h>   // for open()
 #include <unistd.h>     // for fcntl()

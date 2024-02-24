@@ -37,7 +37,7 @@
 
 #endif
 
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
 #define __stdcall
 #endif
 

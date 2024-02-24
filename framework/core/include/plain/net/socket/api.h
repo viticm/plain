@@ -16,7 +16,7 @@
 #if OS_WIN
 #include <winsock2.h>
 #include <ws2tcpip.h>
-#elif OS_UNIX
+#elif OS_UNIX || OS_MAC
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/types.h>

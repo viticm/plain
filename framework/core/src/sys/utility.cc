@@ -1,5 +1,5 @@
 #include "plain/sys/utility.h"
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
 #include <sys/resource.h>
 #elif OS_WIN
 #include <winsock2.h>
@@ -12,7 +12,7 @@ int32_t exec(
     [[maybe_unused]] const char *command,
     [[maybe_unused]] char *result,
     [[maybe_unused]] size_t size) {
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
   char buffer[1024] = {0};
   char temp[1024] = {0};
   safecopy(temp, command, sizeof(temp));
@@ -29,7 +29,7 @@ int32_t exec(
 
 bool set_core_rlimit() {
   bool result = true;
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
   struct rlimit rlimit_core;
   rlimit_core.rlim_cur = RLIM_INFINITY;
   rlimit_core.rlim_max = RLIM_INFINITY;

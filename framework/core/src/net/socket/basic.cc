@@ -50,7 +50,7 @@ Basic Basic::clone() noexcept {
   if (::WSADuplicateSocketW(impl_->id, ::GetCurrentProcessId(), &prot_info) == 0)
     id = static_cast<id_t>(::WSASocketW(
       AF_INET, SOCK_STREAM, 0, &prot_info, 0, WSA_FLAG_OVERLAPPED));
-#elif OS_UNIX
+#elif OS_UNIX || OS_MAC
   id = dup(impl_->id);
 #endif
   return Basic{id};

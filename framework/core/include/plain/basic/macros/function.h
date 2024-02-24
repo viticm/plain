@@ -31,7 +31,7 @@
   _strtoi64(pointer,endpointer,base)
 #define strtouint64(pointer,endpointer,base) \
   _strtoui64(pointer,endpointer,base)
-#elif OS_UNIX
+#elif OS_UNIX || OS_MAC
 #ifndef stricmp
 #define stricmp strcasecmp
 #endif

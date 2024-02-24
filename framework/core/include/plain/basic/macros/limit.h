@@ -20,7 +20,7 @@
 
 #if OS_WIN
 #define HANDLE_INVALID ((VOID*)0)
-#elif OS_UNIX
+#elif OS_UNIX || OS_MAC
 #define HANDLE_INVALID (-1)
 #endif
 
@@ -32,7 +32,7 @@
 #ifndef LF
 #if OS_WIN
 #define LF "\n"
-#elif OS_UNIX
+#elif OS_UNIX || OS_MAC
 #define LF "\r\n"
 #endif
 #endif
