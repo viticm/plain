@@ -572,6 +572,8 @@ clean:
 bool make_pair(id_t fd_pair[2]) noexcept {
 #if OS_WIN
   auto r = socket::socketpair(AF_INET, SOCK_STREAM, 0, fd_pair);
+#elif OS_MAC
+  auto r = ::socketpair(AF_UNIX, SOCK_STREAM, 0, fd_pair);
 #else
   auto r = ::socketpair(AF_UNIX, SOCK_SEQPACKET, 0, fd_pair);
 #endif

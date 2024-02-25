@@ -31,7 +31,7 @@ class PLAIN_API ThreadPool {
  public:
   ThreadPool(size_t);
   template<typename F, typename... Args>
-  auto enqueue(F&& f, Args&&... args) 
+  auto enqueue(F&& f, Args &&... args) 
   -> std::future<typename std::invoke_result_t<F, Args...>>;
   ~ThreadPool();
  private:
@@ -74,14 +74,14 @@ inline const std::string get_id() {
   return std::string(ss.str());
 }
 
-inline const std::string get_id(const thread_t& thread) {
+inline const std::string get_id(const thread_t &thread) {
   std::stringstream ss;
   ss << thread.get_id();
   return std::string(ss.str());
 }
 
 //用下面的方法的线程可以启动与停止
-inline const std::string status_key(thread_t& thread) {
+inline const std::string status_key(thread_t &thread) {
   std::string _status_key{"thread.status."};
   _status_key += get_id(thread);
   return _status_key;
@@ -95,13 +95,13 @@ inline const std::string status_key() {
 
 template<typename _Callable, typename... _Args>
 inline void start(thread_t& thread, _Callable &&__f, _Args...__args) {
-  thread = std::move(thread_t(
-        std::forward<_Callable>(__f), std::forward<_Args>(__args)...));
+  thread = thread_t(
+        std::forward<_Callable>(__f), std::forward<_Args>(__args)...);
   const std::string _status_key = status_key(thread);
   GLOBALS[_status_key] = ThreadStatus::Running;
 }
 
-inline void start(thread_t& thread) {
+inline void start(thread_t &thread) {
   const std::string _status_key = status_key(thread);
   GLOBALS[_status_key] = ThreadStatus::Running;
 }
@@ -116,22 +116,22 @@ inline void stop() {
   GLOBALS[_status_key] = ThreadStatus::Stopped;
 }
 
-inline void stop(thread_t& thread) {
+inline void stop(thread_t &thread) {
   const std::string _status_key = status_key(thread);
   if (GLOBALS[_status_key] == ThreadStatus::Running) 
     GLOBALS[_status_key] = ThreadStatus::Stopped;
 }
 
-inline variable_t status(thread_t& thread) {
+inline variable_t status(thread_t &thread) {
   const std::string _status_key = status_key(thread);
   return GLOBALS[_status_key];
 }
 
-inline bool is_running(thread_t& thread) {
+inline bool is_running(thread_t &thread) {
   return ThreadStatus::Running == status(thread);
 }
 
-inline bool is_stopping(thread_t& thread) {
+inline bool is_stopping(thread_t &thread) {
   return ThreadStatus::Stopped == status(thread);
 }
 
@@ -162,7 +162,7 @@ void check_running(std::false_type, std::future<T> &) {
 // With endless loop excute F(F return false exit).
 template <typename F, typename... Args>
 // requires std::predicate<F, Args...>
-thread_t create(const std::string_view &name, F&& f, Args&&... args) {
+thread_t create(const std::string_view &name, F &&f, Args &&... args) {
   using return_type = typename std::invoke_result_t<F, Args...>;
   auto task = std::make_shared< std::packaged_task<return_type()> >(
     std::bind(std::forward<F>(f), std::forward<Args>(args)...)

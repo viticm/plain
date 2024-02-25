@@ -29,6 +29,7 @@ struct data_struct {
   struct kevent *events{nullptr};
   std::vector<uint64_t> event_datas; // For events save conn and sock ids.
   uint64_t listen_data{0};
+  uint64_t read_data{0};
 };
 using data_t = data_struct;
 
@@ -39,6 +40,7 @@ int32_t poll_create(data_t &d, int32_t max_count) {
     d.max_count = max_count;
     d.events = new struct kevent[max_count];
     assert(d.events);
+    d.event_datas.resize(max_count);
     // signal(SIGPIPE, SIG_IGN);
   } else {
     perror("poll_create failed");
@@ -56,12 +58,13 @@ int32_t poll_delete(data_t &d, int32_t fd) {
 }
 
 int32_t poll_add(data_t &d, int32_t fd, id_t conn_id) {
-  if (conn_id > d.event_datas.size() || d.fd == socket::kInvalidId) {
+  if (conn_id != connection::kInvalidId &&
+      (conn_id > d.event_datas.size() || d.fd == socket::kInvalidId)) {
     return -1;
   }
   struct kevent event;
   std::memset(&event, 0, sizeof event);
-  auto ud = &d.listen_data;
+  auto ud = conn_id == connection::kInvalidId ? &d.listen_data : &d.read_data;
   if (conn_id > 0) {
     size_t index = conn_id - 1;
     ud = &d.event_datas[index];
@@ -91,7 +94,7 @@ int32_t poll_add(data_t &d, int32_t fd, id_t conn_id) {
 int32_t poll_enable(
   data_t &d, int32_t fd, connection::id_t conn_id, bool read_enable,
   bool write_enable) {
-  if (conn_id > d.event_datas.size() || conn_id <= 0 
+  if (conn_id > d.event_datas.size() || conn_id < 0 
       || d.fd == socket::kInvalidId) {
     return -1;
   }

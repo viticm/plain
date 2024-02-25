@@ -150,6 +150,12 @@ void plain::tests::test_net_socket_funcs() {
   sock.create();
   r = sock.connect("127.0.0.1", 135);
   ASSERT_TRUE(r);
+#elif OS_MAC
+  r = sock.connect({":5000"});
+  ASSERT_TRUE(r);
+  sock.create();
+  r = sock.connect("127.0.0.1", 5000);
+  ASSERT_TRUE(r);
 #else
   r = sock.connect({":22"});
   ASSERT_TRUE(r);

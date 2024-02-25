@@ -194,10 +194,16 @@ void plain::tests::test_net_listener_func() {
   ASSERT_TRUE(conn4);
   conn4->close();
 
-  // Io uring
+  // Io uring | iocp | kqueue
   setting.address = ":9531";
   setting.name = "listener6";
+#if OS_WIN
+  setting.mode = Mode::Iocp;
+#elif OS_MAC
+  setting.mode = Mode::Kqueue;
+#elif OS_UNIX
   setting.mode = Mode::IoUring;
+#endif
   Listener listener6(setting);
   started = listener6.start();
   // ASSERT_TRUE(started);
@@ -218,34 +224,9 @@ void plain::tests::test_net_listener_func() {
   if (started) {
     auto conn5 = connector.connect(":9531");
     ASSERT_TRUE(conn5);
-    conn5->close();
-  }
-
-  // Iocp
-  setting.address = ":9532";
-  setting.name = "listener6";
-  setting.mode = Mode::Iocp;
-  Listener listener7(setting);
-  started = listener7.start();
-  // ASSERT_TRUE(started);
-  listener7.set_codec({.encode = line_encode, .decode = line_decode});
-  listener7.set_dispatcher([](
-    connection::Basic *conn, std::shared_ptr<packet::Basic> packet) {
-    std::cout << conn->name() << ": " <<
-      reinterpret_cast<const char *>(packet->data().data()) << std::endl;
-    return true;
-  });
-  listener7.set_connect_callback([](connection::Basic *conn) {
-    std::cout << conn->name() << " connected" << std::endl;
-  });
-  listener7.set_disconnect_callback([](connection::Basic *conn) {
-    std::cout << conn->name() << " disconnected" << std::endl;
-  });
-
-  if (started) {
-    auto conn6 = connector.connect(":9532");
-    ASSERT_TRUE(conn6);
-    conn6->close();
+    conn5->set_codec({.encode = line_encode, .decode = line_decode});
+    conn5->send(pack1);
+    // conn5->close();
   }
 
   std::this_thread::sleep_for(100ms);

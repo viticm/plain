@@ -213,12 +213,12 @@ bool Manager::start() {
 #ifdef PLAIN_NET_MANAGER_USE_COROUTINE
   Impl::enqueue_work(shared_from_this());
 #endif
-  impl_->worker = std::move(thread_t([manager = shared_from_this()]{
+  impl_->worker = thread_t([manager = shared_from_this()]{
     for (;;) {
       if (!Impl::wait_work(manager)) break;
     }
     // std::cout << "work exit: " << manager << std::endl;
-  }));
+  });
   return true;
 }
 
@@ -308,7 +308,7 @@ std::shared_ptr<plain::net::connection::Basic> Manager::new_conn() noexcept {
   }
   if (id == kInvalidId) return {};
   auto r = impl_->connection_info.list[id - 1];
-  if (!r) r = std::move(std::make_shared<Basic>());
+  if (!r) r = std::make_shared<Basic>();
   r->set_id(id);
   r->init();
   r->set_manager(shared_from_this());
