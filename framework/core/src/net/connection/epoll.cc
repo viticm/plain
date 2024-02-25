@@ -110,7 +110,7 @@ int32_t poll_event(data_t &d, int32_t *fd, int32_t *events) {
 }
 
 struct Epoll::Impl {
-#if PLAIN_EPOLL_ENABLE
+#ifdef PLAIN_EPOLL_ENABLE
   data_t data;
   std::mutex mutex;
 #endif
@@ -128,13 +128,13 @@ Epoll::Epoll(
 }
 
 Epoll::~Epoll() {
-#if PLAIN_EPOLL_ENABLE
+#ifdef PLAIN_EPOLL_ENABLE
   poll_destory(impl_->data);
 #endif
 }
   
 bool Epoll::prepare() noexcept {
-#if PLAIN_EPOLL_ENABLE
+#ifdef PLAIN_EPOLL_ENABLE
   if (running()) return true;
   auto fd = poll_create(impl_->data, setting_.max_count);
   if (fd <= 0) {
@@ -156,7 +156,7 @@ bool Epoll::prepare() noexcept {
 }
 
 bool Epoll::work() noexcept {
-#if PLAIN_EPOLL_ENABLE
+#ifdef PLAIN_EPOLL_ENABLE
   poll_wait(impl_->data, -1);
   if (impl_->data.result_event_count < 0) {
     LOG_ERROR << "error: " << impl_->data.result_event_count;
@@ -170,7 +170,7 @@ bool Epoll::work() noexcept {
 }
 
 void Epoll::off() noexcept {
-#if PLAIN_EPOLL_ENABLE
+#ifdef PLAIN_EPOLL_ENABLE
   // poll_destory(impl_->data);
 #endif
 }
@@ -180,7 +180,7 @@ bool Epoll::sock_add(
   [[maybe_unused]] connection::id_t conn_id) noexcept {
   assert(sock_id != socket::kInvalidId);
   assert(conn_id != connection::kInvalidId);
-#if PLAIN_EPOLL_ENABLE
+#ifdef PLAIN_EPOLL_ENABLE
   if (poll_add(impl_->data, sock_id, EPOLLIN | EPOLLET, conn_id) != 0) {
     LOG_ERROR << setting_.name << " sock_add error: " << strerror(errno);
   } else {
@@ -193,7 +193,7 @@ bool Epoll::sock_add(
 bool Epoll::sock_remove([[maybe_unused]] socket::id_t sock_id) noexcept {
   assert(sock_id >= 0);
   assert(sock_id != socket::kInvalidId);
-#if PLAIN_EPOLL_ENABLE
+#ifdef PLAIN_EPOLL_ENABLE
   if (poll_delete(impl_->data, sock_id) != 0) {
     LOG_ERROR << setting_.name << " sock_remove error: " << strerror(errno);
   } else {
@@ -204,7 +204,7 @@ bool Epoll::sock_remove([[maybe_unused]] socket::id_t sock_id) noexcept {
 }
 
 void Epoll::handle_input() noexcept {
-#if PLAIN_EPOLL_ENABLE
+#ifdef PLAIN_EPOLL_ENABLE
   if (!running()) return;
   size_t accept_count{0};
   auto &d = impl_->data;
