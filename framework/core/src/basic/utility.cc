@@ -3,6 +3,7 @@
 #if OS_UNIX || OS_MAC
 #include <sys/stat.h>
 #include <sys/resource.h>
+#include <unistd.h>
 #endif
 #include "plain/basic/base64.h"
 #include "plain/basic/io.h"
@@ -1005,8 +1006,11 @@ void complementpath(char *filepath, size_t size, char delimiter) {
 }
 
 char *strerror_pl(int32_t saved_errno) {
-#if OS_UNIX || OS_MAC
+#if OS_UNIX
   return strerror_r(saved_errno, g_error_buff, sizeof g_error_buff);
+#elif OS_MAC
+  strerror_r(saved_errno, g_error_buff, sizeof g_error_buff);
+  return g_error_buff;
 #else
   strerror_s(g_error_buff, sizeof g_error_buff, saved_errno);
   return g_error_buff;

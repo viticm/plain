@@ -1,4 +1,7 @@
 #include "plain/net/socket/basic.h"
+#if OS_MAC
+#include <unistd.h>
+#endif
 #include "plain/basic/logger.h"
 #include "plain/net/socket/api.h"
 #include "plain/net/detail/socket.h"

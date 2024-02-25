@@ -14,6 +14,7 @@
 
 #include "plain/sys/config.h"
 #include <thread>
+#include <atomic>
 #include "plain/basic/io.h"
 #include "plain/basic/logger.h"
 #include "plain/basic/global.h"
@@ -21,8 +22,11 @@
 
 namespace plain {
 
+#if OS_MAC
+using thread_t = std::thread;
+#else
 using thread_t = std::jthread;
-
+#endif
 class PLAIN_API ThreadPool {
  public:
   ThreadPool(size_t);

@@ -15,6 +15,7 @@
 #define PLAIN_BASIC_RING_H_
 
 #include "plain/basic/config.h"
+#include <atomic>
 #include "plain/basic/concepts.h"
 
 namespace plain {

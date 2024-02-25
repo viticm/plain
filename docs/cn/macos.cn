@@ -1,0 +1,5 @@
+# 安装llvm
+## brew install llvm
+# 使用指定的clang(如果安装了xcode可能版本比较旧导致新特性没有被支持)
+## cmake ../cmake -DCMAKE_CXX_COMPILER=/usr/local/opt/llvm/bin/clang++ \
+## -DCMAKE_C_COMPILER=/usr/local/opt/llvm/bin/clang

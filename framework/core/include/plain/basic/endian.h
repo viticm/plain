@@ -13,6 +13,7 @@
 #define PLAIN_BASIC_ENDIAN_H_
 
 #include "plain/basic/config.h"
+#include <bit>
 
 namespace plain {
 

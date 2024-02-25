@@ -7,9 +7,11 @@
 #include <Windows.h>
 #pragma comment(lib, "Synchronization.lib")
 #elif OS_UNIX || OS_MAC
+#if OS_UNIX
+#include <linux/futex.h>
+#endif
 #include <ctime>
 #include <unistd.h>
-#include <linux/futex.h>
 #include <sys/syscall.h>
 #endif
 
@@ -32,7 +34,7 @@ void atomic_notify_all_native(void *atom) noexcept {
   ::WakeByAddressAll(atom);
 }
 
-#elif OS_UNIX || OS_MAC
+#elif OS_UNIX
 
 int futex(void *addr, int32_t op, int32_t old, const timespec *ts) noexcept {
   return ::syscall(SYS_futex, addr, op, old, ts, nullptr, 0);

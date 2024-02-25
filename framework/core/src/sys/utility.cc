@@ -1,6 +1,7 @@
 #include "plain/sys/utility.h"
 #if OS_UNIX || OS_MAC
 #include <sys/resource.h>
+#include <unistd.h>
 #elif OS_WIN
 #include <winsock2.h>
 #endif

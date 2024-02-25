@@ -7,6 +7,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <signal.h>
+#include <unistd.h>
 #endif
 #include "plain/basic/utility.h"
 #include "plain/basic/io.h"

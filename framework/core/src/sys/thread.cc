@@ -28,7 +28,7 @@ void set_name(const std::string_view &name) noexcept {
 #if OS_WIN
   const std::wstring utf16_name(name.begin(), name.end());
   ::SetThreadDescription(::GetCurrentThread(), utf16_name.data());
-#elif OS_UNIX || OS_MAC
+#elif OS_UNIX
   ::pthread_setname_np(::pthread_self(), name.data());
 #elif OS_MAC
   ::pthread_setname_np(name.data());

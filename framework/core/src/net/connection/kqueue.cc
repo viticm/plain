@@ -17,7 +17,7 @@ namespace plain::net::connection {
 
 namespace {
 
-#if ENABLE_KQUEUE
+#ifdef ENABLE_KQUEUE
 
 static constexpr size_t kOnceAcccpetCount{64};
 
@@ -37,7 +37,7 @@ int32_t poll_create(data_t &d, int32_t max_count) {
   if (fd != -1) {
     d.fd = fd;
     d.max_count = max_count;
-    d.events = new kevent[max_count];
+    d.events = new struct kevent[max_count];
     assert(d.events);
     // signal(SIGPIPE, SIG_IGN);
   } else {
@@ -89,7 +89,8 @@ int32_t poll_add(data_t &d, int32_t fd, id_t conn_id) {
 }
 
 int32_t poll_enable(
-  data_t &d, int32_t fd, bool read_enable, bool write_enable) {
+  data_t &d, int32_t fd, connection::id_t conn_id, bool read_enable,
+  bool write_enable) {
   if (conn_id > d.event_datas.size() || conn_id <= 0 
       || d.fd == socket::kInvalidId) {
     return -1;
@@ -118,7 +119,7 @@ int32_t poll_wait(data_t &d, int32_t timeout) {
   if (timeout >= 0) {
     struct timespec ts{
       static_cast<decltype(ts.tv_sec)>(timeout / 1000),
-      static_cast<decltype(ts.tv_usec)>(timeout % 1000 * 1000)
+      static_cast<decltype(ts.tv_nsec)>(timeout % 1000 * 1000 * 1000)
     };
     d.result_event_count = kevent(d.fd, nullptr, 0, d.events, d.max_count, &ts);
   } else {
@@ -142,7 +143,7 @@ int32_t poll_destory(data_t &d) {
 }
 
 struct Kqueue::Impl {
-#if ENABLE_KQUEUE
+#ifdef ENABLE_KQUEUE
   data_t data;
   std::mutex mutex;
 #endif
@@ -160,13 +161,13 @@ Kqueue::Kqueue(
 }
 
 Kqueue::~Kqueue() {
-#if ENABLE_KQUEUE
+#ifdef ENABLE_KQUEUE
   poll_destory(impl_->data);
 #endif
 }
   
 bool Kqueue::prepare() noexcept {
-#if ENABLE_KQUEUE
+#ifdef ENABLE_KQUEUE
   if (running()) return true;
   impl_->data.event_datas = std::vector<uint64_t>(setting_.max_count, 0);
   auto fd = poll_create(impl_->data, setting_.max_count);
@@ -176,7 +177,7 @@ bool Kqueue::prepare() noexcept {
     return false;
   }
   if (listen_fd_ != socket::kInvalidId) {
-    auto r = poll_add(impl_->data, listen_fd_, EPOLLIN, connection::kInvalidId);
+    auto r = poll_add(impl_->data, listen_fd_, connection::kInvalidId);
     if (r < 0) {
       LOG_ERROR << setting_.name << " add error result: " << r;
       return false;
@@ -189,7 +190,7 @@ bool Kqueue::prepare() noexcept {
 }
 
 bool Kqueue::work() noexcept {
-#if ENABLE_KQUEUE
+#ifdef ENABLE_KQUEUE
   poll_wait(impl_->data, 0);
   if (impl_->data.result_event_count < 0) {
     LOG_ERROR << setting_.name << " error: " << impl_->data.result_event_count;
@@ -203,7 +204,7 @@ bool Kqueue::work() noexcept {
 }
 
 void Kqueue::off() noexcept {
-#if ENABLE_KQUEUE
+#ifdef ENABLE_KQUEUE
   poll_destory(impl_->data);
 #endif
 }
@@ -213,7 +214,7 @@ bool Kqueue::sock_add(
   [[maybe_unused]] connection::id_t conn_id) noexcept {
   assert(sock_id != socket::kInvalidId);
   assert(conn_id != connection::kInvalidId);
-#if ENABLE_KQUEUE
+#ifdef ENABLE_KQUEUE
   if (poll_add(impl_->data, sock_id, conn_id) != 0 ||
       poll_enable(impl_->data, sock_id, conn_id, true, true) != 0) {
     LOG_ERROR << setting_.name << " error: " << strerror(errno);
@@ -227,7 +228,7 @@ bool Kqueue::sock_add(
 bool Kqueue::sock_remove([[maybe_unused]] socket::id_t sock_id) noexcept {
   assert(sock_id >= 0);
   assert(sock_id != socket::kInvalidId);
-#if ENABLE_KQUEUE
+#ifdef ENABLE_KQUEUE
   if (poll_delete(impl_->data, sock_id) != 0) {
     LOG_ERROR << setting_.name << "error: " << strerror(errno);
   } else {
@@ -238,12 +239,13 @@ bool Kqueue::sock_remove([[maybe_unused]] socket::id_t sock_id) noexcept {
 }
 
 void Kqueue::handle_input() noexcept {
-#if ENABLE_KQUEUE
+#ifdef ENABLE_KQUEUE
   size_t accept_count{0};
   auto &d = impl_->data;
   for (int32_t i = 0; i < d.result_event_count; ++i) {
-    uint64_t ud = d.events[i].ud ? *d.events[i].ud : 0;
-    auto sock_id = static_cast<socket::id_t>(get_highsection(ud);
+    uint64_t ud =
+      d.events[i].udata ? *reinterpret_cast<uint64_t *>(d.events[i].udata) : 0;
+    auto sock_id = static_cast<socket::id_t>(get_highsection(ud));
     auto conn_id = static_cast<connection::id_t>(get_lowsection(ud));
     auto filter = d.events[i].filter;
     if (sock_id != socket::kInvalidId &&

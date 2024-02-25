@@ -39,7 +39,7 @@ void FileAppend::flush() {
 }
 
 std::size_t FileAppend::write(const std::string_view &log) {
-#if OS_UNIX || OS_MAC
+#if OS_UNIX
   return ::fwrite_unlocked(log.data(), 1, log.size(), fp_);
 #else
   return ::fwrite(log.data(), 1, log.size(), fp_);

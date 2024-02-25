@@ -87,7 +87,10 @@ struct PLAIN_API variable_struct {
     return r;
   }
 
-  variable_t &operator=(const variable_t &object) = default;
+  variable_t &operator=(const variable_t &object) {
+    value = object.value;
+    return *this;
+  }
   variable_t &operator=(variable_t &&object) {
     std::swap(object.value, value);
     return *this;
@@ -185,12 +188,12 @@ struct PLAIN_API variable_struct {
     return lhs.value <=> rhs.value;
   }
 
-  operator const char*() {
+  explicit operator const char*() {
     std::unique_lock<std::mutex> auto_lock(mutex);
     return std::get<std::string>(value).c_str();
   }
   template <typename T>
-  operator T() {
+  explicit operator T() {
     std::unique_lock<std::mutex> auto_lock(mutex);
     return std::get<T>(value);
   }
