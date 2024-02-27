@@ -12,17 +12,12 @@ struct Connector::Impl {
   std::shared_ptr<connection::Manager> manager;
 };
 
-Connector::Connector(
-  std::unique_ptr<concurrency::executor::Basic> &&executor,
-  const setting_t &setting) : impl_{std::make_unique<Impl>()} {
-  impl_->manager = make_manager(
-    std::forward<decltype(executor)>(executor), setting);
-  assert(impl_->manager);
-}
   
-Connector::Connector(const setting_t &setting) :
+Connector::Connector(
+  const setting_t &setting,
+  std::shared_ptr<concurrency::executor::Basic> executor) :
   impl_{std::make_unique<Impl>()} {
-  impl_->manager = make_manager(setting);
+  impl_->manager = make_manager(setting, executor);
   assert(impl_->manager);
 }
 
@@ -43,16 +38,18 @@ std::shared_ptr<plain::net::connection::Basic>
 Connector::connect(
   std::string_view address,
   std::function<bool(connection::Basic *)> init_func,
-  const std::chrono::milliseconds &timeout) noexcept {
-  return connect_impl(address, 0, init_func, timeout);
+  const std::chrono::milliseconds &timeout,
+  socket::Type sock_type) noexcept {
+  return connect_impl(address, 0, init_func, timeout, sock_type);
 }
  
 std::shared_ptr<plain::net::connection::Basic>
 Connector::connect(
   std::string_view ip, uint16_t port,
   std::function<bool(connection::Basic *)> init_func,
-  const std::chrono::milliseconds &timeout) noexcept {
-  return connect_impl(ip, port, init_func, timeout);
+  const std::chrono::milliseconds &timeout,
+  socket::Type sock_type) noexcept {
+  return connect_impl(ip, port, init_func, timeout, sock_type);
 }
 
 void Connector::set_codec(const stream::codec_t &codec) noexcept {
@@ -93,7 +90,8 @@ void Connector::broadcast(std::shared_ptr<packet::Basic> packet) noexcept {
   return impl_->manager->broadcast(packet);
 }
   
-plain::concurrency::executor::Basic &Connector::get_executor() {
+std::shared_ptr<plain::concurrency::executor::Basic>
+Connector::get_executor() const noexcept {
   return impl_->manager->get_executor();
 }
 
@@ -101,7 +99,8 @@ std::shared_ptr<plain::net::connection::Basic>
 Connector::connect_impl(
   std::string_view addr_or_ip, uint16_t port,
   std::function<bool(connection::Basic *)> init_func,
-  const std::chrono::milliseconds &timeout) noexcept {
+  const std::chrono::milliseconds &timeout,
+  socket::Type sock_type) noexcept {
   auto conn = impl_->manager->new_conn();
   if (!conn || conn->id() == connection::kInvalidId) return {};
   if (static_cast<bool>(init_func) && !init_func(conn.get())) {
@@ -110,8 +109,8 @@ Connector::connect_impl(
     return {};
   }
   auto success = port == 0 ?
-    conn->socket()->connect(addr_or_ip, timeout) :
-    conn->socket()->connect(addr_or_ip, port, timeout);
+    conn->socket()->connect(addr_or_ip, timeout, sock_type) :
+    conn->socket()->connect(addr_or_ip, port, timeout, sock_type);
   if (!success) {
     impl_->manager->remove(conn, true);
     LOG_ERROR << "connect failed: " << socket::get_last_error();
@@ -139,4 +138,16 @@ Connector::connect_impl(
   if (static_cast<bool>(callback))
     callback(conn.get());
   return conn;
+}
+
+uint64_t Connector::send_size() const noexcept {
+  return impl_->manager->send_size();
+}
+
+uint64_t Connector::recv_size() const noexcept {
+  return impl_->manager->recv_size();
+}
+  
+bool Connector::running() const noexcept {
+  return impl_->manager->running();
 }

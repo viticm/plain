@@ -86,6 +86,10 @@ bool Basic::Impl::process_input(Basic *conn) noexcept {
     LOG_ERROR << get_name(conn) << " pull failed: " << r;
     return false;
   }
+  auto m = manager.lock();
+  if (m) {
+    m->increase_recv_size(r);
+  }
   // std::cout << "process_input: " << conn->name() << "|" << r << std::endl;
   if (socket->avail() == 0)
     set_work_flag(WorkFlag::Input, false);
@@ -104,6 +108,10 @@ bool Basic::Impl::process_output(Basic *conn) noexcept {
       LOG_ERROR << get_name(conn) << " push failed: " << r;
       return false;
     }
+    auto m = manager.lock();
+    if (m) {
+      m->increase_send_size(r);
+    }
   }
   if (ostream->size() == 0)
     set_work_flag(WorkFlag::Output, false);
@@ -120,6 +128,7 @@ Basic::Impl::process_input_await(Basic *conn) noexcept {
     LOG_ERROR << get_name(conn) << " pull failed: " << r;
     m->remove(id);
   }
+  m->increase_recv_size(r);
 }
   
 plain::net::detail::Task<>
@@ -135,6 +144,7 @@ Basic::Impl::process_output_await(Basic *conn) noexcept {
       m->remove(id);
       break;
     }
+    m->increase_send_size(r);
   }
 }
 
@@ -202,8 +212,10 @@ void Basic::Impl::enqueue_work() noexcept {
   const auto _working = working.exchange(true, std::memory_order_relaxed);
   if (_working) return;
   // std::cout << "enqueue_work: " << this << " m: " << m << std::endl;
-  if (m->get_executor().shutdown_requested()) return;
-  m->get_executor().post([id = id, m = m] {
+  auto executor = m->get_executor();
+  if (!static_cast<bool>(executor)) return;
+  if (executor->shutdown_requested()) return;
+  executor->post([id = id, m = m] {
       auto conn = m->get_conn(id);
       if (!conn) return;
       auto r = conn->work();
@@ -371,7 +383,7 @@ bool Basic::send(const std::shared_ptr<packet::Basic> &packet) noexcept {
   }
   auto bytes = func(packet);
   if (bytes.empty()) return false;
-  auto r = impl_->ostream->write(bytes);
+  auto r = impl_->ostream->write(bytes) == bytes.size();
   lock.unlock();
   if (r) enqueue_work(WorkFlag::Output);
   return r;

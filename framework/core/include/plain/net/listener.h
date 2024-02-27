@@ -25,9 +25,8 @@ class PLAIN_API Listener final {
 
  public:
   Listener(
-    std::unique_ptr<concurrency::executor::Basic> &&executor,
-    const setting_t &setting = {});
-  Listener(const setting_t &setting = {});
+    const setting_t &setting = {},
+    std::shared_ptr<concurrency::executor::Basic> executor = {});
 
   ~Listener();
 
@@ -48,7 +47,12 @@ class PLAIN_API Listener final {
   get_conn(connection::id_t id) const noexcept;
   bool is_full() const noexcept;
   void broadcast(std::shared_ptr<packet::Basic> packet) noexcept;
-  concurrency::executor::Basic &get_executor();
+  std::shared_ptr<concurrency::executor::Basic> get_executor() const noexcept;
+  bool running() const noexcept;
+
+ public:
+  uint64_t send_size() const noexcept;
+  uint64_t recv_size() const noexcept;
  
  public:
   Address address() const noexcept;

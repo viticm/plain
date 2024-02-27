@@ -94,10 +94,13 @@ class PLAIN_API Basic : noncopyable {
   int32_t accept();
   bool connect(
     std::string_view address,
-    const std::chrono::milliseconds &timeout = {}) noexcept;
+    const std::chrono::milliseconds &timeout = {},
+    Type sock_type = Type::Tcp) noexcept;
+
   bool connect(
     std::string_view ip, uint16_t port,
-    const std::chrono::milliseconds &timeout = {}) noexcept;
+    const std::chrono::milliseconds &timeout = {},
+    Type sock_type = Type::Tcp) noexcept;
 
  private:
   struct Impl;

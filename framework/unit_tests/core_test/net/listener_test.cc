@@ -45,13 +45,16 @@ void plain::tests::test_net_listener_constructor() {
   setting.default_count = 32;
   Listener listener2(setting);
   Listener listener3{
-    std::make_unique<plain::concurrency::executor::Thread>()};
+    setting_t{},
+    std::make_shared<plain::concurrency::executor::Thread>()};
   Listener listener4{
+    setting_t{},
     std::make_unique<plain::concurrency::executor::ThreadPool>(
       "test", 2, std::chrono::seconds(10))};
   Listener listener5{
+    setting_t{},
     std::make_unique<plain::concurrency::executor::ThreadPool>(
-      "test1", 2, std::chrono::seconds(10)), setting};
+      "test1", 2, std::chrono::seconds(10))};
 }
 
 void plain::tests::test_net_listener_operator() {

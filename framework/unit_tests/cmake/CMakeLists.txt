@@ -8,7 +8,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-cmake_minimum_required(VERSION 3.27.0)
+cmake_minimum_required(VERSION 2.8)
 
 if (MSVC)
   # For utf8 no boom.
@@ -34,8 +34,8 @@ set(gtest_libdir ${dependencies_gtest_dir})
 config_compiler_and_linker()
 
 # string(REPLACE "-W4" "-W3" cxx_default "${cxx_default}")
-string(REPLACE "-Wshadow" "" cxx_default "${cxx_default}")
-string(REPLACE "-Wextra" "" cxx_default "${cxx_default}")
+# string(REPLACE "-Wshadow" "" cxx_default "${cxx_default}")
+# string(REPLACE "-Wextra" "" cxx_default "${cxx_default}")
 
 include_directories(${gtest_incdir}
                     ${gtest_hack_incdir}

@@ -11,9 +11,11 @@ Listener::Listener() : socket_{std::make_unique<plain::net::socket::Basic>()} {
 
 Listener::~Listener() = default;
 
-bool Listener::init(const Address &addr, uint32_t backlog) {
+bool Listener::init(
+  const Address &addr, socket::Type sock_type, uint32_t backlog) {
   if (!socket_->close()) return false;
-  if (!socket_->create(addr.family(), SOCK_STREAM, 0)) {
+  auto socket_type = get_sock_type(sock_type);
+  if (!socket_->create(addr.family(), socket_type, 0)) {
     LOG_ERROR << "can't create: " << get_last_error();
     return false;
   }

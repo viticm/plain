@@ -38,7 +38,7 @@ void plain::tests::test_net_iocp_construct() {
   setting.mode = Mode::Iocp;
   auto e1 = std::make_shared<connection::Iocp>(setting);
   auto e2 = std::make_shared<connection::Iocp>(
-    std::make_unique<concurrency::executor::WorkerThread>(), setting);
+    setting, std::make_shared<concurrency::executor::WorkerThread>());
 }
 
 void plain::tests::test_net_iocp_operator() {

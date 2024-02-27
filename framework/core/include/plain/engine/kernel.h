@@ -52,7 +52,7 @@ class PLAIN_API Kernel : public Singleton<Kernel> {
   make_manual_executor();
 
  public:
-  static std::tuple<unsigned int, unsigned int, unsigned int> version() noexcept;
+  static std::tuple<uint32_t, uint32_t, uint32_t> version() noexcept;
 
  public:
   template<class F, class... Args>
@@ -123,5 +123,9 @@ class PLAIN_API Kernel : public Singleton<Kernel> {
 };
 
 } // namespace plain
+
+#ifndef ENGINE
+#define ENGINE plain::Kernel::get_instance()
+#endif
 
 #endif // PLAIN_ENGINE_KERNEL_H_

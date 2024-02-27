@@ -22,10 +22,9 @@ class PLAIN_API alignas(kCacheInlineAlignment)
 Epoll final : public Manager {
 
  public:
-  Epoll(const setting_t &setting);
   Epoll(
-    std::unique_ptr<concurrency::executor::Basic> &&executor,
-    const setting_t &setting);
+    const setting_t &setting,
+    std::shared_ptr<concurrency::executor::Basic> executor = {});
   virtual ~Epoll();
 
  protected:

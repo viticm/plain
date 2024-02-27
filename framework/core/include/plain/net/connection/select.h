@@ -22,10 +22,9 @@ class PLAIN_API alignas(kCacheInlineAlignment)
 Select final : public Manager {
 
  public:
-  Select(const setting_t &setting);
   Select(
-    std::unique_ptr<concurrency::executor::Basic> &&executor,
-    const setting_t &setting);
+    const setting_t &setting,
+    std::shared_ptr<concurrency::executor::Basic> executor = {});
   virtual ~Select();
 
  protected:

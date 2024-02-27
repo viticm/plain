@@ -25,9 +25,8 @@ class PLAIN_API Connector final {
 
  public:
   Connector(
-    std::unique_ptr<concurrency::executor::Basic> &&executor,
-    const setting_t &setting = {});
-  Connector(const setting_t &setting = {});
+    const setting_t &setting = {},
+    std::shared_ptr<concurrency::executor::Basic> executor = {});
   ~Connector();
 
  public:
@@ -40,13 +39,15 @@ class PLAIN_API Connector final {
     std::string_view address,
     std::function<bool(connection::Basic *)> init_func = {},
     const std::chrono::milliseconds 
-    &timeout = std::chrono::seconds(5)) noexcept;
+    &timeout = std::chrono::seconds(5),
+    socket::Type sock_type = socket::Type::Tcp) noexcept;
   std::shared_ptr<connection::Basic>
   connect(
     std::string_view ip, uint16_t port,
     std::function<bool(connection::Basic *)> init_func = {},
     const std::chrono::milliseconds
-    &timeout = std::chrono::seconds(5)) noexcept;
+    &timeout = std::chrono::seconds(5),
+    socket::Type sock_type = socket::Type::Tcp) noexcept;
 
  public:
   void set_codec(const stream::codec_t &codec) noexcept;
@@ -61,7 +62,12 @@ class PLAIN_API Connector final {
   get_conn(connection::id_t id) const noexcept;
   bool is_full() const noexcept;
   void broadcast(std::shared_ptr<packet::Basic> packet) noexcept;
-  concurrency::executor::Basic &get_executor();
+  std::shared_ptr<concurrency::executor::Basic> get_executor() const noexcept;
+  bool running() const noexcept;
+
+ public:
+  uint64_t send_size() const noexcept;
+  uint64_t recv_size() const noexcept;
 
  private:
   struct Impl;
@@ -72,7 +78,8 @@ class PLAIN_API Connector final {
   connect_impl(
     std::string_view addr_or_ip, uint16_t port = 0,
     std::function<bool(connection::Basic *)> init_func = {},
-    const std::chrono::milliseconds &timeout = {}) noexcept;
+    const std::chrono::milliseconds &timeout = {},
+    socket::Type sock_type = socket::Type::Tcp) noexcept;
 
 };
 

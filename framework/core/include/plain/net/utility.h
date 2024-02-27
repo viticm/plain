@@ -18,12 +18,9 @@
 namespace plain::net {
 
 PLAIN_API std::shared_ptr<connection::Manager>
-make_manager(const setting_t &setting = {}) noexcept;
-
-PLAIN_API std::shared_ptr<connection::Manager>
 make_manager(
-  std::unique_ptr<concurrency::executor::Basic> &&executor,
-  const setting_t &setting = {}) noexcept;
+  const setting_t &setting = {},
+  std::shared_ptr<concurrency::executor::Basic> executor = {}) noexcept;
 
 } // namespace plain::net
 

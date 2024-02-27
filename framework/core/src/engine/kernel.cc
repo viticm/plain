@@ -156,7 +156,7 @@ Kernel::make_manual_executor() {
   return executor;
 }
 
-std::tuple<unsigned int, unsigned int, unsigned int>
+std::tuple<uint32_t, uint32_t, uint32_t>
 Kernel::version() noexcept {
   return {2, 0, 0};
 }

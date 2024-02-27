@@ -216,7 +216,7 @@ struct Task final {
   Task &operator=(const Task &) = delete;
 
   bool await_ready() {
-    auto& result_ = coro_.promise().result_;
+    auto &result_ = coro_.promise().result_;
     return result_.index() > 0;
   }
 

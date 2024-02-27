@@ -22,10 +22,9 @@ class PLAIN_API alignas(kCacheInlineAlignment)
 Iocp final : public Manager {
 
  public:
-  Iocp(const setting_t &setting);
   Iocp(
-    std::unique_ptr<concurrency::executor::Basic> &&executor,
-    const setting_t &setting);
+    const setting_t &setting,
+    std::shared_ptr<concurrency::executor::Basic> executor = {});
   virtual ~Iocp();
 
  protected:

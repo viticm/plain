@@ -112,15 +112,10 @@ struct Iocp::Impl {
 #endif
 };
 
-Iocp::Iocp(const setting_t &setting) :
-  Manager(setting), impl_{std::make_unique<Impl>()} {
-}
-  
 Iocp::Iocp(
-  std::unique_ptr<concurrency::executor::Basic> &&executor,
-  const setting_t &setting) :
-  Manager(std::forward<decltype(executor)>(executor), setting),
-  impl_{std::make_unique<Impl>()} {
+  const setting_t &setting,
+  std::shared_ptr<concurrency::executor::Basic> executor) :
+  Manager(setting, executor), impl_{std::make_unique<Impl>()} {
 }
 
 Iocp::~Iocp() {

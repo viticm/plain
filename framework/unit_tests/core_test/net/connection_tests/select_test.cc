@@ -38,7 +38,7 @@ void plain::tests::test_net_select_construct() {
   setting.mode = Mode::Select;
   auto e1 = std::make_shared<connection::Select>(setting);
   auto e2 = std::make_shared<connection::Select>(
-    std::make_unique<concurrency::executor::WorkerThread>(), setting);
+    setting, std::make_shared<concurrency::executor::WorkerThread>());
 }
 
 void plain::tests::test_net_select_operator() {

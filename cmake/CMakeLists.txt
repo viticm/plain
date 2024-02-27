@@ -75,6 +75,9 @@ if(plainframework_build_tests)
                ${root_dir}/plain/app/cmake/build
                plainframework)
   endif()
+  add_subdir(${root_dir}/plain/tests/cmake
+             ${root_dir}/plain/tests/cmake/build
+             plainframework)
 endif()
 
 # Plugins.

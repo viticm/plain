@@ -56,28 +56,21 @@ struct Select::Impl {
 void Select::Impl::select() noexcept {
   if (max_fd == socket::kInvalidId) return;
   read_fds.use = read_fds.full;
-  write_fds.use = write_fds.full;
+  // write_fds.use = write_fds.full;
   except_fds.use = except_fds.full;
   if (select_timeout >= 0) {
     select_result = socket::select(
-      max_fd + 1, &read_fds.use, &write_fds.use, &except_fds.use, &timeout);
+      max_fd + 1, &read_fds.use, nullptr, &except_fds.use, &timeout);
   } else {
     select_result = socket::select(
-      max_fd + 1, &read_fds.use, &write_fds.use, &except_fds.use, nullptr);
+      max_fd + 1, &read_fds.use, nullptr, &except_fds.use, nullptr);
   }
-  // std::cout << "select: " << select_result << std::endl;
 }
 
-Select::Select(const setting_t &setting) :
-  Manager(setting), impl_{std::make_shared<Impl>()} {
-
-}
-  
 Select::Select(
-  std::unique_ptr<concurrency::executor::Basic> &&executor,
-  const setting_t &setting) :
-  Manager(std::forward<decltype(executor)>(executor), setting),
-  impl_{std::make_shared<Impl>()} {
+  const setting_t &setting,
+  std::shared_ptr<concurrency::executor::Basic> executor) :
+  Manager(setting, executor), impl_{std::make_shared<Impl>()} {
 
 }
 
@@ -104,7 +97,8 @@ bool Select::work() noexcept {
   if (impl_->select_result < 0) {
     r = false;
     LOG_ERROR << setting_.name << " error: " << impl_->select_result;
-  } else {
+  } else if (impl_->select_result > 0) {
+    // std::cout << "handle_io: " << impl_->select_result << std::endl;
     handle_io();
   }
   return r;
@@ -134,8 +128,8 @@ void Select::handle_io() noexcept {
         return;
       } else if (FD_ISSET(id, &impl_->read_fds.use)) {
         conn->enqueue_work(WorkFlag::Input);
-      } else if (FD_ISSET(id, &impl_->write_fds.use)) { // output ?
-
+      } else if (FD_ISSET(id, &impl_->write_fds.use)) { // output(by send) ?
+                                                        // disabled now.
       }
       
     });

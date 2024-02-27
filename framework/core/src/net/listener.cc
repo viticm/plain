@@ -9,17 +9,12 @@ using plain::net::Listener;
 struct Listener::Impl {
   std::shared_ptr<connection::Manager> manager;
 };
-
-Listener::Listener(
-  std::unique_ptr<concurrency::executor::Basic> &&executor,
-  const setting_t &setting) : impl_{std::make_unique<Impl>()} {
-  impl_->manager = make_manager(
-    std::forward<decltype(executor)>(executor), setting);
-  assert(impl_->manager);
-}
   
-Listener::Listener(const setting_t &setting) : impl_{std::make_unique<Impl>()} {
-  impl_->manager = make_manager(setting);
+Listener::Listener(
+  const setting_t &setting,
+  std::shared_ptr<concurrency::executor::Basic> executor) :
+  impl_{std::make_unique<Impl>()} {
+  impl_->manager = make_manager(setting, executor);
   assert(impl_->manager);
 }
 
@@ -31,7 +26,9 @@ bool Listener::start() {
   if (impl_->manager->running()) return true;
   impl_->manager->listen_sock_ = std::make_shared<socket::Listener>();
   Address addr{impl_->manager->setting_.address};
-  if (!impl_->manager->listen_sock_->init(addr)) return false;
+  if (!impl_->manager->listen_sock_->init(
+      addr, impl_->manager->setting_.socket_type))
+    return false;
   impl_->manager->listen_fd_ = impl_->manager->listen_sock_->id();
   return impl_->manager->start();
 }
@@ -79,11 +76,24 @@ void Listener::broadcast(std::shared_ptr<packet::Basic> packet) noexcept {
   return impl_->manager->broadcast(packet);
 }
   
-plain::concurrency::executor::Basic &Listener::get_executor() {
+std::shared_ptr<plain::concurrency::executor::Basic>
+Listener::get_executor() const noexcept {
   return impl_->manager->get_executor();
 }
   
 plain::net::Address Listener::address() const noexcept {
   if (!impl_->manager->listen_sock_) return {};
   return impl_->manager->listen_sock_->address();
+}
+
+uint64_t Listener::send_size() const noexcept {
+  return impl_->manager->send_size();
+}
+
+uint64_t Listener::recv_size() const noexcept {
+  return impl_->manager->recv_size();
+}
+
+bool Listener::running() const noexcept {
+  return impl_->manager->running();
 }

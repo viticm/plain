@@ -38,7 +38,7 @@ void plain::tests::test_net_epoll_construct() {
   setting.mode = Mode::Epoll;
   auto e1 = std::make_shared<connection::Epoll>(setting);
   auto e2 = std::make_shared<connection::Epoll>(
-    std::make_unique<concurrency::executor::WorkerThread>(), setting);
+    setting, std::make_shared<concurrency::executor::WorkerThread>());
 }
 
 void plain::tests::test_net_epoll_operator() {

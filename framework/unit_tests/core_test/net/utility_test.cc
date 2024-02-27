@@ -51,23 +51,23 @@ void plain::tests::test_net_utility_funcs() {
 
   setting.mode = Mode::Select;
   m1 = make_manager(
-    std::make_unique<concurrency::executor::WorkerThread>(), setting);
+    setting, std::make_unique<concurrency::executor::WorkerThread>());
   ASSERT_TRUE(m1);
   setting.mode = Mode::Epoll;
   m2 = make_manager(
-    std::make_unique<concurrency::executor::WorkerThread>(), setting);
+    setting, std::make_unique<concurrency::executor::WorkerThread>());
   ASSERT_TRUE(m2);
   setting.mode = Mode::IoUring;
   m3 = make_manager(
-    std::make_unique<concurrency::executor::WorkerThread>(), setting);
+    setting, std::make_unique<concurrency::executor::WorkerThread>());
   ASSERT_TRUE(m3);
   setting.mode = Mode::Iocp;
   m4 = make_manager(
-    std::make_unique<concurrency::executor::WorkerThread>(), setting);
+    setting, std::make_unique<concurrency::executor::WorkerThread>());
   ASSERT_TRUE(m4);
   setting.mode = Mode::Kqueue;
   m5 = make_manager(
-    std::make_unique<concurrency::executor::WorkerThread>(), setting);
+    setting, std::make_unique<concurrency::executor::WorkerThread>());
   ASSERT_TRUE(m5);
 
 }

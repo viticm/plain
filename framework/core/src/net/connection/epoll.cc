@@ -116,17 +116,12 @@ struct Epoll::Impl {
 #endif
 };
 
-Epoll::Epoll(const setting_t &setting) :
-  Manager(setting), impl_{std::make_unique<Impl>()} {
+Epoll::Epoll(
+  const setting_t &setting,
+  std::shared_ptr<concurrency::executor::Basic> executor) :
+  Manager(setting, executor), impl_{std::make_unique<Impl>()} {
 }
   
-Epoll::Epoll(
-  std::unique_ptr<concurrency::executor::Basic> &&executor,
-  const setting_t &setting) :
-  Manager(std::forward<decltype(executor)>(executor), setting),
-  impl_{std::make_unique<Impl>()} {
-}
-
 Epoll::~Epoll() {
 #ifdef PLAIN_EPOLL_ENABLE
   poll_destory(impl_->data);

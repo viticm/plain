@@ -580,4 +580,19 @@ bool make_pair(id_t fd_pair[2]) noexcept {
   return r == 0;
 }
 
+int32_t get_sock_type(Type sock_type) noexcept {
+  int32_t r{SOCK_STREAM};
+  switch (sock_type) {
+    case Type::Tcp:
+      r = SOCK_STREAM;
+      break;
+    case Type::Udp:
+      r = SOCK_DGRAM;
+      break;
+    default:
+      break;
+  }
+  return r;
+}
+
 } // namespace plain::net::socket

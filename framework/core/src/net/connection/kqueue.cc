@@ -152,15 +152,10 @@ struct Kqueue::Impl {
 #endif
 };
 
-Kqueue::Kqueue(const setting_t &setting) :
-  Manager(setting), impl_{std::make_unique<Impl>()} {
-}
-  
 Kqueue::Kqueue(
-  std::unique_ptr<concurrency::executor::Basic> &&executor,
-  const setting_t &setting) :
-  Manager(std::forward<decltype(executor)>(executor), setting),
-  impl_{std::make_unique<Impl>()} {
+  const setting_t &setting,
+  std::shared_ptr<concurrency::executor::Basic> executor) :
+  Manager(setting, executor), impl_{std::make_unique<Impl>()} {
 }
 
 Kqueue::~Kqueue() {

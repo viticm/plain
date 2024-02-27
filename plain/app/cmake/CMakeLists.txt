@@ -29,9 +29,6 @@ if(NOT MSVC)
 endif()
 set(COMMON_LIBS "plain;${CMAKE_THREAD_LIBS_INIT}")
 
- # Plain Framework core flags.
-set(cxx_base_flags "${cxx_base_flags} -DPF_OPEN_EPOLL")
-
 if (MSVC AND pf_build_shared)
   set(cxx_base_flags "${cxx_base_flags} -DPF_BUILD_AS_DLL")
 endif()

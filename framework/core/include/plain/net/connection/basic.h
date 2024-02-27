@@ -20,7 +20,7 @@ namespace plain::net {
 namespace connection {
 
 class PLAIN_API alignas(kCacheInlineAlignment)
-Basic final {
+Basic final : noncopyable {
 
  public:
   Basic();

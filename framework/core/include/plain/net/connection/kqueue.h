@@ -22,10 +22,9 @@ class PLAIN_API alignas(kCacheInlineAlignment)
 Kqueue final : public Manager {
 
  public:
-  Kqueue(const setting_t &setting);
   Kqueue(
-    std::unique_ptr<concurrency::executor::Basic> &&executor,
-    const setting_t &setting);
+    const setting_t &setting,
+    std::shared_ptr<concurrency::executor::Basic> executor = {});
   virtual ~Kqueue();
 
  protected:

@@ -25,7 +25,9 @@ class PLAIN_API Listener : noncopyable {
   ~Listener() noexcept;
 
  public:
-  bool init(const Address &addr, uint32_t backlog = 5);
+  bool init(
+    const Address &addr, socket::Type sock_type = socket::Type::Tcp,
+    uint32_t backlog = 5);
 
  public:
   void close();

@@ -229,11 +229,13 @@ int32_t Basic::accept() {
 }
 
 bool Basic::connect(
-  std::string_view address, const std::chrono::milliseconds &timeout) noexcept {
+  std::string_view address,
+  const std::chrono::milliseconds &timeout, Type sock_type) noexcept {
   bool r{false};
   try {
     Address addr{address, false};
-    if (!valid() && (!close() || !create(addr.family(), SOCK_STREAM, 0)))
+    auto socket_type = get_sock_type(sock_type);
+    if (!valid() && (!close() || !create(addr.family(), socket_type, 0)))
       return false;
     const auto data{addr.data()};
 
@@ -248,11 +250,12 @@ bool Basic::connect(
 
 bool Basic::connect(
   std::string_view ip, uint16_t port,
-  const std::chrono::milliseconds &timeout) noexcept {
+  const std::chrono::milliseconds &timeout, Type sock_type) noexcept {
   bool r{false};
   try {
     Address addr{ip, port, false};
-    if (!valid() && (!close() || !create(addr.family(), SOCK_STREAM, 0)))
+    auto socket_type = get_sock_type(sock_type);
+    if (!valid() && (!close() || !create(addr.family(), socket_type, 0)))
       return false;
     const auto data{addr.data()};
     auto ptr = detail::get_sa_pointer(data); // can't use data.data(), memory cut

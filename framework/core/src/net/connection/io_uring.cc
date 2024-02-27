@@ -16,14 +16,10 @@ using plain::net::detail::Awaitable;
 
 struct IoUring::Impl{};
 
-IoUring::IoUring(const setting_t &setting) : Manager(setting) {
-
-}
-
 IoUring::IoUring(
-  std::unique_ptr<concurrency::executor::Basic> &&executor,
-  const setting_t &setting) :
-  Manager(std::forward<decltype(executor)>(executor), setting) {
+  const setting_t &setting,
+  std::shared_ptr<concurrency::executor::Basic> executor) :
+  Manager(setting, executor) {
 
 }
 
@@ -211,16 +207,11 @@ bool IoUring::Impl::submit() noexcept {
   return true;
 }
 
-IoUring::IoUring(const setting_t &setting) :
-  Manager(setting), impl_{std::make_unique<Impl>()} {
-
-}
-
 IoUring::IoUring(
-  std::unique_ptr<concurrency::executor::Basic> &&executor,
-  const setting_t &setting) :
-  Manager(std::forward<decltype(executor)>(executor), setting),
-  impl_{std::make_unique<Impl>()} {
+  const setting_t &setting,
+  std::shared_ptr<concurrency::executor::Basic> executor) :
+  Manager(setting, executor), impl_{std::make_unique<Impl>()} {
+
 }
 
 IoUring::~IoUring() = default;

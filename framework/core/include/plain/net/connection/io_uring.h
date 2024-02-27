@@ -24,10 +24,9 @@ class PLAIN_API alignas(kCacheInlineAlignment)
 IoUring final : public Manager {
 
  public:
-  IoUring(const setting_t &setting);
   IoUring(
-    std::unique_ptr<concurrency::executor::Basic> &&executor,
-    const setting_t &setting);
+    const setting_t &setting,
+    std::shared_ptr<concurrency::executor::Basic> executor = {});
   virtual ~IoUring();
 
  protected:

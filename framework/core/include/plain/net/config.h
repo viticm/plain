@@ -35,6 +35,12 @@ namespace socket {
 class Basic;
 class Listener;
 
+// The socket type
+enum class Type : std::uint8_t {
+  Tcp = 0,
+  Udp = 1,
+};
+
 }
 
 namespace connection {
@@ -81,6 +87,7 @@ struct setting_struct {
   uint32_t max_count{1024};
   uint32_t default_count{32};
   Mode mode{Mode::Select};
+  socket::Type socket_type{socket::Type::Tcp};
   // ip_v4: x.x.x.x:port ip_v6: [x:x:x:...]:port
   std::string address; // listener only
   std::string name;

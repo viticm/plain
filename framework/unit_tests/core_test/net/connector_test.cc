@@ -40,13 +40,16 @@ void plain::tests::test_net_connector_constructor() {
   setting.default_count = 32;
   Connector connector2(setting);
   Connector connector3{
+    setting_t{},
     std::make_unique<plain::concurrency::executor::Thread>()};
   Connector connector4{
+    setting_t{},
     std::make_unique<plain::concurrency::executor::ThreadPool>(
       "test", 2, std::chrono::seconds(10))};
   Connector connector5{
+    setting,
     std::make_unique<plain::concurrency::executor::ThreadPool>(
-      "test1", 2, std::chrono::seconds(10)), setting};
+      "test1", 2, std::chrono::seconds(10))};
 }
 
 void plain::tests::test_net_connector_func() {

@@ -38,7 +38,7 @@ void plain::tests::test_net_io_uring_construct() {
   setting.mode = Mode::IoUring;
   auto e1 = std::make_shared<connection::IoUring>(setting);
   auto e2 = std::make_shared<connection::IoUring>(
-    std::make_unique<concurrency::executor::WorkerThread>(), setting);
+    setting, std::make_shared<concurrency::executor::WorkerThread>());
 }
 
 void plain::tests::test_net_io_uring_operator() {

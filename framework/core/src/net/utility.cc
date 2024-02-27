@@ -9,43 +9,20 @@
 namespace plain::net {
 
 std::shared_ptr<connection::Manager>
-make_manager(const setting_t &setting) noexcept {
-  switch (setting.mode) {
-    case Mode::Epoll:
-      return std::make_shared<connection::Epoll>(setting);
-    case Mode::Select:
-      return std::make_shared<connection::Select>(setting);
-    case Mode::Iocp:
-      return std::make_shared<connection::Iocp>(setting);
-    case Mode::IoUring:
-      return std::make_shared<connection::IoUring>(setting);
-    case Mode::Kqueue:
-      return std::make_shared<connection::Kqueue>(setting);
-    default:
-      return {};
-  }
-}
-
-std::shared_ptr<connection::Manager>
 make_manager(
-  std::unique_ptr<concurrency::executor::Basic> &&executor,
-  const setting_t &setting) noexcept {
+  const setting_t &setting,
+  std::shared_ptr<concurrency::executor::Basic> executor) noexcept {
   switch (setting.mode) {
     case Mode::Epoll:
-      return std::make_shared<connection::Epoll>(
-        std::forward<decltype(executor)>(executor), setting);
+      return std::make_shared<connection::Epoll>(setting, executor);
     case Mode::Select:
-      return std::make_shared<connection::Select>(
-        std::forward<decltype(executor)>(executor), setting);
+      return std::make_shared<connection::Select>(setting, executor);
     case Mode::Iocp:
-      return std::make_shared<connection::Iocp>(
-        std::forward<decltype(executor)>(executor), setting);
+      return std::make_shared<connection::Iocp>(setting, executor);
     case Mode::IoUring:
-      return std::make_shared<connection::IoUring>(
-        std::forward<decltype(executor)>(executor), setting);
+      return std::make_shared<connection::IoUring>(setting, executor);
     case Mode::Kqueue:
-      return std::make_shared<connection::Kqueue>(
-        std::forward<decltype(executor)>(executor), setting);
+      return std::make_shared<connection::Kqueue>(setting, executor);
     default:
       return {};
   }

@@ -103,6 +103,8 @@ socketpair(int32_t family, int32_t type, int32_t protocol, id_t fds[2]);
 
 PLAIN_API bool make_pair(id_t fd_pair[2]) noexcept;
 
+PLAIN_API int32_t get_sock_type(Type sock_type) noexcept;
+
 } // namespace socket
 } // namespace plain::net
 

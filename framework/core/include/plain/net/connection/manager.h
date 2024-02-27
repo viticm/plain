@@ -25,10 +25,10 @@ class PLAIN_API Manager :
   noncopyable, public std::enable_shared_from_this<Manager> {
 
  public:
-  Manager(const setting_t &setting); // Default use thread executor.
+  // Default executor is worker thread(one thread).
   Manager(
-    std::unique_ptr<concurrency::executor::Basic> &&executor,
-    const setting_t &setting);
+    const setting_t &setting,
+    std::shared_ptr<concurrency::executor::Basic> executor);
   virtual ~Manager();
 
  public:
@@ -46,9 +46,13 @@ class PLAIN_API Manager :
   std::shared_ptr<Basic> get_conn(id_t id) const noexcept;
   bool is_full() const noexcept;
   void broadcast(std::shared_ptr<packet::Basic> packet) noexcept;
-  concurrency::executor::Basic &get_executor();
+  std::shared_ptr<concurrency::executor::Basic> get_executor() const noexcept;
   bool send_ctrl_cmd(std::string_view cmd) noexcept;
   void execute(std::function<void()> func); // Multi safe execute.
+
+ public:
+  uint64_t send_size() const noexcept;
+  uint64_t recv_size() const noexcept;
  
  protected:
   virtual bool work() noexcept = 0; // working
@@ -69,6 +73,10 @@ class PLAIN_API Manager :
   void remove(connection::id_t conn_id, bool no_event = false) noexcept;
   void foreach(std::function<void(std::shared_ptr<Basic> conn)> func); // valid
   void recv_ctrl_cmd() noexcept;
+
+ protected:
+  void increase_send_size(size_t size);
+  void increase_recv_size(size_t size);
 
  protected:
   const stream::codec_t &codec() const noexcept;
