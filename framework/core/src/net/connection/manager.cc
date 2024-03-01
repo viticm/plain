@@ -9,7 +9,8 @@
 #include "plain/net/socket/basic.h"
 #include "plain/net/socket/listener.h"
 
-// #define PLAIN_NET_MANAGER_DISABLE_COROUTINE
+// Current coroutine implemention not recommand.
+// #define PLAIN_NET_MANAGER_ENABLE_COROUTINE
 
 using plain::net::connection::Manager;
 using namespace std::chrono_literals;
@@ -33,7 +34,7 @@ struct Manager::Impl {
   std::shared_ptr<concurrency::executor::Basic> executor;
   detail::ConnectionInfo connection_info;
   std::mutex mutex;
-#ifdef PLAIN_NET_MANAGER_DISABLE_COROUTINE
+#ifndef PLAIN_NET_MANAGER_ENABLE_COROUTINE
   std::mutex wait_mutex;
   std::condition_variable cv;
   thread_t worker; // The main worker.
@@ -46,7 +47,7 @@ struct Manager::Impl {
   uint64_t recv_size{0};
 
   void init_connections(uint32_t count);
-#ifdef PLAIN_NET_MANAGER_DISABLE_COROUTINE
+#ifndef PLAIN_NET_MANAGER_ENABLE_COROUTINE
   static bool wait_work(std::shared_ptr<Manager> manager) noexcept;
 #else
   static void enqueue_work_await(std::shared_ptr<Manager> manager) noexcept;
@@ -68,6 +69,8 @@ void Manager::Impl::init_connections(uint32_t count) {
     */
   }
 }
+
+#ifdef PLAIN_NET_MANAGER_ENABLE_COROUTINE
 
 void Manager::Impl::enqueue_work_await(
   std::shared_ptr<Manager> manager) noexcept {
@@ -95,13 +98,22 @@ void Manager::Impl::enqueue_work_await(
 
 plain::net::detail::Task<bool>
 Manager::Impl::work_await(std::shared_ptr<Manager> manager) noexcept {
-  auto r = manager->work();
+  auto resolve = [manager](void *d) {
+    thread_t([manager, d] {
+      auto resolver = static_cast<net::detail::ResumeResolver *>(d);
+      if (!resolver) return;
+      auto r = manager->work();
+      resolver->resolve(r ? 1 : 0);
+    }).detach();
+  };
+  auto r = co_await net::detail::Awaitable{resolve};
+  co_return r == 1;
   // std::cout << "work_await: " << manager << "|" << r << "|" <<
   // (int32_t)manager->setting_.mode << std::endl;
-  co_return r;
 }
+#endif
 
-#ifdef PLAIN_NET_MANAGER_DISABLE_COROUTINE
+#ifndef PLAIN_NET_MANAGER_ENABLE_COROUTINE
 bool Manager::Impl::wait_work(std::shared_ptr<Manager> manager) noexcept {
   assert(manager);
   std::unique_lock<std::mutex> lock{manager->impl_->wait_mutex};
@@ -110,6 +122,7 @@ bool Manager::Impl::wait_work(std::shared_ptr<Manager> manager) noexcept {
       manager->impl_->connection_info.size > 0 || !manager->running();
   });
   if (!manager->running() || !manager->work()) return false;
+  // std::this_thread::sleep_for(1ms); // change to executor thread work.
   return true;
 }
 #endif
@@ -148,7 +161,7 @@ bool Manager::start() {
     }
   }
   impl_->running = true;
-#ifdef PLAIN_NET_MANAGER_DISABLE_COROUTINE
+#ifndef PLAIN_NET_MANAGER_ENABLE_COROUTINE
    impl_->worker = thread_t([manager = shared_from_this()]{
     for (;;) {
       if (!Impl::wait_work(manager)) break;
@@ -172,12 +185,12 @@ void Manager::stop() {
   for (auto conn : impl_->connection_info.list) {
     if (conn && conn->valid()) conn->shutdown();
   }
-#ifdef PLAIN_NET_MANAGER_DISABLE_COROUTINE
+#ifndef PLAIN_NET_MANAGER_ENABLE_COROUTINE
   impl_->cv.notify_one(); // Just one for wait work.
 #endif
   send_ctrl_cmd("k"); // Send stop.
 
-#ifdef PLAIN_NET_MANAGER_DISABLE_COROUTINE
+#ifndef PLAIN_NET_MANAGER_ENABLE_COROUTINE
   // The will get "Resource deadlock avoided" except if not join(destroy join).
   // Worker stop must be before the executor(connection work in executor and 
   // if open coroutine mode manager wait work also).
@@ -232,7 +245,7 @@ Manager::get_conn(id_t id) const noexcept {
   if (index >= impl_->connection_info.list.size())
     return {};
   auto r = impl_->connection_info.list[index];
-  if (!r || !r->valid()) return {};
+  // if (!r || !r->valid()) return {};
   return r;
 }
 
@@ -260,7 +273,7 @@ std::shared_ptr<plain::net::connection::Basic> Manager::new_conn() noexcept {
   r->set_manager(shared_from_this());
   ++(impl_->connection_info.size);
 
-#ifdef PLAIN_NET_MANAGER_DISABLE_COROUTINE
+#ifndef PLAIN_NET_MANAGER_ENABLE_COROUTINE
   impl_->cv.notify_one(); // Just one for wait work.
 #endif
   return r;
@@ -291,6 +304,7 @@ void Manager::remove(connection::id_t conn_id, bool no_event) noexcept {
       conn->on_disconnect();
     }
     if (conn->socket()->valid()) this->sock_remove(conn->socket()->id());
+    conn->shutdown();
     conn->close();
   }
   impl_->connection_info.free_ids.emplace(conn_id);

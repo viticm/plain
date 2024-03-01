@@ -53,7 +53,7 @@ int32_t Basic::push() noexcept {
   auto send_size = impl_->buffer.read_avail();
   // std::cout << "need size: " << send_size << std::endl;
   if (send_size == 0) return 0;
-  constexpr auto once_max = 1024;
+  constexpr auto once_max = 1024 * 1024; // once max send 1m
   if (send_size > once_max)
     send_size = once_max;
   bytes_t bytes;
@@ -159,15 +159,15 @@ void Basic::set_compress(bool on) noexcept {
 
 size_t Basic::write(std::string_view str) {
   const auto *buffer = reinterpret_cast<const std::byte *>(str.data());
-  return impl_->buffer.write(buffer, str.size());
+  return impl_->buffer.write(buffer, str.size(), true);
 }
 
 size_t Basic::write(const bytes_t &bytes) {
-  return impl_->buffer.write(bytes.data(), bytes.size());
+  return impl_->buffer.write(bytes.data(), bytes.size(), true);
 }
 
 size_t Basic::write(const_byte_span_t bytes) {
-  return impl_->buffer.write(bytes.data(), bytes.size());
+  return impl_->buffer.write(bytes.data(), bytes.size(), true);
 }
 
 size_t Basic::read(std::string &str) {

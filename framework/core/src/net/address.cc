@@ -285,5 +285,5 @@ std::string Address::text() const noexcept {
     default:
       break;
   }
-  return r;
+  return r + ":" + std::to_string(port());
 }

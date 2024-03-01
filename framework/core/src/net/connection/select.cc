@@ -10,7 +10,7 @@
 #include "plain/net/socket/basic.h"
 #include "plain/net/socket/api.h"
 
-
+using namespace std::chrono_literals;
 using plain::net::connection::Select;
 
 struct Select::Impl {
@@ -98,9 +98,9 @@ bool Select::work() noexcept {
     r = false;
     LOG_ERROR << setting_.name << " error: " << impl_->select_result;
   } else if (impl_->select_result > 0) {
-    // std::cout << "handle_io: " << impl_->select_result << std::endl;
     handle_io();
   }
+  std::this_thread::sleep_for(10ns); // must sleep change to the work thread
   return r;
 }
   

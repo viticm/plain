@@ -70,37 +70,37 @@ struct CallbackResolver final: Resolver {
 
 struct Awaitable {
   // TODO: use cancel_token to implement cancellation
-  Awaitable(std::function<void(void *)> set_data_func) noexcept:
-    set_data_func_(set_data_func) {}
+  Awaitable(std::function<void(void *)> resolve_func) noexcept:
+    resolve_func_(resolve_func) {}
 
-  bool set_data(void *data) {
-    if (!static_cast<bool>(set_data_func_)) return false;
-    set_data_func_(data);
+  bool resolve(void *data) {
+    if (!static_cast<bool>(resolve_func_)) return false;
+    resolve_func_(data);
     return true;
   }
 
   // User must keep Resolver alive before the operation is finished
   void set_deferred(DeferredResolver &resolver) {
-    set_data(&resolver);
+    resolve(&resolver);
   }
 
   void set_callback(std::function<void (int32_t result)> cb) {
-    set_data(new CallbackResolver(std::move(cb)));
+    resolve(new CallbackResolver(std::move(cb)));
   }
 
   auto operator co_await() {
     struct awaitable {
       ResumeResolver resolver{};
-      std::function<void(void *)> set_data_func_;
-      awaitable(std::function<void(void *)> set_data_func):
-        set_data_func_(set_data_func) {}
+      std::function<void(void *)> resolve_func_;
+      awaitable(std::function<void(void *)> resolve_func):
+        resolve_func_(resolve_func) {}
 
       constexpr bool await_ready() const noexcept { return false; }
 
       void await_suspend(std::coroutine_handle<> handle) noexcept {
         resolver.handle = handle;
-        if (static_cast<bool>(set_data_func_))
-          set_data_func_(&resolver);
+        if (static_cast<bool>(resolve_func_))
+          resolve_func_(&resolver);
         else
           handle();
       }
@@ -110,11 +110,11 @@ struct Awaitable {
       }
     };
 
-    return awaitable(set_data_func_);
+    return awaitable(resolve_func_);
   }
 
  private:
-  std::function<void(void *)> set_data_func_;
+  std::function<void(void *)> resolve_func_;
 };
 
 

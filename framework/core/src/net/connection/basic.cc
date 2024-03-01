@@ -1,5 +1,6 @@
 #include "plain/net/connection/basic.h"
 #include <map>
+#include "plain/basic/utility.h"
 #include "plain/basic/logger.h"
 #include "plain/concurrency/executor/basic.h"
 #include "plain/net/detail/coroutine.h"
@@ -79,6 +80,7 @@ Basic::Impl::~Impl() = default;
 
 bool Basic::Impl::process_input(Basic *conn) noexcept {
   if (!has_work_flag(WorkFlag::Input)) return true;
+  // std::cout << "input: " << socket->id() << std::endl;
   assert(conn);
   if (!socket->valid()) return false;
   auto r = istream->pull();
@@ -90,7 +92,7 @@ bool Basic::Impl::process_input(Basic *conn) noexcept {
   if (m) {
     m->increase_recv_size(r);
   }
-  // std::cout << "process_input: " << conn->name() << "|" << r << std::endl;
+  set_work_flag(WorkFlag::Command, true);
   if (socket->avail() == 0)
     set_work_flag(WorkFlag::Input, false);
   return true;
@@ -129,6 +131,7 @@ Basic::Impl::process_input_await(Basic *conn) noexcept {
     m->remove(id);
   }
   m->increase_recv_size(r);
+  set_work_flag(WorkFlag::Command, true);
 }
   
 plain::net::detail::Task<>
@@ -150,6 +153,11 @@ Basic::Impl::process_output_await(Basic *conn) noexcept {
 
 bool Basic::Impl::process_command(Basic *conn) noexcept {
   assert(conn);
+  if (!has_work_flag(WorkFlag::Command)) return true;
+  scoped_executor_t check_flag([this]{
+    if (istream->size() == 0)
+      set_work_flag(WorkFlag::Command, false);
+  });
   if (istream->size() == 0) return true;
   stream::decode_func func{stream::decode};
   packet::limit_t packet_limit;
@@ -161,14 +169,13 @@ bool Basic::Impl::process_command(Basic *conn) noexcept {
     func = m->codec().decode;
   }
   if (error_times >= kCantPeekMaxCount) return false;
-  bool clear_error{true};
   for (size_t i = 0; i < kOnceHandlePacketCount; ++i) {
     auto r = func(istream.get(), packet_limit);
     auto e = get_error(r);
     if (e) {
       if (e->is_code(ErrorCode::NetPacketCantFill)) {
+        set_work_flag(WorkFlag::Command, false);
         ++error_times;
-        clear_error = false;
         return true;
       } else if (e->is_code(ErrorCode::NetPacketNeedRecv)) {
         return true;
@@ -186,10 +193,9 @@ bool Basic::Impl::process_command(Basic *conn) noexcept {
     } else {
       LOG_WARN << get_name(conn) << " packet unhandled: " << (*p)->id();
     }
+    if (istream->size() == 0) break;
   }
-  if (clear_error) error_times = 0;
-  if (istream->size() == 0)
-    set_work_flag(WorkFlag::Command, false);
+  error_times = 0;
   return true;
 }
 
@@ -206,12 +212,19 @@ bool Basic::Impl::work(Basic *conn) noexcept {
   return true;
 }
   
+/**
+ * How to enqueue work banlance?
+ **/
 void Basic::Impl::enqueue_work() noexcept {
   auto m = manager.lock();
   if (!m || !m->running()) return;
-  const auto _working = working.exchange(true, std::memory_order_relaxed);
+  const auto _working = working.exchange(true, std::memory_order_acq_rel);
   if (_working) return;
-  // std::cout << "enqueue_work: " << this << " m: " << m << std::endl;
+  /*
+  std::cout << "enqueue_work: " << this << " fd: " << socket->id() << 
+    " working: " << _working << "|" <<
+    working.load(std::memory_order_relaxed) << std::endl;
+  */
   auto executor = m->get_executor();
   if (!static_cast<bool>(executor)) return;
   if (executor->shutdown_requested()) return;
@@ -220,12 +233,11 @@ void Basic::Impl::enqueue_work() noexcept {
       if (!conn) return;
       auto r = conn->work();
       conn->impl_->working.store(false, std::memory_order_relaxed);
-      // std::cout << "work end: " << conn->impl_ << std::endl;
       if (!r) {
         m->remove(id);
       } else {
         if (!conn->idle()) {
-          m->execute([conn]{ conn->impl_->enqueue_work(); });
+          conn->impl_->enqueue_work();
         }
       }
   });
@@ -242,6 +254,20 @@ void Basic::Impl::set_work_flag(WorkFlag flag, bool enable) noexcept {
     work_flags |= (0x1 << std::to_underlying(flag));
   else
     work_flags &= ~(0x1 << std::to_underlying(flag));
+#if 0
+  // wait input finsh.
+  if (flag == WorkFlag::Input) {
+    auto m = manager.lock();
+    if (m && socket->valid()) {
+      if (enable)
+        m->sock_remove(socket->id());
+      else{
+        m->sock_add(socket->id(), id);
+        m->send_ctrl_cmd("w");
+      }
+    }
+  }
+#endif
 }
 
 std::string Basic::Impl::get_name(const Basic *conn) noexcept {
@@ -289,7 +315,8 @@ bool Basic::init() noexcept {
 
 bool Basic::idle() const noexcept {
   return !impl_->socket->valid() ||
-    (impl_->socket->avail() == 0 && impl_->work_flags == 0);
+    (!impl_->has_work_flag(WorkFlag::Output) &&
+     !impl_->has_work_flag(WorkFlag::Command));
 }
   
 bool Basic::shutdown(int32_t how) noexcept {
@@ -312,7 +339,7 @@ bool Basic::work() noexcept {
 
 void Basic::enqueue_work(WorkFlag flag) noexcept {
   if (impl_->socket->awaitable() &&
-      (flag == WorkFlag::Input || flag == WorkFlag::Input)) {
+      (flag == WorkFlag::Input || flag == WorkFlag::Output)) {
     if (flag == WorkFlag::Input)
       impl_->process_input_await(this);
     else if (flag == WorkFlag::Output)
@@ -394,5 +421,7 @@ void Basic::on_connect() noexcept {
 }
   
 void Basic::on_disconnect() noexcept {
+  impl_->istream->clear();
+  impl_->ostream->clear();
   check_callable(this, "__disconnect");
 }

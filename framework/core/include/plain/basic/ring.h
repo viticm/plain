@@ -16,6 +16,7 @@
 
 #include "plain/basic/config.h"
 #include <atomic>
+#include <span>
 #include "plain/basic/concepts.h"
 
 namespace plain {
@@ -26,7 +27,7 @@ using cookie_func_t = std::function<void()>;
 
  public:
   Ring()
-    : cookie_{nullptr}, head_{0}, tail_{0}, size_{0},mask_{0},
+    : cookie_{nullptr}, head_{0}, tail_{0}, size_{0}, mask_{0},
     buffer_{nullptr} {
     set_cookie(cookie_start);
   }
@@ -39,9 +40,10 @@ using cookie_func_t = std::function<void()>;
  public:
   bool can_insert() noexcept {
     std::size_t tmp_head{head_.load(std::memory_order_relaxed)};
-    if ((tmp_head - tail_.load(index_acquire_barrier)) == size_ &&
-        !resize(size_ << 1)) {
-      return false;
+    if ((tmp_head - tail_.load(index_acquire_barrier)) == size_) {
+      auto size = size_.load(std::memory_order_relaxed) << 1;
+      if (!resize(size))
+        return false;
     }
     return true;
   }
@@ -90,11 +92,18 @@ using cookie_func_t = std::function<void()>;
 
     count = (count > avail) ? avail : count;
 
-    tail_.store(tmp_tail + count, index_release_barrier);
+		std::atomic_signal_fence(std::memory_order_release);
+    if (count == avail) {
+      tail_.store(0, index_release_barrier);
+      head_.store(0, index_release_barrier);
+    } else {
+      tail_.store(tmp_tail + count, index_release_barrier);
+    }
     return count;
 	}
 
-  std::size_t write(const T *buffer, std::size_t count) noexcept {
+  std::size_t write(
+    const T *buffer, std::size_t count, bool full = false) noexcept {
     std::size_t available{0};
 	  std::size_t tmp_head{head_.load(std::memory_order_relaxed)};
     std::size_t to_write{count};
@@ -102,8 +111,19 @@ using cookie_func_t = std::function<void()>;
 		available = size_ - (tmp_head - tail_.load(index_acquire_barrier));
 
     // Not enough then try resize.
-    if (available < count && resize(size_ << 1)) {
-      available = size_ - (tmp_head - tail_.load(index_acquire_barrier));
+    if (available < count) {
+      auto size = size_.load(std::memory_order_relaxed) << 1;
+      auto avail = size - (tmp_head - tail_.load(index_acquire_barrier));
+      for (uint16_t i = 0; i < 99; ++i) {
+        if (avail >= count) break;
+        size = size << 1;
+        avail = size - (tmp_head - tail_.load(index_acquire_barrier));
+      }
+      if (resize(size)) {
+        available = size_ - (tmp_head - tail_.load(index_acquire_barrier));
+      }
+      if (available < count && full) // must write full.
+        return 0;
     }
 
 		if (available < count) // do not write more than we can
@@ -135,8 +155,14 @@ using cookie_func_t = std::function<void()>;
 
 		std::atomic_signal_fence(std::memory_order_release);
     // read only not set the tail_.
-		if (!read_only) tail_.store(tmp_tail, index_release_barrier);
-
+    if (!read_only) {
+      if (to_read == available) {
+        head_.store(0, index_release_barrier);
+        tail_.store(0, index_release_barrier);
+      } else {
+        tail_.store(tmp_tail, index_release_barrier);
+      }
+    }
 		return to_read;
   }
 
@@ -166,8 +192,14 @@ using cookie_func_t = std::function<void()>;
     consumer_clear();
   }
   void consumer_clear() noexcept {
-    tail_.store(
-        head_.load(std::memory_order_relaxed), std::memory_order_relaxed);
+    tail_.store(0, std::memory_order_relaxed);
+    head_.store(0, std::memory_order_relaxed);
+  }
+
+  void clear() noexcept {
+    resize(0);
+    tail_.store(0, std::memory_order_relaxed);
+    head_.store(0, std::memory_order_relaxed);
   }
 
   // Gets the first element in the buffer on consumed side.
@@ -193,13 +225,21 @@ using cookie_func_t = std::function<void()>;
   T &operator[](size_t index) {
 		return buffer_[(tail_.load(std::memory_order_relaxed) + index) & mask_];
 	}
+
+ public:
+  std::span<const T> read_block() const {
+    return {};
+  }
+
+  std::span<T> write_block() const {
+    return {};
+  }
   
  protected:
   void set_buffer(T *buffer, std::size_t size) noexcept {
     buffer_ = buffer;
-    std::atomic_signal_fence(std::memory_order_release);
-    size_.store(size, index_release_barrier);
-    mask_.store(size - 1, index_release_barrier);
+    size_.store(size, std::memory_order_relaxed);
+    mask_.store(size - 1, std::memory_order_relaxed);
   }
 
  private:
@@ -256,10 +296,16 @@ class DynamicRing : public Ring<T, fake_tso> {
      buffer_.reserve(SIZE);
      this->set_buffer(buffer_.data(), SIZE);
    }
+   DynamicRing(DynamicRing &&) = default;
+   DynamicRing &operator=(DynamicRing &&) = default;
    virtual ~DynamicRing() = default;
 
  private:
   bool resize(std::size_t size) override {
+    if (size == 0) {
+      buffer_.clear();
+      size = SIZE;
+    }
     buffer_.resize(size);
     this->set_buffer(buffer_.data(), size);
     return true;

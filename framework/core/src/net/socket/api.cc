@@ -393,6 +393,7 @@ int32_t recv(id_t id, void *buffer, uint32_t length, uint32_t flag) {
 #elif OS_WIN
   r = ::recv(id, static_cast<char *>(buffer), length, flag);
 #endif
+  // std::cout << "id: " << id << "|" << length << "|" << r << std::endl;
   if (r == kSocketError) {
     set_error();
     if (s_error.code() == kErrorWouldBlock) r = kErrorWouldBlock;

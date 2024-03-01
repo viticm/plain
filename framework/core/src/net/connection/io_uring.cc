@@ -94,10 +94,10 @@ IoUring::Impl::~Impl() {
 
 Awaitable IoUring::Impl::await_work(io_uring_sqe *sqe, uint8_t flags = 0) {
   io_uring_sqe_set_flags(sqe, flags);
-  auto set_data = [sqe](void *data) {
+  auto resolve = [sqe](void *data) {
     io_uring_sqe_set_data(sqe, data);
   };
-  return Awaitable(set_data);
+  return Awaitable(resolve);
 }
 
 void IoUring::Impl::test_uring_op(const io_uring_params &params) noexcept {
