@@ -18,7 +18,6 @@
 #include <variant>
 #include <utility>
 #include "plain/concurrency/config.h"
-#include "plain/net/connection/detail/config.h"
 
 namespace plain::net {
 namespace detail {

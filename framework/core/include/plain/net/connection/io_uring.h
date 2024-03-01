@@ -15,7 +15,6 @@
 #include "plain/net/connection/config.h"
 #include "plain/net/detail/coroutine.h"
 #include "plain/net/connection/manager.h"
-#include "plain/net/connection/detail/config.h"
 
 namespace plain::net {
 namespace connection {

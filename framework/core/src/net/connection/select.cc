@@ -6,7 +6,6 @@
 #include "plain/file/api.h"
 #include "plain/concurrency/executor/basic.h"
 #include "plain/net/connection/basic.h"
-#include "plain/net/connection/detail/coroutine.h"
 #include "plain/net/socket/basic.h"
 #include "plain/net/socket/api.h"
 
