@@ -73,6 +73,7 @@ class PLAIN_API Manager :
   void remove(connection::id_t conn_id, bool no_event = false) noexcept;
   void foreach(std::function<void(std::shared_ptr<Basic> conn)> func); // valid
   void recv_ctrl_cmd() noexcept;
+  void enqueue(connection::id_t conn_id) noexcept;
 
  protected:
   void increase_send_size(size_t size);

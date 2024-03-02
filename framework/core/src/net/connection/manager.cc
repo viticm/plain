@@ -1,6 +1,7 @@
 #include "plain/net/connection/manager.h"
 #include <set>
 #include <array>
+#include <deque>
 #include "plain/concurrency/executor/basic.h"
 #include "plain/concurrency/executor/worker_thread.h"
 #include "plain/net/detail/coroutine.h"
@@ -45,6 +46,11 @@ struct Manager::Impl {
   callable_func disconnect_callback;
   uint64_t send_size{0};
   uint64_t recv_size{0};
+  // This values for enqueue connection works.
+  std::atomic_uint32_t working_conn_count{0};
+  std::deque<connection::id_t> wait_work_conn_id_deque;
+  std::set<connection::id_t> wait_work_conn_ids;
+  int32_t working_conn_max_count{32};
 
   void init_connections(uint32_t count);
 #ifndef PLAIN_NET_MANAGER_ENABLE_COROUTINE
@@ -54,6 +60,8 @@ struct Manager::Impl {
   static plain::net::detail::Task<bool>
   work_await(std::shared_ptr<Manager> manager) noexcept;
 #endif
+  static void work(
+    std::shared_ptr<Manager> manager, connection::id_t conn_id) noexcept;
 
 };
 
@@ -127,6 +135,19 @@ bool Manager::Impl::wait_work(std::shared_ptr<Manager> manager) noexcept {
 }
 #endif
 
+void Manager::Impl::work(
+  std::shared_ptr<Manager> manager, connection::id_t id) noexcept {
+  auto conn = manager->get_conn(id);
+  if (!conn) return;
+  if (!conn->valid()) return;
+  auto r = conn->work();
+  if (!r) {
+    manager->remove(conn);
+  } else {
+    if (!conn->idle()) manager->enqueue(conn->id());
+  }
+}
+
 Manager::Manager(
   const setting_t &setting,
   std::shared_ptr<concurrency::executor::Basic> executor) :
@@ -137,6 +158,7 @@ Manager::Manager(
   }
   impl_->executor = executor;
   impl_->init_connections(setting.default_count);
+  impl_->working_conn_max_count = impl_->executor->max_concurrency_level();
 }
 
 Manager::~Manager() {
@@ -465,4 +487,34 @@ uint64_t Manager::send_size() const noexcept {
 
 uint64_t Manager::recv_size() const noexcept {
   return impl_->recv_size;
+}
+
+// For banlance connection works.
+void Manager::enqueue(connection::id_t id) noexcept {
+  auto working_conn_count =
+    impl_->working_conn_count.load(std::memory_order_relaxed);
+  if (impl_->working_conn_max_count <= 0 ||
+      working_conn_count < static_cast<uint32_t>(
+        impl_->working_conn_max_count)) {
+    if (id == connection::kInvalidId) {
+      std::unique_lock<std::mutex> lock{impl_->mutex};
+      if (impl_->wait_work_conn_id_deque.empty()) return;
+      id = impl_->wait_work_conn_id_deque.front();
+      impl_->wait_work_conn_id_deque.pop_front();
+      auto it = impl_->wait_work_conn_ids.find(id);
+      if (it != impl_->wait_work_conn_ids.end())
+        impl_->wait_work_conn_ids.erase(it);
+    }
+    if (id == connection::kInvalidId) return;
+    impl_->executor->enqueue([m = shared_from_this(), id]() {
+        Manager::Impl::work(m, id);
+    });
+
+  } else if (id != connection::kInvalidId) {
+    std::unique_lock<std::mutex> lock{impl_->mutex};
+    auto it = impl_->wait_work_conn_ids.find(id);
+    if (it != impl_->wait_work_conn_ids.end()) return;
+    impl_->wait_work_conn_id_deque.push_back(id);
+    impl_->wait_work_conn_ids.emplace(id);
+  }
 }
