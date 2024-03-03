@@ -2,6 +2,7 @@
 #include <set>
 #include <array>
 #include <deque>
+#include "plain/basic/utility.h"
 #include "plain/concurrency/executor/basic.h"
 #include "plain/concurrency/executor/worker_thread.h"
 #include "plain/net/detail/coroutine.h"
@@ -138,13 +139,25 @@ bool Manager::Impl::wait_work(std::shared_ptr<Manager> manager) noexcept {
 void Manager::Impl::work(
   std::shared_ptr<Manager> manager, connection::id_t id) noexcept {
   auto conn = manager->get_conn(id);
-  if (!conn) return;
-  if (!conn->valid()) return;
-  auto r = conn->work();
+  bool r{false};
+  {
+    scoped_executor_t scoped_executor([manager]() {
+        manager->impl_->working_conn_count.store(
+        manager->impl_->working_conn_count.load(std::memory_order_relaxed) - 1,
+        std::memory_order_relaxed);
+    });
+    if (!conn) return;
+    if (!conn->valid()) return;
+    r = conn->work();
+  }
   if (!r) {
     manager->remove(conn);
   } else {
-    if (!conn->idle()) manager->enqueue(conn->id());
+    if (!conn->idle()) {
+      manager->impl_->executor->enqueue([manager, id]{
+        manager->enqueue(id);
+      });
+    }
   }
 }
 
@@ -159,6 +172,7 @@ Manager::Manager(
   impl_->executor = executor;
   impl_->init_connections(setting.default_count);
   impl_->working_conn_max_count = impl_->executor->max_concurrency_level();
+  if (impl_->working_conn_max_count > 0) impl_->working_conn_max_count *= 2;
 }
 
 Manager::~Manager() {
@@ -506,6 +520,10 @@ void Manager::enqueue(connection::id_t id) noexcept {
         impl_->wait_work_conn_ids.erase(it);
     }
     if (id == connection::kInvalidId) return;
+    impl_->working_conn_count.store(
+      impl_->working_conn_count.load(std::memory_order_relaxed) + 1,
+      std::memory_order_relaxed);
+    std::cout << "id: " << id << std::endl;
     impl_->executor->enqueue([m = shared_from_this(), id]() {
         Manager::Impl::work(m, id);
     });

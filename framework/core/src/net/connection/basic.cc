@@ -347,9 +347,11 @@ void Basic::enqueue_work(WorkFlag flag) noexcept {
   } else {
     if (impl_->has_work_flag(flag)) return;
     impl_->set_work_flag(flag, true);
-    // impl_->enqueue_work();
+    impl_->enqueue_work();
+    /*
     auto m = impl_->manager.lock();
     if (m) m->enqueue(impl_->id); // now to banlance work
+    */
   }
 }
 
