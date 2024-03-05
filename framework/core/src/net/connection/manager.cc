@@ -142,23 +142,29 @@ void Manager::Impl::work(
   bool r{false};
   {
     scoped_executor_t scoped_executor([manager]() {
+      auto old_working_conn_count =
+        manager->impl_->working_conn_count.load(std::memory_order_acquire);
+      if (old_working_conn_count > 0) {
+        std::atomic_signal_fence(std::memory_order_release);
         manager->impl_->working_conn_count.store(
-        manager->impl_->working_conn_count.load(std::memory_order_relaxed) - 1,
-        std::memory_order_relaxed);
+          old_working_conn_count - 1,
+          std::memory_order_release);
+      }
     });
     if (!conn) return;
     if (!conn->valid()) return;
     r = conn->work();
   }
+  bool enqueue_work{true};
   if (!r) {
     manager->remove(conn);
   } else {
     if (!conn->idle()) {
-      manager->impl_->executor->enqueue([manager, id]{
-        manager->enqueue(id);
-      });
+       manager->enqueue(id);
+       enqueue_work = false;
     }
   }
+  if (enqueue_work) manager->enqueue(connection::kInvalidId);
 }
 
 Manager::Manager(
@@ -506,7 +512,8 @@ uint64_t Manager::recv_size() const noexcept {
 // For banlance connection works.
 void Manager::enqueue(connection::id_t id) noexcept {
   auto working_conn_count =
-    impl_->working_conn_count.load(std::memory_order_relaxed);
+    impl_->working_conn_count.load(std::memory_order_acquire);
+  // std::cout << "working_conn_count: " << working_conn_count << std::endl;
   if (impl_->working_conn_max_count <= 0 ||
       working_conn_count < static_cast<uint32_t>(
         impl_->working_conn_max_count)) {
@@ -520,10 +527,11 @@ void Manager::enqueue(connection::id_t id) noexcept {
         impl_->wait_work_conn_ids.erase(it);
     }
     if (id == connection::kInvalidId) return;
+		std::atomic_signal_fence(std::memory_order_release);
     impl_->working_conn_count.store(
-      impl_->working_conn_count.load(std::memory_order_relaxed) + 1,
-      std::memory_order_relaxed);
-    std::cout << "id: " << id << std::endl;
+      impl_->working_conn_count.load(std::memory_order_acquire) + 1,
+      std::memory_order_release);
+    // std::cout << "id: " << id << std::endl;
     impl_->executor->enqueue([m = shared_from_this(), id]() {
         Manager::Impl::work(m, id);
     });
@@ -532,6 +540,7 @@ void Manager::enqueue(connection::id_t id) noexcept {
     std::unique_lock<std::mutex> lock{impl_->mutex};
     auto it = impl_->wait_work_conn_ids.find(id);
     if (it != impl_->wait_work_conn_ids.end()) return;
+    // std::cout << "enqueue id: " << id << std::endl;
     impl_->wait_work_conn_id_deque.push_back(id);
     impl_->wait_work_conn_ids.emplace(id);
   }
