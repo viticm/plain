@@ -130,6 +130,10 @@ void Select::handle_io() noexcept {
       } else if (FD_ISSET(id, &impl_->write_fds.use)) { // output(by send) ?
                                                         // disabled now.
       }
+      /*
+      if (impl_->out_id)
+        std::cout << conn->id() << ":" << id << std::endl;
+      */
       
     });
   } catch(...) {

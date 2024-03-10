@@ -30,7 +30,7 @@ endif()
 set(COMMON_LIBS "plain;${CMAKE_THREAD_LIBS_INIT}")
 
 if (MSVC AND pf_build_shared)
-  set(cxx_base_flags "${cxx_base_flags} -DPF_BUILD_AS_DLL")
+  set(cxx_base_flags "${cxx_base_flags} -DPLAIN_BUILD_AS_DLL")
 endif()
 
 set(CMAKE_CXX_STANDARD 23)

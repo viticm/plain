@@ -125,7 +125,7 @@ class PLAIN_API Kernel : public Singleton<Kernel> {
 } // namespace plain
 
 #ifndef ENGINE
-#define ENGINE plain::Kernel::get_instance()
+#define ENGINE plain::Singleton<plain::Kernel>::get_instance()
 #endif
 
 #endif // PLAIN_ENGINE_KERNEL_H_

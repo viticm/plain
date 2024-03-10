@@ -55,6 +55,7 @@ struct Basic::Impl {
   void enqueue_work() noexcept; 
   bool has_work_flag(WorkFlag flag) const noexcept;
   void set_work_flag(WorkFlag flag, bool enable) noexcept;
+  bool exchange_work_flag(WorkFlag flag, bool enable) noexcept;
   static std::string get_name(const Basic *conn) noexcept;
 };
 
@@ -80,6 +81,9 @@ Basic::Impl::~Impl() = default;
 
 bool Basic::Impl::process_input(Basic *conn) noexcept {
   if (!has_work_flag(WorkFlag::Input)) return true;
+  scoped_executor_t check_flag([this]{
+    set_work_flag(WorkFlag::Input, false);
+  });
   // std::cout << "input: " << socket->id() << std::endl;
   assert(conn);
   if (!socket->valid()) return false;
@@ -93,8 +97,10 @@ bool Basic::Impl::process_input(Basic *conn) noexcept {
     m->increase_recv_size(r);
   }
   set_work_flag(WorkFlag::Command, true);
+  /*
   if (socket->avail() == 0)
     set_work_flag(WorkFlag::Input, false);
+  */
   return true;
 }
 
@@ -111,7 +117,7 @@ bool Basic::Impl::process_output(Basic *conn) noexcept {
       return false;
     }
     auto m = manager.lock();
-    if (m) {
+    if (r > 0 && m) {
       m->increase_send_size(r);
     }
   }
@@ -269,6 +275,17 @@ void Basic::Impl::set_work_flag(WorkFlag flag, bool enable) noexcept {
   }
 #endif
 }
+  
+bool Basic::Impl::exchange_work_flag(WorkFlag flag, bool enable) noexcept {
+  std::unique_lock<std::mutex> lock{mutex};
+  auto r = work_flags & (0x1 << std::to_underlying(flag));
+  if (r == enable) return r;
+  if (enable)
+    work_flags |= (0x1 << std::to_underlying(flag));
+  else
+    work_flags &= ~(0x1 << std::to_underlying(flag));
+  return r;
+}
 
 std::string Basic::Impl::get_name(const Basic *conn) noexcept {
   if (!conn->valid()) return {};
@@ -345,8 +362,7 @@ void Basic::enqueue_work(WorkFlag flag) noexcept {
     else if (flag == WorkFlag::Output)
       impl_->process_output_await(this);
   } else {
-    if (impl_->has_work_flag(flag)) return;
-    impl_->set_work_flag(flag, true);
+    if (impl_->exchange_work_flag(flag, true)) return;
     // impl_->enqueue_work();
     auto m = impl_->manager.lock();
     if (m) m->enqueue(impl_->id); // now to banlance work
