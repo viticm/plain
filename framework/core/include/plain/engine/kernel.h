@@ -20,7 +20,7 @@
 
 namespace plain {
 
-class PLAIN_API Kernel : public Singleton<Kernel> {
+class PLAIN_API Kernel {
 
  public:
   void start();

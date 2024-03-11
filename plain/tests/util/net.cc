@@ -29,6 +29,7 @@ plain::Timer counter_net_impl(
       auto recv_str = plain::format_size(manager->recv_size());
       auto str = std::vformat(
         "send:{}/recv:{}", std::make_format_args(send_str, recv_str));
+      str.resize(64);
       std::cout << fgB::green;
       setString(str);
       std::cout.flush();

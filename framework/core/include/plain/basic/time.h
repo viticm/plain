@@ -17,7 +17,7 @@
 
 namespace plain {
 
-class PLAIN_API Time : public Singleton<Time> {
+class PLAIN_API Time {
 
  public:
    Time();

@@ -51,7 +51,7 @@ class PLAIN_API Library {
 
 };
 
-class PLAIN_API LibraryManager : public Singleton< LibraryManager > {
+class PLAIN_API LibraryManager {
 
  public:
    LibraryManager();
