@@ -29,7 +29,13 @@ plain::Timer counter_net_impl(
       auto recv_str = plain::format_size(manager->recv_size());
       auto str = std::vformat(
         "send:{}/recv:{}", std::make_format_args(send_str, recv_str));
-      str.resize(64);
+
+      // Set words size.
+      int32_t left_size = 25 - static_cast<int32_t>(str.size());
+      if (left_size > 0) {
+        for (int32_t i = 0; i < left_size; ++i)
+          str.push_back(' ');
+      }
       std::cout << fgB::green;
       setString(str);
       std::cout.flush();
