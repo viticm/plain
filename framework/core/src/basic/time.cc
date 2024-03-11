@@ -2,8 +2,6 @@
 #include <iomanip>
 #include "plain/basic/time.h"
 
-PLAIN_SINGLETON_DECL(plain::Time);
-
 using namespace plain;
 
 Time::Time() :

@@ -60,7 +60,6 @@ engine_option::engine_option() noexcept :
 
 
 
-PLAIN_SINGLETON_DECL(plain::Kernel);
 using plain::Kernel;
 
 struct Kernel::Impl {

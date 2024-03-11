@@ -6,8 +6,6 @@
 #include "plain/file/api.h"
 #include "plain/engine/kernel.h"
 
-PLAIN_SINGLETON_DECL(plain::LibraryManager);
-
 using namespace plain;
 
 typedef void (__stdcall *function_open)(plain::Kernel*, void*);

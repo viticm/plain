@@ -38,12 +38,12 @@ class PLAIN_API Singleton : noncopyable {
 
 };
 
-} // namespace plain
+template <typename T>
+std::shared_ptr<T> Singleton<T>::singleton_{nullptr};
 
-#define PLAIN_SINGLETON_DECL(T) \
-template <> \
-std::shared_ptr<T> plain::Singleton<T>::singleton_{nullptr}; \
-template <> \
-std::once_flag plain::Singleton<T>::once_flag_{};
+template <typename T>
+std::once_flag Singleton<T>::once_flag_{};
+
+} // namespace plain
 
 #endif //PLAIN_BASIC_SINGLETON_H_
