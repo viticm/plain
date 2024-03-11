@@ -194,6 +194,7 @@ Manager::Manager(
   const setting_t &setting,
   std::shared_ptr<concurrency::executor::Basic> executor) :
   setting_{setting}, impl_{std::make_unique<Impl>()} {
+  assert(socket::initialize());
   assert(setting.default_count <= setting.max_count);
   if (!executor) {
     executor = std::make_shared<concurrency::executor::WorkerThread>();
@@ -214,7 +215,6 @@ Manager::~Manager() {
 
 bool Manager::start() {
   if (impl_->running) return true;
-  if (!socket::initialize()) return false;
   if (!prepare()) return false;
   socket::id_t fds[2]{socket::kInvalidId};
   if (socket::make_pair(fds)) {
