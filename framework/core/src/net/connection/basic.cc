@@ -278,7 +278,7 @@ void Basic::Impl::set_work_flag(WorkFlag flag, bool enable) noexcept {
   
 bool Basic::Impl::exchange_work_flag(WorkFlag flag, bool enable) noexcept {
   std::unique_lock<std::mutex> lock{mutex};
-  auto r = work_flags & (0x1 << std::to_underlying(flag));
+  auto r = static_cast<bool>(work_flags & (0x1 << std::to_underlying(flag)));
   if (r == enable) return r;
   if (enable)
     work_flags |= (0x1 << std::to_underlying(flag));
