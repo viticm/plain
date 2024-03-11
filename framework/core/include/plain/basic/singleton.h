@@ -16,7 +16,7 @@
 namespace plain {
 
 template <typename T>
-class PLAIN_API Singleton : noncopyable {
+class Singleton : noncopyable {
  
  public:
    Singleton() = default;
