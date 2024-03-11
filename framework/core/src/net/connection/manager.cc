@@ -194,7 +194,8 @@ Manager::Manager(
   const setting_t &setting,
   std::shared_ptr<concurrency::executor::Basic> executor) :
   setting_{setting}, impl_{std::make_unique<Impl>()} {
-  assert(socket::initialize());
+  if (!socket::initialize())
+    throw std::runtime_error("socket initialize failed");
   assert(setting.default_count <= setting.max_count);
   if (!executor) {
     executor = std::make_shared<concurrency::executor::WorkerThread>();

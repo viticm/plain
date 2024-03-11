@@ -115,7 +115,7 @@ class PLAIN_API LibraryManager {
    std::unordered_map<std::string, std::vector<std::string>> namesmap_;
 
    /* The library object pointer map. */
-   std::unordered_map<std::string, std::unique_ptr<Library>> librarymap_;
+   std::unordered_map<std::string, std::shared_ptr<Library>> librarymap_;
 
 };
 
