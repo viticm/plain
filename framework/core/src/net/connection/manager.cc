@@ -5,6 +5,7 @@
 #include "plain/basic/utility.h"
 #include "plain/concurrency/executor/basic.h"
 #include "plain/concurrency/executor/worker_thread.h"
+#include "plain/engine/kernel.h"
 #include "plain/net/detail/coroutine.h"
 #include "plain/net/connection/basic.h"
 #include "plain/net/socket/api.h"
@@ -43,7 +44,7 @@ struct Manager::Impl {
   thread_t worker; // The main worker.
 #endif
   socket::id_t ctrl_write_fd{socket::kInvalidId};
-  bool running{false};
+  std::atomic_bool running{false};
   callable_func connect_callback;
   callable_func disconnect_callback;
   uint64_t send_size{0};
@@ -216,7 +217,12 @@ Manager::~Manager() {
 
 bool Manager::start() {
   if (impl_->running) return true;
-  if (!prepare()) return false;
+  auto running = impl_->running.exchange(true, std::memory_order_relaxed);
+  if (running) return true;
+  if (!prepare()) {
+    impl_->running.store(false, std::memory_order_relaxed);
+    return false;
+  }
   socket::id_t fds[2]{socket::kInvalidId};
   if (socket::make_pair(fds)) {
     ctrl_read_fd_ = fds[0];
@@ -224,10 +230,11 @@ bool Manager::start() {
     // std::cout << "fds: " << fds[0] << "|" << fds[1] << std::endl;
     if (!sock_add(ctrl_read_fd_, 0)) {
       LOG_ERROR << setting_.name << " add ctrl read fd failed";
+      impl_->running.store(false, std::memory_order_relaxed);
       return false;
     }
   }
-  impl_->running = true;
+  ENGINE->add(shared_from_this());
 #ifndef PLAIN_NET_MANAGER_ENABLE_COROUTINE
    impl_->worker = thread_t([manager = shared_from_this()]{
     for (;;) {
@@ -243,11 +250,10 @@ bool Manager::start() {
 
 void Manager::stop() {
   // std::cout << "stop: " << this << std::endl;
-  {
-    std::unique_lock<std::mutex> lock{impl_->mutex};
-    if (!impl_->running) return;
-    impl_->running = false;
-  }
+  auto running = impl_->running.exchange(false, std::memory_order_relaxed);
+  if (!running) return;
+  if (setting_.name != "console") // console is kernel owner
+    ENGINE->remove_net(setting_.name);
   off();
   for (auto conn : impl_->connection_info.list) {
     if (conn && conn->valid()) conn->shutdown();
@@ -269,7 +275,7 @@ void Manager::stop() {
 }
 
 bool Manager::running() const noexcept {
-  return impl_->running;
+  return impl_->running.load(std::memory_order_relaxed);
 }
   
 std::shared_ptr<plain::concurrency::executor::Basic>
@@ -414,6 +420,11 @@ void Manager::foreach(std::function<void(std::shared_ptr<Basic> conn)> func) {
     auto conn = get_conn(id);
     if (conn && conn->valid()) func(conn);
   }
+}
+
+size_t Manager::size() const noexcept {
+  std::unique_lock<decltype(impl_->mutex)> auto_lock(impl_->mutex);
+  return impl_->connection_info.ids->size();
 }
 
 std::shared_ptr<plain::net::connection::Basic> Manager::accept() noexcept {

@@ -17,6 +17,7 @@
 #include "plain/basic/logger.h"
 #include "plain/concurrency/config.h"
 #include "plain/sys/thread.h"
+#include "plain/net/config.h"
 
 namespace plain {
 
@@ -53,6 +54,15 @@ class PLAIN_API Kernel {
 
  public:
   static std::tuple<uint32_t, uint32_t, uint32_t> version() noexcept;
+
+ public:
+   void add(std::shared_ptr<net::connection::Manager> net);
+   void remove(std::shared_ptr<net::connection::Manager> net) noexcept;
+   void remove_net(std::string_view name) noexcept;
+
+ public:
+   bool enable_console(std::string_view addr = {}) noexcept;
+   void register_console_handler(std::string cmd, console_func func) noexcept;
 
  public:
   template<class F, class... Args>

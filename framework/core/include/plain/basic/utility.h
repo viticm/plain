@@ -29,12 +29,12 @@ PLAIN_API int64_t toint64(const char *str);
 PLAIN_API uint64_t touint64(const char *str);
 
 //A simple de/encrypt for password.
-PLAIN_API bool encrypt(const std::string &in, std::string &out);
-PLAIN_API bool decrypt(const std::string &in, std::string &out);
+PLAIN_API bool encrypt(std::string_view in, std::string &out);
+PLAIN_API bool decrypt(std::string_view in, std::string &out);
 
 //A simple de/encrypt string with a number.
-PLAIN_API bool encrypt(const std::string &in, int32_t number, std::string &out);
-PLAIN_API bool decrypt(const std::string &in, int32_t &number, std::string &out);
+PLAIN_API bool encrypt(std::string_view in, int32_t number, std::string &out);
+PLAIN_API bool decrypt(std::string_view in, int32_t &number, std::string &out);
 
 PLAIN_API char *safecopy(char *dest, const char *src, size_t size);
 
@@ -56,39 +56,39 @@ PLAIN_API bool checkstr(const char *in, uint32_t size);
 
 // Retira espacios en blanco (u otros caracteres) del inicio de un string.
 PLAIN_API std::string &ltrim(
-    std::string &str, const std::string &character_mask = " \t\n\r\0\x0B");
+    std::string &str, std::string_view character_mask = " \t\n\r\0\x0B");
 
 // Retira los espacios en blanco (u otros caracteres) del final de un string.
 PLAIN_API std::string &rtrim(
-    std::string &str, const std::string &character_mask = " \t\n\r\0\x0B");
+    std::string &str, std::string_view character_mask = " \t\n\r\0\x0B");
 
 // Elimina espacio en blanco (u otro tipo de caracteres) del inicio y el final de la cadena.
 PLAIN_API std::string &trim(
-    std::string &str, const std::string &character_mask = " \t\n\r\0\x0B");
+    std::string &str, std::string_view character_mask = " \t\n\r\0\x0B");
 
 // Determine if a given string contains a given substring.
 PLAIN_API bool contains(
-    const std::string &haystack, const std::vector<std::string> &needles);
+    std::string_view haystack, const std::vector<std::string> &needles);
 
 // Reemplaza todas las apariciones del string buscado con el string de reemplazo.
-PLAIN_API std::string str_replace(const std::string &search , 
-                               const std::string &replace, 
-                               const std::string &subject, 
-                               int32_t count = -1);
+PLAIN_API std::string str_replace(std::string_view search , 
+                                  std::string_view replace, 
+                                  std::string_view subject, 
+                                  int32_t count = -1);
 
 // Reemplaza todas las apariciones del string buscado con el string de reemplazo.
 PLAIN_API std::string str_replaces(const std::vector<std::string> &search , 
-                                const std::string &replace, 
-                                const std::string &subject, 
-                                int32_t count = -1);
+                                   std::string_view replace, 
+                                   std::string_view subject, 
+                                   int32_t count = -1);
 // Quote string with slashes.
-PLAIN_API inline std::string addslashes(const std::string &str) {
+PLAIN_API inline std::string addslashes(std::string_view str) {
   return str_replace(
       "'", "\\'", str_replace("\"", "\\\"", str_replace("\\", "\\\\", str)));
 }
 
 // Quote string without slashes.
-PLAIN_API inline std::string stripslashes(const std::string &str) {
+PLAIN_API inline std::string stripslashes(std::string_view str) {
   return str_replace(
       "\\'", "'", str_replace("\\\"", "\"", str_replace("\\\\", "\\", str)));
 }
@@ -99,7 +99,7 @@ PLAIN_API inline std::string stripslashes(const std::string &str) {
 #endif
 
 // To lower.
-PLAIN_API inline std::string tolower(const std::string &str) {
+PLAIN_API inline std::string tolower(std::string_view str) {
   std::string temp{ str };
   std::transform(
       temp.begin(), temp.end(), temp.begin(), (int32_t (*)(int32_t))std::tolower);
@@ -107,7 +107,7 @@ PLAIN_API inline std::string tolower(const std::string &str) {
 }
 
 // To upper.
-PLAIN_API inline std::string toupper(const std::string &str) {
+PLAIN_API inline std::string toupper(std::string_view str) {
   std::string temp{ str };
   std::transform(
       temp.begin(), temp.end(), temp.begin(), (int32_t (*)(int32_t))std::toupper);
@@ -115,7 +115,7 @@ PLAIN_API inline std::string toupper(const std::string &str) {
 }
 
 PLAIN_API std::string wstr2str(const std::wstring &str);
-PLAIN_API std::wstring str2wstr(const std::string &str);
+PLAIN_API std::wstring str2wstr(std::string_view str);
 
 #if OS_WIN
 # pragma warning( pop )

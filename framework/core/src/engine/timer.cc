@@ -73,7 +73,6 @@ void Timer::cancel() {
 
   if (!static_cast<bool>(timer_queue))
     return;
-  std::cout << "remove: " << this << std::endl;
   timer_queue->remove_internal_timer(std::move(state));
 }
 

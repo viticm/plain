@@ -62,4 +62,38 @@ decode(Basic *input, const packet::limit_t &packet_limit) {
   return p;
 }
 
+error_or_t<std::shared_ptr<packet::Basic>>
+line_decode(stream::Basic *input, const packet::limit_t &packet_limit) {
+  if (!input) return Error{ErrorCode::RunTime};
+  bytes_t bytes;
+  bytes.reserve(packet_limit.max_length);
+  auto readed = input->peek(bytes.data(), bytes.capacity());
+  if (readed == 0) return ErrorCode{ErrorCode::NetPacketNeedRecv};
+  std::string_view str{reinterpret_cast<char *>(bytes.data()), readed};
+  auto pos = str.find('\n');
+  if (pos == std::string::npos) {
+    if (readed == packet_limit.max_length )
+      return Error{ErrorCode::RunTime};
+    else
+      return Error{ErrorCode::NetPacketNeedRecv};
+  }
+  input->remove(pos + 1); // remove readed line.
+  if (pos > 0 && str[pos - 1] == '\r') {
+    pos -= 1;
+  }
+  auto p = std::make_shared<packet::Basic>();
+  if (pos > 0) {
+    p->set_writeable(true);
+    p->write(bytes.data(), pos);
+    p->set_writeable(false);
+  }
+  p->set_readable(true);
+  return p;
+}
+
+bytes_t line_encode(std::shared_ptr<packet::Basic> packet) {
+  auto d = packet->data();
+  return {d.data(), d.size()};
+}
+
 } // namespace plain::net::stream

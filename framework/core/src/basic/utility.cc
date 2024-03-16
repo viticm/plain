@@ -278,7 +278,7 @@ uint64_t touint64(const char *str) {
 }
 
 int32_t explode(const char *source,
-                std::vector<std::string>& result,
+                std::vector<std::string> &result,
                 const char *key,
                 bool one_key,
                 bool ignore_empty) {
@@ -450,7 +450,7 @@ static void pg_decrypt(char *key,
 }
 
 static bool pg_decrypt_password(char *password, const char *encrypted) {
-  int32_t length = (int32_t)strlen(encrypted), pk_length{0}, i{0};
+  int32_t length = static_cast<int32_t>(strlen(encrypted)), pk_length{0}, i{0};
   char buffer[PG_RESULTLENSTD + 1]{0};
   if (length != PG_RESULTLENSTD)
     return false;
@@ -484,7 +484,7 @@ static bool pg_encrypt_password(
     5179,  6121,  6833,  7333,  7829,  8353,  9323,  9829,
   };
 
-  int32_t length = (int32_t)strlen(password), keylength = 0;
+  int32_t length = static_cast<int32_t>(strlen(password)), keylength = 0;
   bool encryptok{false};
   if (length > PG_MAXPASSWORDLEN) return false;
   for (int32_t i = 0; i < length; ++i) {
@@ -501,10 +501,11 @@ static bool pg_encrypt_password(
 
   //public key
   for (int32_t i = 0; i < keylength; i++) {
-    uint32_t random = (uint32_t)tickcount + prime_number_list[i];
-    char c = (char)((random % PG_CHARCOUNT) + PG_MINCHAR);
+    uint32_t random = static_cast<uint32_t>(tickcount) + prime_number_list[i];
+    char c = static_cast<char>((random % PG_CHARCOUNT) + PG_MINCHAR);
     if (PG_INVALIDCHAR(c))
-      c = (char)((random & 1) ? 'a' + (random % 26) : 'A' + (random % 26));
+      c = static_cast<char>(
+        (random & 1) ? 'a' + (random % 26) : 'A' + (random % 26));
     result[i + 1] = c;
   }
 
@@ -514,10 +515,12 @@ static bool pg_encrypt_password(
 
   //fill
   for (int32_t i = 0; i < PG_RESULTLENSTD - 2 - keylength - length; i++) {
-    uint32_t random = (uint32_t)(tickcount + prime_number_list[PG_RESULTLENSTD - i - 1]);
-    char c = (char)((random % PG_CHARCOUNT) + PG_MINCHAR);
+    auto random = static_cast<uint32_t>(
+      tickcount + prime_number_list[PG_RESULTLENSTD - i - 1]);
+    auto c = static_cast<char>((random % PG_CHARCOUNT) + PG_MINCHAR);
     if (PG_INVALIDCHAR(c))
-      c = (char)((random & 1) ? 'a' + (random % 26) : 'A' + (random % 26));
+      c = static_cast<char>(
+        (random & 1) ? 'a' + (random % 26) : 'A' + (random % 26));
     result[PG_RESULTLENSTD - i - 1] = c;
   }
   pg_swapchars(result);
@@ -533,21 +536,21 @@ static bool pg_encrypt_password(
   return false;
 }
 
-bool encrypt(const std::string &in, std::string &out) {
+bool encrypt(std::string_view in, std::string &out) {
   auto tickcount{1}; // = TIME_MANAGER_POINTER->get_tickcount();
   char temp[PG_RESULTLENSTD + 1]{0};
   int32_t level = 0;
   bool result{false};
-  if (pg_encrypt_password(temp, in.c_str(), tickcount, level)) {
+  if (pg_encrypt_password(temp, in.data(), tickcount, level)) {
     result = true;
     out = result;
   }
   return result;
 }
 
-bool decrypt(const std::string &in, std::string &out) {
+bool decrypt(std::string_view in, std::string &out) {
   char temp[PG_RESULTLENSTD + 1]{0};
-  if (!pg_decrypt_password(temp, in.c_str())) return false;
+  if (!pg_decrypt_password(temp, in.data())) return false;
   out = temp;
   return true;
 }
@@ -564,7 +567,7 @@ bool encrypt_number(int32_t number, char _char, std::string &out) {
   return true;
 }
 
-bool decrypt_number(const std::string &in, char _char, int32_t &number) {
+bool decrypt_number(std::string_view in, char _char, int32_t &number) {
   auto number_len = in.size();
   number = 0;
   for (decltype(number_len) i = 0; i < number_len; ++i) {
@@ -577,7 +580,7 @@ bool decrypt_number(const std::string &in, char _char, int32_t &number) {
 //This encrypt not change any word in old string, just insert the number as rand
 //string in rand position.
 //The final string is: first_char + len + pos_len + pos_str + newstring.
-bool encrypt(const std::string &in, int32_t number, std::string &out) {
+bool encrypt(std::string_view in, int32_t number, std::string &out) {
   const char *chars{"abcdefghijklmABCDEFGHIJKLM"}; 
   std::default_random_engine rand_engine(static_cast<uint32_t>(time(nullptr)));
   std::uniform_int_distribution<int32_t> dis(0, 25);
@@ -597,16 +600,16 @@ bool encrypt(const std::string &in, int32_t number, std::string &out) {
   out = "";
   out = out + first_char + len_char + pos_len_char + pos_str;
   if (0 == pos) {
-    out = out + number_str + in;
+    out = out + number_str + in.data();
   } else if (pos == in.size()) {
-    out = out + in + number_str;
+    out = out + in.data() + number_str;
   } else {
-    out = out + in.substr(0, pos) + number_str + in.substr(pos);
+    out = out + in.substr(0, pos).data() + number_str + in.substr(pos).data();
   }
   return true;
 }
 
-bool decrypt(const std::string &in, int32_t &number, std::string &out) {
+bool decrypt(std::string_view in, int32_t &number, std::string &out) {
   if (in.size() <= 4) return false;
   char first_char = in[0];
   int32_t length = in[1] - first_char;
@@ -618,14 +621,14 @@ bool decrypt(const std::string &in, int32_t &number, std::string &out) {
   decrypt_number(pos_str, first_char, pos);
   size_t rsize = in.size() - header_size;
   if (rsize < (size_t)(pos + length)) return false;
-  std::string number_str = in.substr(header_size + pos, length);
+  std::string number_str = in.substr(header_size + pos, length).data();
   decrypt_number(number_str, first_char, number);
-  out = in.substr(header_size, pos) + 
-        in.substr(header_size + pos + length);
+  out = std::string{in.substr(header_size, pos).data()} + 
+        in.substr(header_size + pos + length).data();
   return true;
 }
 
-std::string &ltrim(std::string &str, const std::string &character_mask) {
+std::string &ltrim(std::string &str, std::string_view character_mask) {
   if (str.empty()) return str;
   for (size_t i = 0; i < character_mask.length(); ++i) {
     str.erase(0, str.find_first_not_of(character_mask[i]));
@@ -633,7 +636,7 @@ std::string &ltrim(std::string &str, const std::string &character_mask) {
   return str;
 }
 
-std::string &rtrim(std::string &str, const std::string &character_mask) {
+std::string &rtrim(std::string &str, std::string_view character_mask) {
   if (str.empty()) return str;
   for (size_t i = 0; i < character_mask.length(); ++i) {
     str.erase(str.find_last_not_of(character_mask[i]) + 1);
@@ -641,7 +644,7 @@ std::string &rtrim(std::string &str, const std::string &character_mask) {
   return str;
 }
 
-std::string &trim(std::string &str, const std::string &character_mask) {
+std::string &trim(std::string &str, std::string_view character_mask) {
   if (str.empty()) return str;
   for (size_t i = 0; i < character_mask.length(); ++i) {
     str.erase(0, str.find_first_not_of(character_mask[i]));
@@ -651,17 +654,17 @@ std::string &trim(std::string &str, const std::string &character_mask) {
 }
 
 bool contains(
-    const std::string &haystack, const std::vector<std::string> &needles) {
-  for (const std::string &needle : needles) {
+    std::string_view haystack, const std::vector<std::string> &needles) {
+  for (std::string_view needle : needles) {
     if (needle != "" && haystack.find(needle) != std::string::npos)
       return true;
   }
   return false;
 }
 
-std::string str_replace(const std::string &search , 
-                        const std::string &replace, 
-                        const std::string &subject, 
+std::string str_replace(std::string_view search , 
+                        std::string_view replace, 
+                        std::string_view subject, 
                         int32_t count) {
   std::string r{subject};
   int32_t replace_count{0};
@@ -677,11 +680,11 @@ std::string str_replace(const std::string &search ,
 }
 
 std::string str_replaces(const std::vector<std::string>& search , 
-                         const std::string &replace, 
-                         const std::string &subject, 
+                         std::string_view replace, 
+                         std::string_view subject, 
                          int32_t count) {
   std::string r{subject};
-  for (const std::string &item : search)
+  for (std::string_view item : search)
     r = str_replace(item, replace, subject, count);
   return r;
 }
@@ -704,18 +707,18 @@ std::string wstr2str(const std::wstring &str) {
   return r;
 }
 
-std::wstring str2wstr(const std::string &str) {
+std::wstring str2wstr(std::string_view str) {
   std::wstring r;
 #if OS_WIN
   int32_t len = MultiByteToWideChar(CP_ACP, 0, (LPCSTR)str.c_str(), -1, NULL, 0);
   wchar_t *wszUtf8 = new wchar_t[len + 1];
   memset(wszUtf8, 0, len * 2 + 2);
-  MultiByteToWideChar(CP_ACP, 0, (LPCSTR)str.c_str(), -1, (LPWSTR)wszUtf8, len);
+  MultiByteToWideChar(CP_ACP, 0, (LPCSTR)str.data(), -1, (LPWSTR)wszUtf8, len);
   r = wszUtf8;
   safe_delete_array(wszUtf8);
 #else
   wchar_t temp[512]{0,};
-  mbstowcs(temp, str.c_str(), sizeof(temp) - 1);
+  mbstowcs(temp, str.data(), sizeof(temp) - 1);
   r = temp;
 #endif
   return r;

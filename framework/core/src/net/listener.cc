@@ -29,6 +29,8 @@ bool Listener::start() {
   if (!impl_->manager->listen_sock_->init(
       addr, impl_->manager->setting_.socket_type))
     return false;
+  if (impl_->manager->setting_.address.empty())
+    impl_->manager->setting_.address = address().text();
   impl_->manager->listen_fd_ = impl_->manager->listen_sock_->id();
   return impl_->manager->start();
 }

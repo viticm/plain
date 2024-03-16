@@ -37,6 +37,10 @@ bytes_t encode(std::shared_ptr<packet::Basic> packet);
 error_or_t<std::shared_ptr<packet::Basic>>
 decode(Basic *input, const packet::limit_t &packet_limit);
 
+bytes_t line_encode(std::shared_ptr<packet::Basic> packet);
+error_or_t<std::shared_ptr<packet::Basic>>
+line_decode(Basic *input, const packet::limit_t &packet_limit);
+
 } // namespace stream
 } // namespace plain::net
 

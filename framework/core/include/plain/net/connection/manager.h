@@ -14,6 +14,7 @@
 
 #include "plain/net/connection/config.h"
 #include "plain/concurrency/config.h"
+#include "plain/engine/config.h"
 #include "plain/net/packet/config.h"
 #include "plain/net/socket/config.h"
 #include "plain/net/stream/codec.h"
@@ -49,6 +50,7 @@ class PLAIN_API Manager :
   std::shared_ptr<concurrency::executor::Basic> get_executor() const noexcept;
   bool send_ctrl_cmd(std::string_view cmd) noexcept;
   void execute(std::function<void()> func); // Multi safe execute.
+  size_t size() const noexcept;
 
  public:
   uint64_t send_size() const noexcept;
@@ -94,6 +96,7 @@ class PLAIN_API Manager :
   friend class Basic;
   friend class net::Connector;
   friend class net::Listener;
+  friend class plain::Kernel;
 
  private:
   struct Impl;

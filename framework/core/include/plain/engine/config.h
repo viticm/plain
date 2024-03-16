@@ -21,6 +21,9 @@ enum class AppStatus {
   Stopped,
 };
 
+using console_func = 
+  std::function<std::string(const std::vector<std::string> &args)>;
+
 class Kernel;
 class TimerQueue;
 class Timer;

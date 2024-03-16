@@ -1,12 +1,19 @@
 #include "plain/engine/kernel.h"
+#include <map>
 #include "plain/basic/time.h"
 #include "plain/basic/logger.h"
+#include "plain/basic/utility.h"
 #include "plain/concurrency/executor/inline.h"
 #include "plain/concurrency/executor/manual.h"
 #include "plain/concurrency/executor/thread.h"
 #include "plain/concurrency/executor/thread_pool.h"
 #include "plain/concurrency/executor/worker_thread.h"
 #include "plain/engine/timer_queue.h"
+#include "plain/net/connection/basic.h"
+#include "plain/net/packet/basic.h"
+#include "plain/net/connection/manager.h"
+#include "plain/net/address.h"
+#include "plain/net/listener.h"
 
 namespace plain::detail {
 namespace {
@@ -69,7 +76,84 @@ struct Kernel::Impl {
   std::shared_ptr<concurrency::executor::ThreadPool> background_executor;
   std::shared_ptr<concurrency::executor::Thread> thread_executor;
   detail::executor_collection registered_executors;
+  std::unique_ptr<net::Listener> console_listener;
+  std::map<std::string, std::weak_ptr<net::connection::Manager>> nets;
+  std::map<std::string, console_func> console_handlers;
+  uint32_t unnamed_net_count{0};
+  std::mutex mutex;
+
+  static std::string console_cmd_list(const std::vector<std::string> &args);
+  static std::string console_cmd_kill(const std::vector<std::string> &args);
 };
+
+std::string Kernel::Impl::console_cmd_list(
+  const std::vector<std::string> &args) {
+  std::unique_lock<decltype(ENGINE->impl_->mutex)>
+    auto_lock{ENGINE->impl_->mutex};
+  std::string r;
+  r += "\n";
+  r += " Total: " + std::to_string(ENGINE->impl_->nets.size());
+  if (!ENGINE->impl_->nets.empty()) {
+    r += "\n";
+    for (auto it : ENGINE->impl_->nets) {
+      auto net = it.second.lock();
+      if (net) {
+        r += "\t";
+        r += net->setting_.name;
+        r += " count: " + std::to_string(net->size());
+        r += " maxcount: " + std::to_string(net->setting_.max_count);
+        r += " send: " + format_size(net->send_size());
+        r += " recv: " + format_size(net->recv_size());
+        r += " address: " + net->setting_.address;
+        r += "\n";
+      }
+    }
+  }
+  // Remove the last '\n'
+  if (r.back() == '\n') {
+    r.pop_back();
+  }
+  return r;
+}
+
+std::string Kernel::Impl::console_cmd_kill(
+  const std::vector<std::string> &args) {
+  std::string r{"ok"};
+  decltype(ENGINE->impl_->nets) nets;
+  {
+    std::unique_lock<decltype(ENGINE->impl_->mutex)>
+      auto_lock{ENGINE->impl_->mutex};
+    nets = ENGINE->impl_->nets;
+  }
+  if (nets.empty()) return "failed";
+  if (args.empty()) {
+    // killall
+    for (auto it : nets) {
+      auto net = it.second.lock();
+      if (net) net->stop();
+    }
+  } else {
+    std::string fails;
+    for (const auto &name : args) {
+      auto it = nets.find(name);
+      if (it == nets.end() || name == "console") {
+        fails += name + " ";
+      } else {
+        auto net = it->second.lock();
+        if (net) {
+          net->stop();
+        } else { // Clear from list.
+          std::unique_lock<decltype(ENGINE->impl_->mutex)>
+            auto_lock{ENGINE->impl_->mutex};
+          ENGINE->impl_->nets.erase(name);
+        }
+      }
+    }
+    if (!fails.empty())
+      r = fails + "fails";
+  }
+  return r;
+}
 
 Kernel::Kernel() : Kernel(plain::engine_option{}) {
 
@@ -104,6 +188,10 @@ Kernel::Kernel(const engine_option &option) : impl_{std::make_unique<Impl>()} {
   impl_->thread_executor = std::make_shared<executor::Thread>(
     option.thread_started_callback, option.thread_terminated_callback);
   impl_->registered_executors.register_executor(impl_->thread_executor);
+
+  register_console_handler("list", Impl::console_cmd_list);
+  register_console_handler("kill", Impl::console_cmd_kill);
+  register_console_handler("killall", Impl::console_cmd_kill);
 }
   
 Kernel::~Kernel() noexcept {
@@ -158,4 +246,75 @@ Kernel::make_manual_executor() {
 std::tuple<uint32_t, uint32_t, uint32_t>
 Kernel::version() noexcept {
   return {2, 0, 0};
+}
+
+void Kernel::add(std::shared_ptr<net::connection::Manager> net) {
+  std::unique_lock<decltype(impl_->mutex)> auto_lock{impl_->mutex};
+  auto name = net->setting_.name;
+  if (name.empty()) { // Set unnamed
+    name = "unknown" + std::to_string(++impl_->unnamed_net_count);
+    net->setting_.name = name;
+  }
+  auto it = impl_->nets.find(name);
+  if (it != impl_->nets.end())
+    throw std::runtime_error("repeated net: " + name);
+  impl_->nets.emplace(name, net);
+}
+   
+void Kernel::remove(std::shared_ptr<net::connection::Manager> net) noexcept {
+  std::unique_lock<decltype(impl_->mutex)> auto_lock{impl_->mutex};
+  auto name = net->setting_.name;
+  impl_->nets.erase(name);
+}
+   
+void Kernel::remove_net(std::string_view name) noexcept {
+  std::unique_lock<decltype(impl_->mutex)> auto_lock{impl_->mutex};
+  impl_->nets.erase(name.data());
+}
+
+bool Kernel::enable_console(std::string_view addr) noexcept {
+  if (static_cast<bool>(impl_->console_listener))
+    return false;
+  net::setting_t setting;
+  setting.address = addr;
+  setting.name = "console";
+  impl_->console_listener = std::make_unique<net::Listener>(setting);
+  if (!impl_->console_listener->start())
+    return false;
+  LOG_INFO << "console listen on " <<
+    impl_->console_listener->address().text();
+  
+  impl_->console_listener->set_dispatcher([](
+    net::connection::Basic *conn, std::shared_ptr<net::packet::Basic> packet){
+    auto d = reinterpret_cast<const char *>(packet->data().data());
+    std::vector<std::string> params;
+    explode(d, params, " ", true, true);
+    if (params.empty()) return true;
+    auto cmd = params[0];
+    auto it = ENGINE->impl_->console_handlers.find(cmd);
+    if (it == ENGINE->impl_->console_handlers.end()) return false;
+    params.erase(params.begin());
+    auto r = it->second(params);
+    if (!r.empty()) {
+      auto p = std::make_shared<net::packet::Basic>();
+      p->set_writeable(true);
+      p->write(r + "\n");
+      conn->send(p);
+    }
+    return true;
+  });
+  
+  impl_->console_listener->set_codec(
+    {.encode = net::stream::line_encode, .decode = net::stream::line_decode});
+
+  return true;
+}
+
+void Kernel::register_console_handler(
+  std::string cmd, console_func func) noexcept {
+  std::unique_lock<decltype(impl_->mutex)> auto_lock{impl_->mutex};
+  auto it = impl_->console_handlers.find(cmd);
+  if (it != impl_->console_handlers.end())
+    LOG_WARN << "cmd: " << cmd << " handler will replace";
+  impl_->console_handlers.emplace(cmd, func);
 }

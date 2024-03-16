@@ -1,6 +1,7 @@
 #include "util/parse_args.h"
 #include "util/net.h"
 #include "plain/engine/timer.h"
+#include "plain/engine/kernel.h"
 #include "plain/net/connection/basic.h"
 #include "plain/net/listener.h"
 
@@ -25,6 +26,7 @@ int32_t main(int32_t argc, char **argv) {
   });
   auto timer = counter_net(listener);
   UNUSED(timer);
+  ENGINE->enable_console();
   wait_shutdown(listener);
   return 0;
 }
