@@ -154,7 +154,6 @@ std::string Kernel::Impl::console_cmd_kill(
     if (!fails.empty())
       r = fails + "fails";
   }
-  std::cout << "r: " << r << std::endl;
   return r;
 }
 
