@@ -572,6 +572,7 @@ uint64_t Manager::recv_size() const noexcept {
 // For banlance connection works.
 void Manager::enqueue(connection::id_t id) noexcept {
   std::unique_lock<std::mutex> lock{impl_->mutex};
+  if (!running()) return;
   auto working_conn_count =
     impl_->working_conn_count.load(std::memory_order_acquire);
   // std::cout << "working_conn_count: " << working_conn_count << std::endl;

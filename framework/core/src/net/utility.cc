@@ -28,4 +28,21 @@ make_manager(
   }
 }
 
+const std::string get_mode_name(Mode mode) noexcept {
+  switch (mode) {
+    case Mode::Epoll:
+      return "epoll";
+    case Mode::Select:
+      return "select";
+    case Mode::Iocp:
+      return "iocp";
+    case Mode::IoUring:
+      return "iouring";
+    case Mode::Kqueue:
+      return "kqueue";
+    default:
+      return {};
+  }
+}
+
 } // namespace plain::net

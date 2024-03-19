@@ -29,6 +29,7 @@ class PLAIN_API Basic {
   size_t write(std::string_view str);
   size_t write(const bytes_t &bytes);
   size_t write(const std::byte *value, size_t length);
+  size_t write(const_byte_span_t bytes);
   size_t read(std::string &str);
   size_t read(bytes_t &bytes);
   size_t read(std::byte *value, size_t length);

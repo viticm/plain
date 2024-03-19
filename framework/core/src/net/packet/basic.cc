@@ -42,6 +42,12 @@ size_t Basic::write(const std::byte *bytes, size_t length) {
   return length;
 }
 
+size_t Basic::write(const_byte_span_t bytes) {
+  if (!impl_->have_flag(kWriteableFlag)) return 0;
+  impl_->data.append(bytes.data(), bytes.size());
+  return bytes.size();
+}
+
 size_t Basic::read(std::string &str) {
   if (!impl_->have_flag(kReadableFlag)) return 0;
   uint32_t length{0};

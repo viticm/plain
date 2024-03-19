@@ -22,6 +22,8 @@ make_manager(
   const setting_t &setting = {},
   std::shared_ptr<concurrency::executor::Basic> executor = {}) noexcept;
 
+const std::string get_mode_name(Mode mode) noexcept;
+
 } // namespace plain::net
 
 #endif // PLAIN_NET_UTILITY_H_

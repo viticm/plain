@@ -1,5 +1,6 @@
 #include "plain/engine/kernel.h"
 #include <map>
+#include "plain/basic/type/byte.h"
 #include "plain/basic/time.h"
 #include "plain/basic/logger.h"
 #include "plain/basic/utility.h"
@@ -14,6 +15,7 @@
 #include "plain/net/connection/manager.h"
 #include "plain/net/address.h"
 #include "plain/net/listener.h"
+#include "plain/net/utility.h"
 
 namespace plain::detail {
 namespace {
@@ -91,8 +93,7 @@ std::string Kernel::Impl::console_cmd_list(
   std::unique_lock<decltype(ENGINE->impl_->mutex)>
     auto_lock{ENGINE->impl_->mutex};
   std::string r;
-  r += "\n";
-  r += " Total: " + std::to_string(ENGINE->impl_->nets.size());
+  r += "Total: " + std::to_string(ENGINE->impl_->nets.size());
   if (!ENGINE->impl_->nets.empty()) {
     r += "\n";
     for (auto it : ENGINE->impl_->nets) {
@@ -105,6 +106,7 @@ std::string Kernel::Impl::console_cmd_list(
         r += " send: " + format_size(net->send_size());
         r += " recv: " + format_size(net->recv_size());
         r += " address: " + net->setting_.address;
+        r += " mode: " + net::get_mode_name(net->setting_.mode);
         r += "\n";
       }
     }
@@ -152,6 +154,7 @@ std::string Kernel::Impl::console_cmd_kill(
     if (!fails.empty())
       r = fails + "fails";
   }
+  std::cout << "r: " << r << std::endl;
   return r;
 }
 
@@ -298,7 +301,9 @@ bool Kernel::enable_console(std::string_view addr) noexcept {
     if (!r.empty()) {
       auto p = std::make_shared<net::packet::Basic>();
       p->set_writeable(true);
-      p->write(r + "\n");
+      r += "\n";
+      p->write(as_const_bytes(r));
+      p->set_writeable(false);
       conn->send(p);
     }
     return true;

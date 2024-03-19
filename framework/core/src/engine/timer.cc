@@ -21,6 +21,8 @@ void TimerStateBasic::fire() {
   deadline_ = make_deadline(milliseconds(frequency));
 
   assert(static_cast<bool>(executor_));
+  // FIXME: share the executor maybe get shutdown before post.
+  if (executor_->shutdown_requested()) return;
 
   executor_->post([self = shared_from_this()]() mutable {
     self->execute();
