@@ -92,6 +92,7 @@ struct Kernel::Impl {
 
 std::string Kernel::Impl::console_cmd_list(
   const std::vector<std::string> &args) {
+  UNUSED(args);
   std::unique_lock<decltype(ENGINE->impl_->mutex)>
     auto_lock{ENGINE->impl_->mutex};
   std::string r;
