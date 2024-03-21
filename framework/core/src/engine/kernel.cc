@@ -98,7 +98,7 @@ std::string Kernel::Impl::console_cmd_list(
   std::string r;
   r += "Total: " + std::to_string(ENGINE->impl_->nets.size());
   if (!ENGINE->impl_->nets.empty()) {
-    r += "\n";
+    r += LF;
     for (auto it : ENGINE->impl_->nets) {
       auto net = it.second.lock();
       if (net) {
@@ -110,12 +110,15 @@ std::string Kernel::Impl::console_cmd_list(
         r += " recv: " + format_size(net->recv_size());
         r += " address: " + net->setting_.address;
         r += " mode: " + net::get_mode_name(net->setting_.mode);
-        r += "\n";
+        r += LF;
       }
     }
   }
   // Remove the last '\n'
   if (r.back() == '\n') {
+    r.pop_back();
+  }
+  if (r.back() == '\r') {
     r.pop_back();
   }
   return r;
@@ -168,7 +171,7 @@ std::string Kernel::Impl::console_cmd_help(
       r += it.first;
       r += "\t";
       r += it.second;
-      r += "\n";
+      r += LF;
     }
   } else {
     for (const auto &name : args) {
@@ -177,11 +180,13 @@ std::string Kernel::Impl::console_cmd_help(
         r += it->first;
         r += "\t";
         r += it->second;
-        r += "\n";
+        r += LF;
       }
     }
   }
   if (!r.empty() && r.back() == '\n')
+    r.pop_back();
+  if (!r.empty() && r.back() == '\r')
     r.pop_back();
   return r;
 }
@@ -333,7 +338,7 @@ bool Kernel::enable_console(std::string_view addr) noexcept {
     if (!r.empty()) {
       auto p = std::make_shared<net::packet::Basic>();
       p->set_writeable(true);
-      r += "\n";
+      r += LF;
       p->write(as_const_bytes(r));
       p->set_writeable(false);
       conn->send(p);
