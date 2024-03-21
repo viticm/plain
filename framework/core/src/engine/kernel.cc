@@ -81,11 +81,13 @@ struct Kernel::Impl {
   std::unique_ptr<net::Listener> console_listener;
   std::map<std::string, std::weak_ptr<net::connection::Manager>> nets;
   std::map<std::string, console_func> console_handlers;
+  std::map<std::string, std::string> console_descs;
   uint32_t unnamed_net_count{0};
   std::mutex mutex;
 
   static std::string console_cmd_list(const std::vector<std::string> &args);
   static std::string console_cmd_kill(const std::vector<std::string> &args);
+  static std::string console_cmd_help(const std::vector<std::string> &args);
 };
 
 std::string Kernel::Impl::console_cmd_list(
@@ -157,6 +159,32 @@ std::string Kernel::Impl::console_cmd_kill(
   return r;
 }
 
+std::string Kernel::Impl::console_cmd_help(
+  const std::vector<std::string> &args) {
+  std::string r;
+  if (args.empty()) {
+    for (const auto &it : ENGINE->impl_->console_descs) {
+      r += it.first;
+      r += "\t";
+      r += it.second;
+      r += "\n";
+    }
+  } else {
+    for (const auto &name : args) {
+      auto it = ENGINE->impl_->console_descs.find(name);
+      if (it != ENGINE->impl_->console_descs.end()) {
+        r += it->first;
+        r += "\t";
+        r += it->second;
+        r += "\n";
+      }
+    }
+  }
+  if (!r.empty() && r.back() == '\n')
+    r.pop_back();
+  return r;
+}
+
 Kernel::Kernel() : Kernel(plain::engine_option{}) {
 
 }
@@ -191,9 +219,13 @@ Kernel::Kernel(const engine_option &option) : impl_{std::make_unique<Impl>()} {
     option.thread_started_callback, option.thread_terminated_callback);
   impl_->registered_executors.register_executor(impl_->thread_executor);
 
-  register_console_handler("list", Impl::console_cmd_list);
-  register_console_handler("kill", Impl::console_cmd_kill);
-  register_console_handler("killall", Impl::console_cmd_kill);
+  register_console_handler("list", Impl::console_cmd_list, "Show net list");
+  register_console_handler(
+    "kill", Impl::console_cmd_kill, "Kill net from list(kill name1 name2 ...)");
+  register_console_handler("killall", Impl::console_cmd_kill, "Kill all net");
+  register_console_handler(
+    "help", Impl::console_cmd_help,
+    "Show help to use commands, help command1 command2 (empty will show all)");
 }
   
 Kernel::~Kernel() noexcept {
@@ -315,10 +347,12 @@ bool Kernel::enable_console(std::string_view addr) noexcept {
 }
 
 void Kernel::register_console_handler(
-  std::string cmd, console_func func) noexcept {
+  std::string_view cmd, console_func func, std::string_view desc) noexcept {
   std::unique_lock<decltype(impl_->mutex)> auto_lock{impl_->mutex};
-  auto it = impl_->console_handlers.find(cmd);
+  auto it = impl_->console_handlers.find(cmd.data());
   if (it != impl_->console_handlers.end())
-    LOG_WARN << "cmd: " << cmd << " handler will replace";
+    LOG_WARN << "cmd: " << cmd.data() << " handler will replace";
   impl_->console_handlers.emplace(cmd, func);
+  if (!desc.empty())
+    impl_->console_descs.emplace(cmd, desc);
 }

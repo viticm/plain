@@ -62,7 +62,9 @@ class PLAIN_API Kernel {
 
  public:
    bool enable_console(std::string_view addr = {}) noexcept;
-   void register_console_handler(std::string cmd, console_func func) noexcept;
+   void register_console_handler(
+     std::string_view cmd, console_func func,
+     std::string_view desc = {}) noexcept;
 
  public:
   template<class F, class... Args>

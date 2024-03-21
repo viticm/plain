@@ -710,7 +710,7 @@ std::string wstr2str(const std::wstring &str) {
 std::wstring str2wstr(std::string_view str) {
   std::wstring r;
 #if OS_WIN
-  int32_t len = MultiByteToWideChar(CP_ACP, 0, (LPCSTR)str.c_str(), -1, NULL, 0);
+  int32_t len = MultiByteToWideChar(CP_ACP, 0, (LPCSTR)str.data(), -1, NULL, 0);
   wchar_t *wszUtf8 = new wchar_t[len + 1];
   memset(wszUtf8, 0, len * 2 + 2);
   MultiByteToWideChar(CP_ACP, 0, (LPCSTR)str.data(), -1, (LPWSTR)wszUtf8, len);
