@@ -75,3 +75,4 @@ endif()
 
 test_executables(pingpong_server "../pingpong/server.cc")
 test_executables(pingpong_client "../pingpong/client.cc")
+test_executable(example "../example.cc")
