@@ -118,7 +118,13 @@ bool start_listener() {
   // (if you custom packet handler this need check by yourself)
   setting.packet_limit.max_length = 200 * 1024;
 
-  listener = std::make_shared<Listener>(setting);
+  // The executor for execute net handlers(send/recv/packet)
+  // * default: WorkerThread(one thread)
+  // * also can use: Inline/Manual/Thread/ThreadPool
+  // *! executor module implement by concurrencpp
+  auto executor = std::make_shared<plain::concurrency::executor::WorkerThread>();
+
+  listener = std::make_shared<Listener>(setting, executor);
 
   // The codec handlers.
   listener->set_codec({.encode = line_encode, .decode = line_decode});
@@ -145,7 +151,10 @@ bool start_listener() {
 }
 
 void start_connector() {
-  
+ 
+  // The connector setting same as listener(but not active with address).
+  // Also it can be set executor with construct.
+ 
   connector = std::make_shared<Connector>(); // Using default setting.
   connector->set_codec({.encode = line_encode, .decode = line_decode});
   connector->set_dispatcher([](
