@@ -136,6 +136,8 @@ void start_connector() {
 }
 
 int32_t main(int32_t argc, char **argv) {
+  UNUSED(argc);
+  UNUSED(argv);
   using namespace std::chrono_literals;
   
   // Start console, param empty then listen a random port.
