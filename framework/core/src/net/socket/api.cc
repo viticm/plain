@@ -1,1286 +1,599 @@
-#include "pf/file/api.h"
-#include "pf/basic/io.tcc"
-#include "pf/sys/util.h"
-#include "pf/basic/global.h"
-#include "pf/net/socket/api.h"
-
-int32_t sys_socket(int32_t domain, int32_t type, int32_t protocol) {
-  int32_t result = static_cast<int32_t>(socket(domain, type, protocol));
-  return result;
-}
-
-namespace pf_net {
-
-namespace socket {
-
-namespace api {
-
-#if OS_UNIX
-//extern int32_t errno;
-#elif OS_WIN
-int32_t error;
+#include "plain/net/socket/api.h"
+#include <errno.h>
+#if OS_UNIX || OS_MAC
+#include <signal.h>
 #endif
-char errormessage[FILENAME_MAX] = {'\0'};
+#include "plain/file/api.h"
+#include "plain/basic/type/config.h"
+#include "plain/sys/utility.h"
 
-bool env_init() {
-  if (GLOBALS["socket.env_init"] == true) return true;
-  bool r{true};
-#if OS_UNIX
-  signal(SIGPIPE, SIG_IGN); //Socket has error will get this signal.
-  if (!pf_sys::util::set_core_rlimit()) {
-    pf_basic::io_cerr(
-        "[net] (socket::api::env_init) change core rlimit failed!");
-    return false;
-  }
-#elif OS_WIN
-  WORD versionrequested;
-  WSADATA data;
-  versionrequested = MAKEWORD(2, 2);
-  auto _error = WSAStartup(versionrequested, &data);
-  r = 0 == _error;
-#endif
-  GLOBALS["socket.env_init"] = r;
-  return r;
-}
+namespace plain::net::socket {
 
-int32_t socketex(int32_t domain, int32_t type, int32_t protocol) {
+static thread_local Error s_error;
 
-  int32_t socketid = sys_socket(domain, type, protocol); //remember it
-
-  if (socketid == ID_INVALID) {
-#if OS_UNIX
-    switch (errno) {
-      case EPROTONOSUPPORT :
-      case EMFILE :
-      case ENFILE :
-      case EACCES :
-      case ENOBUFS :
-      default : {
-          break;
-      }
-    }
-#elif OS_WIN
-    error = WSAGetLastError();
-    switch (error) {
+static void set_error(int32_t e) {
+  s_error.set_code(e);
+#if OS_WIN
+  switch (s_error.code()) {
       case WSANOTINITIALISED : {
-        strncpy(errormessage, "WSANOTINITIALISED", sizeof(errormessage) - 1);
+        s_error.set_message("WSANOTINITIALISED");
         break;
       }
       case WSAENETDOWN : {
-        strncpy(errormessage, "WSAENETDOWN", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEAFNOSUPPORT : {
-        strncpy(errormessage, "WSAEAFNOSUPPORT", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEINPROGRESS : {
-        strncpy(errormessage, "WSAEINPROGRESS", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEMFILE : {
-        strncpy(errormessage, "WSAEMFILE", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAENOBUFS : {
-        strncpy(errormessage, "WSAENOBUFS", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEPROTONOSUPPORT : {
-        strncpy(errormessage, "WSAEPROTONOSUPPORT", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEPROTOTYPE : {
-        strncpy(errormessage, "WSAEPROTOTYPE", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAESOCKTNOSUPPORT : {
-        strncpy(errormessage, "WSAESOCKTNOSUPPORT", sizeof(errormessage) - 1);
-        break;
-      }
-      default : {
-        strncpy(errormessage, "UNKNOWN", sizeof(errormessage) - 1);
-        break;
-      }
-    }
-#endif
-  }
-  return socketid;
-}
-
-bool bindex(int32_t socketid,
-            const struct sockaddr *addr,
-            uint32_t addrlength) {
-  if (SOCKET_ERROR == bind(socketid, addr, addrlength)) {
-#if OS_UNIX
-    switch (errno)
-    {
-      case EADDRINUSE :
-      case EINVAL :
-      case EACCES :
-      case ENOTSOCK :
-      case EBADF :
-      case EROFS :
-      case EFAULT :
-      case ENAMETOOLONG :
-      case ENOENT :
-      case ENOMEM :
-      case ENOTDIR :
-      case ELOOP :
-      default : {
-          break;
-      }
-    }
-#elif OS_WIN
-    error = WSAGetLastError();
-    switch (error) {
-      case WSANOTINITIALISED : {
-        strncpy(errormessage, "WSAESOCKTNOSUPPORT", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAENETDOWN : {
-        strncpy(errormessage, "WSAENETDOWN", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEADDRINUSE : {
-        strncpy(errormessage, "WSAEADDRINUSE", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEADDRNOTAVAIL : {
-        strncpy(errormessage, "WSAEADDRNOTAVAIL", sizeof(errormessage) - 1);
+        s_error.set_message("WSAENETDOWN");
         break;
       }
       case WSAEFAULT : {
-        strncpy(errormessage, "WSAEFAULT", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEINPROGRESS : {
-        strncpy(errormessage, "WSAEINPROGRESS", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEINVAL : {
-        strncpy(errormessage, "WSAEINVAL", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAENOBUFS : {
-        strncpy(errormessage, "WSAENOBUFS", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAENOTSOCK : {
-        strncpy(errormessage, "WSAENOTSOCK", sizeof(errormessage) - 1);
-        break;
-      }
-      default : {
-        strncpy(errormessage, "UNKNOWN", sizeof(errormessage) - 1);
-        break;
-      }
-    }
-#endif
-    return false;
-  }
-  return true;
-}
-
-bool connectex(int32_t socketid,
-               const struct sockaddr *addr,
-               uint32_t addrlength) {
-  if (SOCKET_ERROR == connect(socketid, addr, addrlength)) {
-#if OS_UNIX
-    switch (errno) {
-      case EALREADY:
-      case EINPROGRESS:
-      case ECONNREFUSED:
-      case EISCONN:
-      case ETIMEDOUT:
-      case ENETUNREACH:
-      case EADDRINUSE:
-      case EBADF:
-      case EFAULT:
-      case ENOTSOCK:
-      default: {
-          break;
-      }
-    }
-#elif OS_WIN
-    error = WSAGetLastError();
-    switch (error) {
-      case WSANOTINITIALISED: {
-        strncpy(errormessage, "WSANOTINITIALISED", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAENETDOWN: {
-        strncpy(errormessage, "WSAENETDOWN", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEADDRINUSE: {
-        strncpy(errormessage, "WSAEADDRINUSE", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEINTR: {
-        strncpy(errormessage, "WSAEINTR", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEINPROGRESS: {
-        strncpy(errormessage, "WSAEINPROGRESS", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEALREADY: {
-        strncpy(errormessage, "WSAEALREADY", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEADDRNOTAVAIL: {
-        strncpy(errormessage, "WSAEADDRNOTAVAIL", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEAFNOSUPPORT: {
-        strncpy(errormessage, "WSAEAFNOSUPPORT", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAECONNREFUSED: {
-        strncpy(errormessage, "WSAECONNREFUSED", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEFAULT: {
-        strncpy(errormessage, "WSAEFAULT", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEINVAL: {
-        strncpy(errormessage, "WSAEINVAL", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEISCONN: {
-        strncpy(errormessage, "WSAEISCONN", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAENETUNREACH: {
-        strncpy(errormessage, "WSAENETUNREACH", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAENOBUFS: {
-        strncpy(errormessage, "WSAENOBUFS", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAENOTSOCK: {
-        strncpy(errormessage, "WSAENOTSOCK", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAETIMEDOUT: {
-        strncpy(errormessage, "WSAETIMEDOUT", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEWOULDBLOCK: {
-        strncpy(errormessage, "WSAEWOULDBLOCK", sizeof(errormessage) - 1);
-        break;
-      }
-      default: {
-        strncpy(errormessage, "UNKNOWN", sizeof(errormessage) - 1);
-        break;
-      }
-    }
-#endif
-    return false;
-  }
-  return true;
-}
-
-bool listenex(int32_t socketid, uint32_t backlog) {
-  if (SOCKET_ERROR == listen(socketid, backlog)) {
-#if OS_UNIX
-    switch (errno) {
-      case EBADF :
-      case ENOTSOCK :
-      case EOPNOTSUPP :
-      default : {
-          break;
-      }
-    }
-#elif OS_WIN
-    error = WSAGetLastError();
-    switch (error) {
-      case WSANOTINITIALISED : {
-        strncpy(errormessage, "WSANOTINITIALISED", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAENETDOWN : {
-        strncpy(errormessage, "WSAENETDOWN", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEADDRINUSE : {
-        strncpy(errormessage, "WSAEADDRINUSE", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEINPROGRESS : {
-        strncpy(errormessage, "WSAEINPROGRESS", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEINVAL : {
-        strncpy(errormessage, "WSAEINVAL", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEISCONN : {
-        strncpy(errormessage, "WSAEISCONN", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEMFILE : {
-        strncpy(errormessage, "WSAEMFILE", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAENOBUFS : {
-        strncpy(errormessage, "WSAENOBUFS", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAENOTSOCK : {
-        strncpy(errormessage, "WSAENOTSOCK", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEOPNOTSUPP : {
-        strncpy(errormessage, "WSAEOPNOTSUPP", sizeof(errormessage) - 1);
-        break;
-      }
-      default : {
-        strncpy(errormessage, "UNKNOWN", sizeof(errormessage) - 1);
-        break;
-      }
-    }
-#endif
-    return false;
-  }
-  return true;
-}
-
-int32_t acceptex(int32_t socketid,
-                 struct sockaddr *addr,
-                 uint32_t *addrlength) {
-  int32_t client = SOCKET_INVALID;
-#if OS_UNIX
-  client = accept(socketid, addr, addrlength);
-#elif OS_WIN
-  client = static_cast<int32_t>(accept(socketid, addr, (int32_t *)addrlength));
-#endif
-  if (SOCKET_INVALID == client) {
-#if OS_UNIX
-    switch (errno) {
-      case EWOULDBLOCK : {
-        strncpy(errormessage, "EWOULDBLOCK", sizeof(errormessage) - 1);
-        break;
-      }
-      case ECONNRESET : {
-        strncpy(errormessage, "ECONNRESET", sizeof(errormessage) - 1);
-        break;
-      }
-      case ECONNABORTED : {
-        strncpy(errormessage, "ECONNABORTED", sizeof(errormessage) - 1);
-        break;
-      }
-      case EPROTO : {
-        strncpy(errormessage, "EPROTO", sizeof(errormessage) - 1);
-        break;
-      }
-      case EINTR : {
-        // from UNIX Network Programming 2nd, 15.6
-        // with nonblocking-socket, ignore above errors
-        strncpy(errormessage, "EINTR", sizeof(errormessage) - 1);
-        break;
-      }
-      case EBADF : {
-        strncpy(errormessage, "EBADF", sizeof(errormessage) - 1);
-        break;
-      }
-      case ENOTSOCK : {
-        strncpy(errormessage, "ENOTSOCK", sizeof(errormessage) - 1);
-        break;
-      }
-      case EOPNOTSUPP : {
-        strncpy(errormessage, "EOPNOTSUPP", sizeof(errormessage) - 1);
-        break;
-      }
-      case EFAULT : {
-        strncpy(errormessage, "EFAULT", sizeof(errormessage) - 1);
-        break;
-      }
-      default : {
-        memset(errormessage,'\0',sizeof(errormessage));
-        snprintf(errormessage, sizeof(errormessage) - 1, "error: %d", errno);
-        break;
-      }
-    }
-#elif OS_WIN
-    error = WSAGetLastError();
-    switch (error) {
-      case WSANOTINITIALISED : {
-        strncpy(errormessage, "WSANOTINITIALISED", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAENETDOWN : {
-        strncpy(errormessage, "WSAENETDOWN", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEFAULT : {
-        strncpy(errormessage, "WSAEFAULT", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEINTR : {
-        strncpy(errormessage, "WSAEINTR", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEINPROGRESS : {
-        strncpy(errormessage, "WSAEINPROGRESS", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEINVAL : {
-        strncpy(errormessage, "WSAEINVAL", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEMFILE : {
-        strncpy(errormessage, "WSAEMFILE", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAENOBUFS : {
-        strncpy(errormessage, "WSAENOBUFS", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAENOTSOCK : {
-        strncpy(errormessage, "WSAENOTSOCK", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEOPNOTSUPP : {
-        strncpy(errormessage, "WSAEOPNOTSUPP", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEWOULDBLOCK : {
-        strncpy(errormessage, "WSAEWOULDBLOCK", sizeof(errormessage) - 1);
-        break;
-      }
-      default : {
-        strncpy(errormessage, "UNKNOWN", sizeof(errormessage) - 1);
-        break;
-      }
-    }
-#endif
-  } else {
-    //do nothing
-  }
-  return client;
-}
-
-bool getsockopt_exb(int32_t socketid,
-                    int32_t level,
-                    int32_t optname,
-                    void *optval,
-                    uint32_t *optlength) {
-#if OS_UNIX
-  if (SOCKET_ERROR == getsockopt(socketid,
-                                 level,
-                                 optname,
-                                 optval,
-                                 optlength)) {
-    switch (errno) {
-      case EBADF :
-      case ENOTSOCK :
-      case ENOPROTOOPT :
-      case EFAULT :
-      default : {
-        break;
-      }
-    }
-    return false;
-  }
-#elif OS_WIN
-  if (SOCKET_ERROR == getsockopt(socketid,
-                                 level,
-                                 optname,
-                                 (char *)optval,
-                                 (int32_t *)optlength)) {
-    error = WSAGetLastError();
-    switch (error)
-    {
-      case WSANOTINITIALISED : {
-        strncpy(errormessage, "WSANOTINITIALISED", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAENETDOWN : {
-        strncpy(errormessage, "WSAENETDOWN", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEFAULT : {
-        strncpy(errormessage, "WSAEFAULT", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEINPROGRESS : {
-        strncpy(errormessage, "WSAEINPROGRESS", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEINVAL : {
-        strncpy(errormessage, "WSAEINVAL", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAENOPROTOOPT : {
-        strncpy(errormessage, "WSAENOPROTOOPT", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAENOTSOCK : {
-        strncpy(errormessage, "WSAENOTSOCK", sizeof(errormessage) - 1);
-        break;
-      }
-      default : {
-        strncpy(errormessage, "UNKNOWN", sizeof(errormessage) - 1);
-        break;
-      }
-    }
-    return false;
-  }
-#endif
-  return true;
-}
-
-uint32_t getsockopt_exu(int32_t socketid,
-                        int32_t level,
-                        int32_t optname,
-                        void *optval,
-                        uint32_t *optlength) {
-uint32_t result = 0;
-#if OS_UNIX
-  if (SOCKET_ERROR == getsockopt(socketid,
-                                 level,
-                                 optname,
-                                 optval,
-                                 optlength)) {
-    switch (errno) {
-      case EBADF: {
-        result = 1;
-        break;
-      }
-      case ENOTSOCK: {
-        result = 2;
-        break;
-      }
-      case ENOPROTOOPT: {
-        result = 3;
-        break;
-      }
-      case EFAULT: {
-        result = 4;
-        break;
-      }
-      default: {
-        result = 5;
-      }
-    }
-  }
-#elif OS_WIN
-  if (SOCKET_ERROR == getsockopt(socketid,
-                                 level,
-                                 optname,
-                                 (char *)optval,
-                                 (int32_t *)optlength)) {
-    error = WSAGetLastError();
-    switch (error) {
-      case WSANOTINITIALISED: {
-        strncpy(errormessage, "WSANOTINITIALISED", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAENETDOWN: {
-        strncpy(errormessage, "WSAENETDOWN", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEFAULT: {
-        strncpy(errormessage, "WSAEFAULT", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEINPROGRESS: {
-        strncpy(errormessage, "WSAEINPROGRESS", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEINVAL: {
-        strncpy(errormessage, "WSAEINVAL", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAENOPROTOOPT: {
-        strncpy(errormessage, "WSAENOPROTOOPT", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAENOTSOCK: {
-        strncpy(errormessage, "WSAENOTSOCK", sizeof(errormessage) - 1);
-        break;
-      }
-      default : {
-        strncpy(errormessage, "UNKNOWN", sizeof(errormessage) - 1);
-        break;
-      }
-    }
-  }
-#endif
-  return result;
-}
-
-bool setsockopt_ex(int32_t socketid,
-                   int32_t level,
-                   int32_t optname,
-                   const void *optval,
-                   uint32_t optlength) {
-  bool result = true;
-#if OS_UNIX
-  if (SOCKET_ERROR == setsockopt(socketid,
-                                 level,
-                                 optname,
-                                 optval,
-                                 optlength)) {
-    switch (errno) {
-      case EBADF :
-      case ENOTSOCK :
-      case ENOPROTOOPT :
-      case EFAULT :
-      default : {
-          break;
-      }
-    }
-    result = false;
-  }
-#elif OS_WIN
-  if (SOCKET_ERROR == setsockopt(socketid,
-                                 level,
-                                 optname,
-                                 (char *)optval,
-                                 optlength)) {
-    error = WSAGetLastError();
-    switch (error) {
-      case WSANOTINITIALISED : {
-        strncpy(errormessage, "WSANOTINITIALISED", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAENETDOWN : {
-        strncpy(errormessage, "WSAENETDOWN", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEFAULT : {
-        strncpy(errormessage, "WSAEFAULT", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEINPROGRESS : {
-        strncpy(errormessage, "WSAEINPROGRESS", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEINVAL : {
-        strncpy(errormessage, "WSAEINVAL", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAENETRESET : {
-        strncpy(errormessage, "WSAENETRESET", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAENOPROTOOPT : {
-        strncpy(errormessage, "WSAENOPROTOOPT", sizeof(errormessage) - 1);
+        s_error.set_message("WSAEFAULT");
         break;
       }
       case WSAENOTCONN : {
-        strncpy(errormessage, "WSAENOTCONN", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAENOTSOCK : {
-        strncpy(errormessage, "WSAENOTSOCK", sizeof(errormessage) - 1);
-        break;
-      }
-      default : {
-        strncpy(errormessage, "UNKNOWN", sizeof(errormessage) - 1);
-        break;
-      }
-    }
-    result = false;
-  }
-#endif
-  return result;
-}
-
-int32_t sendex(int32_t socketid,
-               const void *buffer,
-               uint32_t length,
-               uint32_t flag) {
-  int32_t result = 0;
-#if OS_UNIX
-  result = send(socketid, buffer, length, flag);
-#elif OS_WIN
-  result = send(socketid, (const char *)buffer, length, flag);
-#endif
-
-  if (SOCKET_ERROR == result) {
-#if OS_UNIX
-    switch (errno) {
-      case EWOULDBLOCK: {
-        result = SOCKET_ERROR_WOULD_BLOCK;
-        break;
-      }
-      case ECONNRESET:
-      case EPIPE:
-      case EBADF:
-      case ENOTSOCK:
-      case EFAULT:
-      case EMSGSIZE:
-      case ENOBUFS:
-      default: {
-        break;
-      }
-    }
-#elif OS_WIN
-    error = WSAGetLastError();
-    switch (error) {
-      case WSANOTINITIALISED : {
-        strncpy(errormessage, "WSANOTINITIALISED", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAENETDOWN : {
-        strncpy(errormessage, "WSAENETDOWN", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEACCES : {
-        strncpy(errormessage, "WSAEACCES", sizeof(errormessage) - 1);
+        s_error.set_message("WSAENOTCONN");
         break;
       }
       case WSAEINTR : {
-        strncpy(errormessage, "WSAEINTR", sizeof(errormessage) - 1);
+        s_error.set_message("WSAEINTR");
         break;
       }
       case WSAEINPROGRESS : {
-        strncpy(errormessage, "WSAEINPROGRESS", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEFAULT : {
-        strncpy(errormessage, "WSAEFAULT", sizeof(errormessage) - 1);
+        s_error.set_message("WSAEINPROGRESS");
         break;
       }
       case WSAENETRESET : {
-        strncpy(errormessage, "WSAENETRESET", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAENOBUFS : {
-        strncpy(errormessage, "WSAENOBUFS", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAENOTCONN : {
-        strncpy(errormessage, "WSAENOTCONN", sizeof(errormessage) - 1);
+        s_error.set_message("WSAENETRESET");
         break;
       }
       case WSAENOTSOCK : {
-        strncpy(errormessage, "WSAENOTSOCK", sizeof(errormessage) - 1);
+        s_error.set_message("WSAENOTSOCK");
         break;
       }
       case WSAEOPNOTSUPP : {
-        strncpy(errormessage, "WSAEOPNOTSUPP", sizeof(errormessage) - 1);
+        s_error.set_message("WSAEOPNOTSUPP");
         break;
       }
-      case WSAESHUTDOWN : {
-        strncpy(errormessage, "WSAESHUTDOWN", sizeof(errormessage) - 1);
+      case WSAESHUTDOWN: {
+        s_error.set_message("WSAESHUTDOWN");
         break;
       }
       case WSAEWOULDBLOCK : {
-        //strncpy(errormessage, "WSAEWOULDBLOCK", sizeof(errormessage) - 1);
-        result = SOCKET_ERROR_WOULD_BLOCK;
+        s_error.set_code(kErrorWouldBlock);
+        s_error.set_message("WSAEWOULDBLOCK");
         break;
       }
       case WSAEMSGSIZE : {
-        strncpy(errormessage, "WSAEMSGSIZE", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEHOSTUNREACH : {
-        strncpy(errormessage, "WSAEHOSTUNREACH", sizeof(errormessage) - 1);
+        s_error.set_message("WSAEMSGSIZE");
         break;
       }
       case WSAEINVAL : {
-        strncpy(errormessage, "WSAEINVAL", sizeof(errormessage) - 1);
+        s_error.set_message("WSAEINVAL");
         break;
       }
       case WSAECONNABORTED : {
-        strncpy(errormessage, "WSAECONNABORTED", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAECONNRESET : {
-        strncpy(errormessage, "WSAECONNRESET", sizeof(errormessage) - 1);
+        s_error.set_message("WSAECONNABORTED");
         break;
       }
       case WSAETIMEDOUT : {
-        strncpy(errormessage, "WSAETIMEDOUT", sizeof(errormessage) - 1);
-        break;
-      }
-      default : {
-        strncpy(errormessage, "UNKNOWN", sizeof(errormessage) - 1);
-        break;
-      }
-    }
-#endif
-  }
-  else if (0 == result) {
-    //do nothing
-  }
-  return result;
-}
-
-int32_t sendtoex(int32_t socketid,
-                 const void *buffer,
-                 int32_t length,
-                 uint32_t flag,
-                 const struct sockaddr* to,
-                 int32_t tolength) {
-  int32_t result = 0;
-#if OS_UNIX
-  result = sendto(socketid, buffer, length, flag, to, tolength);
-#elif OS_WIN
-  result = sendto(socketid, (const char *)buffer,length, flag, to, tolength);
-#endif
-
-  if (SOCKET_ERROR == result) {
-#if OS_UNIX
-    switch (errno) {
-      case EWOULDBLOCK : {
-        result = 0;
-        break;
-      }
-      case ECONNRESET :
-      case EPIPE :
-      case EBADF :
-      case ENOTSOCK :
-      case EFAULT :
-      case EMSGSIZE :
-      case ENOBUFS :
-      default : {
-          break;
-      }
-    }
-#elif OS_WIN
-    //do nothing
-#endif
-  }
-  return result;
-}
-
-int32_t recvex(int32_t socketid,
-               void *buffer,
-               uint32_t length,
-               uint32_t flag) {
-
-  int32_t result = 0;
-#if OS_UNIX
-  result = recv(socketid, buffer, length, flag);
-#elif OS_WIN
-  result = recv(socketid, (char *)buffer, length, flag);
-#endif
-  if (SOCKET_ERROR == result) {
-#if OS_UNIX
-    switch (errno) {
-      case EWOULDBLOCK : {
-        result = SOCKET_ERROR_WOULD_BLOCK;
-        break;
-      }
-      case ECONNRESET :
-      case EPIPE :
-      case EBADF :
-      case ENOTCONN :
-      case ENOTSOCK :
-      case EINTR :
-      case EFAULT :
-
-      default : {
-        break;
-      }
-    }
-#elif OS_WIN
-    error = WSAGetLastError();
-    switch (error) {
-      case WSANOTINITIALISED : {
-        strncpy(errormessage, "WSANOTINITIALISED", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAENETDOWN : {
-        strncpy(errormessage, "WSAENETDOWN", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEFAULT : {
-        strncpy(errormessage, "WSAEFAULT", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAENOTCONN : {
-        strncpy(errormessage, "WSAENOTCONN", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEINTR : {
-        strncpy(errormessage, "WSAEINTR", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEINPROGRESS : {
-        strncpy(errormessage, "WSAEINPROGRESS", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAENETRESET : {
-        strncpy(errormessage, "WSAENETRESET", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAENOTSOCK : {
-        strncpy(errormessage, "WSAENOTSOCK", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEOPNOTSUPP : {
-        strncpy(errormessage, "WSAEOPNOTSUPP", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAESHUTDOWN : {
-        strncpy(errormessage, "WSAESHUTDOWN", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEWOULDBLOCK : {
-        //strncpy(errormessage, "WSAEWOULDBLOCK", sizeof(errormessage) - 1);
-        result = SOCKET_ERROR_WOULD_BLOCK;
-        break;
-      }
-      case WSAEMSGSIZE : {
-        strncpy(errormessage, "WSAEMSGSIZE", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEINVAL : {
-        strncpy(errormessage, "WSAEINVAL", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAECONNABORTED : {
-        strncpy(errormessage, "WSAECONNABORTED", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAETIMEDOUT : {
-        strncpy(errormessage, "WSAETIMEDOUT", sizeof(errormessage) - 1);
+        s_error.set_message("WSAETIMEDOUT");
         break;
       }
       case WSAECONNRESET : {
-        strncpy(errormessage, "WSAECONNRESET", sizeof(errormessage) - 1);
+        s_error.set_message("WSAECONNRESET");
         break;
       }
       default : {
-        strncpy(errormessage, "UNKNOWN", sizeof(errormessage) - 1);
+        s_error.set_message("UNKNOWN");
         break;
       }
     }
-#endif
-  }
-  else if (0 == result) {
-    //do nothing
-  }
-  return result;
-}
-
-int32_t recvfrom_ex(int32_t socketid,
-                    void *buffer,
-                    int32_t length,
-                    uint32_t flag,
-                    struct sockaddr *from,
-                    uint32_t *fromlength) {
-int32_t result = 0;
-#if OS_UNIX
-  result = recvfrom(socketid, buffer, length, flag, from, fromlength);
-#elif OS_WIN
-  result =
-    recvfrom(socketid, (char*)buffer, length, flag, from, (int32_t*)fromlength);
-#endif
-
-  if (SOCKET_ERROR == result) {
-#if OS_UNIX
-    switch (errno) {
-      case EWOULDBLOCK :
-        result = SOCKET_ERROR_WOULD_BLOCK;
-      case ECONNRESET :
-      case EPIPE :
-      case EBADF :
-      case ENOTCONN :
-      case ENOTSOCK :
-      case EINTR :
-      case EFAULT :
-      default : {
-        break;
-      }
-    }
-#elif OS_WIN
-    //do nothing
-#endif
-  }
-  return result;
-}
-
-bool closeex(int32_t socketid) {
-  bool result = true;
-#if OS_UNIX
-  pf_file::api::closeex(socketid);
-#elif OS_WIN
-  if (SOCKET_ERROR == closesocket(socketid)) {
-    error = WSAGetLastError();
-    switch (error) {
-      case WSANOTINITIALISED : {
-        strncpy(errormessage, "WSANOTINITIALISED", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAENETDOWN : {
-        strncpy(errormessage, "WSAENETDOWN", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAENOTSOCK : {
-        strncpy(errormessage, "WSAENOTSOCK", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEINPROGRESS : {
-        strncpy(errormessage, "WSAEINPROGRESS", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEINTR : {
-        strncpy(errormessage, "WSAEINTR", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEWOULDBLOCK : {
-        strncpy(errormessage, "WSAEWOULDBLOCK", sizeof(errormessage) - 1);
-        break;
-      }
-      default : {
-        strncpy(errormessage, "UNKNOWN", sizeof(errormessage) - 1);
-        break;
-      }
-    }
-    result = false;
-  }
-#endif
-  return result;
-}
-
-
-bool ioctlex(int32_t socketid, int64_t cmd, uint64_t *argp) {
-  bool result = true;
-#if OS_UNIX
-  UNUSED(socketid); UNUSED(cmd); UNUSED(argp);
-  //do nothing
-#elif OS_WIN
-  if (SOCKET_ERROR == ioctlsocket(socketid,(long)cmd,(u_long*)argp)) {
-    error = WSAGetLastError();
-      switch (error) {
-      case WSANOTINITIALISED : {
-        strncpy(errormessage, "WSANOTINITIALISED", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAENETDOWN : {
-        strncpy(errormessage, "WSAENETDOWN", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEINPROGRESS : {
-        strncpy(errormessage, "WSAEINPROGRESS", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAENOTSOCK : {
-        strncpy(errormessage, "WSAENOTSOCK", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEFAULT : {
-        strncpy(errormessage, "WSAEFAULT", sizeof(errormessage) - 1);
-        break;
-      }
-      default : {
-        strncpy(errormessage, "UNKNOWN", sizeof(errormessage) - 1);
-        break;
-      }
-    }
-    result = false;
-  }
-#endif
-  return result;
-}
-
-bool get_nonblocking_ex(int32_t socketid) {
-  bool result = true;
-#if OS_UNIX
-  result = pf_file::api::get_nonblocking_ex(socketid);
-#elif OS_WIN
-  UNUSED(socketid);
-  result = false;
-#endif
-  return result;
-}
-
-bool set_nonblocking_ex(int32_t socketid, bool on) {
-  bool result = true;
-#if OS_UNIX
-  pf_file::api::set_nonblocking_ex(socketid, on);
-#elif OS_WIN
-  uint64_t argp = true == on ? 1 : 0;
-  result = ioctlex(socketid, FIONBIO, &argp);
-#endif
-  return result;
-}
-
-uint32_t availableex(int32_t socketid) {
-  uint32_t result = 0;
-#if OS_UNIX
-  result = pf_file::api::availableex(socketid);
-#elif OS_WIN
-  uint64_t argp = 0;
-  ioctlex(socketid, FIONREAD, &argp);
-  result = (uint32_t)argp;
-#endif
-  return result;
-}
-
-bool shutdown_ex(int32_t socketid, int32_t how) {
-  bool result = true;
-  if (shutdown(socketid, how) < 0) {
-#if OS_UNIX
-    switch (errno) {
-      case EBADF :
-      case ENOTSOCK :
-      case ENOTCONN :
-      default : {
-          break;
-      }
-    }
-#elif OS_WIN
-    error = WSAGetLastError();
-    switch (error) {
-      case WSANOTINITIALISED : {
-        strncpy(errormessage, "WSANOTINITIALISED", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAENETDOWN : {
-        strncpy(errormessage, "WSAENETDOWN", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEINVAL : {
-        strncpy(errormessage, "WSAEINVAL", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEINPROGRESS : {
-        strncpy(errormessage, "WSAEINPROGRESS", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAENOTCONN : {
-        strncpy(errormessage, "WSAENOTCONN", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAENOTSOCK : {
-        strncpy(errormessage, "WSAENOTSOCK", sizeof(errormessage) - 1);
-        break;
-      }
-      default : {
-        strncpy(errormessage, "UNKNOWN", sizeof(errormessage) - 1);
-        break;
-      }
-    }
-#endif
-    result = false;
-  }
-  return result;
-}
-
-int32_t selectex(int32_t maxfdp,
-                 fd_set *readset,
-                 fd_set *writeset,
-                 fd_set *exceptset,
-                 struct timeval *timeout) {
-  int32_t result = 0;
-  result = select(maxfdp, readset, writeset, exceptset, timeout);
-  if(SOCKET_ERROR == result) {
-#if OS_UNIX
-
-#elif OS_WIN
-    error = WSAGetLastError();
-    switch (error) {
-      case WSANOTINITIALISED : {
-        strncpy(errormessage, "WSANOTINITIALISED", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEFAULT: {
-        strncpy(errormessage, "WSAEFAULT", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAENETDOWN: {
-        strncpy(errormessage, "WSAENETDOWN", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEINVAL: {
-        strncpy(errormessage, "WSAEINVAL", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEINTR: {
-        strncpy(errormessage, "WSAEINTR", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAEINPROGRESS: {
-        strncpy(errormessage, "WSAEINPROGRESS", sizeof(errormessage) - 1);
-        break;
-      }
-      case WSAENOTSOCK: {
-        strncpy(errormessage, "WSAENOTSOCK", sizeof(errormessage) - 1);
-        break;
-      }
-      default : {
-        strncpy(errormessage, "UNKNOWN", sizeof(errormessage) - 1);
-        break;
-      }
-    }
-#endif
-  }
-  return result;
-}
-
-int32_t getsockname_ex(int32_t socketid,
-                       struct sockaddr *name,
-                       int32_t *namelength) {
-  int32_t result = 0;
-#if OS_UNIX
-  result =
-    getsockname(socketid, name, reinterpret_cast<socklen_t *>(namelength));
-#elif OS_WIN
-  result =
-    getsockname(socketid, name, namelength);
-  error = WSAGetLastError();
-  switch (error) {
-    case WSANOTINITIALISED : {
-      strncpy(errormessage, "WSANOTINITIALISED", sizeof(errormessage) - 1);
+#else
+  switch (s_error.code()) {
+    case EWOULDBLOCK : {
+      s_error.set_code(kErrorWouldBlock);
+      s_error.set_message("EWOULDBLOCK");
       break;
     }
-    case WSAEFAULT: {
-      strncpy(errormessage, "WSAEFAULT", sizeof(errormessage) - 1);
+    case ECONNRESET : {
+      s_error.set_message("ECONNRESET");
       break;
     }
-    case WSAENETDOWN: {
-      strncpy(errormessage, "WSAENETDOWN", sizeof(errormessage) - 1);
+    case ECONNABORTED : {
+      s_error.set_message("ECONNABORTED");
       break;
     }
-    case WSAEINVAL: {
-      strncpy(errormessage, "WSAEINVAL", sizeof(errormessage) - 1);
+    case EPROTO : {
+      s_error.set_message("EPROTO");
       break;
     }
-    case WSAEINTR: {
-      strncpy(errormessage, "WSAEINTR", sizeof(errormessage) - 1);
+    case EINTR : {
+      // from UNIX Network Programming 2nd, 15.6
+      // with nonblocking-socket, ignore above errors
+      s_error.set_message("EINTR");
       break;
     }
-    case WSAEINPROGRESS: {
-      strncpy(errormessage, "WSAEINPROGRESS", sizeof(errormessage) - 1);
+    case EBADF : {
+      s_error.set_message("EBADF");
       break;
     }
-    case WSAENOTSOCK: {
-      strncpy(errormessage, "WSAENOTSOCK", sizeof(errormessage) - 1);
+    case ENOTSOCK : {
+      s_error.set_message("ENOTSOCK");
+      break;
+    }
+    case EOPNOTSUPP : {
+      s_error.set_message("EOPNOTSUPP");
+      break;
+    }
+    case EFAULT : {
+      s_error.set_message("EFAULT");
+      break;
+    }
+    case ETIMEDOUT: {
+      s_error.set_message("ETIMEDOUT");
       break;
     }
     default : {
-      strncpy(errormessage, "UNKNOWN", sizeof(errormessage) - 1);
       break;
     }
   }
 #endif
-  return result;
 }
 
-int32_t getlast_errorcode() {
-#if OS_UNIX
-  return errno;
-#elif OS_WIN
-  return error;
+static void set_error() {
+  int32_t e{-1};
+#if OS_WIN
+  e = WSAGetLastError();
+#else
+  e = errno;
+#endif
+  set_error(e);
+}
+
+class Initializer : noncopyable {
+
+ public:
+  Initializer();
+  ~Initializer();
+
+ public:
+
+  bool success() const noexcept {
+    return success_;
+  }
+
+  static bool init() noexcept {
+    static Initializer s_init;
+    return s_init.success();
+  }
+
+ private:
+  bool success_{true};
+
+};
+
+Initializer::Initializer() {
+#if OS_WIN
+  WSADATA data;
+  auto e = ::WSAStartup(MAKEWORD(2, 0), &data);
+  success_ = 0 == e;
+#elif OS_UNIX || OS_MAC
+  ::signal(SIGPIPE, SIG_IGN);
+  if (!set_core_rlimit())
+    success_ = false;
+#endif
+  if (!success_) set_error();
+}
+
+Initializer::~Initializer() {
+#if OS_WIN
+  ::WSACleanup();
 #endif
 }
 
-void getlast_errormessage(char *buffer, uint16_t length) {
-  snprintf(buffer, length, "%s", errormessage);
+bool initialize() {
+  return Initializer::init();
 }
 
-} //namespace api
+id_t create(int32_t domain, int32_t type, int32_t protocol) {
+  id_t id = static_cast<id_t>(::socket(domain, type, protocol));
+  if (id == kInvalidId) {
+    set_error();
+  }
+  return id;
+}
 
-} //namespace socket
+bool bind(id_t id, const sockaddr *addr, uint32_t addrlength) {
+  auto e = ::bind(id, addr, addrlength);
+  bool r = e != kSocketError;
+  if (!r) set_error();
+  return r;
+}
 
-} //namespace pf_net
+bool connect(
+  id_t id, const sockaddr *addr, uint32_t addrlength,
+  const std::chrono::milliseconds &timeout) {
+  auto nonblocking = get_nonblocking(id);
+  if (!nonblocking && !set_nonblocking(id, true)) {
+    set_error();
+    return false;
+  }
+  auto e = ::connect(id, addr, addrlength);
+#if OS_WIN
+  const auto connect_errno = WSAGetLastError();
+#elif OS_UNIX || OS_MAC
+  const auto connect_errno = errno;
+#else
+  const auto connect_errno = 0;
+#endif
+  bool r = e != kSocketError;
+  if (r) return r;
+  if (!nonblocking && !set_nonblocking(id, false)) {
+    set_error();
+    return false;
+  }
+#if OS_WIN
+  if (connect_errno != WSAEINPROGRESS && connect_errno != WSAEWOULDBLOCK) {
+    set_error();
+    return false;
+  }
+#elif OS_UNIX || OS_MAC
+  if (connect_errno != EINPROGRESS) {
+    set_error();
+    return false;
+  }
+#endif
+  auto read_fds = fd_set{};
+  FD_ZERO(&read_fds);
+  FD_SET(id, &read_fds);
+  auto write_fds = fd_set{};
+  FD_ZERO(&write_fds);
+  FD_SET(id, &write_fds);
+  if (timeout.count() > 0) {
+    timeval tv{
+      static_cast<decltype(tv.tv_sec)>(timeout.count() / 1000),
+      static_cast<decltype(tv.tv_usec)>(timeout.count() % 1000 * 1000)
+    };
+    e = socket::select(FD_SETSIZE, &read_fds, &write_fds, nullptr, &tv);
+  } else {
+    e = socket::select(FD_SETSIZE, &read_fds, &write_fds, nullptr, nullptr); 
+  }
+  r = (e > 0);
+  if (!r) {
+    // zero return is mean timeout.
+    if (e == 0) {
+#if OS_WIN
+      e = WSAETIMEDOUT;
+#else
+      e = ETIMEDOUT;
+#endif
+    }
+    set_error(e);
+    return false;
+  }
+  uint32_t length{static_cast<uint32_t>(sizeof(e))};
+  getsockoptb(id, SOL_SOCKET, SO_ERROR, &e, &length);
+  r = (e == 0);
+  if (!r) set_error(e);
+  return r;
+}
+
+bool listen(id_t id, uint32_t backlog) {
+  auto e = ::listen(id, backlog);
+  bool r = e != kSocketError;
+  if (!r) set_error();
+  return r;
+}
+
+int32_t accept(id_t id, sockaddr *addr, uint32_t *addrlength) {
+  int32_t r{kSocketError};
+#if OS_UNIX || OS_MAC
+  r = ::accept(id, addr, addrlength);
+#elif OS_WIN
+  r = static_cast<int32_t>(
+    ::accept(id, addr, reinterpret_cast<int32_t *>(addrlength)));
+#endif
+  if (r == kSocketError) set_error();
+  return r;
+}
+
+bool getsockoptb(
+  id_t id, int32_t level, int32_t optname, void *optval, uint32_t *optlength) {
+  int32_t e{kSocketError};
+#if OS_UNIX || OS_MAC
+  e = ::getsockopt(id, level, optname, optval, optlength);
+#elif OS_WIN
+  e = ::getsockopt(
+    id, level, optname, static_cast<char *>(optval),
+    reinterpret_cast<int32_t *>(optlength));
+#endif
+  bool r = e != kSocketError;
+  if (!r) set_error();
+  return r;
+}
+
+uint32_t getsockoptu(
+  id_t id, int32_t level, int32_t optname, void *optval, uint32_t *optlength) {
+  uint32_t r{0};
+#if OS_UNIX || OS_MAC
+  if (::getsockopt(id, level, optname, optval, optlength) == kSocketError) {
+    set_error();
+    switch (s_error.code()) {
+      case EBADF:
+        r = 1;
+        break;
+      case ENOTSOCK:
+        r = 2;
+        break;
+      case ENOPROTOOPT:
+        r = 3;
+        break;
+      case EFAULT:
+        r = 4;
+        break;
+      default:
+        r = 5;
+        break;
+    }
+  }
+#elif OS_WIN
+  auto e = ::getsockopt(
+    id, level, optname, static_cast<char *>(optval),
+    reinterpret_cast<int32_t *>(optlength));
+  if (e == kSocketError) set_error();
+#endif
+  return r;
+}
+
+bool setsockopt(
+  id_t id, int32_t level, int32_t optname, const void *optval,
+  uint32_t optlength) {
+  int32_t e{kSocketError};
+#if OS_UNIX || OS_MAC
+  e = ::setsockopt(id, level, optname, optval, optlength);
+#elif OS_WIN
+  e = ::setsockopt(id, level, optname, reinterpret_cast<const char *>(optval), optlength);
+#endif
+  bool r = e != kSocketError;
+  if (!r) set_error();
+  return r;
+}
+
+int32_t send(id_t id, const void *buffer, uint32_t length, uint32_t flag) {
+  int32_t r{kSocketError};
+#if OS_UNIX || OS_MAC
+  r = ::send(id, buffer, length, flag);
+#elif OS_WIN
+  r = ::send(id, static_cast<const char *>(buffer), length, flag);
+#endif
+  if (r == kSocketError) {
+    set_error();
+    if (s_error.code() == kErrorWouldBlock) r = kErrorWouldBlock;
+  }
+  return r;
+}
+
+int32_t sendto(
+  id_t id, const void *buffer, int32_t length, uint32_t flag,
+  const sockaddr *to, int32_t tolength) {
+  int32_t r{kSocketError};
+#if OS_UNIX || OS_MAC
+  r = ::sendto(id, buffer, length, flag, to, tolength);
+#elif OS_WIN
+  r = ::sendto(id, static_cast<const char *>(buffer),length, flag, to, tolength);
+#endif
+  if (r == kSocketError) {
+    set_error();
+    if (s_error.code() == kErrorWouldBlock) r = 0;
+  }
+  return r;
+}
+
+int32_t recv(id_t id, void *buffer, uint32_t length, uint32_t flag) {
+  int32_t r{kSocketError};
+#if OS_UNIX || OS_MAC
+  r = ::recv(id, buffer, length, flag);
+#elif OS_WIN
+  r = ::recv(id, static_cast<char *>(buffer), length, flag);
+#endif
+  // std::cout << "id: " << id << "|" << length << "|" << r << std::endl;
+  if (r == kSocketError) {
+    set_error();
+    if (s_error.code() == kErrorWouldBlock) r = kErrorWouldBlock;
+  } 
+  return r;
+}
+
+int32_t recvfrom(
+  id_t id, void *buffer, int32_t length, uint32_t flag, sockaddr *from,
+  uint32_t *fromlength) {
+  int32_t r{kSocketError};
+#if OS_UNIX || OS_MAC
+  r = ::recvfrom(id, buffer, length, flag, from, fromlength);
+#elif OS_WIN
+  r = ::recvfrom(
+    id, static_cast<char *>(buffer), length, flag, from,
+    reinterpret_cast<int32_t *>(fromlength));
+#endif
+  if (r == kSocketError) {
+    set_error();
+    if (s_error.code() == kErrorWouldBlock) r = kErrorWouldBlock;
+  }
+  return r;
+}
+
+bool close(id_t id) {
+  int32_t e{kSocketError};
+#if OS_UNIX || OS_MAC
+  e = ::close(id);
+#elif OS_WIN
+  e = ::closesocket(id);
+#endif
+  bool r = e != kSocketError;
+  if (!r) set_error();
+  return r;
+}
+
+bool ioctl(
+  [[maybe_unused]] id_t id, [[maybe_unused]] int64_t cmd,
+  [[maybe_unused]] uint64_t *argp) {
+  bool r{false};
+#if OS_WIN
+  auto e = ioctlsocket(id, static_cast<long>(cmd), reinterpret_cast<u_long *>(argp));
+  r = e != kSocketError;
+  if (!r) set_error();
+#endif
+  return r;
+}
+
+bool get_nonblocking(id_t id) {
+  return plain::get_nonblocking(id);
+}
+
+bool set_nonblocking(id_t id, bool on) {
+  auto r = plain::set_nonblocking(id, on);
+  if (!r) set_error();
+  return r;
+}
+
+uint32_t available(id_t id) {
+  return plain::available(id);
+}
+
+bool shutdown(id_t id, int32_t how) {
+  bool r{false};
+  auto e = ::shutdown(id, how);
+  r = e != kSocketError;
+  if (!r) set_error();
+  return r;
+}
+
+int32_t select(
+  id_t maxfdp, fd_set *readset, fd_set *writeset, fd_set *exceptset,
+  timeval *timeout) {
+  auto r = ::select(maxfdp, readset, writeset, exceptset, timeout);
+  if (r == kSocketError) set_error();
+  return r;
+}
+
+int32_t getsockname(id_t id, sockaddr *name, int32_t *namelength) {
+  int32_t r{0};
+#if OS_UNIX || OS_MAC
+  r = ::getsockname(id, name, reinterpret_cast<socklen_t *>(namelength));
+#elif OS_WIN
+  r = ::getsockname(id, name, namelength);
+#endif
+  if (r == kSocketError) set_error();
+  return r;
+}
+
+int32_t getpeername(id_t id, sockaddr *name, int32_t *namelength) {
+  int32_t r{0};
+#if OS_UNIX || OS_MAC
+  r = ::getpeername(id, name, reinterpret_cast<socklen_t *>(namelength));
+#elif OS_WIN
+  r = ::getpeername(id, name, namelength);
+#endif
+  if (r == kSocketError) set_error();
+  return r;
+}
+
+Error get_last_error() noexcept {
+  return s_error;
+}
+
+int32_t socketpair(
+  int32_t family, int32_t type, int32_t protocol, id_t fds[2]) {
+#if OS_WIN
+  id_t tcp1{kInvalidId}, tcp2{ kInvalidId };
+  bytes_t name;
+  if (family == AF_INET6) {
+    sockaddr_in6 addr;
+    memset(&addr, 0, sizeof(addr));
+    addr.sin6_family = static_cast<ADDRESS_FAMILY>(family);
+    auto cr = inet_pton(AF_INET6, "::1", &addr.sin6_addr);
+    if (cr != 1) return -1;
+    name.append(reinterpret_cast<std::byte *>(&addr), sizeof(addr));
+  } else {
+    sockaddr_in addr;
+    memset(&addr, 0, sizeof(addr));
+    addr.sin_family = static_cast<ADDRESS_FAMILY>(family);
+    addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    name.append(reinterpret_cast<std::byte *>(&addr), sizeof(addr));
+  }
+
+  int32_t namelen = static_cast<int32_t>(name.size());
+  id_t tcp = create(family, type, protocol);
+  if (tcp == kInvalidId){
+    goto clean;
+  }
+  if (::bind(tcp, reinterpret_cast<sockaddr *>(name.data()), namelen) == -1){
+    goto clean;
+  }
+  if (!listen(tcp, 5)){
+    goto clean;
+  }
+  if (::getsockname(
+      tcp, reinterpret_cast<sockaddr *>(name.data()), &namelen) == -1){
+    goto clean;
+  }
+  tcp1 = create(family, type, protocol);
+  if (tcp1 == kInvalidId){
+    goto clean;
+  }
+  if (kSocketError == ::connect(
+      tcp1, reinterpret_cast<sockaddr *>(name.data()), namelen)){
+    goto clean;
+  }
+
+  tcp2 = static_cast<id_t>(
+    ::accept(tcp, reinterpret_cast<sockaddr *>(name.data()), &namelen));
+  if (tcp2 == kInvalidId){
+    goto clean;
+  }
+  if (!close(tcp)){
+    goto clean;
+  }
+  fds[0] = tcp1;
+  fds[1] = tcp2;
+  return 0;
+clean:
+  if (tcp != kInvalidId){
+    close(tcp);
+  }
+  if (tcp2 != kInvalidId){
+    close(tcp2);
+  }
+  if (tcp1 != kInvalidId){
+    close(tcp1);
+  }
+  return kInvalidId;
+#else
+  return ::socketpair(family, type, protocol, fds);
+#endif
+}
+
+bool make_pair(id_t fd_pair[2]) noexcept {
+#if OS_WIN
+  auto r = socket::socketpair(AF_INET, SOCK_STREAM, 0, fd_pair);
+#elif OS_MAC
+  auto r = ::socketpair(AF_UNIX, SOCK_STREAM, 0, fd_pair);
+#else
+  auto r = ::socketpair(AF_UNIX, SOCK_SEQPACKET, 0, fd_pair);
+#endif
+  return r == 0;
+}
+
+int32_t get_sock_type(Type sock_type) noexcept {
+  int32_t r{SOCK_STREAM};
+  switch (sock_type) {
+    case Type::Tcp:
+      r = SOCK_STREAM;
+      break;
+    case Type::Udp:
+      r = SOCK_DGRAM;
+      break;
+    default:
+      break;
+  }
+  return r;
+}
+
+} // namespace plain::net::socket

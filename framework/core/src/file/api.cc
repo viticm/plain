@@ -1,6 +1,6 @@
-#include "pf/file/api.h"
+#include "plain/file/api.h"
 
-#if OS_UNIX /* { */
+#if OS_UNIX || OS_MAC /* { */
 #include <sys/types.h>  // for open()
 #include <sys/stat.h>   // for open()
 #include <unistd.h>     // for fcntl()
@@ -10,24 +10,19 @@
 #elif OS_WIN /* }{ */
 #include <io.h>         // for _open()
 #include <fcntl.h>      // for _open()/_close()/_read()/_write()...
+#include <winsock.h>
 #endif /* } */
 
-#if OS_UNIX
-// extern int32_t errno;
-#endif
+namespace plain {
 
-namespace pf_file {
-
-namespace api {
-
-int32_t openex(const char *filename, int32_t flag) {
-#if OS_UNIX
-  int32_t fd = open(filename, flag);
+int32_t open(const char *filename, int32_t flag) {
+#if OS_UNIX || OS_MAC
+  int32_t fd = ::open(filename, flag);
 #elif OS_WIN
-  int32_t fd = _open(filename, flag);
+  int32_t fd = ::_open(filename, flag);
 #endif
   if (fd < 0) {
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
     switch (errno) {
       case EEXIST : 
       case ENOENT : 
@@ -56,15 +51,16 @@ int32_t openex(const char *filename, int32_t flag) {
   return fd;
 }
 
-int32_t openmode_ex(const char * filename, int32_t flag, int32_t mode) {
-#if OS_UNIX
-  int32_t fd = open(filename, flag, mode);
+int32_t openmode(const char * filename, int32_t flag, int32_t mode) {
+  int32_t fd{-1};
+#if OS_UNIX || OS_MAC
+  fd = ::open(filename, flag, mode);
 #elif OS_WIN
-  int32_t fd = _open(filename, flag, mode);
+  fd = ::_open(filename, flag, mode);
 #endif
 
   if (fd < 0) {
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
     switch (errno) {
       case EEXIST : 
       case EISDIR : 
@@ -93,15 +89,15 @@ int32_t openmode_ex(const char * filename, int32_t flag, int32_t mode) {
   return fd;
 }
 
-uint32_t readex(int32_t fd, void *buffer, uint32_t length) {
-#if OS_UNIX
-  int32_t result = read(fd, buffer, length);
+uint32_t read(int32_t fd, void *buffer, uint32_t length) {
+#if OS_UNIX || OS_MAC
+  int32_t result = ::read(fd, buffer, length);
 #elif OS_WIN
-  int32_t result = _read (fd, buffer, length);
+  int32_t result = ::_read (fd, buffer, length);
 #endif
   if (result < 0) {
 
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
     switch (errno) {
       case EINTR : 
       case EAGAIN : 
@@ -125,16 +121,16 @@ uint32_t readex(int32_t fd, void *buffer, uint32_t length) {
   return result;
 }
 
-uint32_t writeex(int32_t fd, const void *buffer, uint32_t length) {
-#if OS_UNIX
-  int32_t result = write(fd, buffer, length);
+uint32_t write(int32_t fd, const void *buffer, uint32_t length) {
+#if OS_UNIX || OS_MAC
+  int32_t result = ::write(fd, buffer, length);
 #elif OS_WIN
-  int32_t result = _write(fd, buffer, length);
+  int32_t result = ::_write(fd, buffer, length);
 #endif
 
   if (result < 0) {
     
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
     switch (errno) {
       case EAGAIN : 
       case EINTR : 
@@ -157,10 +153,10 @@ uint32_t writeex(int32_t fd, const void *buffer, uint32_t length) {
 }
 
 
-void closeex(int32_t fd) {
+void close(int32_t fd) {
  
-#if OS_UNIX
-  close(fd);
+#if OS_UNIX || OS_MAC
+  ::close(fd);
   switch ( errno ) {
     case EBADF : 
     default : {
@@ -168,13 +164,13 @@ void closeex(int32_t fd) {
     }
   }
 #elif OS_WIN
-  _close(fd);
+  ::_close(fd);
 #endif
 }
 
-int32_t fcntlex(int32_t fd, int32_t cmd) {
-#if OS_UNIX
-  int32_t result = fcntl(fd, cmd);
+int32_t fcntl([[maybe_unused]] int32_t fd, [[maybe_unused]] int32_t cmd) {
+#if OS_UNIX || OS_MAC
+  int32_t result = ::fcntl(fd, cmd);
   if (result < 0) {
     switch (errno) {
       case EINTR : 
@@ -191,15 +187,16 @@ int32_t fcntlex(int32_t fd, int32_t cmd) {
   }
   return result;
 #elif OS_WIN
-  UNUSED(fd);
-  UNUSED(cmd);
   return 0 ;
 #endif
 }
 
-int32_t fcntlarg_ex(int32_t fd, int32_t cmd, int32_t arg) {
-#if OS_UNIX
-  int32_t result = fcntl(fd, cmd, arg);
+int32_t fcntlarg(
+    [[maybe_unused]] int32_t fd,
+    [[maybe_unused]] int32_t cmd,
+    [[maybe_unused]] int32_t arg) {
+#if OS_UNIX || OS_MAC
+  int32_t result = ::fcntl(fd, cmd, arg);
   if (result < 0) {
     switch (errno) {
       case EINTR : 
@@ -217,89 +214,74 @@ int32_t fcntlarg_ex(int32_t fd, int32_t cmd, int32_t arg) {
   }
   return result;
 #elif OS_WIN
-  UNUSED(fd); UNUSED(cmd); UNUSED(arg);
   return 0 ;
 #endif
 }
 
-bool get_nonblocking_ex(int32_t fd) {
-#if OS_UNIX
-  int32_t flag = fcntlarg_ex(fd, F_GETFL, 0);
-  return flag | O_NONBLOCK;
+bool get_nonblocking([[maybe_unused]] int32_t fd) {
+#if OS_UNIX || OS_MAC
+  int32_t flag = fcntlarg(fd, F_GETFL, 0);
+  return flag & O_NONBLOCK;
 #elif OS_WIN
-  UNUSED(fd);
   return false;
 #endif
 }
 
-void set_nonblocking_ex(int32_t fd, bool on) {
-#if OS_UNIX
-  int32_t flag = fcntlarg_ex(fd, F_GETFL, 0);
+bool set_nonblocking([[maybe_unused]] int32_t fd, [[maybe_unused]] bool on) {
+  bool r{false};
+#if OS_UNIX || OS_MAC
+  int32_t flag = fcntlarg(fd, F_GETFL, 0);
   if (on)
     // make nonblocking fd
     flag |= O_NONBLOCK;
   else
     // make blocking fd
     flag &= ~O_NONBLOCK;
-  fcntlarg_ex(fd, F_SETFL, flag);
+  auto e = fcntlarg(fd, F_SETFL, flag);
+  r = e >= 0;
 #elif OS_WIN
-  UNUSED(fd);
-  UNUSED(on);
-  //do nothing
+  unsigned long mode = on ? 1 : 0;
+  auto e = ::ioctlsocket(fd, FIONBIO, &mode);
+  r = e >= 0;
 #endif
+  return r;
 }
 
-void ioctlex(int32_t fd, int32_t request, void *argp) {
-#if OS_UNIX
-  if (ioctl(fd,request,argp) < 0) {
-    switch (errno) {
-      case EBADF : 
-      case ENOTTY : 
-      case EINVAL : 
-      default :
-      {
-        break;
-      }
-    }
-  }
+int32_t ioctl(
+    [[maybe_unused]] int32_t fd,
+    [[maybe_unused]] int32_t request,
+    [[maybe_unused]] void *argp) {
+  int32_t r{-1};
+#if OS_UNIX || OS_MAC
+  r = ::ioctl(fd, request, argp);
 #elif OS_WIN
-  UNUSED(fd); UNUSED(request); UNUSED(argp);
+  r = ::ioctlsocket(fd, request, reinterpret_cast<u_long *>(argp));
 #endif
+  return r;
 }
 
-void setnonblocking_ex(int32_t fd, bool on) {
-#if OS_UNIX
-  uint64_t arg = (true == on ? 1 : 0 );
-  ioctlex(fd, FIONBIO, &arg);
-#elif OS_WIN
-  UNUSED(fd);
-  UNUSED(on);
-  //do nothing
-#endif
-}
-
-
-uint32_t availableex(int32_t fd) {
-#if OS_UNIX
-  uint32_t arg = 0;
-  ioctlex(fd, FIONREAD, &arg);
-  std::cout << "availableex: " << arg << std::endl;
+uint32_t available([[maybe_unused]] int32_t fd) {
+#if OS_UNIX || OS_MAC
+  uint32_t arg{0};
+  ::ioctl(fd, FIONREAD, &arg);
   return arg;
 #elif OS_WIN
-  UNUSED(fd);
-  return 0;
+  uint64_t arg{0};
+  ::ioctlsocket(fd, FIONREAD, reinterpret_cast<u_long *>(&arg));
+  return static_cast<uint32_t>(arg);
 #endif
 }
 
-int32_t dupex(int32_t fd) {
-#if OS_UNIX
-  int32_t newfd = dup(fd);
+int32_t dup(int32_t fd) {
+  int32_t r{-1};
+#if OS_UNIX || OS_MAC
+  r = ::dup(fd);
 #elif OS_WIN
-  int32_t newfd = _dup(fd);
+  r = ::_dup(fd);
 #endif
 
-  if (newfd < 0) {
-#if OS_UNIX
+  if (r < 0) {
+#if OS_UNIX || OS_MAC
     switch (errno) {
       case EBADF : 
       case EMFILE : 
@@ -311,12 +293,12 @@ int32_t dupex(int32_t fd) {
     //do nothing
 #endif
   }
-  return newfd;
+  return r;
 }
 
-int64_t lseekex(int32_t fd, uint64_t offset, int32_t whence) {
-#if OS_UNIX
-  int64_t result = lseek(fd, offset, whence);
+int64_t lseek(int32_t fd, uint64_t offset, int32_t whence) {
+#if OS_UNIX || OS_MAC
+  int64_t result = ::lseek(fd, offset, whence);
   if (result < 0) {
     switch (errno) {
       case EBADF : 
@@ -328,20 +310,19 @@ int64_t lseekex(int32_t fd, uint64_t offset, int32_t whence) {
     }
   }
 #elif OS_WIN
-  uint64_t result = _lseek(fd, (long)offset, whence);
+  uint64_t result = ::_lseek(fd, (long)offset, whence);
   if ( result < 0 ) {
   }
 #endif
   return result;
 }
 
-int64_t tellex(int32_t fd) {
+int64_t tell([[maybe_unused]] int32_t fd) {
   int64_t result = 0;
-#if OS_UNIX
-  UNUSED(fd);
+#if OS_UNIX || OS_MAC
   //do nothing
 #elif OS_WIN
-  result = _tell(fd);
+  result = ::_tell(fd);
   if (result < 0) {
   }
 #endif
@@ -355,6 +336,4 @@ bool truncate(const char *filename) {
   return true;
 }
 
-} //namespace api
-
-} //namespace pf_file
+} // namespace plain

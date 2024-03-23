@@ -4,7 +4,7 @@
 
 - **Author:** Viticm
 - **Website:** [http://www.cnblogs.com/lianyue/](http://www.cnblogs.com/lianyue/)
-- **Version:** 1.1.0rc
+- **Version:** 2.0.0rc(cpp23 without modules)
 
 [![Build Status](https://travis-ci.org/viticm/plain.svg)](https://travis-ci.org/viticm/plain)
 
@@ -38,10 +38,9 @@ On Linux, use the command build and run, make sure installed g++ and cmake:
 ```shell
 git clone --recursive https://github.com/viticm/plain && cd plain
 cd cmake && cmake ./ && sudo make install
-cd ../plain/bin && ./app --env=config/.env.example
 ```
 
-On windows(vs 2019+ can build with cmake directly).
+On windows(vs 2022+ can build with cmake directly).
 
 Update all submodule.
 
@@ -49,124 +48,163 @@ Update all submodule.
 git submodule update --remote --recursive
 ```
 
-## Customize your application by environment file. ##
+## Customize your network. ##
 
-The environment example file is: ``plain/bin/config/.env.example``
-The env config will set in framework globals, just like: `section.key=value`, you
-can get it like: `GLOBALS["app.name"]`
+```cpp
+#include "plain/all.h"
 
-### The sections ###
+using namespace plain::net;
 
-**app** 
+std::shared_ptr<Listener> listener;
+std::shared_ptr<Connector> connector;
 
-1. `name` - Set the appliction name(*by default `""`*).
-2. `pidfile` - Set the pid file name(*by default `""`*).
-3. `console` - If Enable the console.(*by default 0*)
-4. `console.name` - The console name.(*by default `"console"`*)
-5. `console.ip` - The console net listen ip.(*by default `"127.0.0.1"`*)
-6. `console.port` - Then console net listen port.(*by default -1*)
-7. `console.connmax` - The console net connection max.(*by default 32*)
+// The packet decode function.
+// Return a packet shared pointer or error.
+plain::error_or_t<std::shared_ptr<packet::Basic>>
+line_decode(
+  stream::Basic *input, const packet::limit_t &packet_limit) {
+  using namespace plain;
+  if (!input) return Error{ErrorCode::RunTime};
+  bytes_t bytes;
+  bytes.reserve(packet_limit.max_length);
+  auto readed = input->peek(bytes.data(), bytes.capacity());
+  if (readed == 0) return ErrorCode{ErrorCode::NetPacketNeedRecv};
+  std::string_view str{reinterpret_cast<char *>(bytes.data()), readed};
+  auto pos = str.find('\n');
+  if (pos == std::string::npos) {
+    if (readed == packet_limit.max_length )
+      return Error{ErrorCode::RunTime};
+    else
+      return Error{ErrorCode::NetPacketNeedRecv};
+  }
+  input->remove(pos + 1); // remove readed line.
+  if (pos > 0 && str[pos - 1] == '\r') {
+    pos -= 1;
+  }
+  auto p = std::make_shared<packet::Basic>();
+  if (pos > 0) {
+    p->set_writeable(true);
+    p->write(bytes.data(), pos);
+    p->set_writeable(false);
+  }
+  p->set_readable(true);
+  return p;
+}
 
-**log**
+// The packet encode function.
+// Return a byte string.
+plain::bytes_t line_encode(std::shared_ptr<packet::Basic> packet) {
+  auto d = packet->data();
+  return {d.data(), d.size()};
+}
 
-1. `active` - If Enable the log module(*by default `1`*).
-2. `directory` - The log directory(*by default `Execute file path with "/log".`*).
-3. `clear` - If remove all log on start(*by default `0`*).
+bool start_listener() {
 
-**default**
+  setting_t setting;
+  setting.max_count = 512; // The connection max count
+  setting.default_count = 32; // The connection object default created
+  // The mode can be: select/epoll/iocp/iouring/kqueue
+  // select is default mode(all platform can be supported).
+  // epoll just active on linux.
+  // iocp just active on windows.
+  // iouring just active on linux kernel 5.0+.
+  // kqueue just active on macos.
+  setting.mode = Mode::Select; 
+  setting.socket_type = socket::Type::Tcp; // Tcp/Udp
+  setting.address = ":2001"; // Just active with Listener(empty system divide a port)
+  setting.name = "listener"; // Empty kernel will divide a unknown name
+  // The max packet id(if you custom packet handler this need check by yourself)
+  setting.packet_limit.max_id = 65535;
+  // The max packet length
+  // (if you custom packet handler this need check by yourself)
+  setting.packet_limit.max_length = 200 * 1024;
 
-1. `engine.frame` - The engine main thread frame(*by default `100`*).
-2. `net.open` - The default net module is enable(*by default `0`*).
-3. `net.service` - The default net module if is with server service(*by default `0`*).
-4. `net.ip` - The default service ip(*by default `""`, bind any*).
-5. `net.port` - The default service port(*by default `0`, rand port*).
-6. `net.connmax` - The default net connection max count(*by default `NET_CONNECTION_MAX`*).
-7. `net.reconnect_time` - The default net client reconnect second(*by default `3`*).
-8. `script.open` - The default script if enable(*by default `0`*).
-9. `script.rootpath` - The default script root path(*by default `SCRIPT_ROOT_PATH`*).
-10. `script.workpath` - The default script workpath(*by default `SCRIPT_WORK_PATH`*).
-11. `script.bootstrap` - The default script bootstrap file(*by default `bootstrap.lua`*).
-12. `script.reload` - The default script reload file(*by default `reload.lua`*).
-13. `script.type` - The default script type(*by default `-1`*).
-14. `script.heartbeat` - The default script heartbeat function(*by default `""`*).
-15. `script.enter` - The default script enter function(*by default `"main"`*).
-16. `db.open` - The default database if enable(*by default `0`*).
-17. `db.type` - The default database type(*by default `-1`*).
-18. `db.name` - The default database name(*by default `""`*).
-19. `db.user` - The default database user(*by default `""`*).
-20. `db.password` - The default database password(*by default `""`*).
-21. `db.encrypt` - The default database password if encrypted(*by default `0`*)
+  // The executor for execute net handlers(send/recv/packet)
+  // * default: WorkerThread(one thread)
+  // * also can use: Inline/Manual/Thread/ThreadPool
+  // *! executor module implement by concurrencpp
+  auto executor = std::make_shared<plain::concurrency::executor::WorkerThread>();
 
-**plugins**
+  listener = std::make_shared<Listener>(setting, executor);
 
-1. `count` - The need load plugins count.
-2. `(0-n)` - The load plugin information(*Like `pf_plugin_odbc:local:...`*).
+  // The codec handlers.
+  listener->set_codec({.encode = line_encode, .decode = line_decode});
 
-**database**
+  // Set the packet dispachter.
+  listener->set_dispatcher([](
+    connection::Basic *conn, std::shared_ptr<packet::Basic> packet) {
+    std::cout << conn->name() << ": " <<
+      reinterpret_cast<const char *>(packet->data().data()) << std::endl;
+    return true;
+  });
 
-1. `count` - The service count.
-2. `type(0-n)` - The service(0-n) type(*dbenv_t*)
-3. `name(0-n)` - The service(0-n) name.
-4. `dbname(0-n)` - The service(0-n) database name.
-5. `dbuser(0-n)` - The service(0-n) database user.
-6. `dbpassword(0-n)` - The service(0-n) database password.
-7. `encrypt(0-n)` - The service(0-n) database password if encrypt.
+  // Set the callback on connected.
+  listener->set_connect_callback([](connection::Basic *conn) {
+    std::cout << conn->name() << " connected" << std::endl;
+  });
 
-**server**
+  // Set the callback on disconnected.
+  listener->set_disconnect_callback([](connection::Basic *conn) {
+    std::cout << conn->name() << " disconnected" << std::endl;
+  });
 
-1. `count` - The extra net service count.
-2. `name(0-n)` - The service(0-n) name.
-3. `ip(0-n)` - The service(0-n) listen ip.
-4. `port(0-n)` - The service(0-n) listen port.
-5. `connmax(0-n)` - The service(0-n) connection count max.
-6. `encrypt(0-n)`- The service(0-n) encrypt string, not empty then connect this server need handshake.
-7. `scriptfunc(0-n)` - Then service(0-n) packet execute script function name.
+  return listener->start();
+}
 
-**client**
+void start_connector() {
+  
+  // The connector setting same as listener(but not active with address).
+  // Also it can be set executor with construct.
 
-1. `count` - The extra net client connection count.
-2. `usercount` - The extra net client by user self operator connection count.
-3. `name(0-n)` - The client(0-n) name.
-4. `ip(0-n)` - The client(0-n) connect ip.
-5. `port(0-n)` - The client(0-n) connect port.
-6. `encrypt(0-n)` - The client encrypt string, not empty then connect will auto handshake.
-7. `startup(0-n)` - The client connect if auto connect on start.
-8. `scriptfunc(0-n)` - The client(0-n) packet execute script function name.
+  connector = std::make_shared<Connector>(); // Using default setting.
+  connector->set_codec({.encode = line_encode, .decode = line_decode});
+  connector->set_dispatcher([](
+    connection::Basic *conn, std::shared_ptr<packet::Basic> packet) {
+    std::cout << conn->name() << ": " <<
+      reinterpret_cast<const char *>(packet->data().data()) << std::endl;
+    return true;
+  });
 
-## More things. ##
+  connector->set_connect_callback([](connection::Basic *conn) {
+    std::cout << conn->name() << " connected" << std::endl;
+  });
 
-### Extend the framework ###
+  connector->set_disconnect_callback([](connection::Basic *conn) {
+    std::cout << conn->name() << " disconnected" << std::endl;
+  });
 
-You can extend or rewrite plain framework modules like these:
+  if (!connector->start()) return;
 
-- engine: Extend the pf_engine::Kernel class.
-- net: Extend submodule for net stream.
-- ...
+  auto pack = std::make_shared<packet::Basic>();
+  pack->set_writeable(true);
+  std::string line{"hello world\n"};
+  pack->write(reinterpret_cast<std::byte *>(line.data()), line.size());
+  std::string line1{"plain\n"};
+  pack->write(reinterpret_cast<std::byte *>(line1.data()), line1.size());
+  auto conn = connector->connect(":2001");
+  
+  if (static_cast<bool>(conn)) {
+    conn->send(pack);
+  }
+}
 
-| Submodule               | Description                                   |
-| ----------------------- | -----------------------------------           |
-| `connection`            | You can define your diffrent connections      |
-| `packet`                | You can define your packet rules or handlers  |
-| `protocol`              | You can change this for your net protocol     |
-| `stream`                | If you want some diffrent stream types        |
+int32_t main(int32_t argc, char **argv) {
+  using namespace std::chrono_literals;
+  
+  // Start console, param empty then listen a random port.
+  if (!ENGINE->enable_console(":3001"))
+    return 1;
+  if (!start_listener())
+    return 1;
+  start_connector();
 
-### Write your plugins ###
-
-The plain plugin make more flexibility for appliction develop, you don't care how 
-to implement it.
-
-You can use it set the environment file like `0=pf_plugin_lua:global:0`.
-
-**`pf_plugin_lua:global:0` Description:**
-
-- `pf_plugin_lua`: The plugin name.
-- `global`: Load global symbols, other is `local`.
-- `0`: The plugin parameter, this mean register the script type is 0, of course can have more parameters.
-
-You can learn write a plugin of plain framework from this project:
-
-[https://github.com/viticm/plain-plugins](https://github.com/viticm/plain-plugins)
-
+  // Wait exit.
+  while (listener->running()) {
+    std::this_thread::sleep_for(100ms);
+  }
+  return 0;
+}
+```
 
 ## Simple project. ##
 

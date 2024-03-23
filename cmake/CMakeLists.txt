@@ -8,10 +8,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.27.0)
 
 set(PROJECT_NAME PlainFramework)
-set(PF_VERSION 1.1.0)
+set(PLAIN_VERSION 2.0.0)
 set(PROJECT_DESC "Plain framework, based on c++ for net applictions")
 
 if (CMAKE_VERSION VERSION_LESS 3.0)
@@ -19,7 +19,7 @@ if (CMAKE_VERSION VERSION_LESS 3.0)
 else()
   cmake_policy(SET CMP0048 NEW)
   cmake_policy(SET CMP0037 NEW)
-  project(PlainFramework VERSION ${PF_VERSION} LANGUAGES CXX C)
+  project(PlainFramework VERSION ${PLAIN_VERSION} LANGUAGES CXX C)
 endif()
 
 # Call fplutil to get locations of dependencies and set common build settings.
@@ -43,9 +43,13 @@ if (NOT has_output_path)
 
 endif()
 
-#For utf8 no boom.
+# C++ Standard
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+#For utf8 no boom and standard.
 if (MSVC)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -wd4819")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++latest -wd4819")
 endif()
 
 # Options that control the build configuration.
@@ -71,11 +75,14 @@ if(plainframework_build_tests)
                ${root_dir}/plain/app/cmake/build
                plainframework)
   endif()
+  add_subdir(${root_dir}/plain/tests/cmake
+             ${root_dir}/plain/tests/cmake/build
+             plainframework)
 endif()
 
 # Plugins.
 # If put build plugin before tests then will have a read access permission
 # conflicts on windows.
 if (plainframework_build_plugins)
-  add_subdir(${root_dir}/plain/plugins/cmake plugins plainframework)
+  #add_subdir(${root_dir}/plain/plugins/cmake plugins plainframework)
 endif()

@@ -8,7 +8,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 2.8)
 
 if (MSVC)
   # For utf8 no boom.
@@ -19,7 +19,7 @@ endif()
 set(GOOGLETEST_VERSION 1.11.0)
 
 # Plain framework crt.
-if (pf_build_shared AND MSVC)
+if (plain_build_shared AND MSVC)
   option(BUILD_SHARED_LIBS "plainframework build shared" ON)
 endif()
 
@@ -34,8 +34,8 @@ set(gtest_libdir ${dependencies_gtest_dir})
 config_compiler_and_linker()
 
 # string(REPLACE "-W4" "-W3" cxx_default "${cxx_default}")
-string(REPLACE "-Wshadow" "" cxx_default "${cxx_default}")
-string(REPLACE "-Wextra" "" cxx_default "${cxx_default}")
+# string(REPLACE "-Wshadow" "" cxx_default "${cxx_default}")
+# string(REPLACE "-Wextra" "" cxx_default "${cxx_default}")
 
 include_directories(${gtest_incdir}
                     ${gtest_hack_incdir}
@@ -49,20 +49,19 @@ if(NOT MSVC)
 endif()
 
 if (MSVC)
-  set(COMMON_LIBS "pf_core;gtest;${CMAKE_THREAD_LIBS_INIT}")
+  set(COMMON_LIBS "plain;gtest;${CMAKE_THREAD_LIBS_INIT}")
 else()
-  set(COMMON_LIBS "pf_core;gtest;${CMAKE_THREAD_LIBS_INIT}")
+  set(COMMON_LIBS "plain;gtest;${CMAKE_THREAD_LIBS_INIT}")
 endif()
 
 # Plain Framework flags.
-set(cxx_base_flags "${cxx_base_flags} -DPF_OPEN_EPOLL")
-if (MSVC AND pf_build_shared)
-  set(cxx_base_flags "${cxx_base_flags} -DPF_BUILD_AS_DLL")
+set(cxx_base_flags "${cxx_base_flags} -DPLAIN_OPEN_EPOLL")
+if (MSVC AND plain_build_shared)
+  set(cxx_base_flags "${cxx_base_flags} -DPLAIN_BUILD_AS_DLL")
 endif()
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 23)
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-  # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 endif()
 
 # Generate a rule to build a unit test executable ${test_name} with
@@ -89,12 +88,23 @@ function(test_executables test_name source)
   # MESSAGE(${source})
 endfunction()
 
-file(GLOB_RECURSE CORE_TEST_SOURCES "../core_test/*.cc")
+# Enable this then just test the directories.
+set(TEST_DIRS "net")
+
+if (NOT TEST_DIRS)
+  file(GLOB_RECURSE CORE_TEST_SOURCES "../core_test/*.cc")
+else()
+  file(GLOB CORE_TEST_SOURCES "../core_test/*.cc")
+  foreach(dir ${TEST_DIRS})
+    file(GLOB_RECURSE CORE_TEST_OTHER_SOURCES "../core_test/${dir}/*.cc")
+    set(CORE_TEST_SOURCES ${CORE_TEST_SOURCES} ${CORE_TEST_OTHER_SOURCES})
+  endforeach()
+endif()
 
 test_executables(core "${CORE_TEST_SOURCES}")
 
 # Copy gtest libraries.
-if (MSVC AND pf_build_shared AND BUILD_SHARED_LIBS)
+if (MSVC AND plain_build_shared AND BUILD_SHARED_LIBS)
   if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
     add_custom_command(TARGET core_tests
       POST_BUILD

@@ -1,113 +1,92 @@
-#include "pf/basic/string.h"
-#include "pf/basic/io.tcc"
-#include "pf/net/socket/listener.h"
+#include "plain/net/socket/listener.h"
+#include "plain/net/socket/api.h"
+#include "plain/net/socket/basic.h"
+#include "plain/basic/logger.h"
 
-namespace pf_net {
+using plain::net::socket::Listener;
 
-namespace socket {
+Listener::Listener() : socket_{std::make_unique<plain::net::socket::Basic>()} {
 
-bool Listener::init(uint16_t _port, const std::string &ip, uint32_t backlog) {
-  using namespace pf_basic;
-  bool result = false;
-  std::unique_ptr< Basic > __socket(new pf_net::socket::Basic());
-  socket_ = std::move(__socket);
-  if (nullptr == socket_) { //memory not enough
-    io_cerr("[net.socket] (Listener::Listener)"
-            " new pap_common_net::socket::Base() failed,"
-            " errorcode: %d",
-            socket_->get_last_error_code());
+}
+
+Listener::~Listener() = default;
+
+bool Listener::init(
+  const Address &addr, socket::Type sock_type, uint32_t backlog) {
+  if (!socket_->close()) return false;
+  auto socket_type = get_sock_type(sock_type);
+  if (!socket_->create(addr.family(), socket_type, 0)) {
+    LOG_ERROR << "can't create: " << get_last_error();
     return false;
   }
-  result = socket_->create();
-  if (false == result) {
-    io_cerr("[net.socket] (Listener::Listener)"
-            " socket_->create() failed, errorcode: %d",
-            socket_->get_last_error_code()); 
+  if (!socket_->set_reuse_addr()) {
+    LOG_ERROR << "can't set reuse addr: " << get_last_error();
     return false;
   }
-  result = socket_->set_reuseaddr();
-  if (false == result) {
-    io_cerr("[net.socket] (Listener::Listener)"
-            " socket_->set_reuseaddr() failed, errorcode: %d",
-            socket_->get_last_error_code());
+  if (!socket_->bind(addr)) {
+    LOG_ERROR << "can't bind addr: " << addr.text()
+      << " error: " << get_last_error();
     return false;
   }
-  result = socket_->bind(_port, ip.c_str());
-  if (false == result) {
-    io_cerr("[net.socket] (Listener::Listener)"
-            " socket_->bind(%d, %s) failed, errorcode: %d", 
-            _port,
-            ip.c_str(),
-            socket_->get_last_error_code());
+  if (!socket_->listen(backlog)) {
+    LOG_ERROR << "can't listen: " << backlog << " error: " << get_last_error();
     return false;
   }
-  result = socket_->listen(backlog);
-  if (false == result) {
-    io_cerr("[net.socket] (Listener::Listener)"
-            " socket_->listen(%d) failed, errorcode: %d",
-            backlog,
-            socket_->get_last_error_code());
+  if (!socket_->set_nonblocking()) {
+    LOG_ERROR << "can't set nonblocking" << " error: " << get_last_error();
     return false;
   }
   return true;
-}
-
-Listener::~Listener() {
-  if (socket_ != nullptr) {
-    socket_->close();
-  }
 }
 
 void Listener::close() {
-  if (socket_ != nullptr) socket_->close();
+  socket_->close();
 }
 
-bool Listener::accept(pf_net::socket::Basic *socket) {
-  using namespace pf_basic;
-  if (nullptr == socket) return false;
-  struct sockaddr_in accept_sockaddr_in;
-  socket->close();
-  socket->set_id(socket_->accept(&accept_sockaddr_in));
-  if (SOCKET_INVALID == socket->get_id()) return false;
-  socket->set_port(ntohs(accept_sockaddr_in.sin_port));
-  socket->set_host(inet_ntoa(accept_sockaddr_in.sin_addr));
-  return true;
+bool Listener::accept(std::shared_ptr<Basic> socket) {
+  if (!socket) return false;
+  if (!socket_->valid()) return false;
+  id_t id = socket_->accept();
+  if (id == kInvalidId) return false;
+  return socket->set_id(id);
 }
 
-uint32_t Listener::get_linger() const {
-  uint32_t linger;
-  linger = socket_->get_linger();
-  return linger;
+uint32_t Listener::get_linger() const noexcept {
+  return socket_->get_linger();
 }
 
-bool Listener::set_linger(uint32_t lingertime) {
-  bool result = false;
-  result = socket_->set_linger(lingertime);
-  return result;
+bool Listener::set_linger(uint32_t lingertime) noexcept {
+  return socket_->set_linger(lingertime);
 }
 
-bool Listener::is_nonblocking() const {
-  bool result = false;
-  result = socket_->is_nonblocking();
-  return result;
+bool Listener::is_nonblocking() const noexcept {
+  return socket_->is_nonblocking();
 }
-
-bool Listener::set_nonblocking(bool on) {
+  
+bool Listener::set_nonblocking(bool on) noexcept {
   return socket_->set_nonblocking(on);
 }
-
-uint32_t Listener::get_receive_buffer_size() const {
-  uint32_t result = 0;
-  result = socket_->get_receive_buffer_size();
-  return result;
+  
+uint32_t Listener::get_recv_size() const noexcept {
+  return socket_->get_recv_size();
+}
+  
+void Listener::set_recv_size(uint32_t size) noexcept {
+  socket_->set_recv_size(size);
 }
 
-bool Listener::set_receive_buffer_size(uint32_t size) {
-  bool result = false;
-  result = socket_->set_receive_buffer_size(size);
-  return result;
+uint32_t Listener::get_send_size() const noexcept {
+  return socket_->get_send_size();
 }
-
-} //namespace socket
-
-} //namespace pf_net
+  
+void Listener::set_send_size(uint32_t size) noexcept {
+  socket_->set_send_size(size);
+}
+  
+plain::net::socket::id_t Listener::id() const noexcept {
+  return socket_->id();
+}
+  
+plain::net::Address Listener::address() const noexcept {
+  return socket_->address();
+}

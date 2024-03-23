@@ -1,429 +1,445 @@
-#include "pf/basic/logger.h"
-#include "pf/basic/type/variable.h"
-#include "pf/basic/io.tcc"
-#include "pf/basic/time_manager.h"
-#include "pf/net/packet/factorymanager.h"
-#include "pf/net/packet/forward.h"
-#include "pf/net/packet/routing.h"
-#include "pf/net/packet/routing_lost.h"
-#include "pf/engine/kernel.h"
-#include "pf/script/interface.h"
-#include "pf/net/connection/manager/listener.h"
-#include "pf/net/connection/basic.h"
+#include "plain/net/connection/basic.h"
+#include <map>
+#include "plain/basic/utility.h"
+#include "plain/basic/logger.h"
+#include "plain/concurrency/executor/basic.h"
+#include "plain/net/detail/coroutine.h"
+#include "plain/net/socket/basic.h"
+#include "plain/net/stream/basic.h"
+#include "plain/net/connection/manager.h"
+#include "plain/net/packet/basic.h"
 
-namespace pf_net {
+using plain::net::connection::Basic;
+using plain::net::connection::callable_func;
 
-namespace connection {
+static std::unordered_map<std::string, callable_func> s_callables;
+static constexpr size_t kOnceHandlePacketCount{12};
+static constexpr size_t kCantPeekMaxCount{60};
 
-// Connection too many, this global map is the address and type to function 
-// can reduce memory use.
-std::map< std::string, std::function<void (Basic *)> > f_callbacks;
-inline std::string get_callback_key(void *pointer, const std::string &type) {
-  pf_basic::type::variable_t r{""};
-  r += POINTER_TOINT64(pointer);
-  r += type;
-  return r.data;
+static std::string
+get_callable_key(Basic *p, std::string_view suffix) noexcept {
+  auto np = (int64_t)(reinterpret_cast<int64_t *>(p));
+  return std::to_string(np) + std::string{suffix};
 }
 
-Basic::Basic() : 
-  id_{ID_INVALID},
-  managerid_{ID_INVALID},
-  socket_{nullptr},
-  istream_{nullptr},
-  istream_compress_{nullptr},
-  ostream_{nullptr},
-  protocol_{nullptr},
-  manager_{nullptr},
-  empty_{true},
-  disconnect_{false},
-  ready_{false},
-  compress_mode_{kCompressModeNone},
-  uncompress_buffer_{nullptr},
-  compress_buffer_{nullptr},
-  receive_bytes_{0},
-  send_bytes_{0},
-  packet_index_{0},
-  execute_count_pretick_{NET_CONNECTION_EXECUTE_COUNT_PRE_TICK_DEFAULT},
-  status_{0},
-  safe_encrypt_{false},
-  safe_encrypt_time_{0},
-  name_{""},
-  error_times_{0} {
-  //do nothing
+static void check_callable(Basic *p, std::string_view suffix) noexcept {
+  auto key = get_callable_key(p, suffix);
+  auto it = s_callables.find(key);
+  if (it != s_callables.end())
+    it->second(p);
 }
 
-Basic::~Basic() {
-  safe_delete(compress_buffer_);
-  safe_delete(uncompress_buffer_);
+struct Basic::Impl {
+  Impl();
+  Impl(std::shared_ptr<socket::Basic> socket);
+  ~Impl();
+  id_t id;
+  std::shared_ptr<socket::Basic> socket;
+  std::unique_ptr<stream::Basic> istream;
+  std::unique_ptr<stream::Basic> ostream;
+  stream::codec_t codec;
+  std::weak_ptr<Manager> manager;
+  packet::dispatch_func dispatcher;
+  uint8_t error_times{0};
+  uint8_t work_flags{0};
+  std::atomic_bool working{false};
+  mutable std::mutex mutex;
+
+  bool process_input(Basic *conn) noexcept;
+  bool process_output(Basic *conn) noexcept;
+  net::detail::Task<> process_input_await(Basic *conn) noexcept;
+  net::detail::Task<> process_output_await(Basic *conn) noexcept;
+  bool process_command(Basic *conn) noexcept;
+  bool process_exception() noexcept;
+  bool work(Basic *conn) noexcept;
+  void enqueue_work() noexcept; 
+  bool has_work_flag(WorkFlag flag) const noexcept;
+  void set_work_flag(WorkFlag flag, bool enable) noexcept;
+  bool exchange_work_flag(WorkFlag flag, bool enable) noexcept;
+  static std::string get_name(const Basic *conn) noexcept;
+};
+
+Basic::Impl::Impl() :
+  id{kInvalidId},
+  socket{std::make_shared<socket::Basic>()},
+  istream{std::make_unique<stream::Basic>(socket)},
+  ostream{std::make_unique<stream::Basic>(socket)},
+  codec{}, manager{} {
+
 }
 
-bool Basic::init(protocol::Interface *_protocol) {
-  if (ready()) return true; 
-  if (is_null(_protocol)) return false;
-  std::unique_ptr<socket::Basic> _socket(new socket::Basic());
-  protocol_ = _protocol;
-  socket_ = std::move(_socket);
-  Assert(socket_.get());
-  std::unique_ptr<stream::Input> _istream(
-      new stream::Input(socket_.get(),
-      NETINPUT_BUFFERSIZE_DEFAULT,
-      64 * 1024 * 1024));
-  istream_ = std::move(_istream);
-  Assert(istream_.get());
-  istream_->init();
-  std::unique_ptr<stream::Output> _ostream (
-      new stream::Output(
-      socket_.get(),
-      NETOUTPUT_BUFFERSIZE_DEFAULT,
-      64 * 1024 * 1024));
-  ostream_ = std::move(_ostream);
-  Assert(ostream_.get());
-  ostream_->init();
-  ready_ = true;
+Basic::Impl::Impl(std::shared_ptr<socket::Basic> socket) :
+  id{kInvalidId},
+  socket{socket},
+  istream{std::make_unique<stream::Basic>(socket)},
+  ostream{std::make_unique<stream::Basic>(socket)},
+  codec{}, manager{} {
+
+}
+
+Basic::Impl::~Impl() = default;
+
+bool Basic::Impl::process_input(Basic *conn) noexcept {
+  if (!has_work_flag(WorkFlag::Input)) return true;
+  scoped_executor_t check_flag([this]{
+    set_work_flag(WorkFlag::Input, false);
+  });
+  // std::cout << "input: " << socket->id() << std::endl;
+  assert(conn);
+  if (!socket->valid()) return false;
+  auto r = istream->pull();
+  if (r < 0) {
+    LOG_ERROR << get_name(conn) << " pull failed: " << r;
+    return false;
+  }
+  auto m = manager.lock();
+  if (m) {
+    m->increase_recv_size(r);
+  }
+  set_work_flag(WorkFlag::Command, true);
+  /*
+  if (socket->avail() == 0)
+    set_work_flag(WorkFlag::Input, false);
+  */
   return true;
 }
 
-bool Basic::process_input() {
-  bool result = true;
-  if (is_disconnect()) return true;
-  pf_util::compressor::Assistant *assistant = nullptr;
-  assistant = istream_->getcompressor()->getassistant();    
-  try {
-    int32_t fillresult = SOCKET_ERROR;
-    if (assistant->isenable()) {
-      if (is_null(istream_compress_)) {
-        SLOW_ERRORLOG("net",
-                      "[net.connection] (Basic::process_input)"
-                      " the socket compress stream is null.");
-        return false;
-      }
-      fillresult = istream_compress_->fill();
-    } else {
-      fillresult = istream_->fill();
-    }
-
-    if (fillresult <= SOCKET_ERROR) {
-      char errormessage[FILENAME_MAX];
-      memset(errormessage, '\0', sizeof(errormessage));
-      istream_->socket()->get_last_error_message(
-          errormessage, 
-          static_cast<uint16_t>(sizeof(errormessage) - 1));
-      SLOW_ERRORLOG("net",
-                    "[net.connection] (Basic::process_input)"
-                    " socket_inputstream_->fill() result: %d %s",
-                    fillresult,
-                    errormessage);
-      result = false;
-    } else if (fillresult > 0) {
-      receive_bytes_ += static_cast<uint32_t>(fillresult); //网络流量
-    }
-  } catch(...) {
-    SaveErrorLog();
-  }
-  
-  if (assistant->isenable() && !is_null(istream_compress_))
-    process_input_compress(); //compress
-  return result;
-}
-
-void Basic::process_input_compress() {
-  if (is_null(protocol_)) return;
-  protocol_->compress(this, uncompress_buffer_, compress_buffer_);
-}
-
-bool Basic::process_output() {
-  bool result = true;
-  if (is_disconnect()) return true;
-  try {
-    int32_t flushresult = ostream_->flush();
-    if (flushresult <= SOCKET_ERROR) {
-      char errormessage[FILENAME_MAX] = {0};
-      istream_->socket()->get_last_error_message(
-          errormessage, 
-          static_cast<uint16_t>(sizeof(errormessage) - 1));
-      SLOW_ERRORLOG("net",
-                    "[net.connection] (Basic::processoutput)"
-                    " socket_outputstream_->flush() result: %d %s",
-                    flushresult,
-                    errormessage);
-      result = false;
-    } else if (flushresult > 0) {
-      send_bytes_ += static_cast<uint32_t>(flushresult);
-    }
-  } catch(...) {
-    SaveErrorLog();
-  }
-  return result;
-}
-
-bool Basic::process_command() {
-  if (is_null(protocol_)) return false;
-  return protocol_->command(this, execute_count_pretick_);
-}
-
-bool Basic::send(packet::Interface *packet) {
-  std::unique_lock<std::mutex> autolock(mutex_);
-  if (is_disconnect()) return false;
-  if (is_null(protocol_)) return false;
-  return protocol_->send(this, packet);
-}
-
-bool Basic::heartbeat(uint64_t, uint32_t) {
-  using namespace pf_basic;
-  auto now = TIME_MANAGER_POINTER->get_ctime();
-  if (is_disconnect()) return false;
-  if (safe_encrypt_time_ != 0 && !is_safe_encrypt()) {
-    now = TIME_MANAGER_POINTER->get_ctime();
-    if (safe_encrypt_time_ + NET_ENCRYPT_CONNECTION_TIMEOUT < now) {
-      io_cwarn("[%s] Connection with safe encrypt timeout!",
-               NET_MODULENAME);
+bool Basic::Impl::process_output(Basic *conn) noexcept {
+  if (!has_work_flag(WorkFlag::Output)) return true;
+  assert(conn);
+  if (!socket->valid()) return false;
+  {
+    std::unique_lock<std::mutex> lock{mutex};
+    auto r = ostream->push();
+    // std::cout << "process_output: " << ostream->size() << std::endl;
+    if (r < 0) {
+      LOG_ERROR << get_name(conn) << " push failed: " << r;
       return false;
     }
-  }
-  // Routing check also can put it in input.
-  std::string aim_name = params_["routing"].data;
-  if (aim_name != "") {
-    auto last_check = params_["routing_check"].get<uint32_t>();
-    if (now - last_check >= 3) {
-      std::string service = params_["routing_service"].data;
-      auto listener = ENGINE_POINTER->get_service(service);
-      if (is_null(listener)) return false;
-      auto connection = listener->get(aim_name);
-      if (is_null(connection) || connection->is_disconnect()) {
-        io_cwarn("[%s] routing(%s|%s) lost!", 
-                 NET_MODULENAME, 
-                 service.c_str(), 
-                 aim_name.c_str());
-        return false;
-      }
-      params_["routing_check"] = now;
+    auto m = manager.lock();
+    if (r > 0 && m) {
+      m->increase_send_size(r);
     }
   }
+  if (ostream->size() == 0)
+    set_work_flag(WorkFlag::Output, false);
   return true;
 }
 
-void Basic::disconnect() {
-  using namespace pf_basic::type;
-  //Notice routing original.
-  std::string aim_name = params_["routing"].data;
-  if (!is_null(ENGINE_POINTER) && aim_name != "") {
-    std::string service = params_["routing_service"].data;
-    manager::Interface *manager = ENGINE_POINTER->get_service(service);
-    if (is_null(manager)) return;
-    auto connection = manager->get(aim_name);
-    if (!is_null(connection) && name_ != "") {
-      packet::RoutingLost packet;
-      packet.set_aim_name(name_);
-      connection->send(&packet);
+plain::net::detail::Task<>
+Basic::Impl::process_input_await(Basic *conn) noexcept {
+  auto m = manager.lock();
+  if (!m) co_return;
+  auto sock_data = m->get_sock_data();
+  auto r = co_await istream->pull_await(sock_data);
+  if (r < 0) {
+    LOG_ERROR << get_name(conn) << " pull failed: " << r;
+    m->remove(id);
+  }
+  m->increase_recv_size(r);
+  set_work_flag(WorkFlag::Command, true);
+}
+  
+plain::net::detail::Task<>
+Basic::Impl::process_output_await(Basic *conn) noexcept {
+  auto m = manager.lock();
+  if (!m) co_return;
+  auto sock_data = m->get_sock_data();
+  for (;;) {
+    auto r = co_await ostream->push_await(sock_data);
+    if (ostream->size() == 0) break;
+    if (r < 0) {
+      LOG_ERROR << get_name(conn) << " pull failed: " << r;
+      m->remove(id);
+      break;
+    }
+    m->increase_send_size(r);
+  }
+}
+
+bool Basic::Impl::process_command(Basic *conn) noexcept {
+  assert(conn);
+  if (!has_work_flag(WorkFlag::Command)) return true;
+  scoped_executor_t check_flag([this]{
+    if (istream->size() == 0)
+      set_work_flag(WorkFlag::Command, false);
+  });
+  if (istream->size() == 0) return true;
+  stream::decode_func func{stream::decode};
+  packet::limit_t packet_limit;
+  auto m = manager.lock();
+  if (m) packet_limit = m->setting_.packet_limit;
+  if (codec.decode) {
+    func = codec.decode;
+  } else if (m && m->codec().decode) {
+    func = m->codec().decode;
+  }
+  if (error_times >= kCantPeekMaxCount) return false;
+  for (size_t i = 0; i < kOnceHandlePacketCount; ++i) {
+    auto r = func(istream.get(), packet_limit);
+    auto e = get_error(r);
+    if (e) {
+      if (e->is_code(ErrorCode::NetPacketCantFill)) {
+        set_work_flag(WorkFlag::Command, false);
+        ++error_times;
+        return true;
+      } else if (e->is_code(ErrorCode::NetPacketNeedRecv)) {
+        return true;
+      }
+      LOG_ERROR << get_name(conn) << " error: " << e->code();
+      return false;
+    }
+    auto p = std::get_if<std::shared_ptr<packet::Basic>>(&r);
+    if (!p) return false; // impossible.
+    // Handle packet.
+    if (dispatcher) {
+      if (!dispatcher(conn, *p)) return false;
+    } else if (m && m->dispatcher()) {
+      if (!m->dispatcher()(conn, *p)) return false;
+    } else {
+      LOG_WARN << get_name(conn) << " packet unhandled: " << (*p)->id();
+    }
+    if (istream->size() == 0) break;
+  }
+  error_times = 0;
+  return true;
+}
+
+bool Basic::Impl::process_exception() noexcept {
+  if (!has_work_flag(WorkFlag::Except)) return true;
+  return true;
+}
+
+bool Basic::Impl::work(Basic *conn) noexcept {
+  if (!process_exception()) return false;
+  if (!process_input(conn)) return false;
+  if (!process_output(conn)) return false;
+  if (!process_command(conn)) return false;
+  return true;
+}
+  
+/**
+ * How to enqueue work banlance?
+ **/
+void Basic::Impl::enqueue_work() noexcept {
+  auto m = manager.lock();
+  if (!m || !m->running()) return;
+  const auto _working = working.exchange(true, std::memory_order_acq_rel);
+  if (_working) return;
+  /*
+  std::cout << "enqueue_work: " << this << " fd: " << socket->id() << 
+    " working: " << _working << "|" <<
+    working.load(std::memory_order_relaxed) << std::endl;
+  */
+  auto executor = m->get_executor();
+  if (!static_cast<bool>(executor)) return;
+  if (executor->shutdown_requested()) return;
+  executor->post([id = id, m = m] {
+      auto conn = m->get_conn(id);
+      if (!conn) return;
+      auto r = conn->work();
+      conn->impl_->working.store(false, std::memory_order_relaxed);
+      if (!r) {
+        m->remove(id);
+      } else {
+        if (!conn->idle()) {
+          conn->impl_->enqueue_work();
+        }
+      }
+  });
+}
+
+bool Basic::Impl::has_work_flag(WorkFlag flag) const noexcept {
+  std::unique_lock<std::mutex> lock{mutex};
+  return work_flags & (0x1 << std::to_underlying(flag));
+}
+  
+void Basic::Impl::set_work_flag(WorkFlag flag, bool enable) noexcept {
+  std::unique_lock<std::mutex> lock{mutex};
+  if (enable)
+    work_flags |= (0x1 << std::to_underlying(flag));
+  else
+    work_flags &= ~(0x1 << std::to_underlying(flag));
+#if 0
+  // wait input finsh.
+  if (flag == WorkFlag::Input) {
+    auto m = manager.lock();
+    if (m && socket->valid()) {
+      if (enable)
+        m->sock_remove(socket->id());
+      else{
+        m->sock_add(socket->id(), id);
+        m->send_ctrl_cmd("w");
+      }
     }
   }
-  auto script = 
-    !is_null(ENGINE_POINTER) ? ENGINE_POINTER->get_script() : nullptr;
-  if (!is_null(script) && GLOBALS["default.script.netlost"] != "") {
-    auto func = GLOBALS["default.script.netlost"].data;
-    variable_array_t params;
-    params.emplace_back(this->name());
-    params.emplace_back(this->get_id());
-    variable_array_t results;
-    script->call(func, params, results);
-  }
-  clear();
+#endif
+}
+  
+bool Basic::Impl::exchange_work_flag(WorkFlag flag, bool enable) noexcept {
+  std::unique_lock<std::mutex> lock{mutex};
+  auto r = static_cast<bool>(work_flags & (0x1 << std::to_underlying(flag)));
+  if (r == enable) return r;
+  if (enable)
+    work_flags |= (0x1 << std::to_underlying(flag));
+  else
+    work_flags &= ~(0x1 << std::to_underlying(flag));
+  return r;
 }
 
-void Basic::on_connect() {
-  auto key = get_callback_key(this, "__connect");
-  if (f_callbacks.find(key) == f_callbacks.end()) return;
-  auto func = f_callbacks[key];
-  func(this);
-}
-
-void Basic::on_disconnect() {
-  auto key = get_callback_key(this, "__disconnect");
-  if (f_callbacks.find(key) == f_callbacks.end()) return;
-  auto func = f_callbacks[key];
-  func(this);
-}
-
-void Basic::callback_connect(std::function<void (Basic *)> callback) {
-  auto key = get_callback_key(this, "__connect");
-  f_callbacks[key] = callback;
-}
-
-void Basic::callback_disconnect(std::function<void (Basic *)> callback) {
-  auto key = get_callback_key(this, "__disconnect");
-  f_callbacks[key] = callback;
-}
-
-void Basic::exit() {
-  if (!is_null(manager_)) {
-    manager_->remove(this);
+std::string Basic::Impl::get_name(const Basic *conn) noexcept {
+  if (!conn->valid()) return {};
+  std::string r;
+  auto m = conn->impl_->manager.lock();
+  if (m && !m->setting_.name.empty()) {
+    r += m->setting_.name;
   } else {
-    disconnect();
+    r += "unknown";
+  }
+  r += ".";
+  r += std::to_string(conn->id());
+  return r;
+}
+
+Basic::Basic() : impl_{std::make_unique<Impl>()} {
+
+}
+
+Basic::Basic(std::shared_ptr<socket::Basic> socket) :
+  impl_{std::make_unique<Impl>(socket)} {
+
+}
+
+Basic::Basic(Basic &&object) noexcept = default;
+
+Basic::~Basic() = default;
+
+Basic &Basic::operator=(Basic &&object) noexcept = default;
+
+bool Basic::init() noexcept {
+  if (!impl_->socket->close()) return false;
+  impl_->working.store(false, std::memory_order_relaxed);
+  impl_->work_flags = 0;
+  impl_->istream->clear();
+  impl_->ostream->clear();
+  auto connect_call_key = get_callable_key(this, "__connect");
+  s_callables.erase(connect_call_key);
+  auto disconnect_call_key = get_callable_key(this, "__disconnect");
+  s_callables.erase(disconnect_call_key);
+  // if (!impl_->socket->create()) return false;
+  return true;
+}
+
+bool Basic::idle() const noexcept {
+  return !impl_->socket->valid() ||
+    (!impl_->has_work_flag(WorkFlag::Output) &&
+     !impl_->has_work_flag(WorkFlag::Command));
+}
+  
+bool Basic::shutdown(int32_t how) noexcept {
+  if (!impl_->socket->valid()) return true;
+  return impl_->socket->shutdown(how);
+}
+  
+bool Basic::close() noexcept {
+  if (!impl_->socket->valid()) return true;
+  return impl_->socket->close();
+}
+  
+bool Basic::valid() const noexcept {
+  return impl_->socket->valid();
+}
+  
+bool Basic::work() noexcept {
+  return impl_->work(this);
+}
+
+void Basic::enqueue_work(WorkFlag flag) noexcept {
+  if (impl_->socket->awaitable() &&
+      (flag == WorkFlag::Input || flag == WorkFlag::Output)) {
+    if (flag == WorkFlag::Input)
+      impl_->process_input_await(this);
+    else if (flag == WorkFlag::Output)
+      impl_->process_output_await(this);
+  } else {
+    if (impl_->exchange_work_flag(flag, true)) return;
+    // impl_->enqueue_work();
+    auto m = impl_->manager.lock();
+    if (m) m->enqueue(impl_->id); // now to banlance work
   }
 }
 
-bool Basic::is_valid() {
-  if (is_null(socket_.get())) return false;
-  bool result = false;
-  result = socket_->is_valid();
-  return result;
+plain::net::connection::id_t Basic::id() const noexcept {
+  return impl_->id;
 }
 
-void Basic::clear() {
-  if (socket_) socket_->close();
-  if (istream_) istream_->clear();
-  if (ostream_) ostream_->clear();
-  set_managerid(ID_INVALID);
-  packet_index_ = 0;
-  status_ = 0;
-  execute_count_pretick_ = NET_CONNECTION_EXECUTE_COUNT_PRE_TICK_DEFAULT;
-  set_disconnect(true);
-  set_empty(true);
-  set_safe_encrypt(false);
-  safe_encrypt_time_ = 0;
-  name_ = "";
-  params_.clear();
-  routing_list_.clear();
-  error_times_ = 0;
+std::string Basic::name() const noexcept {
+  return impl_->get_name(this);
+}
+  
+void Basic::set_id(id_t id) noexcept {
+  impl_->id = id;
+}
+  
+std::shared_ptr<plain::net::socket::Basic> Basic::socket() const noexcept {
+  return impl_->socket;
+}
+  
+/*
+plain::net::stream::Basic &Basic::istream() {
+  return *(impl_->istream);
+}
+  
+plain::net::stream::Basic &Basic::ostream() {
+  return *(impl_->ostream);
+}
+*/
+
+void Basic::set_codec(const stream::codec_t &codec) noexcept {
+  impl_->codec = codec;
+}
+  
+void Basic::set_connect_callback(callable_func func) noexcept {
+  auto key = get_callable_key(this, "__connect");
+  s_callables[key] = func;
+}
+  
+void Basic::set_disconnect_callback(callable_func func) noexcept {
+  auto key = get_callable_key(this, "__disconnect");
+  s_callables[key] = func;
+}
+  
+void Basic::set_manager(std::shared_ptr<Manager> manager) noexcept {
+  impl_->manager = manager;
+}
+  
+void Basic::set_dispatcher(packet::dispatch_func func) noexcept {
+  impl_->dispatcher = func;
 }
 
-uint32_t Basic::get_receive_bytes() {
-  uint32_t result = receive_bytes_;
-  receive_bytes_ = 0;
-  return result;
-  return 0;
-}
-
-uint32_t Basic::get_send_bytes() {
-  uint32_t result = send_bytes_;
-  send_bytes_ = 0;
-  return result;
-}
-
-void Basic::compress_set_mode(compress_mode_t mode) {
-  compress_mode_ = mode;
-  pf_util::compressor::Assistant *assistant = nullptr;
-  bool inputstream_compress_enable = 
-    kCompressModeInput == compress_get_mode() || 
-    kCompressModeAll == compress_get_mode() ? true : false;
-  bool outputstream_compress_enable = 
-    kCompressModeOutput == compress_get_mode() || 
-    kCompressModeAll == compress_get_mode() ? true : false;
-  assistant = istream_->getcompressor()->getassistant();    
-  assistant->enable(inputstream_compress_enable);
-  if (assistant->isenable()) {
-    if (is_null(uncompress_buffer_)) {
-      uncompress_buffer_ = new char[NET_CONNECTION_UNCOMPRESS_BUFFER_SIZE];
-      memset(uncompress_buffer_, 0, NET_CONNECTION_UNCOMPRESS_BUFFER_SIZE);
-    }
-    if (is_null(compress_buffer_)) {
-      compress_buffer_ = new char[NET_CONNECTION_COMPRESS_BUFFER_SIZE];
-      memset(compress_buffer_, 0, NET_CONNECTION_COMPRESS_BUFFER_SIZE);
-    }
-    if (is_null(istream_compress_)) {
-      std::unique_ptr<stream::Input> _istream_compress(
-            new stream::Input(socket_.get(),
-            NETINPUT_BUFFERSIZE_DEFAULT,
-            64 * 1024 * 1024));
-      istream_compress_ = std::move(_istream_compress);
-    }
+bool Basic::send(const std::shared_ptr<packet::Basic> &packet) noexcept {
+  std::unique_lock<std::mutex> lock{impl_->mutex};
+  stream::encode_func func{stream::encode};
+  if (impl_->codec.encode) {
+    func = impl_->codec.encode;
+  } else if (
+    auto manager = impl_->manager.lock(); manager && manager->codec().encode) {
+    func = manager->codec().encode;
   }
-  assistant = ostream_->getcompressor()->getassistant();
-  assistant->enable(outputstream_compress_enable);
+  auto bytes = func(packet);
+  if (bytes.empty()) return false;
+  auto r = impl_->ostream->write(bytes) == bytes.size();
+  lock.unlock();
+  if (r) enqueue_work(WorkFlag::Output);
+  return r;
 }
 
-void Basic::encrypt_enable(bool enable) {
-  istream_->encryptenable(enable);
-  ostream_->encryptenable(enable);
+void Basic::on_connect() noexcept {
+  check_callable(this, "__connect");
 }
-
-void Basic::encrypt_set_key(const char *key) {
-  istream_->encrypt_setkey(key);
-  ostream_->encrypt_setkey(key);
+  
+void Basic::on_disconnect() noexcept {
+  impl_->istream->clear();
+  impl_->ostream->clear();
+  check_callable(this, "__disconnect");
 }
-
-bool Basic::routing(const std::string &_name, 
-                    packet::Interface *packet,
-                    const std::string &service) {
-  if (routing_list_[_name] != 1 || is_null(packet)) return false;
-  packet::Routing routing_packet;
-  routing_packet.set_destination(service);
-  routing_packet.set_aim_name(_name);
-  routing_packet.set_packet_size(packet->size());
-  return send(&routing_packet) && send(packet);
-}
-
-bool Basic::forward(packet::Interface *packet) {
-  if (is_null(packet)) return false;
-  std::string aim_name = params_["routing"].data;
-  if (aim_name == "") return false;
-  std::string service = params_["routing_service"].data;
-  if (service == "") service = "default";
-  auto listener = ENGINE_POINTER->get_listener(service);
-  if (is_null(listener)) return false;
-  auto connection = listener->get(aim_name);
-  if (is_null(connection) || connection->is_disconnect()) return false;
-  packet::Forward forward_packet;
-  forward_packet.set_original(name());
-  forward_packet.set_packet_size(packet->size());
-  return connection->send(&forward_packet) && connection->send(packet);
-}
-
-bool Basic::connect(const std::string &ip, uint16_t port) {
-  std::unique_lock<std::mutex> autolock(mutex_);
-  if (!is_null(manager_) && manager_->is_service()) {
-    SLOW_ERRORLOG("net",
-                  "[net.connection] (Basic::connect)"
-                  " service connection can't connect(%s:%d)",
-                  ip.c_str(),
-                  port);
-    return false;
-  }
-  clear();
-  if (is_null(socket_)) {
-    Assert(socket_);
-    return false;
-  }
-  bool result = false;
-  uint8_t step = 0;
-  try {
-    result = socket_->is_valid() ? true : socket_->create();
-    if (!result) {
-      step = 1;
-      goto EXCEPTION;
-    }
-    result = socket_->connect(ip.c_str(), port);
-    if (!result) {
-      step = 2;
-      goto EXCEPTION;
-    }
-    result = socket_->set_nonblocking();
-    if (!result) {
-      step = 3;
-      goto EXCEPTION;
-    }
-    result = socket_->set_linger(0);
-    if (!result) {
-      step = 4;
-      goto EXCEPTION;
-    }
-  } catch (...) {
-    step = 5;
-    goto EXCEPTION;
-  }
-  set_disconnect(false);
-EXCEPTION:
-  SLOW_LOG(NET_MODULENAME,
-           "[net.connection] (Basic::connect) %s !"
-           " ip: %s, port: %d step(%d)",
-           result ? "success" : "failed",
-           ip.c_str(),
-           port,
-           step);
-
-  return result;
-}
-
-} //namespace connection
-
-} //namespace pf_net

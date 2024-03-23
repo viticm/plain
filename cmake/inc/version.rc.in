@@ -18,7 +18,7 @@ BEGIN
             VALUE "FileDescription", "${PROJECT_DESC}"
             VALUE "FileVersion", "${PROJECT_VERSION_MAJOR}, ${PROJECT_VERSION_MINOR}, ${PROJECT_VERSION_PATCH}"
             VALUE "InternalName", "${PROJECT_NAME}"
-            VALUE "LegalCopyright", "Copyright viticm.ti@gmail.com (C) 2022"
+            VALUE "LegalCopyright", "Copyright viticm.ti@gmail.com (C) 2023"
             VALUE "OriginalFilename", "plain framework"
             VALUE "ProductName", "${PROJECT_NAME}"
             VALUE "ProductVersion", "${PROJECT_VERSION_MAJOR}, ${PROJECT_VERSION_MINOR}, ${PROJECT_VERSION_PATCH}"

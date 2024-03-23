@@ -1,11 +1,9 @@
-#include <map>
-#include <assert.h>
-#include <exception>
-#include "pf/basic/string.h"
-#include "pf/sys/assert.h"
-#include "pf/file/tab.h"
+#include "plain/file/tab.h"
+#include <unordered_map>
+#include "plain/basic/utility.h"
+#include "plain/sys/assert.h"
 
-namespace pf_file {
+using namespace plain;
 
 Tab::Tab(uint32_t id) : 
   id_{id},
@@ -24,7 +22,7 @@ Tab::~Tab() {
 }
 
 bool Tab::open_from_txt(const char *filename) {
-  assert(filename);
+  Assert(filename);
   FILE *fp = fopen(filename, "rb");
   if (nullptr == fp) return false;
   fseek(fp, 0, SEEK_END);
@@ -93,12 +91,12 @@ const Tab::field_data *Tab::search_position(int32_t line,
     memset(temp, '\0', sizeof(temp));
     snprintf(temp, 
              sizeof(temp) - 1, 
-             "pf_file::Tab::search_position is failed,"
+             "plain_file::Tab::search_position is failed,"
              " position out for range[line:%d, column:%d] position:%d",
              line,
              column,
              position);
-#ifdef _PF_THROW_EXCEPTION_AS_STD_STRING
+#ifdef _plain_THROW_EXCEPTION_AS_STD_STRING
     throw std::string(temp);
 #else
     AssertEx(false, temp);
@@ -113,7 +111,7 @@ const Tab::field_data* Tab::search_first_column_equal(
     const field_data &value) const {
   if (column < 0 || column > field_number_) return nullptr;
   field_type_enum type = type_[column];
-  register int32_t i;
+  int32_t i;
   for (i = 0; i < record_number_; ++i) {
     const field_data &_field_data = 
       data_buffer_[(field_number_ * i) + column];
@@ -160,7 +158,7 @@ void Tab::create_index(int32_t column, const char *filename) {
                filename, 
                i + 1, 
                _field_data->int_value);
-#ifdef _PF_THROW_EXCEPTION_AS_STD_STRING
+#ifdef _plain_THROW_EXCEPTION_AS_STD_STRING
       throw std::string(temp);
 #else
       AssertEx(false, temp);
@@ -174,7 +172,7 @@ const char *Tab::get_line_from_memory(char *str,
                                            int32_t size, 
                                            const char *memory, 
                                            const char *end) {
-  register const char *_memory = memory;
+  const char *_memory = memory;
   if (_memory >= end || 0 == *_memory) return nullptr;
   while (_memory < end &&
          _memory - memory + 1 < size &&
@@ -191,8 +189,8 @@ const char *Tab::get_line_from_memory(char *str,
 }
 
 bool Tab::field_equal(field_type_enum type, 
-                           const field_data &a, 
-                           const field_data &b) {
+                      const field_data &a, 
+                      const field_data &b) {
   bool result = false;
   if (kTypeInt == type) {
     result = a.int_value == b.int_value;
@@ -209,16 +207,15 @@ bool Tab::field_equal(field_type_enum type,
 }
 
 bool Tab::open_from_memory_text(const char *memory, 
-                                     const char *end, 
-                                     const char *filename) {
-  using namespace pf_basic;
+                                const char *end, 
+                                const char *filename) {
   char line[(1024 * 10) + 1]; //long string
   memset(line, '\0', sizeof(line));
-  register const char *_memory = memory;
+  const char *_memory = memory;
   _memory = get_line_from_memory(line, sizeof(line) - 1, _memory, end);
   if (!_memory) return false;
   std::vector<std::string> result;
-  string::explode(line, result, "\t", true, true);
+  explode(line, result, "\t", true, true);
   if (result.empty()) return false;
   field_type _field_type;
   _field_type.resize(result.size());
@@ -239,10 +236,10 @@ bool Tab::open_from_memory_text(const char *memory,
   int32_t record_number = 0;
   int32_t field_number = static_cast<int32_t>(_field_type.size());
   std::vector<std::pair<std::string, int32_t> > string_buffer;
-  std::map<std::string, int32_t> map_string_buffer;
+  std::unordered_map<std::string, int32_t> map_string_buffer;
   _memory = get_line_from_memory(line, sizeof(line) - 1, _memory, end);
   //第二行为列名（相当于数据库的字段名），应尽量使用英文
-  string::explode(line, fieldnames_, "\t", true, true);
+  explode(line, fieldnames_, "\t", true, true);
   if (!_memory) return false;
   int32_t string_buffer_size = 0;
   bool loop = true;
@@ -251,7 +248,7 @@ bool Tab::open_from_memory_text(const char *memory,
     _memory = get_line_from_memory(line, sizeof(line) - 1, _memory, end);
     if (!_memory) break;
     if ('#' == line[0]) continue; //注释行
-    string::explode(line, result, "\t", true, false);
+    explode(line, result, "\t", true, false);
     if (result.empty()) continue; //空行
     if (static_cast<int32_t>(result.size()) != field_number) { //列数不对
       int32_t left_number = 
@@ -283,12 +280,12 @@ bool Tab::open_from_memory_text(const char *memory,
           char *convert_str = new char[convert_strlength];
           memset(convert_str, 0, convert_strlength);
           int32_t convert_result = 
-            string::charset_convert("GBK",
-                                    "UTF-8",
-                                    convert_str,
-                                    convert_strlength,
-                                    value,
-                                    static_cast<int32_t>(strlen(value)));
+            charset_convert("GBK",
+                            "UTF-8",
+                             convert_str,
+                             convert_strlength,
+                             value,
+                             static_cast<int32_t>(strlen(value)));
           if (convert_result > 0) {
             value = convert_str;
             result[i] = convert_str;
@@ -298,8 +295,7 @@ bool Tab::open_from_memory_text(const char *memory,
             convert_str = nullptr;
           }
 #endif
-          std::map<std::string, int32_t>::iterator it = 
-            map_string_buffer.find(result[i]);
+          auto it = map_string_buffer.find(result[i]);
           if (it == map_string_buffer.end()) {
             string_buffer.push_back(
                 std::make_pair(result[i], string_buffer_size));
@@ -331,7 +327,7 @@ bool Tab::open_from_memory_text(const char *memory,
   //unsigned char blank = '\0';
   string_buffer_[0] = '\0';
   
-  register char *temp = string_buffer_ + 1;
+  char *temp = string_buffer_ + 1;
   for (i = 0; i < static_cast<int32_t>(string_buffer.size()); ++i) {
     memcpy(temp, 
            string_buffer[i].first.c_str(), 
@@ -341,7 +337,7 @@ bool Tab::open_from_memory_text(const char *memory,
   }
 
   //relocate string block
-  register uint16_t m, n;
+  uint16_t m, n;
   for (m = 0; m < field_number; ++m) {
     if (type_[m] != kTypeString) continue;
     for (n = 0; n < record_number; ++n) {
@@ -356,7 +352,7 @@ bool Tab::open_from_memory_text(const char *memory,
 bool Tab::open_from_memory_binary(const char *memory, 
                              const char *end, 
                              const char *filename) {
-  register const char *_memory = memory;
+  const char *_memory = memory;
   file_head_t file_head;
   memcpy(&file_head, _memory, sizeof(file_head_t));
   if (file_head.identify != FILE_DATABASE_INDENTIFY) return false;
@@ -526,7 +522,7 @@ const Tab::field_data *Tab::get_fielddata(int32_t line,
   return _field_data;
 }
 
-bool Tab::save_totext_line(std::vector<std::string> _data){
+bool Tab::save_totext_line(const std::vector<std::string> &_data){
   if(static_cast<int32_t>(_data.size()) != field_number_)
     return false;
 
@@ -551,5 +547,3 @@ bool Tab::save_totext_line(std::vector<std::string> _data){
   } 
   return true;
 }
-
-} //namespace pf_file

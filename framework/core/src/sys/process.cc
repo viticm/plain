@@ -1,33 +1,32 @@
-#include "pf/basic/config.h"
+#include "plain/sys/process.h"
 #if OS_WIN
 #include <process.h>
 #include <psapi.h>
-#elif OS_UNIX
-#include <unistd.h>
+#include <winsock2.h>
+#elif OS_UNIX || OS_MAC
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <signal.h>
+#include <unistd.h>
 #endif
-#include "pf/basic/util.h"
-#include "pf/basic/io.tcc"
-#include "pf/sys/util.h"
-#include "pf/sys/assert.h"
-#include "pf/sys/process.h"
+#include "plain/basic/utility.h"
+#include "plain/basic/io.h"
+#include "plain/sys/utility.h"
+#include "plain/sys/assert.h"
 
-namespace pf_sys {
-
-namespace process {
+namespace plain::process {
 
 int32_t getid() {
   int32_t id = ID_INVALID;
 #if OS_WIN
   id = _getpid();
-#elif OS_UNIX
+#elif OS_UNIX || OS_MAC
   id = getpid();
 #endif
   return id;
 }
 
 void get_filename(char *filename, size_t size) {
-  using namespace pf_basic::util;
   get_module_filename(filename, size);
   auto havelength = strlen(filename);
   auto _size = size - havelength;
@@ -55,7 +54,8 @@ bool writeid(const char *filename) {
 }
 
 bool waitexit(const char *filename) {
-  using namespace pf_basic;
+  using namespace std::chrono_literals;
+  using namespace plain;
   if (nullptr == filename || 0 == strlen(filename)) {
     io_cerr("[sys] (process::waitexit) error, can't find pid file");
     return false;
@@ -66,13 +66,13 @@ bool waitexit(const char *filename) {
             filename);
     return false;
   }
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
   kill(id, 10);
-  std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+  std::this_thread::sleep_for(2s);
   kill(id, 10);
   int32_t result = kill(id, 0);
   while (result >= 0) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    std::this_thread::sleep_for(1s);
     result = kill(id, 0);
   }
   io_cerr("[sys] (process::waitexit) success, pid(%d), result(%d)", id, result);
@@ -146,14 +146,14 @@ float get_cpu_usage(int32_t id) {
     (system_time_delta * 100 + time_delta / 2) / time_delta);
   last_system_time = system_time;
   last_time = time;
-#elif OS_UNIX /* } { */
+#elif OS_UNIX || OS_MAC /* } { */
   char temp[32] = {0};
   char command[128] = {0};
   snprintf(command, 
            sizeof(command) - 1, 
            "ps aux | awk '{if ($2 == %d) print $3}'",
            id);
-  if (0 == util::exec(command, temp, sizeof(temp))) {
+  if (0 == exec(command, temp, sizeof(temp))) {
     cpu = atof(temp);
   }
 #endif /* } */
@@ -168,14 +168,14 @@ uint64_t get_virtualmemory_usage(int32_t id) {
     if (::GetProcessMemoryInfo(hProcess, &pmc, sizeof(pmc))) {
       result = pmc.PagefileUsage;
     }
-#elif OS_UNIX /* }{ */
+#elif OS_UNIX || OS_MAC /* }{ */
   char temp[128] = {0};
   char command[128] = {0};
   snprintf(command, 
            sizeof(command) - 1, 
            "ps aux | awk '{if ($2 == %d) print $5}'",
            id);
-  if (0 == util::exec(command, temp, sizeof(temp))) {
+  if (0 == exec(command, temp, sizeof(temp))) {
     char *endpointer = nullptr;
     result = strtouint64(temp, &endpointer, 10);
     result *= 1024;
@@ -192,14 +192,14 @@ uint64_t get_physicalmemory_usage(int32_t id) {
     if (::GetProcessMemoryInfo(hProcess, &pmc, sizeof(pmc))) {
       result = pmc.WorkingSetSize;
     }
-#elif OS_UNIX /* }{ */
+#elif OS_UNIX || OS_MAC /* }{ */
   char temp[128] = {0};
   char command[128] = {0};
   snprintf(command, 
            sizeof(command) - 1, 
            "ps aux | awk '{if ($2 == %d) print $6}'",
            id);
-  if (0 == util::exec(command, temp, sizeof(temp))) {
+  if (0 == exec(command, temp, sizeof(temp))) {
     char *endpointer = nullptr;
     result = strtouint64(temp, &endpointer, 10);
     result *= 1024;
@@ -210,7 +210,7 @@ uint64_t get_physicalmemory_usage(int32_t id) {
 
 bool daemon() {
   bool result = false;
-#if OS_UNIX
+#if OS_UNIX || OS_MAC
   pid_t pid;
   if ((pid = fork()) != 0) exit(0);
   setsid();
@@ -223,6 +223,14 @@ bool daemon() {
   return result;
 }
 
-} //namespace process
+std::string hostname() {
+  char buf[256]{0};
+  if (0 == ::gethostname(buf, sizeof buf)) {
+    buf[sizeof(buf) - 1] = '\0';
+    return buf;
+  } else {
+    return "unknownhost";
+  }
+}
 
-} //namespace pf_sys
+} // namespace plain::process

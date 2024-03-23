@@ -1,4 +1,4 @@
-#include "pf/basic/md5.h"
+#include "plain/basic/md5.h"
 /* MD5
  converted to C++ class by Frank Thilo (thilo@unix-ag.org)
  for bzflag (http://www.bzflag.org)
@@ -6,7 +6,7 @@
    based on:
  
    md5.h and md5.c
-   reference implemantion of RFC 1321
+   reference implementation of RFC 1321
  
    Copyright (C) 1991-2, RSA Data Security, Inc. Created 1991. All
 rights reserved.
@@ -51,7 +51,7 @@ documentation and/or software.
  
 ///////////////////////////////////////////////
  
-namespace pf_basic {
+using namespace plain;
 
 // F, G, H and I are basic MD5 functions.
 inline MD5::uint4 MD5::F(uint4 x, uint4 y, uint4 z) {
@@ -346,5 +346,3 @@ std::string md5(const std::string &str) {
   MD5 md5 = MD5(str);
   return md5.hexdigest();
 }
-
-} // namespace pf_basic

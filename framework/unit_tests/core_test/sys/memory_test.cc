@@ -1,9 +1,8 @@
 #include "gtest/gtest.h"
-#include "pf/sys/memory/pool.h"
-#include "pf/sys/memory/stack_allocator.h"
-#include "pf/sys/memory/fast_pool.h"
+#include "plain/sys/memory/stack_allocator.h"
+#include "plain/sys/memory/pool.h"
 
-using namespace pf_sys::memory;
+using namespace plain::memory;
 using TestFun = std::function<bool(int cnt, std::size_t each_size)>;
 
 /* Adjust these values depending on how much you trust your computer */
@@ -37,30 +36,6 @@ void stack_compare() {
   }
   std::cout << "Default Allocator Time: ";
   std::cout << (((double)clock() - start) / CLOCKS_PER_SEC) << "\n\n";
-
-  /* Use MemoryPool */
-  StackAllocator<int, Pool<int> > stack_pool;
-  start = clock();
-  for (int j = 0; j < REPS; j++) {
-    assert(stack_pool.empty());
-    for (int i = 0; i < ELEMS / 4; i++) {
-      // Unroll to time the actual code and not the loop
-      stack_pool.push(i);
-      stack_pool.push(i);
-      stack_pool.push(i);
-      stack_pool.push(i);
-    }
-    for (int i = 0; i < ELEMS / 4; i++) {
-      // Unroll to time the actual code and not the loop
-      stack_pool.pop();
-      stack_pool.pop();
-      stack_pool.pop();
-      stack_pool.pop();
-    }
-  }
-  std::cout << "MemoryPool Allocator Time: ";
-  std::cout << (((double)clock() - start) / CLOCKS_PER_SEC) << "\n\n";
-
 
   std::cout << "Here is a secret: the best way of implementing a stack"
             " is a dynamic array.\n";
@@ -132,34 +107,34 @@ bool test_OS_malloc(int cnt, std::size_t each_size) {
   return re;
 } 
 
-bool test_fastmempool(int cnt, std::size_t each_size) {
-  using namespace pf_sys::memory;
+bool test_mempool(int cnt, std::size_t each_size) {
+  using namespace plain::memory;
   bool re = true;
   //std::vector<void *> vec_allocs;
   //vec_allocs.reserve(cnt);
 
-  // FastPool Constructor will takes time here:
-  FastPool<16000000, 16, 16, false, false> fast_mem_pool;
+  // Pool Constructor will takes time here:
+  Pool<16000000, 16, 16, false, false> mem_pool;
   for (int i = 0; i < cnt; ++i) {
-    void *ptr = fast_mem_pool.malloc(each_size);
+    void *ptr = mem_pool.malloc(each_size);
     UNUSED(ptr);
 //    if (ptr)
 //    {
-//      all allocations in FastPool, no need vec_allocs for free
+//      all allocations in Pool, no need vec_allocs for free
 //      vec_allocs.emplace_back(ptr);
 //    }
   }
 
 //  for (auto &&it : vec_allocs) {
-//      all allocations in FastPool, no need vec_allocs for free
+//      all allocations in Pool, no need vec_allocs for free
 //    free(it);
 //  }
 
-  // FastPool Destructor will takes time here..
+  // Pool Destructor will takes time here..
   return re;
 }
 
-TEST_F(Memory, testFastPool) {
+TEST_F(Memory, testPool) {
   int threads_cnt = 2;
   /*
   if (argc > 1) {
@@ -169,7 +144,7 @@ TEST_F(Memory, testFastPool) {
   }
   */
   // std::cout << "\nMemory overhead for each allocation bytes=" << 
-  // sizeof (FastPool<>::AllocHeader) << std::endl;
+  // sizeof (Pool<>::AllocHeader) << std::endl;
   struct AllocHeader {
     /*
      label of own allocations:
@@ -189,7 +164,7 @@ TEST_F(Memory, testFastPool) {
 
   std::cout << "\nMulti threaded (threads =" 
     <<  threads_cnt  << "), msec for each count:";
-  map_fun.emplace("|  test_fastmempool           ", test_fastmempool);
+  map_fun.emplace("|  test_mempool               ", test_mempool);
   map_fun.emplace("|  test_OS_malloc             ", test_OS_malloc);
   std::cout 
     << 

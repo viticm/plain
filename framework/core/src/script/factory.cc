@@ -1,10 +1,9 @@
-#include "pf/script/interface.h"
-#include "pf/basic/logger.h"
-#include "pf/script/factory.h"
+#include "plain/script/factory.h"
+#include "plain/script/interface.h"
 
-using namespace pf_script;
+using namespace plain::script;
 
-eid_t Factory::newenv(const config_t &config) {
+eid_t Factory::newenv(const config_t& config) {
   eid_t eid = neweid();
   if (SCRIPT_EID_INVALID == eid) return eid;
   auto func_envcreator = get_env_creator_script(config.type);
@@ -20,7 +19,7 @@ eid_t Factory::newenv(const config_t &config) {
   return eid;
 }
 
-eid_t Factory::newenv(Interface *env) {
+eid_t Factory::newenv(Interface* env) {
   eid_t eid = neweid();
   if (SCRIPT_EID_INVALID == eid) return eid;
   std::unique_ptr< Interface > pointer(env);
