@@ -139,6 +139,44 @@ Connector::connect_impl(
     callback(conn.get());
   return conn;
 }
+  
+void Connector::set_keep_alive(connection::id_t id, bool flag) noexcept {
+   auto conn = get_conn(id);
+   if (!conn) return;
+   conn->set_keep_alive(flag);
+}
+  
+bool Connector::connect(
+  std::shared_ptr<connection::Basic> conn,
+  const std::chrono::milliseconds &timeout) noexcept {
+  if (!conn || conn->id() == connection::kInvalidId) return {};
+  auto addr = conn->socket()->peer_address().text();
+  if (addr.empty()) return false;
+  auto success = conn->socket()->connect(addr, timeout, conn->socket()->type());
+  if (!success) {
+    LOG_ERROR << "connect failed: " << socket::get_last_error();
+    return false;
+  }
+  auto sock = conn->socket();
+  if (!sock->set_nonblocking()) {
+    LOG_ERROR << "set_nonblocking failed: " << socket::get_last_error();
+    return false;
+  }
+  if (!sock->set_linger(0)) {
+    LOG_ERROR << "set_linger(0) failed: " << socket::get_last_error();
+    return false;
+  }
+  if (!impl_->manager->sock_add(sock->id(), conn->id())) {
+    LOG_ERROR << "sock add failed";
+    return false;
+  }
+  impl_->manager->send_ctrl_cmd("w"); // wakeup to add socket descriptor.
+  conn->on_connect();
+  const auto &callback = impl_->manager->connect_callback();
+  if (static_cast<bool>(callback))
+    callback(conn.get());
+  return true;
+}
 
 uint64_t Connector::send_size() const noexcept {
   return impl_->manager->send_size();

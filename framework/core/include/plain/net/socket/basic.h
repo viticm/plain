@@ -44,6 +44,7 @@ class PLAIN_API Basic : noncopyable {
   int32_t send(const bytes_t &bytes, uint32_t flag = 0);
   int32_t recv(bytes_t &bytes, uint32_t flag = 0); // recv max bytes capacity size.
   size_t avail() const noexcept;
+  Type type() const noexcept;
 
  public:
   virtual detail::Awaitable send_await(

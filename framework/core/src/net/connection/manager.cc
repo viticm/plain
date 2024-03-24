@@ -384,6 +384,7 @@ void Manager::remove(connection::id_t conn_id, bool no_event) noexcept {
     if (conn->socket()->valid()) this->sock_remove(conn->socket()->id());
     conn->shutdown();
     conn->close();
+    if (conn->is_keep_alive()) return; // The connector will keep alive.
   }
   impl_->connection_info.free_ids.emplace(conn_id);
   if (impl_->connection_info.size > 0)

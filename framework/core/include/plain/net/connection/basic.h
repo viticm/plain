@@ -72,6 +72,8 @@ Basic final : noncopyable {
  private:
   void set_id(id_t id) noexcept;
   void set_manager(std::shared_ptr<Manager> manager) noexcept;
+  void set_keep_alive(bool flag) const noexcept;
+  bool is_keep_alive() const noexcept;
 
  private:
   bool work() noexcept;
