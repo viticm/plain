@@ -48,6 +48,9 @@ class PLAIN_API Connector final {
     const std::chrono::milliseconds
     &timeout = std::chrono::seconds(5),
     socket::Type sock_type = socket::Type::Tcp) noexcept;
+  bool connect(
+    std::shared_ptr<connection::Basic> conn,
+    const std::chrono::milliseconds &timeout = std::chrono::seconds(5)) noexcept;
 
  public:
   void set_codec(const stream::codec_t &codec) noexcept;
@@ -56,6 +59,7 @@ class PLAIN_API Connector final {
   const packet::dispatch_func &dispatcher() const noexcept;
   void set_connect_callback(connection::callable_func func) noexcept;
   void set_disconnect_callback(connection::callable_func func) noexcept;
+  void set_keep_alive(connection::id_t id, bool flag) noexcept;
 
  public:
   std::shared_ptr<connection::Basic>

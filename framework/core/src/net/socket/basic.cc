@@ -10,6 +10,7 @@ using plain::net::socket::Basic;
 
 struct Basic::Impl {
   id_t id{kInvalidId};
+  Type type{Type::Tcp};
 };
 
 Basic::Basic(id_t id) : impl_{std::make_unique<Impl>()} {
@@ -242,6 +243,9 @@ bool Basic::connect(
     auto ptr = detail::get_sa_pointer(data); // can't use data.data(), memory cut
     auto len = static_cast<uint32_t>(data.size());
     r = socket::connect(impl_->id, ptr, len, timeout);
+    if (r) {
+      impl_->type = sock_type;
+    }
   } catch(...) {
     LOG_ERROR << "connect except";
   }
@@ -261,8 +265,15 @@ bool Basic::connect(
     auto ptr = detail::get_sa_pointer(data); // can't use data.data(), memory cut
     auto len = static_cast<uint32_t>(data.size());
     r = socket::connect(impl_->id, ptr, len, timeout);
+    if (r) {
+      impl_->type = sock_type;
+    }
   } catch(...) {
     LOG_ERROR << "connect except";
   }
   return r;
+}
+
+plain::net::socket::Type Basic::type() const noexcept {
+  return impl_->type;
 }

@@ -43,6 +43,7 @@ struct Basic::Impl {
   uint8_t error_times{0};
   uint8_t work_flags{0};
   std::atomic_bool working{false};
+  std::atomic_bool keep_alive{false};
   mutable std::mutex mutex;
 
   bool process_input(Basic *conn) noexcept;
@@ -442,4 +443,12 @@ void Basic::on_disconnect() noexcept {
   impl_->istream->clear();
   impl_->ostream->clear();
   check_callable(this, "__disconnect");
+}
+
+void Basic::set_keep_alive(bool flag) const noexcept {
+  impl_->keep_alive.store(flag, std::memory_order_relaxed);
+}
+  
+bool Basic::is_keep_alive() const noexcept {
+  return impl_->keep_alive.load(std::memory_order_relaxed);
 }
