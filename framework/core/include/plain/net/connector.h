@@ -59,7 +59,8 @@ class PLAIN_API Connector final {
   const packet::dispatch_func &dispatcher() const noexcept;
   void set_connect_callback(connection::callable_func func) noexcept;
   void set_disconnect_callback(connection::callable_func func) noexcept;
-  void set_keep_alive(connection::id_t id, bool flag) noexcept;
+  void set_keep_alive(
+		std::shared_ptr<connection::Basic> conn, bool flag) noexcept;
 
  public:
   std::shared_ptr<connection::Basic>

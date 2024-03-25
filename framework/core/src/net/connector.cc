@@ -140,9 +140,10 @@ Connector::connect_impl(
   return conn;
 }
   
-void Connector::set_keep_alive(connection::id_t id, bool flag) noexcept {
-   auto conn = get_conn(id);
-   if (!conn) return;
+void Connector::set_keep_alive(
+	std::shared_ptr<connection::Basic> conn, bool flag) noexcept {
+   auto _conn = get_conn(conn->id());
+   if (!_conn || _conn != conn) return;
    conn->set_keep_alive(flag);
 }
   
