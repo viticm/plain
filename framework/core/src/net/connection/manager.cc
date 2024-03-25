@@ -2,6 +2,7 @@
 #include <set>
 #include <array>
 #include <deque>
+#include <map>
 #include "plain/basic/utility.h"
 #include "plain/concurrency/executor/basic.h"
 #include "plain/concurrency/executor/worker_thread.h"
@@ -43,6 +44,7 @@ struct Manager::Impl {
   std::condition_variable cv;
   thread_t worker; // The main worker.
 #endif
+  std::map<connection::id_t, std::string> conn_names;
   socket::id_t ctrl_write_fd{socket::kInvalidId};
   std::atomic_bool running{false};
   callable_func connect_callback;
@@ -592,4 +594,23 @@ void Manager::enqueue(connection::id_t id) noexcept {
   } else if (id != connection::kInvalidId) {
     impl_->push_work_id(id);
   }
+}
+
+void Manager::set_name(
+  connection::id_t conn_id, std::string_view name) noexcept {
+  std::unique_lock<std::mutex> lock{impl_->mutex};
+  auto conn = get_conn(conn_id);
+  if (!conn) return;
+  impl_->conn_names.emplace(conn_id, name.data());
+}
+  
+std::string Manager::get_name(connection::id_t conn_id) const noexcept {
+  std::unique_lock<std::mutex> lock{impl_->mutex};
+  auto it = impl_->conn_names.find(conn_id);
+  if (it == impl_->conn_names.end()) {
+    std::string r{setting_.name.empty() ? "unknown" : setting_.name};
+    r += "." + std::to_string(conn_id);
+    return r;
+  }
+  return it->second;
 }

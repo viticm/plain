@@ -76,6 +76,8 @@ class PLAIN_API Manager :
   void foreach(std::function<void(std::shared_ptr<Basic> conn)> func); // valid
   void recv_ctrl_cmd() noexcept;
   void enqueue(connection::id_t conn_id) noexcept;
+  void set_name(connection::id_t conn_id, std::string_view name) noexcept;
+  std::string get_name(connection::id_t conn_id) const noexcept;
 
  protected:
   void increase_send_size(size_t size);
