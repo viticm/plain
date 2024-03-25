@@ -147,6 +147,11 @@ void Connector::set_keep_alive(
    conn->set_keep_alive(flag);
 }
   
+bool Connector::is_keep_alive(
+    std::shared_ptr<connection::Basic> conn) const noexcept {
+  return static_cast<bool>(conn) && conn->is_keep_alive();
+}
+  
 bool Connector::connect(
   std::shared_ptr<connection::Basic> conn,
   const std::chrono::milliseconds &timeout) noexcept {

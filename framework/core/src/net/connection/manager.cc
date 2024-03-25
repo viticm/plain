@@ -379,9 +379,9 @@ void Manager::remove(connection::id_t conn_id, bool no_event) noexcept {
   auto &conn = impl_->connection_info.list[conn_id - 1];
   if (conn) {
     if (!no_event) {
+      conn->on_disconnect();
       if (static_cast<bool>(impl_->disconnect_callback))
         impl_->disconnect_callback(conn.get());
-      conn->on_disconnect();
     }
     if (conn->socket()->valid()) this->sock_remove(conn->socket()->id());
     conn->shutdown();

@@ -61,6 +61,7 @@ class PLAIN_API Connector final {
   void set_disconnect_callback(connection::callable_func func) noexcept;
   void set_keep_alive(
 		std::shared_ptr<connection::Basic> conn, bool flag) noexcept;
+  bool is_keep_alive(std::shared_ptr<connection::Basic> conn) const noexcept;
 
  public:
   std::shared_ptr<connection::Basic>
