@@ -42,6 +42,7 @@ Basic final : noncopyable {
   id_t id() const noexcept;
   std::string name() const noexcept;
   std::shared_ptr<socket::Basic> socket() const noexcept;
+  void set_name(std::string_view name) noexcept;
 
  public:
   void set_codec(const stream::codec_t &codec) noexcept;

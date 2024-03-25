@@ -293,12 +293,8 @@ std::string Basic::Impl::get_name(const Basic *conn) noexcept {
   std::string r;
   auto m = conn->impl_->manager.lock();
   if (m && !m->setting_.name.empty()) {
-    r += m->setting_.name;
-  } else {
-    r += "unknown";
+    r = m->get_name(conn->id());
   }
-  r += ".";
-  r += std::to_string(conn->id());
   return r;
 }
 
@@ -376,6 +372,12 @@ plain::net::connection::id_t Basic::id() const noexcept {
 
 std::string Basic::name() const noexcept {
   return impl_->get_name(this);
+}
+  
+void Basic::set_name(std::string_view name) noexcept {
+  auto m = impl_->manager.lock();
+  if (!m) return;
+  m->set_name(impl_->id, name);
 }
   
 void Basic::set_id(id_t id) noexcept {
