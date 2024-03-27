@@ -34,11 +34,11 @@ struct vtable {
   vtable(const vtable&) noexcept = default;
   constexpr vtable() noexcept : move_destroy_fn{nullptr},
     execute_destroy_fn{nullptr}, destroy_fn{nullptr} {}
-  constexpr vtable(decltype(move_destroy_fn) move_destroy_fn,
-                   decltype(execute_destroy_fn) execute_destroy_fn,
-                   decltype(destroy_fn) destroy_fn) noexcept :
-    move_destroy_fn(move_destroy_fn),
-    execute_destroy_fn(execute_destroy_fn), destroy_fn(destroy_fn) {}
+  constexpr vtable(decltype(move_destroy_fn) _move_destroy_fn,
+                   decltype(execute_destroy_fn) _execute_destroy_fn,
+                   decltype(destroy_fn) _destroy_fn) noexcept :
+    move_destroy_fn(_move_destroy_fn),
+    execute_destroy_fn(_execute_destroy_fn), destroy_fn(_destroy_fn) {}
   static constexpr bool trivially_copiable_destructible(
     decltype(move_destroy_fn) move_fn) noexcept {
     return move_fn == nullptr;
