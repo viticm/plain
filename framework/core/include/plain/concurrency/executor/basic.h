@@ -126,8 +126,8 @@ class PLAIN_API Basic {
     std::vector<Task> &accumulator;
     bool interrupted_{false};
 
-    accumulating_awaitable(std::vector<Task> &accumulator) noexcept :
-      accumulator(accumulator) {}
+    accumulating_awaitable(std::vector<Task> &_accumulator) noexcept :
+      accumulator(_accumulator) {}
     constexpr bool await_ready() const noexcept {
       return false;
     }
@@ -156,8 +156,8 @@ class PLAIN_API Basic {
 
   template <typename CT, typename RT = typename std::invoke_result_t<CT>>
   static Result<RT>
-  bulk_submit_bridge(std::vector<Task> &accumulator, CT callable) {
-    co_await accumulating_awaitable(accumulator);
+  bulk_submit_bridge(std::vector<Task> &_accumulator, CT callable) {
+    co_await accumulating_awaitable(_accumulator);
     co_return callable();
   }
 
