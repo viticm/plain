@@ -166,7 +166,13 @@ bool Connector::is_keep_alive(connection::Basic *conn) const noexcept {
 bool Connector::connect(
   std::shared_ptr<connection::Basic> conn,
   const std::chrono::milliseconds &timeout) noexcept {
-  if (!conn || conn->id() == connection::kInvalidId) return {};
+  return connect(conn.get(), timeout);
+}
+
+bool Connector::connect(
+  connection::Basic *conn,
+  const std::chrono::milliseconds &timeout) noexcept {
+  if (!conn || conn->id() == connection::kInvalidId) return false;
   auto addr = conn->socket()->peer_address().text();
   if (addr.empty()) return false;
   auto success = conn->socket()->connect(addr, timeout, conn->socket()->type());
@@ -191,7 +197,7 @@ bool Connector::connect(
   conn->on_connect();
   const auto &callback = impl_->manager->connect_callback();
   if (static_cast<bool>(callback))
-    callback(conn.get());
+    callback(conn);
   return true;
 }
 
