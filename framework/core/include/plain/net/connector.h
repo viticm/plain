@@ -62,6 +62,8 @@ class PLAIN_API Connector final {
   void set_keep_alive(
 		std::shared_ptr<connection::Basic> conn, bool flag) noexcept;
   bool is_keep_alive(std::shared_ptr<connection::Basic> conn) const noexcept;
+  void set_keep_alive(connection::Basic *conn, bool flag) noexcept;
+  bool is_keep_alive(connection::Basic *conn) const noexcept;
 
  public:
   std::shared_ptr<connection::Basic>
