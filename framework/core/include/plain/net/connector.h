@@ -51,6 +51,9 @@ class PLAIN_API Connector final {
   bool connect(
     std::shared_ptr<connection::Basic> conn,
     const std::chrono::milliseconds &timeout = std::chrono::seconds(5)) noexcept;
+  bool connect(
+    connection::Basic *conn,
+    const std::chrono::milliseconds &timeout = std::chrono::seconds(5)) noexcept;
 
  public:
   void set_codec(const stream::codec_t &codec) noexcept;
