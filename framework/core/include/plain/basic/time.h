@@ -50,4 +50,8 @@ class PLAIN_API Time {
 
 } // namespace plain
 
+#ifndef TIME
+#define TIME plain::Singleton<plain::Time>::get_instance()
+#endif
+
 #endif // PLAIN_BASIC_TIME_H_
