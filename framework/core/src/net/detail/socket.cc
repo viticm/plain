@@ -22,15 +22,15 @@ constexpr auto sin6_addr_offset {offsetof(sockaddr_in6, sin6_addr)};
 namespace plain::net::detail {
 
 std::string to_string(const in_addr &addr) noexcept {
-  std::string r{INET_ADDRSTRLEN, '\0'};
+  std::array<char, INET_ADDRSTRLEN> r{'\0',};
   ::inet_ntop(AF_INET, &addr, r.data(), r.size());
-  return r;
+  return r.data();
 }
 
 std::string to_string(const in6_addr &addr) noexcept {
-  std::string r{INET6_ADDRSTRLEN, '\0'};
+  std::array<char, INET6_ADDRSTRLEN> r{'\0',};
   ::inet_ntop(AF_INET6, &addr, r.data(), r.size());
-  return r;
+  return r.data();
 }
 
 const sockaddr *get_sa_pointer(const bytes_t &addr) noexcept {
