@@ -104,7 +104,7 @@ Connector::connect_impl(
   auto conn = impl_->manager->new_conn();
   if (!conn || conn->id() == connection::kInvalidId) return {};
   if (static_cast<bool>(init_func) && !init_func(conn.get())) {
-    impl_->manager->remove(conn, true);
+    impl_->manager->remove(conn, true, false);
     LOG_ERROR << "initialize failed";
     return {};
   }
@@ -112,23 +112,23 @@ Connector::connect_impl(
     conn->socket()->connect(addr_or_ip, timeout, sock_type) :
     conn->socket()->connect(addr_or_ip, port, timeout, sock_type);
   if (!success) {
-    impl_->manager->remove(conn, true);
+    impl_->manager->remove(conn, true, false);
     LOG_ERROR << "connect failed: " << socket::get_last_error();
     return {};
   }
   auto sock = conn->socket();
   if (!sock->set_nonblocking()) {
-    impl_->manager->remove(conn, true);
+    impl_->manager->remove(conn, true, false);
     LOG_ERROR << "set_nonblocking failed: " << socket::get_last_error();
     return {};
   }
   if (!sock->set_linger(0)) {
-    impl_->manager->remove(conn, true);
+    impl_->manager->remove(conn, true, false);
     LOG_ERROR << "set_linger(0) failed: " << socket::get_last_error();
     return {};
   }
   if (!impl_->manager->sock_add(sock->id(), conn->id())) {
-    impl_->manager->remove(conn, true);
+    impl_->manager->remove(conn, true, false);
     LOG_ERROR << "sock add failed";
     return {};
   }
