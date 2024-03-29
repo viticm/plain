@@ -366,7 +366,7 @@ bool Manager::is_full() const noexcept {
 void Manager::remove(
   std::shared_ptr<Basic> conn, bool no_event, bool sock) noexcept {
   if (conn->id() == connection::kInvalidId) return;
-  remove(conn->id(), no_event);
+  remove(conn->id(), no_event, sock);
 }
   
 void Manager::remove(
