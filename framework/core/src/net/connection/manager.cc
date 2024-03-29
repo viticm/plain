@@ -363,12 +363,14 @@ bool Manager::is_full() const noexcept {
     impl_->connection_info.max_id >= static_cast<id_t>(setting_.max_count);
 }
 
-void Manager::remove(std::shared_ptr<Basic> conn, bool no_event) noexcept {
+void Manager::remove(
+  std::shared_ptr<Basic> conn, bool no_event, bool sock) noexcept {
   if (conn->id() == connection::kInvalidId) return;
   remove(conn->id(), no_event);
 }
   
-void Manager::remove(connection::id_t conn_id, bool no_event) noexcept {
+void Manager::remove(
+  connection::id_t conn_id, bool no_event, bool sock) noexcept {
   std::unique_lock<decltype(impl_->mutex)> auto_lock(impl_->mutex);
   assert(conn_id != connection::kInvalidId);
   if (conn_id <= 0 || conn_id > impl_->connection_info.max_id)
@@ -380,7 +382,7 @@ void Manager::remove(connection::id_t conn_id, bool no_event) noexcept {
       if (static_cast<bool>(impl_->disconnect_callback))
         impl_->disconnect_callback(conn.get());
     }
-    if (conn->socket()->valid()) this->sock_remove(conn->socket()->id());
+    if (sock && conn->socket()->valid()) this->sock_remove(conn->socket()->id());
     conn->shutdown();
     conn->close();
     if (conn->is_keep_alive()) return; // The connector will keep alive.

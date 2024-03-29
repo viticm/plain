@@ -71,8 +71,11 @@ class PLAIN_API Manager :
 
  protected:
   std::shared_ptr<Basic> new_conn() noexcept;
-  void remove(std::shared_ptr<Basic> conn, bool no_event = false) noexcept;
-  void remove(connection::id_t conn_id, bool no_event = false) noexcept;
+  void remove(
+    std::shared_ptr<Basic> conn, bool no_event = false,
+    bool sock = true) noexcept;
+  void remove(
+    connection::id_t conn_id, bool no_event = false, bool sock = true) noexcept;
   void foreach(std::function<void(std::shared_ptr<Basic> conn)> func); // valid
   void recv_ctrl_cmd() noexcept;
   void enqueue(connection::id_t conn_id) noexcept;
