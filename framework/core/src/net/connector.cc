@@ -113,7 +113,9 @@ Connector::connect_impl(
     conn->socket()->connect(addr_or_ip, port, timeout, sock_type);
   if (!success) {
     impl_->manager->remove(conn, true, false);
-    LOG_ERROR << "connect failed: " << socket::get_last_error();
+    std::string addr{addr_or_ip};
+    if (port != 0) addr += std::to_string(port);
+    LOG_ERROR << "connect " << addr << " failed: " << socket::get_last_error();
     return {};
   }
   auto sock = conn->socket();
@@ -177,7 +179,7 @@ bool Connector::connect(
   if (addr.empty()) return false;
   auto success = conn->socket()->connect(addr, timeout, conn->socket()->type());
   if (!success) {
-    LOG_ERROR << "connect failed: " << socket::get_last_error();
+    LOG_ERROR << "connect " << addr << " failed: " << socket::get_last_error();
     return false;
   }
   auto sock = conn->socket();
