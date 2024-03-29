@@ -218,11 +218,8 @@ Manager::~Manager() {
 }
 
 bool Manager::start() {
-  if (impl_->running) return true;
-  auto running = impl_->running.exchange(true, std::memory_order_relaxed);
-  if (running) return true;
+  if (running()) return true;
   if (!prepare()) {
-    impl_->running.store(false, std::memory_order_relaxed);
     return false;
   }
   socket::id_t fds[2]{socket::kInvalidId};
@@ -232,7 +229,6 @@ bool Manager::start() {
     // std::cout << "fds: " << fds[0] << "|" << fds[1] << std::endl;
     if (!sock_add(ctrl_read_fd_, 0)) {
       LOG_ERROR << setting_.name << " add ctrl read fd failed";
-      impl_->running.store(false, std::memory_order_relaxed);
       return false;
     }
   }
@@ -247,6 +243,7 @@ bool Manager::start() {
 #else
   impl_->enqueue_work_await(shared_from_this());
 #endif
+  impl_->running.store(true, std::memory_order_relaxed);
   return true;
 }
 
