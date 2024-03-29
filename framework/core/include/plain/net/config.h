@@ -14,16 +14,9 @@
 #define PLAIN_NET_CONFIG_H_
 
 #include "plain/basic/config.h"
+#include "plain/net/constants.h"
 
 namespace plain::net {
-
-enum class Mode : std::uint8_t {
-  Select = 0,
-  Epoll = 1,
-  IoUring = 2,
-  Iocp = 3,
-  Kqueue = 4,
-};
 
 class Address;
 class Connector;
@@ -74,8 +67,8 @@ namespace packet {
 class Basic;
 
 struct limit_struct {
-  uint32_t max_id{std::numeric_limits<uint16_t>::max()};
-  uint32_t max_length{200 * 1024}; // default 200k
+  uint32_t max_id{kPacketIdMax};
+  uint32_t max_length{kPacketLengthMax}; // default 200k
 };
 using limit_t = limit_struct;
 
@@ -84,9 +77,9 @@ using limit_t = limit_struct;
 struct setting_struct {
   setting_struct() = default;
   ~setting_struct() = default;
-  uint32_t max_count{1024};
-  uint32_t default_count{32};
-  Mode mode{Mode::Select};
+  uint32_t max_count{kConnectionCountMax};
+  uint32_t default_count{kConnectionCountDefault};
+  Mode mode{kOptimalMode};
   socket::Type socket_type{socket::Type::Tcp};
   // ip_v4: x.x.x.x:port ip_v6: [x:x:x:...]:port
   std::string address; // listener only
