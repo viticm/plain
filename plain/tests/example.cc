@@ -87,6 +87,8 @@ bool start_listener() {
 
   // Set the callback on connected.
   listener->set_connect_callback([](connection::Basic *conn) {
+    std::cout << "address: " <<
+      conn->socket()->peer_address().text() << std::endl;
     std::cout << conn->name() << " connected" << std::endl;
   });
 
