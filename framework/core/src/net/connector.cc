@@ -114,7 +114,7 @@ Connector::connect_impl(
   if (!success) {
     impl_->manager->remove(conn, true, false);
     std::string addr{addr_or_ip};
-    if (port != 0) addr += std::to_string(port);
+    if (port != 0) addr += ":" + std::to_string(port);
     LOG_ERROR << "connect " << addr << " failed: " << socket::get_last_error();
     return {};
   }
