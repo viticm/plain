@@ -270,6 +270,10 @@ size_t Address::size() const noexcept {
 }
 
 std::string Address::text() const noexcept {
+  return host() + ":" + std::to_string(port());
+}
+
+std::string Address::host() const noexcept {
   auto _family = family();
   std::string r;
   switch (_family) {
@@ -285,5 +289,5 @@ std::string Address::text() const noexcept {
     default:
       break;
   }
-  return r + ":" + std::to_string(port());
+  return r;
 }

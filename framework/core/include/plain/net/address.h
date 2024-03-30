@@ -44,6 +44,7 @@ class PLAIN_API Address {
   [[nodiscard]] uint16_t port() const noexcept;
   [[nodiscard]] size_t size() const noexcept;
   [[nodiscard]] std::string text() const noexcept;
+  [[nodiscard]] std::string host() const noexcept;
 
  private:
   value_type value_;
