@@ -167,15 +167,18 @@ bool Connector::is_keep_alive(connection::Basic *conn) const noexcept {
 
 bool Connector::connect(
   std::shared_ptr<connection::Basic> conn,
-  const std::chrono::milliseconds &timeout) noexcept {
-  return connect(conn.get(), timeout);
+  const std::chrono::milliseconds &timeout,
+  std::string_view address) noexcept {
+  return connect(conn.get(), timeout, address);
 }
 
 bool Connector::connect(
   connection::Basic *conn,
-  const std::chrono::milliseconds &timeout) noexcept {
+  const std::chrono::milliseconds &timeout,
+  std::string_view address) noexcept {
   if (!conn || conn->id() == connection::kInvalidId) return false;
-  auto addr = conn->socket()->peer_address().text();
+  std::string addr =
+    address.empty() ? conn->socket()->peer_address().text() : address.data();
   if (addr.empty()) return false;
   auto success = conn->socket()->connect(addr, timeout, conn->socket()->type());
   if (!success) {

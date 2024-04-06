@@ -50,10 +50,12 @@ class PLAIN_API Connector final {
     socket::Type sock_type = socket::Type::Tcp) noexcept;
   bool connect(
     std::shared_ptr<connection::Basic> conn,
-    const std::chrono::milliseconds &timeout = std::chrono::seconds(5)) noexcept;
+    const std::chrono::milliseconds &timeout = std::chrono::seconds(5),
+    std::string_view address = {}) noexcept;
   bool connect(
     connection::Basic *conn,
-    const std::chrono::milliseconds &timeout = std::chrono::seconds(5)) noexcept;
+    const std::chrono::milliseconds &timeout = std::chrono::seconds(5),
+    std::string_view address = {}) noexcept;
 
  public:
   void set_codec(const stream::codec_t &codec) noexcept;
