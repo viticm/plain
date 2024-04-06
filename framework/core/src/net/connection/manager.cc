@@ -597,9 +597,9 @@ void Manager::enqueue(connection::id_t id) noexcept {
 
 void Manager::set_name(
   connection::id_t conn_id, std::string_view name) noexcept {
-  std::unique_lock<std::mutex> lock{impl_->mutex};
   auto conn = get_conn(conn_id);
   if (!conn) return;
+  std::unique_lock<std::mutex> lock{impl_->mutex};
   impl_->conn_names.emplace(conn_id, name.data());
 }
   
