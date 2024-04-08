@@ -185,6 +185,7 @@ bool Basic::Impl::process_command(Basic *conn) noexcept {
         ++error_times;
         return true;
       } else if (e->is_code(ErrorCode::NetPacketNeedRecv)) {
+        set_work_flag(WorkFlag::Command, false);
         return true;
       }
       LOG_ERROR << get_name(conn) << " error: " << e->code();
