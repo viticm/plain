@@ -445,6 +445,7 @@ void Basic::on_connect() noexcept {
 void Basic::on_disconnect() noexcept {
   impl_->istream->clear();
   impl_->ostream->clear();
+  impl_->working.store(false, std::memory_order_relaxed);
   check_callable(this, "__disconnect");
 }
 
