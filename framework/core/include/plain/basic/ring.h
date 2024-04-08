@@ -292,16 +292,17 @@ requires power_of_two<SIZE>
 class DynamicRing : public Ring<T, fake_tso> {
 
  public:
-   DynamicRing() {
-     buffer_.reserve(SIZE);
-     this->set_buffer(buffer_.data(), SIZE);
-   }
-   DynamicRing(DynamicRing &&) = default;
-   DynamicRing &operator=(DynamicRing &&) = default;
-   virtual ~DynamicRing() = default;
+  DynamicRing() {
+   buffer_.resize(SIZE);
+   this->set_buffer(buffer_.data(), SIZE);
+  }
+  DynamicRing(DynamicRing &&) = default;
+  DynamicRing &operator=(DynamicRing &&) = default;
+  virtual ~DynamicRing() = default;
 
  private:
   bool resize(std::size_t size) override {
+    std::unique_lock<decltype(mutex_)> auto_lock{mutex_};
     if (size == 0) {
       buffer_.clear();
       size = SIZE;
@@ -312,6 +313,7 @@ class DynamicRing : public Ring<T, fake_tso> {
   }
 
  private:
+  std::mutex mutex_; // For resize buffer_
   std::vector<T> buffer_; // FIXME: C++20: std::vector is constexpr
                           // 是否可以将FixedRing和DynamicRing做一个整合？
 

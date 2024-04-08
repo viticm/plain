@@ -180,7 +180,6 @@ bool Connector::connect(
   std::string addr =
     address.empty() ? conn->socket()->peer_address().text() : address.data();
   if (addr.empty()) return false;
-  conn->init();
   auto success = conn->socket()->connect(addr, timeout, conn->socket()->type());
   if (!success) {
     LOG_ERROR << "connect " << addr << " failed: " << socket::get_last_error();
