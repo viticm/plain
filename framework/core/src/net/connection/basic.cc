@@ -83,7 +83,8 @@ Basic::Impl::~Impl() = default;
 bool Basic::Impl::process_input(Basic *conn) noexcept {
   if (!has_work_flag(WorkFlag::Input)) return true;
   scoped_executor_t check_flag([this]{
-    set_work_flag(WorkFlag::Input, false);
+    if (socket->avail() == 0)
+      set_work_flag(WorkFlag::Input, false);
   });
   // std::cout << "input: " << socket->id() << std::endl;
   assert(conn);
@@ -329,9 +330,8 @@ bool Basic::init() noexcept {
 }
 
 bool Basic::idle() const noexcept {
-  return !impl_->socket->valid() ||
-    (!impl_->has_work_flag(WorkFlag::Output) &&
-     !impl_->has_work_flag(WorkFlag::Command));
+  std::unique_lock<std::mutex> lock{impl_->mutex};
+  return !impl_->socket->valid() || (impl_->work_flags == 0);
 }
   
 bool Basic::shutdown(int32_t how) noexcept {
