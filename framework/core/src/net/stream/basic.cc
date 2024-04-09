@@ -33,7 +33,8 @@ int32_t Basic::pull() noexcept {
   if (!socket || !socket->valid()) return 0;
   auto socket_avail = socket->avail();
   if (socket_avail == 0) socket_avail = 1;
-  auto once_max = impl_->buffer.write_avail() + impl_->buffer.size();
+  // auto once_max = impl_->buffer.write_avail() + impl_->buffer.size();
+  constexpr size_t once_max{20 * 1024}; // 20k
   bytes_t bytes;
   bytes.reserve(socket_avail >= once_max ? once_max : socket_avail);
   auto e = socket->recv(bytes);
