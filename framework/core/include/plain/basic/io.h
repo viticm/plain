@@ -43,13 +43,13 @@ inline void reset_consolecolor(uint16_t color) {
 template<class... Args> 
 void io_cerr(const std::string_view &format, Args... args) {
 #if OS_UNIX || OS_MAC
-  std::cout << "\033[0;31;1m";  
+  std::cout << "\x1B[31m";  
 #elif OS_WIN
   auto lastcolor = set_consolecolor(FOREGROUND_INTENSITY | FOREGROUND_RED);
 #endif
   std::cout << std::vformat(format, std::make_format_args(args...));
 #if OS_UNIX || OS_MAC
-  std::cout << "\033[0m";
+  std::cout << "\x1B[0m";
 #endif
   std::cout << std::endl;
 #if OS_WIN
@@ -60,14 +60,14 @@ void io_cerr(const std::string_view &format, Args... args) {
 template<class... Args> 
 void io_cwarn(const std::string_view &format, Args... args) {
 #if OS_UNIX || OS_MAC
-  std::cout<<"\033[0;33;1m";  
+  std::cout<<"\x1B[33m";  
 #elif OS_WIN
   auto lastcolor = 
     set_consolecolor(FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN);
 #endif
   std::cout << std::vformat(format, std::make_format_args(args...));
 #if OS_UNIX || OS_MAC
-  std::cout << "\033[0m";
+  std::cout << "\x1B[0m";
 #endif
   std::cout << std::endl;
 #if OS_WIN
@@ -78,13 +78,13 @@ void io_cwarn(const std::string_view &format, Args... args) {
 template<class... Args> 
 void io_cdebug(const std::string_view &format, Args... args) {
 #if OS_UNIX || OS_MAC
-  std::cout << "\033[0;32;1m";  
+  std::cout << "\x1B[32m";  
 #elif OS_WIN
   auto lastcolor = set_consolecolor(FOREGROUND_INTENSITY | FOREGROUND_GREEN);
 #endif
   std::cout << std::vformat(format, std::make_format_args(args...));
 #if OS_UNIX || OS_MAC
-  std::cout << "\033[0m";
+  std::cout << "\x1B[0m";
 #endif
   std::cout << std::endl;
 #if OS_WIN

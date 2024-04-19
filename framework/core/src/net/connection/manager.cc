@@ -38,7 +38,8 @@ struct Manager::Impl {
   packet::dispatch_func dispatcher;
   std::shared_ptr<concurrency::executor::Basic> executor;
   detail::ConnectionInfo connection_info;
-  std::mutex mutex;
+  std::recursive_mutex mutex; // callback will recursive use this mutex(
+                              // when remove connection)
 #ifndef PLAIN_NET_MANAGER_ENABLE_COROUTINE
   std::mutex wait_mutex;
   std::condition_variable cv;
@@ -549,17 +550,17 @@ void Manager::recv_ctrl_cmd() noexcept {
 
 void Manager::execute(std::function<void()> func) {
   // This use with get_executor post functions(How can free?).
-  std::unique_lock<std::mutex> lock{impl_->mutex};
+  std::unique_lock<decltype(impl_->mutex)> lock{impl_->mutex};
   func();
 }
 
 void Manager::increase_send_size(size_t size) {
-  std::unique_lock<std::mutex> lock{impl_->mutex};
+  std::unique_lock<decltype(impl_->mutex)> lock{impl_->mutex};
   impl_->send_size += static_cast<uint64_t>(size);
 }
   
 void Manager::increase_recv_size(size_t size) {
-  std::unique_lock<std::mutex> lock{impl_->mutex};
+  std::unique_lock<decltype(impl_->mutex)> lock{impl_->mutex};
   impl_->recv_size += static_cast<uint64_t>(size);
 }
 
@@ -573,7 +574,7 @@ uint64_t Manager::recv_size() const noexcept {
 
 // For banlance connection works.
 void Manager::enqueue(connection::id_t id) noexcept {
-  std::unique_lock<std::mutex> lock{impl_->mutex};
+  std::unique_lock<decltype(impl_->mutex)> lock{impl_->mutex};
   if (!running()) return;
   auto working_conn_count =
     impl_->working_conn_count.load(std::memory_order_acquire);
@@ -599,12 +600,12 @@ void Manager::set_name(
   connection::id_t conn_id, std::string_view name) noexcept {
   auto conn = get_conn(conn_id);
   if (!conn) return;
-  std::unique_lock<std::mutex> lock{impl_->mutex};
+  std::unique_lock<decltype(impl_->mutex)> lock{impl_->mutex};
   impl_->conn_names.emplace(conn_id, name.data());
 }
   
 std::string Manager::get_name(connection::id_t conn_id) const noexcept {
-  std::unique_lock<std::mutex> lock{impl_->mutex};
+  std::unique_lock<decltype(impl_->mutex)> lock{impl_->mutex};
   auto it = impl_->conn_names.find(conn_id);
   if (it == impl_->conn_names.end()) {
     std::string r{setting_.name.empty() ? "unknown" : setting_.name};
