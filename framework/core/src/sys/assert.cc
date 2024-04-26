@@ -6,7 +6,7 @@ namespace plain {
 
 void __show__(const char *temp) {
 #if OS_UNIX || OS_MAC
-  io_cerr("Assert: %s", temp);
+  io_cerr("Assert: {}", temp);
 #endif
   LOG_WARN << temp;
 #if OS_WIN
