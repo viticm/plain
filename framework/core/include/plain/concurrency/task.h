@@ -31,7 +31,7 @@ struct vtable {
   void (*execute_destroy_fn)(void *target);
   void (*destroy_fn)(void *target) noexcept;
 
-  vtable(const vtable&) noexcept = default;
+  vtable(const vtable &) noexcept = default;
   constexpr vtable() noexcept : move_destroy_fn{nullptr},
     execute_destroy_fn{nullptr}, destroy_fn{nullptr} {}
   constexpr vtable(decltype(move_destroy_fn) _move_destroy_fn,

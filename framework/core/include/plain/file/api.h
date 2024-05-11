@@ -30,8 +30,8 @@ namespace plain {
 PLAIN_API int32_t open(const char *filename, int32_t flag);
 PLAIN_API int32_t openmode(const char *filename, int32_t flag, int32_t mode);
 PLAIN_API void close(int32_t fd);
-PLAIN_API uint32_t read(int32_t fd, void* buffer, uint32_t length);
-PLAIN_API uint32_t write(int32_t fd, const void* buffer, uint32_t length);
+PLAIN_API uint32_t read(int32_t fd, void *buffer, uint32_t length);
+PLAIN_API uint32_t write(int32_t fd, const void *buffer, uint32_t length);
 PLAIN_API int32_t fcntl(int32_t fd, int32_t cmd);
 PLAIN_API int32_t fcntlarg(int32_t fd, int32_t cmd, int32_t arg);
 PLAIN_API bool get_nonblocking(int32_t socketid);

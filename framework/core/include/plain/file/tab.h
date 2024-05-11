@@ -92,20 +92,19 @@ class PLAIN_API Tab {
  public:
    bool save_tobinary(const char *filename);
    bool save_totext(const char *filename);
-   bool save_totext_line(const std::vector<std::string> &_data);
   
  private:
    typedef std::unordered_map<int32_t, field_data*> field_hashmap;
-   uint32_t id_;
+   uint32_t id_{0};
    field_type type_;
-   int32_t record_number_;
-   int32_t field_number_;
+   int32_t record_number_{0};
+   int32_t field_number_{0};
    data_buffer data_buffer_; //所有表格数据容器
    std::vector< std::string > fieldnames_;
-   char *string_buffer_; //表格中所有字符串组成的数组，重复的字符串使用一个地址
-   int32_t string_buffer_size_;
+   char *string_buffer_{nullptr}; //表格中所有字符串组成的数组，重复的字符串使用一个地址
+   int32_t string_buffer_size_{0};
    field_hashmap hash_index_;
-   int32_t index_column_;
+   int32_t index_column_{0};
 
  private:
    bool open_from_memory_text(const char *memory, 

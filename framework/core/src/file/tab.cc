@@ -273,11 +273,11 @@ bool Tab::open_from_memory_text(const char *memory,
         }
         case kTypeString: {
 #ifdef FILE_DATABASE_CONVERT_GBK_TO_UTF8
-          const char *value = result[i].c_str();
+          auto value = result[i].c_str();
           //convert charset
           //utf8 -> gbk 1.5multiple length
-          int32_t convert_strlength = static_cast<int32_t>(strlen(value) * 2);
-          char *convert_str = new char[convert_strlength];
+          auto convert_strlength = static_cast<int32_t>(strlen(value) * 2);
+          auto convert_str = new char[convert_strlength];
           memset(convert_str, 0, convert_strlength);
           int32_t convert_result = 
             charset_convert("GBK",
@@ -520,30 +520,4 @@ const Tab::field_data *Tab::get_fielddata(int32_t line,
   int32_t column = get_fieldindex(name);
   _field_data = search_position(line, column);
   return _field_data;
-}
-
-bool Tab::save_totext_line(const std::vector<std::string> &_data){
-  if(static_cast<int32_t>(_data.size()) != field_number_)
-    return false;
-
-  for(int32_t column = 0; column < field_number_; ++column){
-    switch (type_[column]) {
-      case kTypeInt: {
-      
-        break;
-      }
-      case kTypeFloat: {
-      
-        break;
-      }
-      case kTypeString: {
-      
-        break;
-      }
-      default:
-        break;
-
-    }
-  } 
-  return true;
 }

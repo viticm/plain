@@ -34,9 +34,9 @@ class PLAIN_API FileAppend : noncopyable {
   std::size_t write(const std::string_view &log);
 
  private:
-  FILE* fp_;
+  FILE *fp_{nullptr};
   char buffer_[64 * 1024];
-  off_t written_bytes_;
+  off_t written_bytes_{0};
 
 };
 

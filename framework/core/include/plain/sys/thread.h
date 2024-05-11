@@ -32,7 +32,7 @@ class PLAIN_API ThreadPool {
   ThreadPool(size_t);
   // add new work item to the pool
   template<class F, class... Args>
-  auto enqueue(F&& f, Args&&... args) 
+  auto enqueue(F &&f, Args &&...args) 
     -> std::future<typename std::invoke_result_t<F, Args...>> {
     using return_type = typename std::invoke_result_t<F, Args...>;
     auto task = std::make_shared< std::packaged_task<return_type()> >(
@@ -113,7 +113,7 @@ inline const std::string status_key() {
 }
 
 template<typename _Callable, typename... _Args>
-inline void start(thread_t& thread, _Callable &&__f, _Args...__args) {
+inline void start(thread_t &thread, _Callable &&__f, _Args &&...__args) {
   thread = thread_t(
         std::forward<_Callable>(__f), std::forward<_Args>(__args)...);
   const std::string _status_key = status_key(thread);

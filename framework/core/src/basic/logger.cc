@@ -229,7 +229,7 @@ Logger &Logger::operator<<(uint64_t v) {
   return *this;
 }
 
-Logger &Logger::operator<<(const void* p) {
+Logger &Logger::operator<<(const void *p) {
   if (impl_->buffer_.write_avail() >= kMaxNumericSize) {
     char str[kMaxNumericSize]{0};
     auto v = reinterpret_cast<uintptr_t>(p);
