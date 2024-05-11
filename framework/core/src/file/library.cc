@@ -8,7 +8,7 @@
 
 using namespace plain;
 
-typedef void (__stdcall *function_open)(plain::Kernel*, void*);
+typedef void (__stdcall *function_open)(plain::Kernel *, void *);
 
 /* The diffrent os library prefix and suffix. */
 #if OS_WIN
@@ -71,9 +71,9 @@ bool Library::load(bool tryprefix, bool seeglb) {
     tryprefix = false;
 #ifdef _UNICODE
     auto wstr = str2wstr(path.string());
-    handle_ = cast(void*, LoadLibrary(wstr.c_str()));
+    handle_ = cast(void *, LoadLibrary(wstr.c_str()));
 #else
-    handle_ = cast(void*, LoadLibrary(temp.c_str()));
+    handle_ = cast(void *, LoadLibrary(temp.c_str()));
 #endif
     if (is_null(handle_)) 
       errorstr_ = GetLastErrorString(GetLastError());
@@ -89,12 +89,8 @@ bool Library::load(bool tryprefix, bool seeglb) {
         filename_.substr(0, strlen(LIBRARY_PREFIX)) == LIBRARY_PREFIX) {
 #if _DEBUG
       if (fileexists) {
-        /*
-        SLOW_ERRORLOG("library", 
-                    "[library] load (%s) error: %s", 
-                    filename_.c_str(), 
-                    errorstr_.c_str());
-        */
+        LOG_ERROR << "[library] load (" << filename_ << ") error: "
+          << errorstr_;
       }
 #endif
       return false;
@@ -137,18 +133,14 @@ bool Library::unload() {
   return is_null(handle_);
 }
    
-void* Library::resolve(const std::string &symbol, bool again) {
-  void* symbolhandle = nullptr;
+void *Library::resolve(const std::string &symbol, bool again) {
+  void *symbolhandle = nullptr;
 #if OS_WIN
   symbolhandle = cast(void *, GetProcAddress((HMODULE)handle_, symbol.c_str()));
   if (is_null(symbolhandle)) {
     errorstr_ = GetLastErrorString(GetLastError());
-    /*
-    SLOW_ERRORLOG("library", 
-                  "[library] resolve(%s) failed, error: %s", 
-                  symbol.c_str(), 
-                  errorstr_.c_str());
-    */
+    LOG_ERROR << "[library] resolve(" << symbol << ") failed, error: "
+      << errorstr_;
   }
 #else
   symbolhandle = dlsym(handle_, symbol.c_str());
@@ -213,7 +205,7 @@ bool LibraryManager::load(const std::string &name,
                           bool seeglb,
                           const variable_array_t &params) {
   if (librarymap_[name]) {
-    // SLOW_DEBUGLOG("library", "[library] load(%s) has loaded", name.c_str());
+    LOG_DEBUG << "[library] load(" << name << ")  has loaded";
     return true;
   }
   std::vector<std::string> names = namesmap_[name];
@@ -248,12 +240,7 @@ bool LibraryManager::load(const std::string &name,
       std::string err{"The file mybe not found!"};
       if (library->errorstr() != "")
         err = library->errorstr();
-      /*
-      SLOW_ERRORLOG("library", 
-                    "[library] load(%s) error-> %s", 
-                    _name.c_str(),
-                    err.c_str());
-      */
+      LOG_ERROR << "[library] load(" << name << ") error: " << err;
     }
   }
   if (!library->isloaded()) {
@@ -271,30 +258,24 @@ bool LibraryManager::load(const std::string &name,
 __extension__
 #endif
     function_open openfunc = reinterpret_cast<function_open>(openhanlde);
-    UNUSED(openfunc);
-    UNUSED(params);
-    // openfunc(ENGINE_POINTER, cast(void *, &params));
+    openfunc(ENGINE.get(), cast(void *, &params));
   }
 
   librarymap_[name] = nullptr;
   librarymap_[name] = std::move(library);
-  // SLOW_DEBUGLOG("library", "[library] load(%s) ok!", name.c_str());
+  LOG_DEBUG << "[library] load(" << name << ") ok!";
   return true;
 }
 
 bool LibraryManager::unload(const std::string &name) {
   auto it = librarymap_.find(name);
   if (it == librarymap_.end()) {
-    // SLOW_DEBUGLOG("library", "[library] load(%s) has unloaded", name.c_str());
+    LOG_DEBUG << "[library] unload(" << name << ") not loaded";
     return true;
   }
   if (!it->second->unload()) {
-    /*
-    SLOW_ERRORLOG("library", 
-                  "[library] load(%s) error: %s", 
-                  name.c_str(), 
-                  it->second->errorstr().c_str());
-    */
+    LOG_ERROR << "[library] load(" << name << ") error: "
+      << it->second->errorstr();
     return false;
   }
   librarymap_.erase(name);

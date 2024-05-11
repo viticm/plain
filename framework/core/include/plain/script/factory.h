@@ -24,8 +24,8 @@ class PLAIN_API Factory {
    ~Factory() {};
 
  public:
-   eid_t newenv(const config_t& config);
-   eid_t newenv(Interface* env);
+   eid_t newenv(const config_t &config);
+   eid_t newenv(Interface *env);
    Interface *getenv(eid_t eid) {
      if (envs_[eid]) return envs_[eid].get();
      return nullptr;

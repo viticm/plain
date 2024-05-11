@@ -83,10 +83,10 @@ class PLAIN_API Ini {
    std::ifstream fstream_;
    char filename_[FILENAME_MAX];
    sectionset_t sectiondata_;
-   valueset_t *current_section_;
-   char *buffer_;
-   int32_t bufferlength_;
-   int32_t bufferlength_max_;
+   valueset_t *current_section_{nullptr};
+   char *buffer_{nullptr};
+   int32_t bufferlength_{0};
+   int32_t bufferlength_max_{0};
 
 };
 

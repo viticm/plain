@@ -134,10 +134,10 @@ class PLAIN_API Timer {
   Timer(std::shared_ptr<detail::TimerStateBasic> timer_impl) noexcept;
   
   Timer(Timer &&rhs) noexcept = default;
-  Timer& operator=(Timer &&rhs) noexcept;
+  Timer &operator=(Timer &&rhs) noexcept;
 
   Timer(const Timer &) = delete;
-  Timer& operator=(const Timer &) = delete;
+  Timer &operator=(const Timer &) = delete;
 
  public:
   explicit operator bool() const noexcept {
