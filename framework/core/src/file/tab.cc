@@ -39,9 +39,8 @@ bool Tab::open_from_txt(const char *filename) {
   return result;
 }
 
-bool Tab::open_from_memory(const char *memory, 
-                                const char *end, 
-                                const char *filename) {
+bool Tab::open_from_memory(
+  const char *memory, const char *end, const char *filename) {
   bool result = true;
   if (end - memory >= static_cast<int32_t>(sizeof(file_head_t)) && 
       *((uint32_t*)memory) == FILE_DATABASE_INDENTIFY) {

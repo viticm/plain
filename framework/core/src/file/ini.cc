@@ -5,7 +5,7 @@
 
 using namespace plain;
 
-Ini::Ini() :
+Ini::Ini() noexcept :
   current_section_{nullptr},
   buffer_{nullptr},
   bufferlength_{0},
@@ -13,7 +13,7 @@ Ini::Ini() :
   memset(filename_, 0, FILENAME_MAX);
 }
 
-Ini::Ini(const char *filename) :
+Ini::Ini(const char *filename) noexcept :
   current_section_{nullptr},
   buffer_{nullptr},
   bufferlength_{0},
@@ -26,7 +26,7 @@ Ini::~Ini() {
   close();
 }
 
-bool Ini::open(const char *filename) {
+bool Ini::open(const char *filename) noexcept {
   buffer_ = new char[INI_VALUE_MAX];
   bufferlength_max_ += INI_VALUE_MAX; 
   strncpy(filename_, filename, FILENAME_MAX - 1);
@@ -66,7 +66,7 @@ bool Ini::open(const char *filename) {
   return true;
 }
 
-void Ini::close() {
+void Ini::close() noexcept {
   if (fstream_) fstream_.close();
   safe_delete_array(buffer_);
   sectionset_t::iterator iter = sectiondata_.begin();
@@ -80,13 +80,13 @@ void Ini::close() {
   memset(filename_, 0, FILENAME_MAX);
 }
 
-Ini::sectionset_t *Ini::getdata() {
+Ini::sectionset_t *Ini::getdata() noexcept {
   return &sectiondata_;
 }
 
 int32_t Ini::getint32(const char *section, const char *key, int32_t _default) {
   int32_t result;
-  if (_getint32(section, key, result)) return result;
+  if (_get(section, key, result)) return result;
   char msg[5120] = {0};
   snprintf(msg, 
            sizeof(msg) - 1, 
@@ -99,12 +99,12 @@ int32_t Ini::getint32(const char *section, const char *key, int32_t _default) {
 bool Ini::getint32_ifexist(const char *section, 
                            const char *key, 
                            int32_t &result) {
-  return _getint32(section, key, result);
+  return _get(section, key, result);
 }
 
 float Ini::getfloat(const char *section, const char *key, float _default) {
   float result;
-  if (_getfloat(section, key, result)) return result;  
+  if (_get(section, key, result)) return result;  
   char msg[5120] = {0};
   snprintf(msg, 
            sizeof(msg) - 1, 
@@ -119,7 +119,7 @@ float Ini::getfloat(const char *section, const char *key, float _default) {
 bool Ini::getfloat_ifexist(const char *section, 
                            const char *key, 
                            float &result) {
-  return _getfloat(section, key, result);
+  return _get(section, key, result);
 }
 
 bool Ini::getstring(const char *section, 
@@ -142,9 +142,8 @@ bool Ini::getstring(const char *section,
   return false;
 }
 
-void Ini::get(const char *section, 
-              const char *key, 
-              plain::variable_t &variable) {
+void Ini::get(
+  const char *section, const char *key, plain::variable_t &variable) noexcept {
   sectionset_t::iterator it = sectiondata_.find(section);
   if(it == sectiondata_.end()) return;
   valueset_t *_section = it->second;
@@ -164,7 +163,7 @@ bool Ini::getstring_ifexist(const char *section,
   return _getstring(section, key, str, size);
 }
 
-bool Ini::_getint32(const char *section, const char *key, int32_t &result) {
+bool Ini::_get(const char *section, const char *key, int32_t &result) {
   sectionset_t::iterator it = sectiondata_.find(section);
   if (it == sectiondata_.end()) return false;
   valueset_t *_section = it->second;
@@ -180,7 +179,7 @@ bool Ini::_getint32(const char *section, const char *key, int32_t &result) {
   return false;
 }
 
-bool Ini::_getfloat(const char *section, const char *key, float &result) {
+bool Ini::_get(const char *section, const char *key, float &result) {
   sectionset_t::iterator it = sectiondata_.find(section);
   if (it == sectiondata_.end()) return false;
   valueset_t *_section = it->second;
@@ -195,14 +194,12 @@ bool Ini::_getfloat(const char *section, const char *key, float &result) {
   return false;
 }
  
-const char *Ini::getstring(int32_t position) {
+const char *Ini::getstring(int32_t position) noexcept {
   return get_bufferstring(position);
 }
 
-bool Ini::_getstring(const char *section, 
-                   const char *key, 
-                   char *str, 
-                   int32_t size) {
+bool Ini::_getstring(
+  const char *section, const char *key, char *str, int32_t size) noexcept {
   sectionset_t::iterator it = sectiondata_.find(section);
   if(it == sectiondata_.end()) return false;
   valueset_t *_section = it->second;

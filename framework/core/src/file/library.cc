@@ -42,7 +42,7 @@ static inline std::string GetLastErrorString(DWORD nErrorCode) {
 #include <dlfcn.h>
 #endif
 
-void Library::set_filename(const std::string &_filename) {
+void Library::set_filename(const std::string &_filename) noexcept {
   filename_ = _filename;
   if (_filename.size() < strlen(LIBRARY_SUFFIX)) {
     filename_ += LIBRARY_SUFFIX;
@@ -62,7 +62,7 @@ void Library::set_filename(const std::string &_filename) {
   }
 }
 
-bool Library::load(bool tryprefix, bool seeglb) {
+bool Library::load(bool tryprefix, bool seeglb) noexcept {
   std::filesystem::path path{path_ + filename_};
   auto fileexists = std::filesystem::exists(path);
   if (fileexists) {
@@ -107,7 +107,7 @@ bool Library::load(bool tryprefix, bool seeglb) {
   return !is_null(handle_);
 }
    
-bool Library::unload() {
+bool Library::unload() noexcept {
 #if OS_WIN
   if (!is_null(handle_)) {
     FreeLibrary((HMODULE)handle_);
@@ -133,7 +133,7 @@ bool Library::unload() {
   return is_null(handle_);
 }
    
-void *Library::resolve(const std::string &symbol, bool again) {
+void *Library::resolve(const std::string &symbol, bool again) noexcept {
   void *symbolhandle = nullptr;
 #if OS_WIN
   symbolhandle = cast(void *, GetProcAddress((HMODULE)handle_, symbol.c_str()));
@@ -176,7 +176,8 @@ LibraryManager::LibraryManager() {
 
 LibraryManager::~LibraryManager() = default;
 
-void LibraryManager::add_searchpaths(const std::vector<std::string> &paths) {
+void LibraryManager::add_searchpaths(
+  const std::vector<std::string> &paths) noexcept {
   for (const std::string &path : paths) {
     if (std::find(searchpaths_.begin(), 
                   searchpaths_.end(), 
@@ -185,7 +186,8 @@ void LibraryManager::add_searchpaths(const std::vector<std::string> &paths) {
   }
 }
 
-void LibraryManager::remove_searchpaths(const std::vector<std::string> &paths) {
+void LibraryManager::remove_searchpaths(
+  const std::vector<std::string> &paths) noexcept {
   for (const std::string &path : paths) {
     searchpaths_.erase(
         std::remove(searchpaths_.begin(), searchpaths_.end(), path), 
@@ -201,9 +203,9 @@ void LibraryManager::remove_librarynames(const std::string &onlyname,
   }
 }
    
-bool LibraryManager::load(const std::string &name, 
-                          bool seeglb,
-                          const variable_array_t &params) {
+bool LibraryManager::load(
+  const std::string &name, bool seeglb,
+  const variable_array_t &params) noexcept {
   if (librarymap_[name]) {
     LOG_DEBUG << "[library] load(" << name << ")  has loaded";
     return true;
@@ -267,7 +269,7 @@ __extension__
   return true;
 }
 
-bool LibraryManager::unload(const std::string &name) {
+bool LibraryManager::unload(const std::string &name) noexcept {
   auto it = librarymap_.find(name);
   if (it == librarymap_.end()) {
     LOG_DEBUG << "[library] unload(" << name << ") not loaded";
