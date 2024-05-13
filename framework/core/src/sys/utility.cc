@@ -10,9 +10,8 @@
 namespace plain {
 
 int32_t exec(
-    [[maybe_unused]] const char *command,
-    [[maybe_unused]] char *result,
-    [[maybe_unused]] size_t size) {
+  [[maybe_unused]] const char *command, [[maybe_unused]] char *result,
+  [[maybe_unused]] size_t size) {
 #if OS_UNIX || OS_MAC
   char buffer[1024] = {0};
   char temp[1024] = {0};
