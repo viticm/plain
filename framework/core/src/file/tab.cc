@@ -82,8 +82,8 @@ uint8_t Tab::get_fieldtype(int32_t index) {
   return result;
 }
 
-const Tab::field_data *Tab::search_position(int32_t line, 
-                                            int32_t column) const {
+const Tab::field_data *
+Tab::search_position(int32_t line, int32_t column) const {
   int32_t position = line * get_field_number() + column;
   if (line < 0 || position > static_cast<int32_t>(data_buffer_.size())) {
     char temp[256];
@@ -95,7 +95,7 @@ const Tab::field_data *Tab::search_position(int32_t line,
              line,
              column,
              position);
-#ifdef _plain_THROW_EXCEPTION_AS_STD_STRING
+#ifdef _PLAIN_THROW_EXCEPTION_AS_STD_STRING
     throw std::string(temp);
 #else
     AssertEx(false, temp);
@@ -105,9 +105,8 @@ const Tab::field_data *Tab::search_position(int32_t line,
   return &(data_buffer_[position]);
 }
 
-const Tab::field_data* Tab::search_first_column_equal(
-    int32_t column, 
-    const field_data &value) const {
+const Tab::field_data *
+Tab::search_first_column_equal(int32_t column, const field_data &value) const {
   if (column < 0 || column > field_number_) return nullptr;
   field_type_enum type = type_[column];
   int32_t i;
@@ -151,12 +150,9 @@ void Tab::create_index(int32_t column, const char *filename) {
     if (it_find != hash_index_.end()) {
       char temp[256];
       memset(temp, '\0', sizeof(temp));
-      snprintf(temp, 
-               sizeof(temp) - 1, 
-               "[%s]multi index at line: %d(smae value: %d)", 
-               filename, 
-               i + 1, 
-               _field_data->int_value);
+      snprintf(
+        temp, sizeof(temp) - 1, "[%s]multi index at line: %d(smae value: %d)", 
+        filename, i + 1, _field_data->int_value);
 #ifdef _plain_THROW_EXCEPTION_AS_STD_STRING
       throw std::string(temp);
 #else
@@ -167,29 +163,24 @@ void Tab::create_index(int32_t column, const char *filename) {
   }
 }
 
-const char *Tab::get_line_from_memory(char *str, 
-                                           int32_t size, 
-                                           const char *memory, 
-                                           const char *end) {
+const char *Tab::get_line_from_memory(
+  char *str, int32_t size, const char *memory, const char *end) {
   const char *_memory = memory;
   if (_memory >= end || 0 == *_memory) return nullptr;
-  while (_memory < end &&
-         _memory - memory + 1 < size &&
-         *_memory != 0 &&
-         *_memory != '\n' &&
-         *_memory != '\r') {
+  while (
+    _memory < end && _memory - memory + 1 < size && *_memory != 0 &&
+    *_memory != '\n' && *_memory != '\r') {
     *(str++) = *(_memory++);
   }
   *str = 0;
-  while (_memory < end && 
-         *_memory != 0 && 
-         (*_memory == '\r' || *_memory == '\n')) ++_memory;
+  while (
+    _memory < end && *_memory != 0 && 
+    (*_memory == '\r' || *_memory == '\n')) ++_memory;
   return _memory;
 }
 
-bool Tab::field_equal(field_type_enum type, 
-                      const field_data &a, 
-                      const field_data &b) {
+bool Tab::field_equal(
+  field_type_enum type, const field_data &a, const field_data &b) {
   bool result = false;
   if (kTypeInt == type) {
     result = a.int_value == b.int_value;
@@ -205,9 +196,8 @@ bool Tab::field_equal(field_type_enum type,
   return result;
 }
 
-bool Tab::open_from_memory_text(const char *memory, 
-                                const char *end, 
-                                const char *filename) {
+bool Tab::open_from_memory_text(
+  const char *memory, const char *end, const char *filename) {
   char line[(1024 * 10) + 1]; //long string
   memset(line, '\0', sizeof(line));
   const char *_memory = memory;
@@ -279,12 +269,9 @@ bool Tab::open_from_memory_text(const char *memory,
           auto convert_str = new char[convert_strlength];
           memset(convert_str, 0, convert_strlength);
           int32_t convert_result = 
-            charset_convert("GBK",
-                            "UTF-8",
-                             convert_str,
-                             convert_strlength,
-                             value,
-                             static_cast<int32_t>(strlen(value)));
+            charset_convert(
+              "GBK", "UTF-8", convert_str, convert_strlength, value,
+              static_cast<int32_t>(strlen(value)));
           if (convert_result > 0) {
             value = convert_str;
             result[i] = convert_str;
@@ -348,9 +335,8 @@ bool Tab::open_from_memory_text(const char *memory,
   return true;
 }
 
-bool Tab::open_from_memory_binary(const char *memory, 
-                             const char *end, 
-                             const char *filename) {
+bool Tab::open_from_memory_binary(
+  const char *memory, const char *end, const char *filename) {
   const char *_memory = memory;
   file_head_t file_head;
   memcpy(&file_head, _memory, sizeof(file_head_t));
@@ -381,12 +367,8 @@ bool Tab::open_from_memory_binary(const char *memory,
   int32_t i;
   for (i = 0; i < field_number_; ++i) {
     switch(field_types[i]) {
-      case kTypeInt: {
-        //do nothing
-      }
-      case kTypeFloat: {
-        //do nothing
-      }
+      case kTypeInt:
+      case kTypeFloat:
       case kTypeString: {
         type_[i] = static_cast<field_type_enum>(field_types[i]);
         break;
@@ -403,9 +385,9 @@ bool Tab::open_from_memory_binary(const char *memory,
 
   //read all field
   data_buffer_.resize(field_number_ * record_number_);
-  memcpy(&(data_buffer_[0]), 
-         _memory, 
-         sizeof(field_data) * field_number_ * record_number_);
+  memcpy(
+    &(data_buffer_[0]), _memory, 
+    sizeof(field_data) * field_number_ * record_number_);
   _memory += sizeof(field_data) * field_number_ * record_number_;
   memcpy(string_buffer_, _memory, string_buffer_size_);
   string_buffer_[string_buffer_size_ - 1] = '\0';
@@ -433,10 +415,9 @@ bool Tab::save_tobinary(const char *filename) {
     if (nullptr == fp) return false;
     fwrite(&filehead, sizeof(filehead), 1, fp);
     fwrite(&(type_[0]), sizeof(field_type_enum) *filehead.field_number, 1, fp);
-    fwrite(&(data_buffer_[0]), 
-           filehead.field_number * filehead.record_number, 
-           1, 
-           fp);
+    fwrite(
+      &(data_buffer_[0]), filehead.field_number * filehead.record_number, 
+      1, fp);
     fwrite(string_buffer_, filehead.string_block_size, 1, fp);
     fclose(fp);
     return true;
@@ -495,10 +476,9 @@ bool Tab::save_totext(const char *filename) {
           break;
         }
         case kTypeString: {
-          fwrite(_field_data->string_value, 
-                 strlen(_field_data->string_value), 
-                 1, 
-                 fp);
+          fwrite(
+            _field_data->string_value, strlen(_field_data->string_value), 
+            1, fp);
           break;
         }
         default:

@@ -25,10 +25,8 @@ UNUSED(msg);
 #endif
 }
 
-void __assert__(const char *file, 
-                unsigned int line, 
-                const char *func , 
-                const char *expr) {
+void __assert__(
+  const char *file, unsigned int line, const char *func, const char *expr) {
   char temp[1024] = {0};
 #if OS_UNIX || OS_MAC //换个格式
   sprintf(temp, "[%s][%d][%s][%s]\n", file, line, func, expr);
@@ -38,11 +36,9 @@ void __assert__(const char *file,
   __show__(temp);
 }
 
-void __assertex__(const char *file, 
-                  unsigned int line, 
-                  const char *func, 
-                  const char *expr,
-                  const char *msg) {
+void __assertex__(
+  const char *file, unsigned int line, const char *func, const char *expr,
+  const char *msg) {
   char temp[1024] = {0};
 #if OS_UNIX || OS_MAC
   sprintf(temp, "[%s][%d][%s][%s]\n[%s]\n", file, line, func, expr, msg);
@@ -52,11 +48,9 @@ void __assertex__(const char *file,
   __show__(temp);
 }
 
-void __assertspecial__(const char *file, 
-                       unsigned int line, 
-                       const char *func, 
-                       const char *expr,
-                       const char *msg) {
+void __assertspecial__(
+  const char *file, unsigned int line, const char *func, const char *expr,
+  const char *msg) {
   char temp[1024] = {0};
 #if OS_UNIX || OS_MAC
   sprintf(temp, "S[%s][%d][%s][%s]\n[%s]\n", file, line, func, expr, msg) ;

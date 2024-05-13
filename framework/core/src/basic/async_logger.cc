@@ -61,11 +61,9 @@ struct File {
   time_t last_flush_;
 };
 
-File::File(const std::string &name,
-           std::size_t roll_size,
-           bool thread_safe,
-           time_t flush_interval,
-           uint32_t check_every_N)
+File::File(
+  const std::string &name, std::size_t roll_size, bool thread_safe,
+  time_t flush_interval, uint32_t check_every_N)
   : name_{name}, roll_size_{roll_size},
     mutex_{thread_safe ? std::make_unique<std::mutex>() : nullptr},
     flush_interval_{flush_interval}, check_every_N_{check_every_N},
@@ -149,9 +147,8 @@ struct AsyncLogger::Impl {
   thread_t thread_;
 };
 
-AsyncLogger::Impl::Impl(const std::string &name,
-                        std::size_t roll_size,
-                        int32_t flush_interval)
+AsyncLogger::Impl::Impl(
+  const std::string &name, std::size_t roll_size, int32_t flush_interval)
   : name_{name}, roll_size_{roll_size}, flush_interval_{flush_interval},
     mutex_{}, running_{false}, latch_{1}, cond_{},
     current_buffer_{std::make_unique<Buffer>()},
@@ -221,11 +218,9 @@ void AsyncLogger::Impl::thread_handle() {
     assert(!write_buffers.empty());
     if (write_buffers.size() > 25) {
       char buf[256]{0};
-      auto size = snprintf(buf,
-                           sizeof buf,
-                           "Dropped log messages at %s, %zd larger buffers\n",
-                           Time::format(true).c_str(),
-                           write_buffers.size() - 2);
+      auto size = snprintf(
+        buf, sizeof buf, "Dropped log messages at %s, %zd larger buffers\n",
+        Time::format(true).c_str(), write_buffers.size() - 2);
       io_cerr(buf);
       file.append({buf, static_cast<std::size_t>(size)});
       write_buffers.erase(write_buffers.begin() + 2, write_buffers.end());
