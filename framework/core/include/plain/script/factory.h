@@ -29,12 +29,12 @@ class PLAIN_API Factory {
    Interface *getenv(eid_t eid) {
      if (envs_[eid]) return envs_[eid].get();
      return nullptr;
-   };
+   }
    void closeenv(eid_t eid) {
      auto it = envs_.find(eid);
      if (it != envs_.end()) envs_.erase(it);
      last_del_eid_ = eid; 
-   };
+   }
 
  private:
    eid_t neweid();

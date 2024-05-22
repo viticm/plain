@@ -16,20 +16,14 @@
 
 namespace plain {
 
-PLAIN_API void __assert__(const char *file, 
-                       unsigned int line, 
-                       const char *func, 
-                       const char *expr);
-PLAIN_API void __assertex__(const char *file, 
-                         unsigned int line, 
-                         const char *func, 
-                         const char *expr, 
-                         const char *msg);
-PLAIN_API void __assertspecial__(const char *file, 
-                              unsigned int line, 
-                              const char *func, 
-                              const char *expr, 
-                              const char *msg);
+PLAIN_API void __assert__(
+  const char *file, unsigned int line, const char *func, const char *expr);
+PLAIN_API void __assertex__(
+  const char *file, unsigned int line, const char *func, const char *expr, 
+  const char *msg);
+PLAIN_API void __assertspecial__(
+  const char *file, unsigned int line, const char *func, const char *expr, 
+  const char *msg);
 PLAIN_API void __messagebox__(const char *msg);
 PLAIN_API void __show__(const char *temp);
 

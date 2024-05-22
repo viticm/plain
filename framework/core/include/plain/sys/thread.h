@@ -228,10 +228,9 @@ inline ThreadCollect::~ThreadCollect() {
   count_.fetch_sub(1, std::memory_order_relaxed);
   auto count = count_.load(std::memory_order_relaxed);
   if (true == GLOBALS["app.debug"]) {
-    plain::io_cdebug("[%s] thread(%s) collect wait exit: %d", 
-                     GLOBALS["app.name"].c_str(), 
-                     thread::get_id().c_str(),
-                     count);
+    plain::io_cdebug(
+      "[%s] thread(%s) collect wait exit: %d", GLOBALS["app.name"].c_str(), 
+      thread::get_id().c_str(), count);
   }
 }
 

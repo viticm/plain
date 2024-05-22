@@ -46,8 +46,8 @@ class PLAIN_API Library {
    std::string errorstr_;
    std::string filename_;
    std::string path_;
-   bool isloaded_;
-   void *handle_;
+   bool isloaded_{false};
+   void *handle_{nullptr};
 
 };
 
@@ -91,7 +91,7 @@ class PLAIN_API LibraryManager {
   /* Get the load library all possible names. */
   std::vector<std::string>
   get_librarynames(const std::string &onlyname) noexcept {
-   return namesmap_[onlyname];
+    return namesmap_[onlyname];
   }
 
   /* Load the library by name. */
@@ -104,7 +104,7 @@ class PLAIN_API LibraryManager {
 
   /* Get the library pointer by name. */
   Library *get(const std::string &name) noexcept {
-   return is_null(librarymap_[name]) ? nullptr : librarymap_[name].get();
+    return is_null(librarymap_[name]) ? nullptr : librarymap_[name].get();
   }
 
   private:
