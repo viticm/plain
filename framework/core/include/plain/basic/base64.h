@@ -5,8 +5,8 @@
  * @copyright Copyright (c) 2023 viticm( viticm.ti@gmail.com )
  * @license
  * @user viticm( viticm.ti@gmail.com )
- * @date 2023/03/31 17:57
- * @uses your description
+ * @date 2024/06/11 13:15
+ * @uses The base64 implementation.
  */
 #ifndef PLAIN_BASIC_BASE64_H_
 #define PLAIN_BASIC_BASE64_H_
@@ -15,8 +15,12 @@
 
 namespace plain {
 
-PLAIN_API std::string base64_encode(unsigned char const* , unsigned int len);
-PLAIN_API std::string base64_decode(std::string const& s);
+PLAIN_API std::string base64_encode(unsigned char const *, unsigned int len);
+PLAIN_API std::string base64_encode(std::string_view str) {
+  return base64_encode(reinterpret_cast<unsigned char const *>(
+    str.data()), str.size());
+}
+PLAIN_API std::string base64_decode(std::string const &s);
 
 } // namespace plain
 
