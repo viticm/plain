@@ -51,11 +51,8 @@ bool Ini::open(const char *filename) noexcept {
     if (_parsekey(buffer, &key, &value)) {
       if(current_section_ == nullptr) {
         char msg[128] = {0};
-        snprintf(msg, 
-                 128, 
-                 "[file] format invalid! file: %s, key: %s", 
-                 filename,
-                 key);
+        snprintf(
+          msg, 128, "[file] format invalid! file: %s, key: %s", filename, key);
         AssertEx(false, msg);
       }
       int position = _add_bufferstring(value);
@@ -88,17 +85,15 @@ int32_t Ini::getint32(const char *section, const char *key, int32_t _default) {
   int32_t result;
   if (_get(section, key, result)) return result;
   char msg[5120] = {0};
-  snprintf(msg, 
-           sizeof(msg) - 1, 
-           "[ini] invalid key! file: %s, section: %s, key: %s", 
-           filename_,section,key);
+  snprintf(
+    msg, sizeof(msg) - 1, "[ini] invalid key! file: %s, section: %s, key: %s", 
+    filename_,section,key);
   AssertEx(false, msg);
   return _default;
 }
 
-bool Ini::getint32_ifexist(const char *section, 
-                           const char *key, 
-                           int32_t &result) {
+bool Ini::getint32_ifexist(
+  const char *section, const char *key, int32_t &result) {
   return _get(section, key, result);
 }
 
@@ -106,38 +101,31 @@ float Ini::getfloat(const char *section, const char *key, float _default) {
   float result;
   if (_get(section, key, result)) return result;  
   char msg[5120] = {0};
-  snprintf(msg, 
-           sizeof(msg) - 1, 
-           "[ini] invalid key! file: %s, section: %s, key: %s", 
-           filename_,
-           section,
-           key);
+  snprintf(
+    msg, sizeof(msg) - 1, "[ini] invalid key! file: %s, section: %s, key: %s", 
+    filename_, section, key);
   AssertEx(false, msg);
   return _default;
 }
 
-bool Ini::getfloat_ifexist(const char *section, 
-                           const char *key, 
-                           float &result) {
+bool Ini::getfloat_ifexist(
+  const char *section, const char *key, float &result) {
   return _get(section, key, result);
 }
 
-bool Ini::getstring(const char *section, 
-                    const char *key, 
-                    char *str, 
-                    int32_t size, 
-                    const char *_default) {
+bool Ini::getstring(
+  const char *section, const char *key, char *str, int32_t size,
+  const char *_default) {
   if (_getstring(section, key, str, size)) return true;
   strncpy(str, _default, size);
-  int32_t _size = static_cast<int32_t>(strlen(_default)) > size - 1 ? 
-                  size - 1 : 
-                  static_cast<int32_t>(strlen(_default));
+  int32_t _size = 
+    static_cast<int32_t>(strlen(_default)) > size - 1 ? size - 1 : 
+    static_cast<int32_t>(strlen(_default));
   str[_size] = 0;
   char msg[5120] = {0};
-  snprintf(msg, 
-           sizeof(msg) - 1, 
-           "[ini] invalid key! file: %s, section: %s, key: %s", 
-           filename_,section,key);
+  snprintf(
+    msg, sizeof(msg) - 1, "[ini] invalid key! file: %s, section: %s, key: %s", 
+    filename_, section, key);
   AssertEx(false, msg);
   return false;
 }
@@ -156,10 +144,8 @@ void Ini::get(
   }
 }
 
-bool Ini::getstring_ifexist(const char *section, 
-                            const char *key, 
-                            char *str, 
-                            int32_t size) {
+bool Ini::getstring_ifexist(
+  const char *section, const char *key, char *str, int32_t size) {
   return _getstring(section, key, str, size);
 }
 

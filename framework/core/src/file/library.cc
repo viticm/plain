@@ -18,15 +18,10 @@ typedef void (__stdcall *function_open)(plain::Kernel *, void *);
 static inline std::string GetLastErrorString(DWORD nErrorCode) {
   WCHAR *msg = 0; //Qt: wchar_t
   // Ask Windows to prepare a standard message for a GetLastError() code:
-  FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | 
-                FORMAT_MESSAGE_FROM_SYSTEM | 
-                FORMAT_MESSAGE_IGNORE_INSERTS,
-                NULL,
-                nErrorCode,
-                MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                (LPTSTR)&msg,
-                0,
-                NULL);
+  FormatMessage(
+    FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | 
+    FORMAT_MESSAGE_IGNORE_INSERTS, NULL, nErrorCode,
+    MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR)&msg, 0, NULL);
   std::string s = wstr2str(msg);
   LocalFree(msg);
   return s;
@@ -179,9 +174,8 @@ LibraryManager::~LibraryManager() = default;
 void LibraryManager::add_searchpaths(
   const std::vector<std::string> &paths) noexcept {
   for (const std::string &path : paths) {
-    if (std::find(searchpaths_.begin(), 
-                  searchpaths_.end(), 
-                  path) == searchpaths_.end())
+    if (std::find(
+        searchpaths_.begin(), searchpaths_.end(), path) == searchpaths_.end())
       searchpaths_.push_back(path);
   }
 }
@@ -190,8 +184,8 @@ void LibraryManager::remove_searchpaths(
   const std::vector<std::string> &paths) noexcept {
   for (const std::string &path : paths) {
     searchpaths_.erase(
-        std::remove(searchpaths_.begin(), searchpaths_.end(), path), 
-        searchpaths_.end());
+      std::remove(searchpaths_.begin(), searchpaths_.end(), path), 
+      searchpaths_.end());
   }
 }
 

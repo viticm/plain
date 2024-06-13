@@ -157,12 +157,9 @@ char *safecopy(char *dest, const char *src, size_t size) {
  * @param srclen want convert string length
  */
 #ifdef PLAIN_OPEN_ICONV
-int32_t charset_convert(const char *from, 
-                        const char *to, 
-                        char *save, 
-                        int32_t save_length, 
-                        const char *src, 
-                        int32_t src_length) {
+int32_t charset_convert(
+  const char *from, const char *to, char *save, int32_t save_length, 
+  const char *src, int32_t src_length) {
   int32_t status = 0;
   iconv_t cd;
   const char *inbuf  = src;
@@ -277,11 +274,9 @@ uint64_t touint64(const char *str) {
   return result;
 }
 
-int32_t explode(const char *source,
-                std::vector<std::string> &result,
-                const char *key,
-                bool one_key,
-                bool ignore_empty) {
+int32_t explode(
+  const char *source, std::vector<std::string> &result, const char *key,
+  bool one_key, bool ignore_empty) {
   result.clear();
   std::string str = source; //use stanard string class to source
   if (str.empty()) return 0;
@@ -314,7 +309,7 @@ int32_t explode(const char *source,
 }
 
 bool checkstr(const char *in, uint32_t size) {
-  if (0 == size) return false;
+  if (size == 0) return false;
   for (decltype(size) i = 0; i < size; ++i) {
     switch (in[i]) {
     case '\0':
@@ -404,11 +399,9 @@ inline void pg_swapchars(char *sz) {
   PG_SWAP(15, 18);
 }
 
-static bool pg_encrypt(char *key, 
-                       int32_t keylength, 
-                       char *buffer, 
-                       const char *password, 
-                       int32_t str_length) {
+static bool pg_encrypt(
+  char *key, int32_t keylength, char *buffer, const char *password, 
+  int32_t str_length) {
   int32_t i{0}, c{0}, cc{0};
   for (i = 0; i < str_length; i++) {
     cc = key[i % keylength];
@@ -433,11 +426,9 @@ static bool pg_encrypt(char *key,
   return true;
 }
 
-static void pg_decrypt(char *key, 
-                       int32_t keylength, 
-                       char *buffer, 
-                       const char *encrypted, 
-                       int32_t length) {
+static void pg_decrypt(
+  char *key, int32_t keylength, char *buffer, const char *encrypted, 
+  int32_t length) {
   int32_t i{0}, c{0}, cc{0};
   for (i = 0; i < length; i++) {
     cc = key[i % keylength];
@@ -662,10 +653,9 @@ bool contains(
   return false;
 }
 
-std::string str_replace(std::string_view search , 
-                        std::string_view replace, 
-                        std::string_view subject, 
-                        int32_t count) {
+std::string str_replace(
+  std::string_view search, std::string_view replace, std::string_view subject, 
+  int32_t count) {
   std::string r{subject};
   int32_t replace_count{0};
   auto it = r.find(search);
@@ -679,10 +669,9 @@ std::string str_replace(std::string_view search ,
   return r;
 }
 
-std::string str_replaces(const std::vector<std::string>& search , 
-                         std::string_view replace, 
-                         std::string_view subject, 
-                         int32_t count) {
+std::string str_replaces(
+  const std::vector<std::string>& search, std::string_view replace, 
+  std::string_view subject, int32_t count) {
   std::string r{subject};
   for (std::string_view item : search)
     r = str_replace(item, replace, subject, count);
@@ -824,11 +813,9 @@ bool binary_tostring(const char *in, uint32_t in_length, char *out) {
   return true;
 }
 
-bool string_tobinary(const char *in,
-                     uint32_t in_length,
-                     char *out,
-                     uint32_t out_limit,
-                     uint32_t &out_length) {
+bool string_tobinary(
+  const char *in, uint32_t in_length, char *out, uint32_t out_limit,
+  uint32_t &out_length) {
   if (0 == in_length) return false;
   uint32_t out_index = 0;
   uint32_t i;
