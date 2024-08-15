@@ -21,13 +21,13 @@ namespace plain {
 class PLAIN_API AsyncLogger : noncopyable {
 
  public:
-  AsyncLogger(const std::string &name,
+  AsyncLogger(std::string_view name,
               std::size_t roll_size,
               int32_t flush_interval = 3);
   ~AsyncLogger();
 
  public:
-  void append(const std::string_view &log);
+  void append(std::string_view log);
   void start();
   void stop();
 

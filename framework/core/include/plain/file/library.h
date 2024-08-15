@@ -107,8 +107,8 @@ class PLAIN_API LibraryManager {
     return is_null(librarymap_[name]) ? nullptr : librarymap_[name].get();
   }
 
-  private:
-
+ private:
+  
   /* The search paths. */
   std::vector<std::string> searchpaths_;
 
@@ -121,5 +121,9 @@ class PLAIN_API LibraryManager {
 };
 
 } //namespace plain
+  
+#ifndef LIBRARY
+#define LIBRARY plain::Singleton<plain::LibraryManager>::get_instance()
+#endif
 
 #endif //PLAIN_FILE_LIBRARY_H_

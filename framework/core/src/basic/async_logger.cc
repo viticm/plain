@@ -251,8 +251,8 @@ void AsyncLogger::Impl::thread_handle() {
 }
 
 AsyncLogger::AsyncLogger(
-  const std::string &name, std::size_t roll_size, int32_t flush_interval)
-  : impl_{std::make_unique<Impl>(name, roll_size, flush_interval)} {
+  std::string_view name, std::size_t roll_size, int32_t flush_interval)
+  : impl_{std::make_unique<Impl>(name.data(), roll_size, flush_interval)} {
   auto log_directory = GLOBALS["log.directory"].get<std::string>();
   if (!std::filesystem::exists(log_directory)) {
     assert(std::filesystem::create_directory(log_directory));
@@ -269,6 +269,6 @@ void AsyncLogger::stop() {
   impl_->stop();
 }
 
-void AsyncLogger::append(const std::string_view &log) {
+void AsyncLogger::append(std::string_view log) {
   impl_->append(log);
 }
