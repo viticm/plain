@@ -22,6 +22,7 @@ class copyable {
    copyable(const copyable &) noexcept = default;
    copyable(copyable &&) noexcept = default;
    copyable &operator=(copyable &&) noexcept = default;
+   copyable &operator=(const copyable &) noexcept = default;
    bool operator==(const copyable &) const noexcept = default;
 
 };
