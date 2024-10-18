@@ -146,6 +146,9 @@ void plain::tests::test_net_connection_funcs() {
   listener1.bind("add", [](int32_t a, int32_t b) {
     return a + b;
   });
+  listener1.bind("hello", []() {
+    return std::string{"world!"};
+  });
 
   r = listener1.start();
   ASSERT_TRUE(r);
@@ -157,10 +160,13 @@ void plain::tests::test_net_connection_funcs() {
   ASSERT_TRUE(static_cast<bool>(conn3));
 
   auto call_r = conn3->call("add", 11, 21).as<int32_t>();
+  ASSERT_TRUE(call_r == (11 + 21));
 
   std::cout << "call_r: " << call_r << std::endl;
 
-  ASSERT_TRUE(call_r == (11 + 21));
+  auto call_r1 = conn3->call("hello").as<std::string>();
+  ASSERT_TRUE(call_r1 == std::string{"world!"});
+
  
   std::this_thread::sleep_for(50ms);
 }
