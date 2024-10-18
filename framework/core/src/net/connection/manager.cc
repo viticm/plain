@@ -3,6 +3,7 @@
 #include <array>
 #include <deque>
 #include <map>
+#include <latch>
 #include "plain/basic/utility.h"
 #include "plain/concurrency/executor/basic.h"
 #include "plain/concurrency/executor/worker_thread.h"
@@ -57,6 +58,10 @@ struct Manager::Impl {
   std::deque<connection::id_t> wait_work_conn_id_deque;
   std::set<connection::id_t> wait_work_conn_ids;
   int32_t working_conn_max_count{32};
+  std::latch latch{1};
+
+  // rpc.
+  std::shared_ptr<rpc::Dispatcher> rpc_dispatcher;
 
   void init_connections(uint32_t count);
 #ifndef PLAIN_NET_MANAGER_ENABLE_COROUTINE
@@ -133,10 +138,13 @@ Manager::Impl::work_await(std::shared_ptr<Manager> manager) noexcept {
 bool Manager::Impl::wait_work(std::shared_ptr<Manager> manager) noexcept {
   assert(manager);
   std::unique_lock<std::mutex> lock{manager->impl_->wait_mutex};
-  manager->impl_->cv.wait(lock, [manager] {
-    return manager->listen_fd_ != socket::kInvalidId ||
-      manager->impl_->connection_info.size > 0 || !manager->running();
-  });
+  if (manager->listen_fd_ == socket::kInvalidId && 
+    manager->impl_->connection_info.size == 0) {
+    manager->impl_->cv.wait(lock, [manager] {
+      return manager->listen_fd_ != socket::kInvalidId ||
+        manager->impl_->connection_info.size > 0 || !manager->running();
+    });
+  }
   if (!manager->running() || !manager->work()) return false;
   // std::this_thread::sleep_for(1ms); // change to executor thread work.
   return true;
@@ -236,6 +244,7 @@ bool Manager::start() {
   ENGINE->add(shared_from_this());
 #ifndef PLAIN_NET_MANAGER_ENABLE_COROUTINE
    impl_->worker = thread_t([manager = shared_from_this()]{
+    manager->impl_->latch.wait();
     for (;;) {
       if (!Impl::wait_work(manager)) break;
     }
@@ -245,6 +254,7 @@ bool Manager::start() {
   impl_->enqueue_work_await(shared_from_this());
 #endif
   impl_->running.store(true, std::memory_order_relaxed);
+  impl_->latch.count_down();
   return true;
 }
 
@@ -483,6 +493,7 @@ std::shared_ptr<plain::net::connection::Basic> Manager::accept() noexcept {
 std::shared_ptr<plain::net::connection::Basic>
 Manager::accept(socket::id_t sock_id) noexcept {
   auto conn = new_conn();
+  std::cout << "accept: " << setting_.name << "|" << sock_id << std::endl;
   if (!conn) {
     LOG_WARN << setting_.name << " new conn failed";
     auto sock = std::make_shared<socket::Basic>();
@@ -578,7 +589,6 @@ void Manager::enqueue(connection::id_t id) noexcept {
   if (!running()) return;
   auto working_conn_count =
     impl_->working_conn_count.load(std::memory_order_acquire);
-  // std::cout << "working_conn_count: " << working_conn_count << std::endl;
   if (impl_->working_conn_max_count <= 0 ||
       working_conn_count < static_cast<uint32_t>(
         impl_->working_conn_max_count)) {
@@ -613,4 +623,13 @@ std::string Manager::get_name(connection::id_t conn_id) const noexcept {
     return r;
   }
   return it->second;
+}
+
+plain::net::rpc::Dispatcher *Manager::rpc_dispatcher() const noexcept {
+  return impl_->rpc_dispatcher.get();
+}
+  
+void Manager::set_rpc_dispatcher(
+    std::shared_ptr<rpc::Dispatcher> dispatcher) noexcept {
+  impl_->rpc_dispatcher = dispatcher;
 }

@@ -338,7 +338,7 @@ bool Kernel::enable_console(std::string_view addr) noexcept {
     if (!r.empty()) {
       auto p = std::make_shared<net::packet::Basic>();
       p->set_writeable(true);
-      r += "\r\n";
+      r += "\r";
       p->write(as_const_bytes(r));
       p->set_writeable(false);
       conn->send(p);

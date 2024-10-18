@@ -61,6 +61,17 @@ void plain::tests::test_net_listener_operator() {
 
 }
 
+static constexpr plain::bytes_t
+kRpcRequestBegin{std::byte{0x63}, std::byte{0x72}};
+static constexpr plain::bytes_t
+kRpcRequestEnd{std::byte{0x72}, std::byte{0x63}};
+static constexpr plain::bytes_t
+kRpcResponseBegin{std::byte{0x63}, std::byte{0x6f}};
+static constexpr plain::bytes_t
+kRpcResponseEnd{std::byte{0x6f}, std::byte{0x63}};
+static constexpr size_t kRpcRequestSizeMin{4 + 4 + 1};
+static constexpr size_t kRpcResponseSizeMin{4 + 4 + 4 + 1};
+
 plain::error_or_t<std::shared_ptr<packet::Basic>>
 plain::tests::line_decode(
   stream::Basic *input, const packet::limit_t &packet_limit) {
@@ -81,10 +92,26 @@ plain::tests::line_decode(
   if (pos > 0 && str[pos - 1] == '\r') {
     pos -= 1;
   }
+
+  // For rpc
   auto p = std::make_shared<packet::Basic>();
+  if (pos >= kRpcRequestSizeMin &&
+    bytes_t{bytes.data(), 2} == kRpcRequestBegin &&
+    bytes_t{bytes.data() + pos - 2, 2} == kRpcRequestEnd) {
+    p->set_call_request(true);
+  } else if (pos >= kRpcResponseSizeMin &&
+    bytes_t{bytes.data(), 2} == kRpcResponseBegin &&
+    bytes_t{bytes.data() + pos - 2, 2} == kRpcResponseEnd) {
+    p->set_call_response(true);
+  }
+
   if (pos > 0) {
     p->set_writeable(true);
-    p->write(bytes.data(), pos);
+    if (p->is_call_request() || p->is_call_response()) {
+      p->write(bytes.data() + 2, pos - 2);
+    } else {
+      p->write(bytes.data(), pos);
+    }
     p->set_writeable(false);
   }
   p->set_readable(true);
@@ -93,7 +120,17 @@ plain::tests::line_decode(
 
 plain::bytes_t plain::tests::line_encode(std::shared_ptr<packet::Basic> packet) {
   auto d = packet->data();
-  return {d.data(), d.size()};
+  plain::bytes_t r{d.data(), d.size()};
+
+  // For rpc
+  if (packet->is_call_request()) {
+    r = kRpcRequestBegin + r + kRpcRequestEnd;
+  } else if (packet->is_call_response()) {
+    r = kRpcResponseBegin + r + kRpcResponseEnd;
+  }
+
+  r.push_back(std::byte{'\n'});
+  return r;
 }
 
 void plain::tests::test_net_listener_func() {
@@ -185,7 +222,7 @@ void plain::tests::test_net_listener_func() {
   pack1->set_writeable(true);
   std::string line{"hello world\n"};
   pack1->write(reinterpret_cast<std::byte *>(line.data()), line.size());
-  std::string line1{"plain\n"};
+  std::string line1{"plain"};
   pack1->write(reinterpret_cast<std::byte *>(line1.data()), line1.size());
   auto conn3 = connector.connect(":9530");
   ASSERT_TRUE(conn3);

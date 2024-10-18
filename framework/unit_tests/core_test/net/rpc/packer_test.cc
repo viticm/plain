@@ -387,3 +387,31 @@ TEST_F(RpcPacker, UnorderedMapPacking) {
   ASSERT_TRUE(map1[0] == map_copy[0]);
   ASSERT_TRUE(map1[1] == map_copy[1]);
 }
+
+TEST_F(RpcPacker, TuplePacking) {
+  auto packer = Packer{};
+  auto unpacker = Unpacker{};
+
+  auto tuple1 = std::tuple<int32_t, int32_t>(1, 2);
+  auto tuple_copy = tuple1;
+  packer.process(tuple1);
+
+  /*
+  for (int8_t i = 1; i < std::numeric_limits<int8_t>::max(); ++i) {
+    if (uint8_t(packer.twos_complement(i).to_ulong()) <= 32) {
+      std::cout << "i: " << int32_t(i) << std::endl;
+    }
+    if (uint8_t(packer.twos_complement(-i).to_ulong()) > 0) {
+      std::cout << "-i: " << int32_t(-i) << "|"
+        << uint32_t(uint8_t(packer.twos_complement(-i).to_ulong())) << std::endl;
+    }
+  }
+  */
+
+  unpacker.set_data(packer.vector().data(), packer.vector().size());
+  unpacker.process(tuple1);
+  std::cout << std::get<0>(tuple1) << "|" << std::get<1>(tuple1) << std::endl;
+  std::cout << std::get<0>(tuple_copy) << "|" <<
+    std::get<1>(tuple_copy) << std::endl;
+  ASSERT_TRUE(tuple1 == tuple_copy);
+}

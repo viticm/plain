@@ -60,7 +60,7 @@ void plain::tests::test_net_connection_send_line(
   auto bytes = as_const_bytes(str);
   pack->set_writeable(true);
   pack->write(bytes.data(), bytes.size());
-  pack->write(reinterpret_cast<const std::byte *>("\n"), 1);
+  //pack->write(reinterpret_cast<const std::byte *>("\n"), 1);
   pack->set_writeable(false);
   auto r = conn->send(pack);
   ASSERT_TRUE(r);
@@ -103,6 +103,10 @@ void plain::tests::test_net_connection_funcs() {
     return true;
   });
 
+  listener.bind("sum", [](int32_t a, int32_t b){
+    return a * b;
+  });
+
   Connector connector;
   r = connector.start();
   ASSERT_TRUE(r);
@@ -130,7 +134,34 @@ void plain::tests::test_net_connection_funcs() {
 
   auto conn2 = connector.connect(":9527", nullptr, 5s);
   ASSERT_TRUE(static_cast<bool>(conn2));
-  
+
+  auto call_r0 = conn1->call("sum", 11, 9).as<int32_t>();
+  ASSERT_TRUE(call_r0 == (11 * 9));
+
+  // For call.
+  setting_t setting1;
+  setting1.address = ":9528";
+  setting1.name = "test1";
+  Listener listener1(setting1);
+  listener1.bind("add", [](int32_t a, int32_t b) {
+    return a + b;
+  });
+
+  r = listener1.start();
+  ASSERT_TRUE(r);
+  listener1.set_connect_callback([](connection::Basic *conn) {
+    std::cout << conn->name() << " connected" << std::endl;
+  });
+
+  auto conn3 = connector.connect(":9528", nullptr, 5s);
+  ASSERT_TRUE(static_cast<bool>(conn3));
+
+  auto call_r = conn3->call("add", 11, 21).as<int32_t>();
+
+  std::cout << "call_r: " << call_r << std::endl;
+
+  ASSERT_TRUE(call_r == (11 + 21));
+ 
   std::this_thread::sleep_for(50ms);
 }
 

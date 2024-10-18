@@ -63,6 +63,13 @@ class PLAIN_API Unpacker {
     (unpack(std::forward<Types &>(args)), ...);
   }
 
+  template <typename T>
+  T as() {
+    T r;
+    process(r);
+    return r;
+  }
+
  public:
 
   template <typename T>
@@ -73,6 +80,8 @@ class PLAIN_API Unpacker {
       unpack_array(value);
     } else if constexpr (is_stdarray<T>::value) {
       unpack_stdarray(value);
+    } else if constexpr (is_tuple<T>::value) {
+      unpack_tuple(value);
     } else {
       auto recursive_data = std::vector<uint8_t>{};
       unpack(recursive_data);
@@ -187,6 +196,13 @@ class PLAIN_API Unpacker {
         map.insert_or_assign(key, value);
       }
     }
+  }
+
+  template <typename T>
+  void unpack_tuple(T &value) noexcept {
+    std::apply([this](auto &&...args){
+      (unpack(args), ...);
+    }, value);
   }
 
  public:

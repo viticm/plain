@@ -6,7 +6,7 @@ Packer::Packer() = default;
 Packer::~Packer() = default;
 
 void Packer::pack(int8_t value) noexcept {
-  if (value > 31 || value < -32) {
+  if (value > 0 && value < std::to_underlying(Type::Max)) {
     serialized_object_.emplace_back(std::to_underlying(Type::Int8));
   }
   serialized_object_.emplace_back(uint8_t(twos_complement(value).to_ulong()));

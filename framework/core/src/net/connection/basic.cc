@@ -8,6 +8,9 @@
 #include "plain/net/stream/basic.h"
 #include "plain/net/connection/manager.h"
 #include "plain/net/packet/basic.h"
+#include "plain/net/rpc/packer.h"
+#include "plain/net/rpc/unpacker.h"
+#include "plain/net/rpc/dispatcher.h"
 
 using plain::net::connection::Basic;
 using plain::net::connection::callable_func;
@@ -45,6 +48,12 @@ struct Basic::Impl {
   std::atomic_bool working{false};
   std::atomic_bool keep_alive{false};
   mutable std::mutex mutex;
+  
+  // For rpc calls.
+  using call_t = std::pair<std::string, std::promise<rpc::Unpacker>>;
+  std::atomic_uint32_t call_index{0};
+  std::unordered_map<uint32_t, call_t> callings;
+  std::optional<int64_t> timeout{std::nullopt};
 
   bool process_input(Basic *conn) noexcept;
   bool process_output(Basic *conn) noexcept;
@@ -58,6 +67,9 @@ struct Basic::Impl {
   void set_work_flag(WorkFlag flag, bool enable) noexcept;
   bool exchange_work_flag(WorkFlag flag, bool enable) noexcept;
   static std::string get_name(const Basic *conn) noexcept;
+  bool handle_rpc_request(Basic *conn, std::shared_ptr<packet::Basic> packet);
+  bool handle_rpc_response(Basic *conn, std::shared_ptr<packet::Basic> packet);
+  bool write(const std::shared_ptr<packet::Basic> &packet) noexcept;
 };
 
 Basic::Impl::Impl() :
@@ -86,7 +98,6 @@ bool Basic::Impl::process_input(Basic *conn) noexcept {
     if (socket->avail() == 0)
       set_work_flag(WorkFlag::Input, false);
   });
-  // std::cout << "input: " << socket->id() << std::endl;
   assert(conn);
   if (!socket->valid()) return false;
   auto r = istream->pull();
@@ -113,7 +124,6 @@ bool Basic::Impl::process_output(Basic *conn) noexcept {
   {
     std::unique_lock<std::mutex> lock{mutex};
     auto r = ostream->push();
-    // std::cout << "process_output: " << ostream->size() << std::endl;
     if (r < 0) {
       LOG_ERROR << get_name(conn) << " push failed: " << r;
       return false;
@@ -195,7 +205,11 @@ bool Basic::Impl::process_command(Basic *conn) noexcept {
     auto p = std::get_if<std::shared_ptr<packet::Basic>>(&r);
     if (!p) return false; // impossible.
     // Handle packet.
-    if (dispatcher) {
+    if ((*p)->is_call_request()) {
+      if (!handle_rpc_request(conn, *p)) return false;
+    } else if ((*p)->is_call_response()) {
+      if (!handle_rpc_response(conn, *p)) return false;
+    } else if (dispatcher) {
       if (!dispatcher(conn, *p)) return false;
     } else if (m && m->dispatcher()) {
       if (!m->dispatcher()(conn, *p)) return false;
@@ -300,6 +314,79 @@ std::string Basic::Impl::get_name(const Basic *conn) noexcept {
   return r;
 }
 
+bool Basic::Impl::handle_rpc_request(
+  Basic *conn, std::shared_ptr<packet::Basic> packet) {
+  auto m = manager.lock();
+  if (!m) return false;
+  auto dispatcher = m->rpc_dispatcher();
+  if (dispatcher) {
+    uint32_t index{0};
+    (*packet) >> index;
+    auto r = dispatcher->dispatch(packet);
+    auto e = get_error(r);
+    int32_t error = e ? e->code() : std::to_underlying(ErrorCode::None);
+    auto p = std::make_shared<packet::Basic>();
+    p->set_id(packet::kRpcResponseId);
+    p->set_writeable(true);
+    p->set_call_response(true);
+    (*p) << index;
+    (*p) << error;
+    if (!e) {
+      auto temp = std::get_if<std::shared_ptr<rpc::Packer>>(&r);
+      if (temp) (*p) << (*temp)->vector();
+    }
+    p->set_writeable(false);
+    conn->send(p);
+
+  } else {
+    LOG_WARN << "rpc request unhandled, check you " <<
+      m->setting_.name << " codec";
+  }
+
+  return true;
+}
+  
+bool Basic::Impl::handle_rpc_response(
+  Basic *conn, std::shared_ptr<packet::Basic> packet) {
+
+  uint32_t index{0};
+  int32_t error{std::to_underlying(ErrorCode::None)};
+  (*packet) >> index;
+  if (0 == index) return true; // No call(notify?).
+  (*packet) >> error;
+  auto it = callings.find(index);
+  if (it == callings.end()) {
+    LOG_WARN << "rpc response no calling: " << index << " error: " << error;
+    return false;
+  }
+  auto &call = it->second;
+  try {
+    if (error != std::to_underlying(ErrorCode::None)) {
+      throw std::logic_error("error: " + std::to_string(error));
+    }
+    auto data = reinterpret_cast<const uint8_t *>(
+      packet->data().data() + packet->offset());
+    auto size = packet->data().size() - packet->offset();
+    std::get<1>(call).set_value(rpc::Unpacker(data, size));
+  } catch(...) {
+    std::get<1>(call).set_exception(std::current_exception());
+  }
+  return true;
+}
+  
+bool Basic::Impl::write(const std::shared_ptr<packet::Basic> &packet) noexcept {
+  stream::encode_func func{stream::encode};
+  if (codec.encode) {
+    func = codec.encode;
+  } else if (auto m = manager.lock(); m && m->codec().encode) {
+    func = m->codec().encode;
+  }
+  auto bytes = func(packet);
+  if (bytes.empty()) return false;
+  auto r = ostream->write(bytes) == bytes.size();
+  return r;
+}
+
 Basic::Basic() : impl_{std::make_unique<Impl>()} {
 
 }
@@ -321,6 +408,8 @@ bool Basic::init() noexcept {
   impl_->work_flags = 0;
   impl_->istream->clear();
   impl_->ostream->clear();
+  impl_->callings.clear();
+  impl_->call_index = 0;
   auto connect_call_key = get_callable_key(this, "__connect");
   s_callables.erase(connect_call_key);
   auto disconnect_call_key = get_callable_key(this, "__disconnect");
@@ -423,16 +512,7 @@ void Basic::set_dispatcher(packet::dispatch_func func) noexcept {
 
 bool Basic::send(const std::shared_ptr<packet::Basic> &packet) noexcept {
   std::unique_lock<std::mutex> lock{impl_->mutex};
-  stream::encode_func func{stream::encode};
-  if (impl_->codec.encode) {
-    func = impl_->codec.encode;
-  } else if (
-    auto manager = impl_->manager.lock(); manager && manager->codec().encode) {
-    func = manager->codec().encode;
-  }
-  auto bytes = func(packet);
-  if (bytes.empty()) return false;
-  auto r = impl_->ostream->write(bytes) == bytes.size();
+  auto r = impl_->write(packet);
   lock.unlock();
   if (r) enqueue_work(WorkFlag::Output);
   return r;
@@ -455,4 +535,41 @@ void Basic::set_keep_alive(bool flag) const noexcept {
   
 bool Basic::is_keep_alive() const noexcept {
   return impl_->keep_alive.load(std::memory_order_relaxed);
+}
+
+bool Basic::send_call(
+  const std::shared_ptr<packet::Basic> &packet,
+  uint32_t index, const std::string &func_name,
+  std::shared_ptr<std::promise<rpc::Unpacker>> promise) {
+  std::unique_lock<std::mutex> lock{impl_->mutex};
+  packet->set_call_request(true);
+  auto r = impl_->write(packet);
+  if (r && static_cast<bool>(promise)) {
+    impl_->callings.emplace(
+      index, std::make_pair(func_name, std::move(*promise)));
+  }
+  lock.unlock();
+  if (r) enqueue_work(WorkFlag::Output);
+  // std::cout << "send_call: " << name() << std::endl;
+  return r;
+}
+  
+uint32_t Basic::new_call_index() noexcept {
+  std::unique_lock<std::mutex> lock{impl_->mutex};
+  return ++(impl_->call_index);
+}
+
+void Basic::set_call_timeout(const std::chrono::milliseconds &timeout) noexcept {
+  std::unique_lock<std::mutex> lock{impl_->mutex};
+  impl_->timeout = timeout.count();
+}
+
+void Basic::clear_call_timeout() noexcept {
+  std::unique_lock<std::mutex> lock{impl_->mutex};
+  impl_->timeout = std::nullopt;
+}
+
+std::optional<int64_t> Basic::get_call_timeout() const noexcept {
+  std::unique_lock<std::mutex> lock{impl_->mutex};
+  return impl_->timeout;
 }

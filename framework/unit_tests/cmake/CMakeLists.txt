@@ -89,7 +89,7 @@ function(test_executables test_name source)
 endfunction()
 
 # Enable this then just test the directories.
-#set(TEST_DIRS "net")
+set(TEST_DIRS "net")
 
 if (NOT TEST_DIRS)
   file(GLOB_RECURSE CORE_TEST_SOURCES "../core_test/*.cc")

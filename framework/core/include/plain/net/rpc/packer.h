@@ -55,6 +55,8 @@ class PLAIN_API Packer {
       pack_map(value);
     } else if constexpr (is_container<T>::value || is_stdarray<T>::value) {
       pack_array(value);
+    } else if constexpr (is_tuple<T>::value) {
+      pack_tuple(value);
     } else {
       auto recursive_packer = Packer{};
       const_cast<T &>(value).pack(recursive_packer);
@@ -116,6 +118,13 @@ class PLAIN_API Packer {
   template <typename T>
   void pack(const std::chrono::time_point<T> &value) {
     pack(value.time_since_epoch().count());
+  }
+
+  template <typename T>
+  void pack_tuple(const T &value) noexcept {
+    std::apply([this](auto &&...args){
+      (pack(args), ...);
+    }, value);
   }
 
  public:

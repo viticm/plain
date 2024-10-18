@@ -21,6 +21,10 @@ using dispatch_func = std::function<
   bool(connection::Basic *, std::shared_ptr<Basic>)>;
 using id_t = uint16_t;
 
+static constexpr id_t kMaxId{std::numeric_limits<id_t>::max()};
+static constexpr id_t kRpcRequestId{kMaxId - 1};
+static constexpr id_t kRpcResponseId{kMaxId - 2};
+
 } // namespace packet
 } // namespace plain::net
 

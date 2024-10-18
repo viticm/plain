@@ -27,6 +27,7 @@ enum class ErrorCode : std::uint8_t {
   NetPacketCantFill,
   NetPacketNeedRecv,
   NetPacketInvalid,
+  NetRpcFunctionNotFound,
   OutOfRange,
 };
 

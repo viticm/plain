@@ -13,8 +13,10 @@ struct Listener::Impl {
 Listener::Listener(
   const setting_t &setting,
   std::shared_ptr<concurrency::executor::Basic> executor) :
+  rpc_dispatcher_{std::make_shared<rpc::Dispatcher>()},
   impl_{std::make_unique<Impl>()} {
   impl_->manager = make_manager(setting, executor);
+  impl_->manager->set_rpc_dispatcher(rpc_dispatcher_);
   assert(impl_->manager);
 }
 
