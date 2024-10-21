@@ -205,7 +205,7 @@ bool Basic::Impl::process_command(Basic *conn) noexcept {
     auto p = std::get_if<std::shared_ptr<packet::Basic>>(&r);
     if (!p) return false; // impossible.
     // Handle packet.
-    if ((*p)->is_call_request()) {
+    if ((*p)->is_call_request() || (*p)->is_call_notify()) {
       if (!handle_rpc_request(conn, *p)) return false;
     } else if ((*p)->is_call_response()) {
       if (!handle_rpc_response(conn, *p)) return false;
@@ -321,23 +321,27 @@ bool Basic::Impl::handle_rpc_request(
   auto dispatcher = m->rpc_dispatcher();
   if (dispatcher) {
     uint32_t index{0};
-    (*packet) >> index;
+    if (packet->is_call_request())
+      (*packet) >> index;
     auto r = dispatcher->dispatch(packet);
     auto e = get_error(r);
     int32_t error = e ? e->code() : std::to_underlying(ErrorCode::None);
-    auto p = std::make_shared<packet::Basic>();
-    p->set_id(packet::kRpcResponseId);
-    p->set_writeable(true);
-    p->set_call_response(true);
-    (*p) << index;
-    (*p) << error;
-    if (!e) {
-      auto temp = std::get_if<std::shared_ptr<rpc::Packer>>(&r);
-      if (temp) (*p) << (*temp)->vector();
+    if (packet->is_call_request()) {
+      auto p = std::make_shared<packet::Basic>();
+      p->set_id(packet::kRpcResponseId);
+      p->set_writeable(true);
+      p->set_call_response(true);
+      (*p) << index;
+      (*p) << error;
+      if (!e) {
+        auto temp = std::get_if<std::shared_ptr<rpc::Packer>>(&r);
+        if (temp) (*p) << (*temp)->vector();
+      }
+      p->set_writeable(false);
+      conn->send(p);
+    } else if (e) { // Notify
+      LOG_ERROR << "rpc request error: " << error;
     }
-    p->set_writeable(false);
-    conn->send(p);
-
   } else {
     LOG_WARN << "rpc request unhandled, check you " <<
       m->setting_.name << " codec";

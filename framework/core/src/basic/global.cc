@@ -22,7 +22,7 @@ class InitGlobal {
 #define SET(key,value) g.emplace(key, value)
 
 void InitGlobal::init() {
-  auto&& g = get_globals();
+  auto &&g = get_globals();
 
   // App settings.
   SET("app.name", "unknown");

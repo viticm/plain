@@ -63,6 +63,8 @@ decode(Basic *input, const packet::limit_t &packet_limit) {
     p->set_call_request(true);
   } else if (head.id == packet::kRpcResponseId) {
     p->set_call_response(true);
+  } else if (head.id == packet::kRpcNotifyId) {
+    p->set_call_notify(true);
   }
   return p;
 }
@@ -76,7 +78,13 @@ static constexpr plain::bytes_t
 kRpcResponseBegin{std::byte{0x63}, std::byte{0x6f}};
 static constexpr plain::bytes_t
 kRpcResponseEnd{std::byte{0x6f}, std::byte{0x63}};
+static constexpr plain::bytes_t
+kRpcNotifyBegin{std::byte{0x63}, std::byte{0x6e}};
+static constexpr plain::bytes_t
+kRpcNotifyEnd{std::byte{0x6e}, std::byte{0x63}};
+
 static constexpr size_t kRpcRequestSizeMin{4 + 4 + 1};
+static constexpr size_t kRpcNotifySizeMin{4 + 1};
 static constexpr size_t kRpcResponseSizeMin{4 + 4 + 4 + 1};
 
 error_or_t<std::shared_ptr<packet::Basic>>
@@ -109,6 +117,10 @@ line_decode(stream::Basic *input, const packet::limit_t &packet_limit) {
     bytes_t{bytes.data(), 2} == kRpcResponseBegin &&
     bytes_t{bytes.data() + pos - 2, 2} == kRpcResponseEnd) {
     p->set_call_response(true);
+  } else if (pos >= kRpcNotifySizeMin &&
+    bytes_t{bytes.data(), 2} == kRpcNotifyBegin &&
+    bytes_t{bytes.data() + pos - 2, 2} == kRpcNotifyEnd) {
+    p->set_call_notify(true);
   }
 
   if (pos > 0) {
@@ -133,6 +145,8 @@ bytes_t line_encode(std::shared_ptr<packet::Basic> packet) {
     r = kRpcRequestBegin + r + kRpcRequestEnd;
   } else if (packet->is_call_response()) {
     r = kRpcResponseBegin + r + kRpcResponseEnd;
+  } else if (packet->is_call_notify()) {
+    r = kRpcNotifyBegin + r + kRpcNotifyEnd;
   }
 
   r.push_back(std::byte{'\n'});

@@ -41,11 +41,13 @@ class PLAIN_API Basic {
   void set_readable(bool flag) noexcept;
   void set_writeable(bool flag) noexcept;
 
- public:
+ public: // For rpc.
   void set_call_request(bool flag) noexcept;
   void set_call_response(bool flag) noexcept;
+  void set_call_notify(bool flag) noexcept;
   bool is_call_request() const noexcept;
   bool is_call_response() const noexcept;
+  bool is_call_notify() const noexcept;
 
  public:
   void set_id(id_t id) noexcept;

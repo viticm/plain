@@ -149,6 +149,9 @@ void plain::tests::test_net_connection_funcs() {
   listener1.bind("hello", []() {
     return std::string{"world!"};
   });
+  listener1.bind("notify", []() {
+    std::cout << "the notify call" << std::endl;
+  });
 
   r = listener1.start();
   ASSERT_TRUE(r);
@@ -166,6 +169,9 @@ void plain::tests::test_net_connection_funcs() {
 
   auto call_r1 = conn3->call("hello").as<std::string>();
   ASSERT_TRUE(call_r1 == std::string{"world!"});
+
+  auto notify_r = conn3->send("notify");
+  ASSERT_TRUE(notify_r);
 
  
   std::this_thread::sleep_for(50ms);

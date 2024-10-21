@@ -97,6 +97,20 @@ Basic final : noncopyable {
   }
   void set_call_timeout(const std::chrono::milliseconds &value) noexcept;
   void clear_call_timeout() noexcept;
+  template <typename ...Args>
+  bool send(std::string_view name, Args ...args) {
+    auto packet = std::make_shared<packet::Basic>();
+    packet->set_writeable(true);
+    packet->set_id(packet::kRpcNotifyId);
+    auto args_tuple = std::make_tuple(args...);
+    *(packet) << name;
+    rpc::Packer packer;
+    packer.process(args_tuple);
+    *(packet) << packer.vector();
+    
+    std::string func_name(name.data(), name.size());
+    return send(packet);
+  }
 
  private:
   friend class Manager;

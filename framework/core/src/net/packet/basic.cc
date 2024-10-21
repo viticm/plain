@@ -7,6 +7,7 @@ enum {
   kWriteableFlag = 1,
   kCallRequestFlag = 2,
   kCallResponseFlag = 3,
+  kCallNotifyFlag = 4,
 };
 
 struct Basic::Impl {
@@ -129,12 +130,20 @@ void Basic::set_call_response(bool flag) noexcept {
   impl_->set_flag(flag, kCallResponseFlag);
 }
   
+void Basic::set_call_notify(bool flag) noexcept {
+  impl_->set_flag(flag, kCallNotifyFlag);
+}
+  
 bool Basic::is_call_request() const noexcept {
   return impl_->have_flag(kCallRequestFlag);
 }
   
 bool Basic::is_call_response() const noexcept {
   return impl_->have_flag(kCallResponseFlag);
+}
+
+bool Basic::is_call_notify() const noexcept {
+  return impl_->have_flag(kCallNotifyFlag);
 }
 
 Basic::Basic() : impl_{std::make_unique<Impl>()} {
