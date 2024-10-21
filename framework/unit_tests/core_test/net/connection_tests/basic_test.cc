@@ -107,6 +107,10 @@ void plain::tests::test_net_connection_funcs() {
     return a * b;
   });
 
+  listener.bind("notify_message_line", [](const std::string &str) {
+    std::cout << "notify_message_line: " << str << std::endl;
+  });
+
   Connector connector;
   r = connector.start();
   ASSERT_TRUE(r);
@@ -138,6 +142,9 @@ void plain::tests::test_net_connection_funcs() {
   auto call_r0 = conn1->call("sum", 11, 9).as<int32_t>();
   ASSERT_TRUE(call_r0 == (11 * 9));
 
+  auto call_r2 = conn1->send("notify_message_line", "have a round!!!");
+  ASSERT_TRUE(call_r2);
+
   // For call.
   setting_t setting1;
   setting1.address = ":9528";
@@ -151,6 +158,9 @@ void plain::tests::test_net_connection_funcs() {
   });
   listener1.bind("notify", []() {
     std::cout << "the notify call" << std::endl;
+  });
+  listener1.bind("notify_message", [](const std::string &message) {
+    std::cout << "the notify_message call: " << message << std::endl;
   });
 
   r = listener1.start();
@@ -173,6 +183,8 @@ void plain::tests::test_net_connection_funcs() {
   auto notify_r = conn3->send("notify");
   ASSERT_TRUE(notify_r);
 
+  auto notify_r1 = conn3->send("notify_message", std::string{"have fun!!"});
+  ASSERT_TRUE(notify_r1);
  
   std::this_thread::sleep_for(50ms);
 }

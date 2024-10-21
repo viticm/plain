@@ -125,7 +125,7 @@ line_decode(stream::Basic *input, const packet::limit_t &packet_limit) {
 
   if (pos > 0) {
     p->set_writeable(true);
-    if (p->is_call_request() || p->is_call_response()) { // Rpc
+    if (p->is_call_request() || p->is_call_response() || p->is_call_notify()) { // Rpc
       p->write(bytes.data() + 2, pos - 2);
     } else {
       p->write(bytes.data(), pos);

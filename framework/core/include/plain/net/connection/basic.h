@@ -102,6 +102,7 @@ Basic final : noncopyable {
     auto packet = std::make_shared<packet::Basic>();
     packet->set_writeable(true);
     packet->set_id(packet::kRpcNotifyId);
+    packet->set_call_notify(true);
     auto args_tuple = std::make_tuple(args...);
     *(packet) << name;
     rpc::Packer packer;

@@ -184,6 +184,12 @@ class PLAIN_API Packer {
   void pack(float value) noexcept;
   void pack(double value) noexcept;
   void pack(const std::string &value) noexcept;
+  void pack(std::string_view value) noexcept {
+    pack(std::string{value.data(), value.size()});
+  }
+  void pack(const char *str) noexcept {
+    pack(std::string{str});
+  }
   void pack(const std::vector<uint8_t> &value) noexcept;
 
  private:
