@@ -27,6 +27,8 @@ enum class ErrorCode : std::uint8_t {
   NetPacketCantFill,
   NetPacketNeedRecv,
   NetPacketInvalid,
+  NetRpcFunctionNotFound,
+  OutOfRange,
 };
 
 class PLAIN_API [[nodiscard]] Error : copyable {
@@ -71,10 +73,17 @@ class PLAIN_API [[nodiscard]] Error : copyable {
   explicit operator bool() const noexcept {
     return valid();
   }
+  explicit operator ErrorCode() const noexcept {
+    return static_cast<ErrorCode>(code_);
+  }
 
  public:
   friend std::ostream &operator<<(std::ostream &os, const Error &e) {
     return os << std::to_string(e.code()) << std::string(": ") << e.message();
+  }
+
+  friend bool operator==(const Error &e, ErrorCode code) noexcept {
+    return e.code() == std::to_underlying(code);
   }
 
  public:

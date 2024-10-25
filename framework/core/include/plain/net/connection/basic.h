@@ -13,8 +13,10 @@
 #define PLAIN_NET_CONNECTION_BASIC_H_
 
 #include "plain/net/connection/config.h"
-#include "plain/net/packet/config.h"
+#include "plain/net/packet/basic.h"
 #include "plain/net/stream/codec.h"
+#include "plain/net/rpc/packer.h"
+#include "plain/net/rpc/unpacker.h"
 
 namespace plain::net {
 namespace connection {
@@ -53,6 +55,64 @@ Basic final : noncopyable {
  public:
   bool send(const std::shared_ptr<packet::Basic> &packet) noexcept;
 
+ public:
+  template <typename ...Args>
+  rpc::Unpacker call(std::string_view name, Args ...args) {
+    auto future = async_call(name, std::forward<Args>(args)...);
+    if (auto timeout = get_call_timeout()) {
+      auto wait_result = future.wait_for(std::chrono::milliseconds(*timeout));
+      if (wait_result == std::future_status::timeout) {
+        std::string func_name(name.data(), name.size());
+        throw std::logic_error(
+          "call " + func_name + " timeout: " + std::to_string(*timeout));
+      }
+    }
+    return future.get();
+  }
+  template <typename ...Args>
+  std::future<rpc::Unpacker> async_call(std::string_view name, Args ...args) {
+    auto packet = std::make_shared<packet::Basic>();
+    packet->set_writeable(true);
+    packet->set_id(packet::kRpcRequestId);
+    auto args_tuple = std::make_tuple(args...);
+    auto index = new_call_index();
+    *(packet) << index;
+    *(packet) << name;
+    rpc::Packer packer;
+    packer.process(args_tuple);
+    *(packet) << packer.vector();
+    
+    auto promise = std::make_shared<std::promise<rpc::Unpacker>>();
+    std::string func_name(name.data(), name.size());
+    auto future = promise->get_future();
+    bool r = send_call(packet, index, func_name, promise);
+    try {
+      if (!r) {
+        throw std::logic_error("async_call " + func_name + " failed");
+      }
+    } catch(...) {
+      promise->set_exception(std::current_exception());
+    }
+    return future;
+  }
+  void set_call_timeout(const std::chrono::milliseconds &value) noexcept;
+  void clear_call_timeout() noexcept;
+  template <typename ...Args>
+  bool send(std::string_view name, Args ...args) {
+    auto packet = std::make_shared<packet::Basic>();
+    packet->set_writeable(true);
+    packet->set_id(packet::kRpcNotifyId);
+    packet->set_call_notify(true);
+    auto args_tuple = std::make_tuple(args...);
+    *(packet) << name;
+    rpc::Packer packer;
+    packer.process(args_tuple);
+    *(packet) << packer.vector();
+    
+    std::string func_name(name.data(), name.size());
+    return send(packet);
+  }
+
  private:
   friend class Manager;
   friend class Epoll;
@@ -79,6 +139,15 @@ Basic final : noncopyable {
  private:
   bool work() noexcept;
   void enqueue_work(WorkFlag flag) noexcept;
+
+ private:
+  bool rpc_dispatch(std::shared_ptr<packet::Basic> packet);
+  bool send_call(
+    const std::shared_ptr<packet::Basic> &packet,
+    uint32_t index, const std::string &func_name,
+    std::shared_ptr<std::promise<rpc::Unpacker>> promise);
+  uint32_t new_call_index() noexcept;
+  std::optional<int64_t> get_call_timeout() const noexcept;
 
 };
 

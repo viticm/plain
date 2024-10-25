@@ -18,6 +18,7 @@
 #include "plain/net/packet/config.h"
 #include "plain/net/socket/config.h"
 #include "plain/net/stream/codec.h"
+#include "plain/net/rpc/config.h"
 
 namespace plain::net {
 namespace connection {
@@ -81,6 +82,8 @@ class PLAIN_API Manager :
   void enqueue(connection::id_t conn_id) noexcept;
   void set_name(connection::id_t conn_id, std::string_view name) noexcept;
   std::string get_name(connection::id_t conn_id) const noexcept;
+  rpc::Dispatcher *rpc_dispatcher() const noexcept;
+  void set_rpc_dispatcher(std::shared_ptr<rpc::Dispatcher> dispatcher) noexcept;
 
  protected:
   void increase_send_size(size_t size);

@@ -130,7 +130,8 @@ void MD5::init() {
  
 //////////////////////////////
  
-// decodes input (unsigned char) into output (uint4). Assumes len is a multiple of 4.
+// decodes input (unsigned char) into output (uint4).
+// Assumes len is a multiple of 4.
 void MD5::decode(uint4 output[], const uint1 input[], size_type len) {
   for (unsigned int i = 0, j = 0; j < len; i++, j += 4)
     output[i] = ((uint4)input[j]) | (((uint4)input[j+1]) << 8) |

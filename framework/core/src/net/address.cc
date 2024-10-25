@@ -15,10 +15,7 @@ bool plain::net::is_valid_addr(const bytes_t &addr, bool verbose) noexcept {
   constexpr auto value_width {10};
 
   if (verbose) {
-    std::cout
-      << "Validating socket address: "
-      << addr
-      << std::endl;
+    std::cout << "Validating socket address: " << addr << std::endl;
   }
 
   if (addr.empty()) {
@@ -29,8 +26,7 @@ bool plain::net::is_valid_addr(const bytes_t &addr, bool verbose) noexcept {
 
   if (verbose) {
     std::cout << std::setw(key_width) << "  Family: "
-          << std::right << std::setw(value_width) << family
-          << std::endl;
+      << std::right << std::setw(value_width) << family << std::endl;
   }
 
   switch (family) {

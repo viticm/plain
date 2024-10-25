@@ -178,7 +178,7 @@ struct TaskPromise final: TaskPromiseBasic<T, nothrow> {
   using TaskPromiseBasic<T, nothrow>::result_;
 
   template <typename U>
-  void return_value(U&& u) {
+  void return_value(U &&u) {
     if (result_.index() == 3) [[unlikely]] return;
     result_.template emplace<1>(static_cast<U&&>(u));
   }

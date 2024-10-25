@@ -80,6 +80,7 @@
 #include "plain/net/connector.h"
 #include "plain/net/listener.h"
 #include "plain/net/utility.h"
+#include "plain/net/rpc/utility.h"
 
 #endif //PLAIN_H_
 

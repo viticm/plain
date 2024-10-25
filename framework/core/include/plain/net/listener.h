@@ -18,6 +18,7 @@
 #include "plain/net/packet/config.h"
 #include "plain/net/socket/config.h"
 #include "plain/net/stream/codec.h"
+#include "plain/net/rpc/dispatcher.h"
 
 namespace plain::net {
 
@@ -33,6 +34,11 @@ class PLAIN_API Listener final {
  public:
   bool start();
   void stop();
+
+ public:
+  template <typename F> void bind(const std::string &name, F func) {
+    rpc_dispatcher_->bind(name, func);
+  }
 
  public:
   void set_codec(const stream::codec_t &codec) noexcept;
@@ -58,6 +64,7 @@ class PLAIN_API Listener final {
   Address address() const noexcept;
 
  private:
+  std::shared_ptr<rpc::Dispatcher> rpc_dispatcher_;
   struct Impl;
   std::unique_ptr<Impl> impl_;
 

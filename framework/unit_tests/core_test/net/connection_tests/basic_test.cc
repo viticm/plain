@@ -60,7 +60,7 @@ void plain::tests::test_net_connection_send_line(
   auto bytes = as_const_bytes(str);
   pack->set_writeable(true);
   pack->write(bytes.data(), bytes.size());
-  pack->write(reinterpret_cast<const std::byte *>("\n"), 1);
+  //pack->write(reinterpret_cast<const std::byte *>("\n"), 1);
   pack->set_writeable(false);
   auto r = conn->send(pack);
   ASSERT_TRUE(r);
@@ -103,6 +103,14 @@ void plain::tests::test_net_connection_funcs() {
     return true;
   });
 
+  listener.bind("sum", [](int32_t a, int32_t b){
+    return a * b;
+  });
+
+  listener.bind("notify_message_line", [](const std::string &str) {
+    std::cout << "notify_message_line: " << str << std::endl;
+  });
+
   Connector connector;
   r = connector.start();
   ASSERT_TRUE(r);
@@ -130,7 +138,54 @@ void plain::tests::test_net_connection_funcs() {
 
   auto conn2 = connector.connect(":9527", nullptr, 5s);
   ASSERT_TRUE(static_cast<bool>(conn2));
-  
+
+  auto call_r0 = conn1->call("sum", 11, 9).as<int32_t>();
+  ASSERT_TRUE(call_r0 == (11 * 9));
+
+  auto call_r2 = conn1->send("notify_message_line", "have a round!!!");
+  ASSERT_TRUE(call_r2);
+
+  // For call.
+  setting_t setting1;
+  setting1.address = ":9528";
+  setting1.name = "test1";
+  Listener listener1(setting1);
+  listener1.bind("add", [](int32_t a, int32_t b) {
+    return a + b;
+  });
+  listener1.bind("hello", []() {
+    return std::string{"world!"};
+  });
+  listener1.bind("notify", []() {
+    std::cout << "the notify call" << std::endl;
+  });
+  listener1.bind("notify_message", [](const std::string &message) {
+    std::cout << "the notify_message call: " << message << std::endl;
+  });
+
+  r = listener1.start();
+  ASSERT_TRUE(r);
+  listener1.set_connect_callback([](connection::Basic *conn) {
+    std::cout << conn->name() << " connected" << std::endl;
+  });
+
+  auto conn3 = connector.connect(":9528", nullptr, 5s);
+  ASSERT_TRUE(static_cast<bool>(conn3));
+
+  auto call_r = conn3->call("add", 11, 21).as<int32_t>();
+  ASSERT_TRUE(call_r == (11 + 21));
+
+  std::cout << "call_r: " << call_r << std::endl;
+
+  auto call_r1 = conn3->call("hello").as<std::string>();
+  ASSERT_TRUE(call_r1 == std::string{"world!"});
+
+  auto notify_r = conn3->send("notify");
+  ASSERT_TRUE(notify_r);
+
+  auto notify_r1 = conn3->send("notify_message", std::string{"have fun!!"});
+  ASSERT_TRUE(notify_r1);
+ 
   std::this_thread::sleep_for(50ms);
 }
 

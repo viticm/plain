@@ -5,6 +5,9 @@ using plain::net::packet::Basic;
 enum {
   kReadableFlag = 0,
   kWriteableFlag = 1,
+  kCallRequestFlag = 2,
+  kCallResponseFlag = 3,
+  kCallNotifyFlag = 4,
 };
 
 struct Basic::Impl {
@@ -13,10 +16,18 @@ struct Basic::Impl {
   size_t offset{0};
   uint8_t flag{0};
   bool have_flag(uint32_t flag) const noexcept;
+  void set_flag(bool flag, uint32_t type) noexcept;
 };
 
 bool Basic::Impl::have_flag(uint32_t type) const noexcept {
   return flag & (1 << type);
+}
+
+void Basic::Impl::set_flag(bool _flag, uint32_t type) noexcept {
+  if (_flag)
+    flag |= (1 << type);
+  else
+    flag &= ~(1 << kReadableFlag);
 }
 
 size_t Basic::write(std::string_view str) {
@@ -98,19 +109,41 @@ size_t Basic::remove(size_t length) noexcept {
 plain::const_byte_span_t Basic::data() const noexcept {
   return as_const_bytes(impl_->data);
 }
+  
+size_t Basic::offset() const noexcept {
+  return impl_->offset;
+}
 
 void Basic::set_readable(bool flag) noexcept {
-  if (flag)
-    impl_->flag |= (1 << kReadableFlag);
-  else
-    impl_->flag &= ~(1 << kReadableFlag);
+  impl_->set_flag(flag, kReadableFlag);
 }
   
 void Basic::set_writeable(bool flag) noexcept {
-  if (flag)
-    impl_->flag |= (1 << kWriteableFlag);
-  else
-    impl_->flag &= ~(1 << kWriteableFlag);
+  impl_->set_flag(flag, kWriteableFlag);
+}
+
+void Basic::set_call_request(bool flag) noexcept {
+  impl_->set_flag(flag, kCallRequestFlag);
+}
+  
+void Basic::set_call_response(bool flag) noexcept {
+  impl_->set_flag(flag, kCallResponseFlag);
+}
+  
+void Basic::set_call_notify(bool flag) noexcept {
+  impl_->set_flag(flag, kCallNotifyFlag);
+}
+  
+bool Basic::is_call_request() const noexcept {
+  return impl_->have_flag(kCallRequestFlag);
+}
+  
+bool Basic::is_call_response() const noexcept {
+  return impl_->have_flag(kCallResponseFlag);
+}
+
+bool Basic::is_call_notify() const noexcept {
+  return impl_->have_flag(kCallNotifyFlag);
 }
 
 Basic::Basic() : impl_{std::make_unique<Impl>()} {

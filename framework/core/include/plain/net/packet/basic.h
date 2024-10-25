@@ -35,10 +35,19 @@ class PLAIN_API Basic {
   size_t read(std::byte *value, size_t length);
   size_t remove(size_t length) noexcept;
   const_byte_span_t data() const noexcept;
+  size_t offset() const noexcept;
 
  public:
- void set_readable(bool flag) noexcept;
+  void set_readable(bool flag) noexcept;
   void set_writeable(bool flag) noexcept;
+
+ public: // For rpc.
+  void set_call_request(bool flag) noexcept;
+  void set_call_response(bool flag) noexcept;
+  void set_call_notify(bool flag) noexcept;
+  bool is_call_request() const noexcept;
+  bool is_call_response() const noexcept;
+  bool is_call_notify() const noexcept;
 
  public:
   void set_id(id_t id) noexcept;
@@ -52,6 +61,12 @@ class PLAIN_API Basic {
     auto temp = hton(value);
     bytes.insert(0, reinterpret_cast<bytes_t::value_type *>(&temp), sizeof(T));
     write(bytes.data(), bytes.size());
+    return *this;
+  }
+
+  Basic &operator<<(const std::vector<uint8_t> &data) {
+    auto p = reinterpret_cast<const std::byte *>(&(data[0]));
+    write(p, data.size());
     return *this;
   }
 
