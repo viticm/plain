@@ -41,7 +41,7 @@ struct executor_collection {
       std::find(executors.begin(), executors.end(), executor) == executors.end());
     executors.emplace_back(std::move(executor));
   }
-  
+
   void shutdown_all() {
     std::unique_lock<decltype(lock)> _lock{lock};
     for (auto &executor : executors) {
@@ -138,7 +138,14 @@ std::string Kernel::Impl::console_cmd_kill(
     // killall
     for (auto it : nets) {
       auto net = it.second.lock();
-      if (net) net->stop();
+      if (net) {
+        auto is_self = static_cast<bool>(ENGINE->impl_->console_listener) &&
+          net->get_executor().get()
+            == ENGINE->impl_->console_listener->get_executor().get();
+        if (!is_self) {
+          net->stop();
+        }
+      }
     }
   } else {
     std::string fails;
@@ -206,7 +213,7 @@ Kernel::Kernel(const engine_option &option) : impl_{std::make_unique<Impl>()} {
   impl_->registered_executors.register_executor(impl_->inline_executor);
 
   impl_->thread_pool_executor = std::make_shared<executor::ThreadPool>(
-    "thread pool executor", option.max_cpu_threads, 
+    "thread pool executor", option.max_cpu_threads,
     option.max_thread_pool_executor_waiting_time,
     option.thread_started_callback,
     option.thread_terminated_callback
@@ -214,7 +221,7 @@ Kernel::Kernel(const engine_option &option) : impl_{std::make_unique<Impl>()} {
   impl_->registered_executors.register_executor(impl_->thread_pool_executor);
 
   impl_->background_executor = std::make_shared<executor::ThreadPool>(
-    "thread background executor", option.max_cpu_threads, 
+    "thread background executor", option.max_cpu_threads,
     option.max_thread_pool_executor_waiting_time,
     option.thread_started_callback,
     option.thread_terminated_callback
@@ -233,7 +240,7 @@ Kernel::Kernel(const engine_option &option) : impl_{std::make_unique<Impl>()} {
     "help", Impl::console_cmd_help,
     "Show help to use commands, help command1 command2 (empty will show all)");
 }
-  
+
 Kernel::~Kernel() noexcept {
   try {
     impl_->timer_queue->shutdown();
@@ -246,22 +253,22 @@ Kernel::~Kernel() noexcept {
 std::shared_ptr<TimerQueue> Kernel::timer_queue() const noexcept {
   return impl_->timer_queue;
 }
-  
+
 std::shared_ptr<plain::concurrency::executor::Inline>
 Kernel::inline_executor() const noexcept {
   return impl_->inline_executor;
 }
-  
+
 std::shared_ptr<plain::concurrency::executor::ThreadPool>
 Kernel::thread_pool_executor() const noexcept {
   return impl_->thread_pool_executor;
 }
-  
+
 std::shared_ptr<plain::concurrency::executor::ThreadPool>
 Kernel::background_executor() const noexcept {
   return impl_->background_executor;
 }
-  
+
 std::shared_ptr<plain::concurrency::executor::Thread>
 Kernel::thread_executor() const noexcept {
   return impl_->thread_executor;
@@ -300,13 +307,13 @@ void Kernel::add(std::shared_ptr<net::connection::Manager> net) {
     throw std::runtime_error("repeated net: " + name);
   impl_->nets.emplace(name, net);
 }
-   
+
 void Kernel::remove(std::shared_ptr<net::connection::Manager> net) noexcept {
   std::unique_lock<decltype(impl_->mutex)> auto_lock{impl_->mutex};
   auto name = net->setting_.name;
   impl_->nets.erase(name);
 }
-   
+
 void Kernel::remove_net(std::string_view name) noexcept {
   std::unique_lock<decltype(impl_->mutex)> auto_lock{impl_->mutex};
   impl_->nets.erase(name.data());
@@ -323,7 +330,7 @@ bool Kernel::enable_console(std::string_view addr) noexcept {
     return false;
   LOG_INFO << "console listen on " <<
     impl_->console_listener->address().text();
-  
+
   impl_->console_listener->set_dispatcher([](
     net::connection::Basic *conn, std::shared_ptr<net::packet::Basic> packet){
     auto d = reinterpret_cast<const char *>(packet->data().data());
@@ -345,7 +352,7 @@ bool Kernel::enable_console(std::string_view addr) noexcept {
     }
     return true;
   });
-  
+
   impl_->console_listener->set_codec(
     {.encode = net::stream::line_encode, .decode = net::stream::line_decode});
 
