@@ -65,6 +65,7 @@ class PLAIN_API Basic {
   }
 
   Basic &operator<<(const std::vector<uint8_t> &data) {
+    if (data.empty()) return *this;
     auto p = reinterpret_cast<const std::byte *>(&(data[0]));
     write(p, data.size());
     return *this;
